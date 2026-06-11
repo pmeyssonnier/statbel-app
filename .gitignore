@@ -1,10 +1,15 @@
-# Liste blanche stricte — ne versionner que le code (jamais de données)
+# Liste blanche stricte — ne versionner que le code + les fichiers PWA
 *
 !.gitignore
 !README.md
 !index.html
+!manifest.webmanifest
+!sw.js
+!icon-192.png
+!icon-512.png
+!icon-512-mask.png
 
-# Données personnelles : jamais
+# Données personnelles : jamais (sécurité renforcée)
 *.csv
 *.json
 *.vcf
