@@ -570,11 +570,15 @@
   .resume-print-header { display: none; }
 
   @media (min-width: 1024px) {
-    #resumeContainer { padding: 20px 32px 40px; }
+    /* Utiliser toute la largeur disponible sur PC */
+    #resumeContainer { padding: 20px 32px 40px; max-width: none; }
     .resume-title { font-size: 18px; }
     .kpi-card .kpi-val { font-size: 34px; }
     .resume-table { font-size: 14px; }
     .resume-table th, .resume-table td { padding: 10px 16px; }
+    /* Colonne Enquête : nom complet, sans troncature, et largeur prioritaire */
+    .resume-table th:first-child,
+    .resume-table td:first-child { max-width: none; white-space: nowrap; width: 40%; }
   }
 
   /* ── Modal détail backup/restore ────────────────────────────────── */
