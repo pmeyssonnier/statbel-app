@@ -1,0 +1,12 @@
+# Liste blanche stricte — ne versionner que le code (jamais de données)
+*
+!.gitignore
+!README.md
+!index.html
+
+# Données personnelles : jamais
+*.csv
+*.json
+*.vcf
+*.xlsx
+*.xls

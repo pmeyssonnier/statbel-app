@@ -1,0 +1,3027 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statbel – Interviews</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg:       #f0f2f5;
+    --card-bg:  #ffffff;
+    --card-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    --text:     #222;
+    --text2:    #444;
+    --text3:    #666;
+    --border:   #ccc;
+    --filter-bg:#ffffff;
+    --filter-border: #1a237e;
+    --filter-text: #1a237e;
+    --input-bg: #ffffff;
+    --input-border: #ccc;
+    --edit-input-bg: #f8fbff;
+    --badge-bg: #f5f5f5;
+    --badge-color: #555;
+    --ordre-bg: #e8eaf6;
+    --ordre-color: #666;
+    --edit-sep: #ccc;
+    --header-bg: #1a237e;
+    --modal-bg: #ffffff;
+    --legend-bg: #ffffff;
+  }
+  body.dark {
+    --bg:       #121212;
+    --card-bg:  #1e1e2e;
+    --card-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    --text:     #e0e0e0;
+    --text2:    #bdbdbd;
+    --text3:    #9e9e9e;
+    --border:   #444;
+    --filter-bg:#1e1e2e;
+    --filter-border: #7986cb;
+    --filter-text: #7986cb;
+    --input-bg: #2a2a3e;
+    --input-border: #555;
+    --edit-input-bg:#2a2a3e;
+    --badge-bg: #2a2a3e;
+    --badge-color: #bbb;
+    --ordre-bg: #283593;
+    --ordre-color: #c5cae9;
+    --edit-sep: #444;
+    --header-bg: #0d1257;
+    --modal-bg: #1e1e2e;
+    --legend-bg: #1e1e2e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
+
+  header {
+    background: var(--header-bg);
+    color: white;
+    padding: 8px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .header-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+  }
+  .header-col1 { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .header-col3 { display: flex; align-items: center; gap: 4px; }
+  .header-mid { display: flex; justify-content: center; min-width: 0; }
+
+  header h1 { font-size: 15px; white-space: nowrap; }
+
+  #surveySelect {
+    width: 480px; max-width: 560px;
+    padding: 5px 8px;
+    border-radius: 8px; border: none;
+    font-size: 12px;
+    background: rgba(255,255,255,0.15);
+    color: white; cursor: pointer;
+  }
+  #surveySelect option { background: #1a237e; color: white; }
+
+  .view-toggle { display:flex; gap:3px; }
+  .btn-view, .btn-ico {
+    background: rgba(255,255,255,0.15); color:white;
+    border: 1px solid rgba(255,255,255,0.35);
+    width: 36px; height: 36px;
+    border-radius:7px; font-size:15px;
+    cursor:pointer; white-space:nowrap; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center;
+    padding: 0;
+  }
+  .btn-view.active { background:white; color:#1a237e; font-weight:bold; }
+  .btn-ico:hover   { background: rgba(255,255,255,0.25); }
+  .btn-ico.active  { background: #1a73e8; border-color:#1a73e8; }
+
+  /* Tooltip des boutons de vue (Liste / Carte / Rendez-vous) */
+  .view-toggle .btn-view { position: relative; }
+  .view-toggle .btn-view::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 18px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30,30,30,0.92);
+    color: #fff;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: normal;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 400;
+  }
+  .view-toggle .btn-view::before {
+    content: "";
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: rgba(30,30,30,0.92);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 400;
+  }
+  .view-toggle .btn-view:hover::after,
+  .view-toggle .btn-view:hover::before { opacity: 1; }
+
+  .kebab-wrap { position: relative; }
+  .kebab-menu {
+    display: none; position: absolute; right:0; top: calc(100% + 6px);
+    background: var(--modal-bg); border-radius:10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    min-width: 200px; z-index: 300; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .kebab-menu.open { display: block; }
+  .kebab-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px; font-size: 14px; color: var(--text);
+    cursor: pointer; border: none; background: none; width: 100%; text-align:left;
+  }
+  .kebab-item:hover { background: var(--badge-bg); }
+  .kebab-item.danger { color: white; background: #c62828; }
+  .kebab-sep { border:none; border-top:1px solid var(--border); margin:4px 0; }
+
+  .search-bar {
+    padding: 6px 12px;
+    background: var(--filter-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .search-bar input {
+    width: 100%;
+    padding: 7px 12px 7px 32px;
+    border: 1px solid var(--input-border);
+    border-radius: 20px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text);
+    outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+  }
+  .search-bar input:focus { border-color: var(--filter-border); }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    overflow-x: auto;
+    background: var(--filter-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-btn {
+    padding: 5px 12px;
+    border: 2px solid var(--filter-border);
+    border-radius: 20px;
+    background: var(--filter-bg);
+    color: var(--filter-text);
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .filter-btn.active { background: var(--filter-border); color: white; }
+
+  .contact-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: #999; font-size: 15px; }
+  .empty-state button {
+    margin-top: 16px; background: #1a237e; color: white; border: none;
+    padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer;
+  }
+
+  .card {
+    background: var(--card-bg); border-radius: 10px; padding: 12px 14px;
+    box-shadow: var(--card-shadow); border-left: 5px solid #90a4ae;
+  }
+  .card.A-faire  { border-left-color: #90a4ae; }
+  .card.En-cours { border-left-color: #f9a825; }
+  .card.Fait     { border-left-color: #2e7d32; }
+  .card.Absent   { border-left-color: #e65100; }
+  .card.Refus    { border-left-color: #b71c1c; }
+
+  .card-top { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 32px; }
+  .card-name { font-size: 15px; font-weight: bold; color: var(--filter-text); flex: 1; }
+  .card-ordre { font-size: 12px; color: var(--ordre-color); background: var(--ordre-bg); padding: 2px 8px; border-radius: 10px; white-space: nowrap; flex-shrink:0; }
+  .card-adresse-row { display:block; margin: 6px 0 8px 0; }
+  .card-adresse { font-size: 13px; color: var(--text2); line-height: 1.4; text-decoration: none; }
+  .card-adresse:hover { color: #1a73e8; text-decoration: underline; }
+  .card-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .badge { font-size: 11px; color: var(--badge-color); background: var(--badge-bg); padding: 2px 8px; border-radius: 10px; text-decoration:none; display:inline-block; }
+  .badge-tel { color: #2e7d32 !important; background: #e8f5e9 !important; font-weight: 600; }
+  .badge-tel:hover { background: #c8e6c9 !important; }
+  .badge-rdv { color: #1565c0 !important; background: #e3f2fd !important; font-weight: 600; }
+  .badge.green { color: #2e7d32; background: #e8f5e9; }
+
+  .card-bottom { display: flex; gap: 6px; align-items: center; justify-content: space-between; margin-top: 6px; }
+
+  .statut-bar { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+  .s-btn {
+    font-size: 11px; padding: 4px 9px; border-radius: 20px; border: 1.5px solid transparent;
+    cursor: pointer; font-weight: 600; opacity: 0.45; transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap; background: transparent;
+  }
+  .s-btn:active { transform: scale(0.95); }
+  .s-btn.actif  { opacity: 1; border-color: currentColor; }
+  .s-btn.sf  { color: #546e7a; border-color: #90a4ae; background: var(--badge-bg); }
+  .s-btn.se  { color: #e65100; }
+  .s-btn.sd  { color: #2e7d32; }
+  .s-btn.sa  { color: #e65100; }
+  .s-btn.sr  { color: #b71c1c; }
+  .s-btn.actif.sf { background: #eceff1; }
+  .s-btn.actif.se { background: #fff9c4; }
+  .s-btn.actif.sd { background: #e8f5e9; }
+  .s-btn.actif.sa { background: #fff3e0; }
+  .s-btn.actif.sr { background: #ffebee; }
+
+  .card.Fait .card-name::after { content: " ✓"; color: #2e7d32; }
+
+  .edit-area { display:none; flex-direction:column; gap:7px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--edit-sep); }
+  .edit-area.open { display:flex; }
+  .edit-row { display:flex; flex-direction:column; gap:3px; }
+  .edit-row label { font-size:9px; color:var(--text3); font-weight:bold; text-transform:uppercase; }
+  .edit-row input { padding:7px 9px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; font-family:Arial,sans-serif; background:var(--edit-input-bg); color:var(--text); }
+  .edit-row input:focus { outline:none; border-color:#1a73e8; background:var(--input-bg); }
+  .edit-btns { display:flex; gap:8px; margin-top:2px; }
+  .btn-save-edit { background:#1a237e; color:white; border:none; padding:8px 16px; border-radius:8px; font-size:13px; cursor:pointer; flex:1; }
+  .btn-cancel-edit { background:var(--badge-bg); color:var(--text); border:1px solid var(--border); padding:8px 12px; border-radius:8px; font-size:13px; cursor:pointer; }
+  .btn-vcard { background:#e3f2fd; color:#1a237e; border:1px solid #90caf9; padding:8px 12px; border-radius:8px; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .btn-vcard:hover { background:#bbdefb; }
+  .btn-edit {
+    position: absolute; top: 0; right: 0;
+    background: transparent; color: var(--text3);
+    border: none; padding: 2px 4px; font-size: 16px; cursor: pointer; line-height:1; border-radius: 6px;
+  }
+  .btn-edit:hover { background: var(--badge-bg); color: #f57f17; }
+  .no-coords { font-size:11px; color:#e65100; margin-top:3px; }
+
+  .demo-section { background:var(--badge-bg); border-radius:8px; padding:8px 10px; margin-top:8px; }
+  .demo-section summary { font-size:12px; font-weight:bold; color:var(--text3); cursor:pointer; text-transform:uppercase; letter-spacing:0.5px; list-style:none; }
+  .demo-section summary::before { content:'▶ '; font-size:10px; }
+  .demo-section[open] summary::before { content:'▼ '; }
+  .demo-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
+  .demo-item label { font-size:10px; color:var(--text3); font-weight:bold; text-transform:uppercase; display:block; margin-bottom:2px; }
+  .demo-item input, .demo-item select {
+    width:100%; padding:5px 7px; border:1px solid var(--input-border);
+    border-radius:6px; font-size:13px; background:var(--edit-input-bg); color:var(--text);
+  }
+  .demo-item.full { grid-column: 1 / -1; }
+
+  .rdv-title { font-size:17px; color:var(--filter-text); margin:2px 2px 0; }
+  .rdv-search input {
+    width:100%; padding:8px 14px 8px 32px;
+    border:1px solid var(--input-border); border-radius:20px;
+    font-size:14px; background:var(--input-bg); color:var(--text); outline:none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:10px center;
+  }
+  .rdv-search input:focus { border-color: var(--filter-border); }
+  .rdv-card { background: var(--card-bg); border-radius:10px; padding:12px 14px; box-shadow: var(--card-shadow); border-left: 5px solid #1a73e8; }
+  .rdv-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .rdv-datetime { font-size:15px; font-weight:bold; color:#1565c0; background:#e3f2fd; padding:4px 12px; border-radius:20px; }
+  .rdv-empty { text-align:center; padding:40px 20px; color:#999; font-size:15px; }
+  .rdv-today { border-left-color:#2e7d32; }
+  .rdv-past  { opacity: 0.6; border-left-color:#90a4ae; }
+
+  .marker-moi {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #1a73e8; border: 3px solid white;
+    box-shadow: 0 0 0 3px rgba(26,115,232,0.4);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 3px rgba(26,115,232,0.4); }
+    50%  { box-shadow: 0 0 0 10px rgba(26,115,232,0.0); }
+    100% { box-shadow: 0 0 0 3px rgba(26,115,232,0.4); }
+  }
+  .badge-dist { font-size:11px; color:#1a73e8; background:#e3f2fd; padding:2px 8px; border-radius:10px; font-weight:bold; }
+
+  #mapContainer { display:none; height: calc(100vh - 90px); position:relative; z-index:0; }
+  #map { width:100%; height:100%; }
+
+  .marker-pin {
+    width: 30px; height: 30px; border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); border: 2px solid rgba(0,0,0,0.3);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .marker-pin span { transform: rotate(45deg); font-size: 9px; font-weight: bold; color: white; line-height:1; text-align:center; }
+  .m-afaire  { background: #78909c; }
+  .m-encours { background: #f9a825; }
+  .m-fait    { background: #2e7d32; }
+  .m-absent  { background: #e65100; }
+  .m-refus   { background: #b71c1c; }
+
+  .leaflet-popup-content { min-width:180px; font-size:13px; line-height:1.6; }
+  .popup-titre { font-weight:bold; color:#1a237e; font-size:14px; margin-bottom:4px; }
+  .popup-statut { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:6px; }
+  .ps-afaire  { background:#eceff1; color:#546e7a; }
+  .ps-encours { background:#fff9c4; color:#f57f17; }
+  .ps-fait    { background:#e8f5e9; color:#2e7d32; }
+  .ps-absent  { background:#fff3e0; color:#e65100; }
+  .ps-refus   { background:#ffebee; color:#b71c1c; }
+
+  #geocodeProgress {
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,0.7); color:white; padding:6px 14px;
+    border-radius:20px; font-size:12px; z-index:1000; display:none;
+  }
+  .map-legend {
+    position:absolute; bottom:30px; right:10px; z-index:500;
+    background:var(--legend-bg); color:var(--text); padding:8px 12px; border-radius:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.2); font-size:11px; line-height:1.8;
+  }
+  .leg-item { display:flex; align-items:center; gap:6px; }
+  .leg-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+
+  /* ── Vue Résumé ────────────────────────────────────────────────── */
+  #resumeContainer {
+    display: none;
+    padding: 14px 14px 30px;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .resume-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--filter-text);
+    margin-bottom: 2px;
+  }
+  /* KPI cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+  .kpi-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: var(--card-shadow);
+    border-top: 4px solid #90a4ae;
+    text-align: center;
+  }
+  .kpi-card .kpi-val {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--filter-text);
+    line-height: 1.1;
+  }
+  .kpi-card .kpi-lbl {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+  .kpi-card .kpi-pct {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  /* Barre de progression globale */
+  .resume-section-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .progress-stacked {
+    height: 22px;
+    border-radius: 11px;
+    overflow: hidden;
+    display: flex;
+    background: var(--badge-bg);
+  }
+  .progress-seg {
+    height: 100%;
+    transition: width 0.4s;
+    position: relative;
+  }
+  .progress-seg:first-child { border-radius: 11px 0 0 11px; }
+  .progress-seg:last-child  { border-radius: 0 11px 11px 0; }
+  .progress-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .prog-leg-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .prog-leg-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  /* Tableau croisé */
+  .resume-table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: var(--card-shadow);
+  }
+  .resume-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg);
+    font-size: 13px;
+  }
+  .resume-table th {
+    background: var(--header-bg);
+    color: white;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 600;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .resume-table th:first-child { text-align: left; border-radius: 10px 0 0 0; }
+  .resume-table th:last-child  { border-radius: 0 10px 0 0; }
+  .resume-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    color: var(--text2);
+  }
+  .resume-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .resume-table tr:last-child td { border-bottom: none; }
+  .resume-table tr.resume-total td {
+    font-weight: bold;
+    background: var(--badge-bg);
+    color: var(--text);
+    border-top: 2px solid var(--border);
+  }
+  .resume-table tr.resume-total td:first-child { border-radius: 0 0 0 10px; }
+  .resume-table tr.resume-total td:last-child  { border-radius: 0 0 10px 0; }
+  .cell-badge {
+    display: inline-block;
+    min-width: 26px;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .cell-zero { color: var(--text3); font-weight: normal; }
+  /* Mini sparkbar dans le tableau */
+  .cell-bar-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  /* ── Boutons export résumé ─────────────────────────────────────── */
+  .resume-export-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-export:hover { opacity: 0.85; }
+  .btn-export-pdf  { background: #c62828; color: white; }
+  .btn-export-xlsx { background: #1b5e20; color: white; }
+
+  /* ── Impression PDF ─────────────────────────────────────────────── */
+  @media print {
+    header, .search-bar, .filters, .view-toggle,
+    .btn-ico, .kebab-wrap, #mapContainer,
+    #rdvContainer, .contact-list,
+    .resume-export-bar { display: none !important; }
+
+    body { background: white !important; color: black !important; }
+
+    #resumeContainer {
+      display: flex !important;
+      max-width: 100% !important;
+      padding: 10mm 12mm !important;
+      gap: 12px !important;
+    }
+    .resume-print-header { display: block !important; }
+    .kpi-card  { box-shadow: none !important; border: 1px solid #ccc !important; }
+    .resume-table-wrap { box-shadow: none !important; }
+    .resume-table th { background: #1a237e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .progress-stacked { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .progress-seg     { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cell-badge       { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .kpi-card         { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  .resume-print-header { display: none; }
+
+  @media (min-width: 1024px) {
+    #resumeContainer { padding: 20px 32px 40px; }
+    .resume-title { font-size: 18px; }
+    .kpi-card .kpi-val { font-size: 34px; }
+    .resume-table { font-size: 14px; }
+    .resume-table th, .resume-table td { padding: 10px 16px; }
+  }
+
+  /* ── Modal détail backup/restore ────────────────────────────────── */
+  #modalBackupDetail .modal {
+    max-width: 500px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 20px;
+  }
+  .backup-body {
+    overflow-y: auto;
+    flex: 1;
+    margin: 10px 0;
+  }
+  .backup-meta {
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    background: var(--badge-bg);
+    border-radius: 8px;
+    line-height: 1.7;
+  }
+  .backup-enq-block {
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .backup-enq-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--badge-bg);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .backup-enq-total {
+    font-size: 12px;
+    font-weight: normal;
+    color: var(--text3);
+  }
+  .backup-statuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .backup-statut-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .backup-grand-total {
+    margin-top: 6px;
+    padding: 8px 12px;
+    background: var(--header-bg);
+    color: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Historique des passages ─────────────────────────────────────── */
+  .historique-wrap {
+    margin-top: 6px;
+    padding: 6px 8px;
+    background: var(--badge-bg);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .historique-title {
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+  .historique-ligne {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 0;
+  }
+  .historique-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .email-wrap { position: relative; flex: 1; min-width: 0; width: 100%; }
+  .email-wrap input { width: 100%; }
+  .email-suggestions {
+    display: none; position: absolute; left: 0; right: 0; top: 100%;
+    background: var(--modal-bg); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 50; overflow: hidden; margin-top: 2px;
+  }
+  .email-suggestions.open { display: block; }
+  .email-sug-item {
+    padding: 8px 12px; font-size: 13px; cursor: pointer;
+    color: var(--text); border: none; background: none; width: 100%; text-align: left;
+  }
+  .email-sug-item:hover, .email-sug-item.focused { background: var(--badge-bg); }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--modal-bg); border-radius:12px; padding:20px; width:90%; max-width:400px; color:var(--text); }
+  .modal h2 { font-size:16px; margin-bottom:14px; color:var(--filter-text); }
+  .modal input[type="text"] { width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; font-size:14px; margin-bottom:10px; background:var(--input-bg); color:var(--text); }
+  .modal-btns { display:flex; gap:8px; justify-content:flex-end; margin-top:6px; }
+  .btn-primary { background:#1a237e; color:white; border:none; padding:9px 18px; border-radius:8px; font-size:14px; cursor:pointer; }
+  .btn-secondary { background:#f5f5f5; color:#333; border:1px solid #ccc; padding:9px 18px; border-radius:8px; font-size:14px; cursor:pointer; }
+
+  /* ── Panneau Paramètres ───────────────────────────────────────────── */
+  #modalSettings .modal { max-width: 420px; max-height: 85vh; overflow-y: auto; padding: 16px 18px; }
+  #modalSettings h2 { margin-bottom: 10px; }
+  .set-row { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+  .set-row > label { font-size:12px; font-weight:bold; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; }
+  .set-row select {
+    padding:9px 10px; border:1px solid var(--input-border); border-radius:8px;
+    font-size:14px; background:var(--input-bg); color:var(--text); cursor:pointer;
+  }
+  .set-row small { font-size:11px; color:var(--text3); line-height:1.4; }
+  .set-row .btn-secondary { padding:7px 12px; font-size:13px; }
+  .modal-aide { max-width: 540px; max-height: 85vh; display:flex; flex-direction:column; }
+  .aide-body { overflow-y:auto; padding-right:6px; }
+  .aide-body p { font-size:13px; line-height:1.55; color:var(--text2); margin-bottom:10px; }
+  .aide-body h3 { font-size:13px; color:var(--filter-text); margin:14px 0 5px; }
+  .aide-body ul { margin:0 0 10px 18px; }
+  .aide-body li { font-size:13px; line-height:1.5; color:var(--text2); margin-bottom:3px; }
+  .aide-copyright { font-size:12px; color:var(--text3); text-align:center; }
+  #nonGeoList:not(:empty) { margin-top:8px; }
+  .nongeo-ok { font-size:13px; color:#2e7d32; }
+  .nongeo-head { font-size:12px; color:var(--text3); margin-bottom:6px; }
+  .nongeo-item { display:block; width:100%; text-align:left; background:#fff3e0; color:var(--text);
+    border:1px solid #ffcc80; border-radius:8px; padding:7px 10px; margin-bottom:5px; cursor:pointer; }
+  body.dark .nongeo-item { background:#3a2a1a; border-color:#7a5a2a; }
+  .nongeo-item:hover { border-color:#e65100; }
+  .nongeo-ref  { display:inline-block; font-size:11px; color:#e65100; font-weight:bold; }
+  .nongeo-name { display:block; font-size:13px; font-weight:bold; }
+  .nongeo-adr  { display:block; font-size:12px; color:var(--text3); }
+  .set-accordion { margin-bottom:10px; border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
+  .set-accordion > summary { font-size:12px; font-weight:bold; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; cursor:pointer; list-style:none; }
+  .set-accordion > summary::before { content:'▶ '; font-size:10px; }
+  .set-accordion[open] > summary::before { content:'▼ '; }
+  .statut-edit-row { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+  .statut-edit-row input[type=color] { width:34px; height:32px; padding:0; border:1px solid var(--input-border); border-radius:6px; background:none; cursor:pointer; flex-shrink:0; }
+  .statut-edit-row input.se-icon  { flex:0 0 42px; width:42px; text-align:center; }
+  .statut-edit-row input.se-label { flex:1 1 auto; width:auto; min-width:0; }
+  .statut-edit-row input[type=text] { padding:6px 7px; border:1px solid var(--input-border); border-radius:6px; font-size:13px; background:var(--input-bg); color:var(--text); }
+  .statut-edit-row .se-flag { display:flex; align-items:center; gap:2px; font-size:13px; color:var(--text3); white-space:nowrap; cursor:pointer; }
+  .statut-edit-row .se-del { background:none; border:none; cursor:pointer; font-size:15px; padding:2px 4px; }
+  .statut-edit-row .se-del:disabled { opacity:0.3; cursor:not-allowed; }
+
+  /* ── Mobile : champs en colonne ──────────────────────────────────── */
+  @media (max-width: 599px) {
+    .edit-area [style*="display:flex;gap:10px"] { flex-direction: column !important; }
+    .edit-area [style*="display:flex;gap:10px"] .edit-row { flex: 1 1 100% !important; width: 100% !important; }
+    .edit-area [style*="display:flex;gap:10px"] .edit-row input { max-width: 100% !important; width: 100% !important; }
+    .email-wrap input { width: 100% !important; }
+  }
+
+  /* ── Tablette ≥ 600px ─────────────────────────────────────────────── */
+  @media (min-width: 600px) {
+    header { padding: 10px 20px; }
+    header h1 { font-size: 18px; }
+    #surveySelect { font-size: 14px; padding: 6px 10px; }
+    .search-bar { padding: 8px 20px; }
+    .search-bar input { font-size: 15px; padding: 9px 14px 9px 36px; }
+    .filters { padding: 10px 20px; gap: 8px; }
+    .filter-btn { font-size: 13px; padding: 6px 16px; }
+    .contact-list { padding: 14px 20px; gap: 14px; }
+    .card { padding: 14px 18px; }
+    .card-name { font-size: 17px; }
+    .card-ordre { font-size: 13px; }
+    .card-adresse { font-size: 14px; }
+    .badge { font-size: 12px; }
+    .s-btn { font-size: 12px; padding: 5px 12px; }
+    .edit-row input, .extra-area textarea { font-size: 15px; }
+    .btn-save-edit, .btn-cancel-edit, .btn-vcard { font-size: 14px; padding: 9px 16px; }
+  }
+
+  /* ── PC ≥ 1024px ──────────────────────────────────────────────────── */
+  @media (min-width: 1024px) {
+    body { font-size: 16px; }
+    header { padding: 12px 32px; }
+    header h1 { font-size: 20px; }
+    #surveySelect { font-size: 15px; }
+    .search-bar { padding: 10px 32px; }
+    .search-bar input { font-size: 16px; padding: 10px 16px 10px 38px; border-radius: 24px; }
+    .filters { padding: 10px 32px; gap: 10px; }
+    .filter-btn { font-size: 14px; padding: 7px 18px; }
+    .contact-list { padding: 16px 32px; gap: 16px; display: grid; grid-template-columns: repeat(2, 1fr); }
+    .card { padding: 16px 20px; }
+    .card-name { font-size: 18px; }
+    .card-ordre { font-size: 14px; padding: 3px 10px; }
+    .card-adresse { font-size: 15px; }
+    .badge { font-size: 13px; padding: 3px 10px; }
+    .badge-dist { font-size: 13px; }
+    .s-btn { font-size: 13px; padding: 6px 14px; }
+    .edit-row input, .extra-area textarea { font-size: 16px; padding: 9px 12px; }
+    .btn-save-edit, .btn-cancel-edit, .btn-vcard { font-size: 15px; padding: 10px 18px; }
+    .no-coords { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div class="header-col1">
+      <h1>📋</h1>
+      <select id="surveySelect" onchange="changerEnquete(this.value)"></select>
+    </div>
+    <div class="header-mid">
+    </div>
+    <div class="header-col3">
+      <div class="view-toggle">
+        <button class="btn-view active" id="btnListe" data-tip="Liste" onclick="setView('liste')">☰</button>
+        <button class="btn-view" id="btnCarte" data-tip="Carte" onclick="setView('carte')">🗺️</button>
+        <button class="btn-view" id="btnRdv" data-tip="Rendez-vous" onclick="setView('rdv')">📅</button>
+        <button class="btn-view" id="btnResume" data-tip="Résumé" onclick="setView('resume')">📊</button>
+      </div>
+      <button class="btn-ico" id="btnGeo" onclick="toggleMaPosition()" title="Ma position">🎯</button>
+      <div class="kebab-wrap">
+        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options">⋮</button>
+        <div class="kebab-menu" id="kebabMenu">
+          <button class="kebab-item" onclick="ouvrirSettings();toggleKebab()">
+            ⚙️ Paramètres
+          </button>
+          <button class="kebab-item" onclick="ouvrirAide();toggleKebab()">
+            ❓ Aide
+          </button>
+          <hr class="kebab-sep">
+          <button class="kebab-item" onclick="document.getElementById('importFile').click();toggleKebab()">
+            ⬆️ Importer CSV / Excel
+          </button>
+          <button class="kebab-item" onclick="exporterCSV();toggleKebab()">
+            ⬇️ Exporter CSV
+          </button>
+          <hr class="kebab-sep">
+          <button class="kebab-item danger" onclick="supprimerEnquete();toggleKebab()">
+            🗑️ Supprimer cette enquête
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="importFile" accept=".csv,.xlsx,.xls"
+    style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden"
+    onchange="importerFichier(event)">
+</header>
+
+<div class="search-bar">
+  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom ou adresse…" oninput="debounce(rendu)" autocomplete="off">
+</div>
+
+<div class="filters"></div>
+
+<div class="contact-list" id="liste"></div>
+
+<div id="mapContainer">
+  <div id="map"></div>
+  <button onclick="recentrerCarte()" title="Recentrer sur les contacts"
+    class="btn-view" style="position:absolute;top:10px;right:10px;z-index:500;background:white;color:#1a237e;box-shadow:0 2px 6px rgba(0,0,0,0.2);">⊙</button>
+  <div id="geocodeProgress">⏳ Géocodage <span id="geocodeCount"></span></div>
+  <div class="map-legend" id="mapLegend"></div>
+</div>
+
+<div id="rdvContainer" style="display:none; padding:10px 12px; flex-direction:column; gap:10px;">
+  <h2 class="rdv-title" id="rdvTitle">📅 Suivi des interviews</h2>
+  <div class="rdv-search">
+    <input type="search" id="rdvSearch" placeholder="Filtrer par nom, prénom ou adresse…" oninput="debounce(renduRdv)" autocomplete="off">
+  </div>
+  <div class="filters" id="rdvFilters" style="padding:0;border:none;background:none;"></div>
+  <div id="rdvListe"></div>
+</div>
+
+<div id="resumeContainer"></div>
+
+<div class="modal-overlay" id="modalNom">
+  <div class="modal">
+    <h2>Nom de l'enquête</h2>
+    <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305">
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="fermerModal()">Annuler</button>
+      <button class="btn-primary" onclick="confirmerImport()">Importer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalSettings">
+  <div class="modal">
+    <h2>⚙️ Paramètres</h2>
+
+    <div class="set-row">
+      <label>🎨 Thème</label>
+      <select id="setTheme" onchange="settings.theme=this.value;saveSettings();appliquerTheme()">
+        <option value="light">Clair</option>
+        <option value="dark">Sombre</option>
+        <option value="auto">Automatique (système)</option>
+      </select>
+    </div>
+
+    <div class="set-row">
+      <label>🌍 Région / fournisseur géo</label>
+      <select id="setProvider" onchange="changerProvider(this.value)">
+        <option value="bruxelles">Bruxelles (UrbIS — CIRB)</option>
+        <option value="wallonie">Wallonie (SPW + IGN)</option>
+        <option value="flandre">Flandre (Geopunt + IGN)</option>
+        <option value="osm">Belgique générique (OSM + Nominatim)</option>
+      </select>
+      <small id="setProviderHint"></small>
+    </div>
+
+    <div class="set-row" id="setStyleRow">
+      <label>🗺️ Fond de carte</label>
+      <select id="setMapStyle" onchange="settings.mapStyle=this.value;saveSettings();rafraichirFond()">
+        <option value="gray">Sobre (niveaux de gris)</option>
+        <option value="color">Couleur</option>
+      </select>
+    </div>
+
+    <div class="set-row">
+      <label>🧭 Liens de navigation</label>
+      <select id="setNav" onchange="settings.navMode=this.value;saveSettings();rendu()">
+        <option value="coords">Coordonnées GPS (respect vie privée)</option>
+        <option value="adresse">Adresse postale complète</option>
+      </select>
+      <small>« Coordonnées GPS » n'envoie qu'un point au service de navigation, sans nom ni adresse.</small>
+    </div>
+
+    <hr class="kebab-sep" style="margin:9px 0;">
+
+    <details class="set-accordion">
+      <summary>🏷️ Statuts disponibles</summary>
+      <div class="set-row" style="margin-top:8px;">
+        <div id="statutsEditor"></div>
+        <button class="btn-secondary" style="align-self:flex-start" onclick="ajouterStatut()">＋ Ajouter un statut</button>
+        <small>« ✓ » horodate la date de l'action (entretien, refus…). « 📅 » active la date/heure et la vue agenda.</small>
+      </div>
+    </details>
+
+    <hr class="kebab-sep" style="margin:9px 0;">
+
+    <div class="set-row">
+      <label>💾 Données</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="btn-secondary" onclick="exporterBackup()">⬇️ Sauvegarder tout (JSON)</button>
+        <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆️ Restaurer</button>
+        <button class="btn-secondary" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
+        <button class="btn-secondary" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
+      </div>
+      <small id="dataStats"></small>
+      <div id="nonGeoList"></div>
+    </div>
+
+    <hr class="kebab-sep" style="margin:9px 0;">
+    <p class="aide-copyright" style="margin-top:10px;">Version 2 · © Consultora sprl 2026</p>
+
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="fermerSettings()">Fermer</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="restoreFile" accept=".json"
+  style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden"
+  onchange="importerBackup(event)">
+
+<!-- Modal détail sauvegarde / restauration -->
+<div class="modal-overlay" id="modalBackupDetail">
+  <div class="modal">
+    <h2 id="modalBackupTitle">💾 Détail de la sauvegarde</h2>
+    <div class="backup-body" id="modalBackupBody"></div>
+    <div class="modal-btns" id="modalBackupBtns">
+      <button class="btn-secondary" onclick="fermerBackupDetail()">Annuler</button>
+      <button class="btn-primary"   id="btnBackupConfirm">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAide">
+  <div class="modal modal-aide">
+    <h2>❓ Aide — Statbel Interviews</h2>
+    <div class="aide-body">
+      <p>Cette application aide les <strong>enquêteurs Statbel</strong> à suivre leurs contacts à interviewer (enquête sur les forces de travail, LFS). Tout fonctionne <strong>dans votre navigateur</strong> : aucune donnée n'est envoyée vers un serveur, et l'application reste utilisable hors-ligne une fois chargée.</p>
+
+      <h3>🗂️ Enquêtes &amp; import</h3>
+      <ul>
+        <li>Importez vos contacts depuis un fichier <strong>CSV ou Excel</strong> (menu ⋮ → Importer).</li>
+        <li>Vous pouvez gérer <strong>plusieurs enquêtes</strong> et basculer de l'une à l'autre via le sélecteur en haut à gauche.</li>
+        <li>Chaque fiche contient nom, adresse, GSM, e-mail, données démographiques et notes.</li>
+      </ul>
+
+      <h3>👁️ Les trois vues</h3>
+      <ul>
+        <li><strong>☰ Liste</strong> — toutes les fiches, avec recherche et filtres par statut.</li>
+        <li><strong>🗺️ Carte</strong> — localisation des contacts ; filtre par statut dans l'en-tête, recentrage ⊙, et distance depuis votre position.</li>
+        <li><strong>📅 Rendez-vous</strong> — agenda chronologique des RDV planifiés, avec recherche.</li>
+      </ul>
+
+      <h3>🏷️ Statuts</h3>
+      <p>Chaque fiche a un statut (À faire, En cours, Fait, Absent, Refus). Les statuts sont <strong>personnalisables</strong> dans les Paramètres (couleur, icône, ajout/suppression). « Fait » et « Refus » <strong>enregistrent automatiquement la date</strong> de l'action ; « En cours » permet de fixer un <strong>rendez-vous</strong>.</p>
+
+      <h3>📍 Localisation &amp; vie privée</h3>
+      <ul>
+        <li>Le géocodage des adresses passe par <strong>UrbIS (CIRB)</strong>, le service public de la Région bruxelloise — pas de transfert vers un tiers hors UE.</li>
+        <li>Les liens de navigation envoient par défaut de simples <strong>coordonnées GPS</strong> (sans nom ni adresse) pour préserver la vie privée.</li>
+        <li>Hors Bruxelles, basculez le fournisseur sur « Belgique générique » dans les Paramètres.</li>
+      </ul>
+
+      <h3>💾 Données &amp; sécurité</h3>
+      <ul>
+        <li>Les données sont stockées localement (IndexedDB). Pensez à <strong>Sauvegarder tout (JSON)</strong> régulièrement : un nettoyage du navigateur peut effacer les données.</li>
+        <li>Vous pouvez <strong>exporter en CSV</strong>, générer une <strong>vCard</strong> par contact, et restaurer une sauvegarde.</li>
+      </ul>
+
+      <h3>💡 Astuces</h3>
+      <ul>
+        <li>Sur une fiche, le bouton 🖊️ ouvre l'édition (adresse, démographie, RDV, notes).</li>
+        <li>Sur la carte, cliquez un repère pour changer son statut ou éditer la fiche.</li>
+        <li>Thème clair / sombre / automatique dans les Paramètres.</li>
+      </ul>
+      <hr class="kebab-sep" style="margin:12px 0;">
+      <p class="aide-copyright">Version 2 · © Consultora sprl 2026</p>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="fermerAide()">Compris</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ════════════════════════════════════════════════════════════════════
+// UTIL — Échappement HTML (protège contre l'injection depuis les imports)
+// ════════════════════════════════════════════════════════════════════
+
+/** Temporisation : exécute fn après un délai d'inactivité (évite de
+ *  reconstruire toute la liste à chaque frappe — crucial sur gros fichiers). */
+let _debounceTimer;
+function debounce(fn, delai) {
+  clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(fn, delai || 200);
+}
+
+/** Neutralise les caractères HTML dangereux avant insertion via innerHTML */
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// CONFIG GÉO + PARAMÈTRES — fournisseurs de carte/géocodage
+// ════════════════════════════════════════════════════════════════════
+//
+// Chaque fournisseur regroupe À LA FOIS le fond de carte (tuiles) ET le
+// géocodage (adresse → coordonnées). Le choix se fait désormais dans le
+// panneau ⚙️ Paramètres (plus besoin d'éditer le code).
+//
+const GEO_PROVIDERS = {
+
+  // Région de Bruxelles-Capitale — service public régional (CIRB / UrbIS).
+  // Données belges, hébergées en Belgique, pas de transfert hors UE.
+  bruxelles: {
+    label: 'Bruxelles (UrbIS — CIRB)',
+    tileAttribution: '© <a href="https://cirb.brussels" target="_blank">UrbIS® — CIRB</a>',
+    maxZoom: 19,
+    // style : 'gray' (sobre) ou 'color' (couleur)
+    tileUrl: function(style) {
+      const layer = style === 'color' ? 'urbisFR' : 'urbisFRGray';
+      return 'https://geoservices-urbis.irisnet.be/geowebcache/service/wmts/rest/'
+           + layer + '/default/EPSG:900913/EPSG:900913:{z}/{y}/{x}?format=image/png';
+    },
+    geocode: function(adresse) {
+      const base = 'https://geoservices.irisnet.be/localization/Rest/Localize/getaddresses'
+                 + '?language=fr&spatialReference=4326&address=';
+      const q = adresseSansBoite(adresse);
+      // Tolérance aux accents / mauvais encodage : on réessaie sans diacritiques,
+      // puis en ne gardant que l'ASCII (corrige « â » cassé, mojibake, etc.)
+      const sansAccent = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const variantes = [...new Set([
+        q,
+        sansAccent(q),
+        q.replace(/[^\x00-\x7F]/g, '')
+      ])];
+      function essai(i) {
+        if (i >= variantes.length) return Promise.resolve(null);
+        return fetch(base + encodeURIComponent(variantes[i]))
+          .then(r => r.json())
+          .then(data => {
+            const r0 = data && !data.error && data.result && data.result[0];
+            if (r0 && r0.point && (r0.score === undefined || r0.score >= 50))
+              return { lat: r0.point.y, lng: r0.point.x };
+            return essai(i + 1);
+          })
+          .catch(() => essai(i + 1));
+      }
+      return essai(0);
+    }
+  },
+
+  // Région wallonne — géocodage SPW (ICAR) + fond de carte IGN/NGI Cartoweb.
+  // Deux services publics belges, hébergés en Belgique, pas de transfert hors UE.
+  wallonie: {
+    label: 'Wallonie (SPW + IGN)',
+    tileAttribution: '© <a href="https://www.ngi.be" target="_blank">IGN/NGI</a> · géocodage © SPW',
+    maxZoom: 17,
+    tileUrl: function() {
+      return 'https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png';
+    },
+    geocode: function(adresse) {
+      const url = 'https://geoservices.wallonie.be/geocodeWS/geocode'
+                + '?geom=true&crs=EPSG:4326&address=' + encodeURIComponent(adresseSansBoite(adresse));
+      return fetch(url).then(r => r.json()).then(d => {
+        const cand = d && d.candidates && d.candidates[0];
+        if (!cand) return null;
+        const g = (cand.house && cand.house.geometry)
+               || (cand.street && cand.street.geometry) || cand.geometry;
+        return (g && g.coordinates) ? { lat: g.coordinates[1], lng: g.coordinates[0] } : null;
+      }).catch(() => null);
+    }
+  },
+
+  // Région flamande — géocodage Geopunt (Informatie Vlaanderen) + fond IGN/NGI.
+  // Deux services publics belges, hébergés en Belgique, pas de transfert hors UE.
+  flandre: {
+    label: 'Flandre (Geopunt + IGN)',
+    tileAttribution: '© <a href="https://www.ngi.be" target="_blank">IGN/NGI</a> · géocodage © Geopunt',
+    maxZoom: 17,
+    tileUrl: function() {
+      return 'https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png';
+    },
+    geocode: function(adresse) {
+      const url = 'https://geo.api.vlaanderen.be/geolocation/v4/Location?c=1&q='
+                + encodeURIComponent(adresseSansBoite(adresse));
+      return fetch(url).then(r => r.json()).then(d => {
+        const r0 = d && d.LocationResult && d.LocationResult[0];
+        const loc = r0 && r0.Location;
+        return (loc && loc.Lat_WGS84 && loc.Lon_WGS84)
+          ? { lat: loc.Lat_WGS84, lng: loc.Lon_WGS84 } : null;
+      }).catch(() => null);
+    }
+  },
+
+  // Reste de la Belgique / usage générique — OpenStreetMap + Nominatim.
+  // ⚠️ Moins conforme RGPD (tiers hors UE) : à n'utiliser que faute de mieux.
+  osm: {
+    label: 'Belgique générique (OpenStreetMap + Nominatim)',
+    tileAttribution: '© OpenStreetMap',
+    maxZoom: 19,
+    tileUrl: function() { return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; },
+    geocode: function(adresse) {
+      const { rue, cpville } = parseAdresse(adresse);
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='
+                + encodeURIComponent(rue + ', ' + cpville + ', Belgique');
+      return fetch(url).then(r => r.json()).then(d =>
+        (d && d[0]) ? { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) } : null
+      ).catch(() => null);
+    }
+  }
+
+};
+
+// ── Statuts par défaut ───────────────────────────────────────────────
+// done : marque l'entretien terminé → remplit automatiquement la date
+// rdv  : statut « rendez-vous » → active la date/heure et la vue 📅
+const STATUTS_DEFAULTS = [
+  { label:'À faire',     color:'#90a4ae', icon:'✕',  done:false, rdv:false },
+  { label:'En cours',    color:'#f9a825', icon:'⏳', done:false, rdv:true  },
+  { label:'Fait',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false },
+  { label:'Absent',      color:'#e65100', icon:'⊘',  done:true,  rdv:false },
+  { label:'Refus',       color:'#b71c1c', icon:'✗',  done:true,  rdv:false },
+  { label:'A déménager', color:'#7b1fa2', icon:'📦', done:true,  rdv:false },
+];
+const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
+
+// ── Paramètres utilisateur (persistés dans localStorage) ─────────────
+const SETTINGS_DEFAULTS = {
+  theme:    'light',      // 'light' | 'dark' | 'auto'
+  provider: 'bruxelles',  // 'bruxelles' | 'osm'
+  mapStyle: 'gray',       // 'gray' | 'color'  (Bruxelles uniquement)
+  navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
+  statuts:  cloneStatuts(),
+  statutsV: 2,            // version de schéma des statuts (pour migrations)
+};
+let settings = Object.assign({}, SETTINGS_DEFAULTS, { statuts: cloneStatuts() });
+let GEO = GEO_PROVIDERS[settings.provider];
+
+function chargerSettings() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('statbel_settings') || '{}');
+    settings = Object.assign({}, SETTINGS_DEFAULTS, raw);
+  } catch(e) { settings = Object.assign({}, SETTINGS_DEFAULTS); }
+  if (!Array.isArray(settings.statuts) || !settings.statuts.length) settings.statuts = cloneStatuts();
+  // Migration v2 : horodater aussi les refus
+  if (!settings.statutsV) {
+    settings.statuts.forEach(s => { if (s.label === 'Refus') s.done = true; });
+    settings.statutsV = 2;
+    saveSettings();
+  }
+  // Migration v3 : horodater Absent + ajouter A déménager si absent
+  if (settings.statutsV < 3) {
+    settings.statuts.forEach(s => { if (s.label === 'Absent') s.done = true; });
+    if (!settings.statuts.find(s => s.label === 'A déménager')) {
+      settings.statuts.push({ label:'A déménager', color:'#7b1fa2', icon:'📦', done:true, rdv:false });
+    }
+    settings.statutsV = 3;
+    saveSettings();
+  }
+  // Compat : ancien réglage de thème isolé
+  const legacy = localStorage.getItem('statbel_theme');
+  if (legacy && !('statbel_settings' in localStorage)) settings.theme = legacy;
+  GEO = GEO_PROVIDERS[settings.provider] || GEO_PROVIDERS.bruxelles;
+}
+function saveSettings() { localStorage.setItem('statbel_settings', JSON.stringify(settings)); }
+
+// ── Accès aux statuts (pilotés par les paramètres) ───────────────────
+function statutDefs()       { return settings.statuts; }
+function statutDefaut()     { return (settings.statuts[0] || {label:'À faire'}).label; }
+function statutDef(label)   {
+  return settings.statuts.find(s => s.label === label)
+      || settings.statuts[0]
+      || { label, color:'#90a4ae', icon:'•', done:false, rdv:false };
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// STORAGE — IndexedDB (enquêtes) + localStorage (coords, prefs)
+// ════════════════════════════════════════════════════════════════════
+
+const DB_NAME    = 'StatbelInterviewer';
+const DB_VERSION = 1;
+let db = null;
+
+/** Ouvre (ou crée) la base IndexedDB */
+function ouvrirDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const idb = e.target.result;
+      if (!idb.objectStoreNames.contains('enquetes'))
+        idb.createObjectStore('enquetes', { keyPath: 'nom' });
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+/** Promesse sur un IDBRequest */
+function idbReq(req) {
+  return new Promise((res, rej) => {
+    req.onsuccess = () => res(req.result);
+    req.onerror   = () => rej(req.error);
+  });
+}
+
+/** Promesse sur la complétion d'une transaction IDB */
+function idbTx(tx) {
+  return new Promise((res, rej) => {
+    tx.oncomplete = res;
+    tx.onerror    = () => rej(tx.error);
+  });
+}
+
+/** Sauvegarde toutes les enquêtes dans IndexedDB (fire-and-forget) */
+async function sauver() {
+  if (!db) return;
+  try {
+    const tx    = db.transaction('enquetes', 'readwrite');
+    const store = tx.objectStore('enquetes');
+    await idbReq(store.clear());
+    for (const [nom, cts] of Object.entries(enquetes)) {
+      store.put({ nom, contacts: cts });
+    }
+    await idbTx(tx);
+    localStorage.setItem('statbel_active', enqueteActive);
+  } catch(e) { console.error('sauver() erreur:', e); }
+}
+
+/** Charge toutes les enquêtes depuis IndexedDB, avec migration localStorage → IDB */
+async function charger() {
+  db = await ouvrirDB();
+
+  // Migration : si IDB est vide et localStorage contient des données, on importe
+  const count = await idbReq(db.transaction('enquetes','readonly').objectStore('enquetes').count());
+  if (count === 0) {
+    const raw = localStorage.getItem('statbel_enquetes');
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        const tx    = db.transaction('enquetes', 'readwrite');
+        const store = tx.objectStore('enquetes');
+        for (const [nom, cts] of Object.entries(data)) store.put({ nom, contacts: cts });
+        await idbTx(tx);
+        localStorage.removeItem('statbel_enquetes');
+        console.info('✅ Migration localStorage → IndexedDB effectuée');
+      } catch(e) { console.warn('Erreur migration:', e); }
+    }
+  }
+
+  // Charger les enquêtes
+  const items = await idbReq(db.transaction('enquetes','readonly').objectStore('enquetes').getAll());
+  enquetes = {};
+  items.forEach(item => { enquetes[item.nom] = item.contacts; });
+  enqueteActive = localStorage.getItem('statbel_active') || Object.keys(enquetes)[0] || '';
+}
+
+/** Cache de coordonnées — localStorage (accès synchrone requis dans le rendu) */
+function coordsCache(adresse) {
+  const raw = localStorage.getItem('coords_' + adresseSansBoite(adresse));
+  return raw ? JSON.parse(raw) : null;
+}
+function saveCoords(adresse, lat, lng) {
+  localStorage.setItem('coords_' + adresseSansBoite(adresse), JSON.stringify({ lat, lng }));
+}
+
+function restaurerIndicateur() {}
+
+
+// ════════════════════════════════════════════════════════════════════
+// STATE — Variables globales et sélecteur d'enquêtes
+// ════════════════════════════════════════════════════════════════════
+
+let enquetes      = {};
+let enqueteActive = '';
+let filtreActif   = 'Tous';
+let csvEnAttente  = null;
+
+function contacts() { return enquetes[enqueteActive] || []; }
+
+function contactsFiltres() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  return contacts().filter(c => {
+    if (filtreActif !== 'Tous' && (c.statut || 'À faire') !== filtreActif) return false;
+    if (q && !(c.prenom + ' ' + c.nom + ' ' + c.adresse).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function refreshSelect() {
+  const sel  = document.getElementById('surveySelect');
+  const noms = Object.keys(enquetes);
+  sel.innerHTML = noms.length === 0
+    ? '<option value="">— Aucune enquête —</option>'
+    : noms.map(n => `<option value="${esc(n)}"${n===enqueteActive?' selected':''}>${esc(n)}</option>`).join('');
+}
+
+function changerEnquete(nom) {
+  enqueteActive = nom;
+  sauver();
+  filtreActif = 'Tous';
+  filtreRdv   = 'Tous';
+  renderFilters();
+  if      (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+  else if (vueActive === 'rdv')                   renduRdv();
+  else if (vueActive === 'resume')                renduResume();
+  else                                            rendu();
+}
+
+function supprimerEnquete() {
+  if (!enqueteActive) return;
+  if (!confirm('Supprimer l\'enquête "' + enqueteActive + '" et toutes ses données ?')) return;
+  delete enquetes[enqueteActive];
+  enqueteActive = Object.keys(enquetes)[0] || '';
+  sauver();
+  refreshSelect();
+  rendu();
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// ADRESSE — Parse / compose / variantes geocodage
+// ════════════════════════════════════════════════════════════════════
+
+function parseAdresse(adresse) {
+  if (!adresse) return { rue: '', boite: '', cpville: '' };
+  const comma = adresse.indexOf(',');
+  const avant = comma >= 0 ? adresse.slice(0, comma).trim() : adresse.trim();
+  const apres = comma >= 0 ? adresse.slice(comma + 1).trim() : '';
+  const bteMatch =
+    avant.match(/\s+(b(?:o[iî]te?|te?|us|ox|t)?\.?\s*\d+[a-z]?)$/i) ||
+    avant.match(/\s+((?:é|e)tages?\s*\d*[a-z]?)$/i) ||
+    avant.match(/\s+(ET[-]?[A-Z0-9]{1,4})$/i) ||
+    avant.match(/\s+(app?t?\.?\s*\d+[a-z]?)$/i) ||
+    avant.match(/(\s*\/[A-Z0-9]+)$/i);
+  const boite = bteMatch ? bteMatch[1].trim() : '';
+  const rue   = bteMatch ? avant.slice(0, bteMatch.index).trim() : avant;
+  return { rue, boite, cpville: apres };
+}
+
+function composeAdresse(rue, boite, cpville) {
+  let a = (rue || '').trim();
+  if ((boite || '').trim()) a += ' ' + boite.trim();
+  if ((cpville || '').trim()) a += ', ' + cpville.trim();
+  return a;
+}
+
+function adresseSansBoite(adresse) {
+  const p = parseAdresse(adresse);
+  return composeAdresse(p.rue, '', p.cpville);
+}
+
+// Lien de navigation. On privilégie les coordonnées GPS (point anonyme)
+// plutôt que l'adresse nominative. Repli sur l'adresse seulement si
+// le géocodage n'a pas encore eu lieu.
+function mapsUrl(adresse) {
+  const c = coordsCache(adresse);
+  if (settings.navMode === 'coords' && c)
+    return 'https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lng;
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(adresseSansBoite(adresse) + ', Belgique');
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// CONTACTS — Modification des champs d'un contact
+// ════════════════════════════════════════════════════════════════════
+
+function todayStr() {
+  const now = new Date();
+  return ('0'+now.getDate()).slice(-2)+'/'+('0'+(now.getMonth()+1)).slice(-2)+'/'+now.getFullYear();
+}
+
+/** Convertit DD/MM/YYYY en YYYY-MM-DD pour comparaison de tri */
+function dateFrToISO(d) {
+  if (!d) return '';
+  const p = d.split('/');
+  return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : '';
+}
+
+function changerStatut(i, val) {
+  const c   = contacts()[i];
+  const old = c.statut || statutDefaut();
+  const def = statutDef(val);
+
+  // Enregistrer l'historique si on quitte un statut "done" ou si on entre dans un nouveau statut "done"
+  if (def.done) {
+    const today = todayStr();
+    // Ajouter une entrée dans l'historique
+    if (!Array.isArray(c.historique)) c.historique = [];
+    // Éviter doublon : même statut + même date
+    const derniere = c.historique[c.historique.length - 1];
+    if (!derniere || derniere.statut !== val || derniere.date !== today) {
+      c.historique.push({ statut: val, date: today });
+    }
+    c.date = today;   // Toujours mettre à jour la date (nouveau passage = nouvelle date)
+  } else {
+    c.date = '';
+  }
+
+  c.statut = val;
+  if (!def.rdv) c.rdv = '';
+  sauver();
+  rendu();
+  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+  if (vueActive === 'rdv') renduRdv();
+}
+
+function changerNotes(i, val)  { contacts()[i].notes = val;  sauver(); }
+function changerEmail(i, val)  { contacts()[i].email = val;  sauver(); }
+
+function changerGsm(i, input) {
+  const f = formaterGsm(input.value);
+  input.value = f;
+  contacts()[i].gsm = f;
+  sauver();
+}
+
+function formaterGsm(val) {
+  let d = val.replace(/[^\d]/g, '');
+  if (d.startsWith('0')) d = '32' + d.slice(1);
+  d = d.slice(0, 11);
+  if (d.length <= 2) return d ? '+' + d : '';
+  if (d.length <= 5) return '+' + d.slice(0,2) + ' ' + d.slice(2);
+  if (d.length <= 7) return '+' + d.slice(0,2) + ' ' + d.slice(2,5) + ' ' + d.slice(5);
+  if (d.length <= 9) return '+' + d.slice(0,2) + ' ' + d.slice(2,5) + ' ' + d.slice(5,7) + ' ' + d.slice(7);
+  return '+' + d.slice(0,2) + ' ' + d.slice(2,5) + ' ' + d.slice(5,7) + ' ' + d.slice(7,9) + ' ' + d.slice(9,11);
+}
+
+function changerRdvDH(i) {
+  const d = (document.getElementById('edit-rdv-date-' +i)||{}).value||'';
+  const h = (document.getElementById('edit-rdv-heure-'+i)||{}).value||'';
+  contacts()[i].rdv = d ? (h ? d+' '+h : d) : '';
+  sauver();
+}
+
+function majAge(i) {
+  const c = contacts()[i];
+  if (!c.birth_date) return;
+  const nais = new Date(c.birth_date);
+  const now  = new Date();
+  let age = now.getFullYear() - nais.getFullYear();
+  const m = now.getMonth() - nais.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < nais.getDate())) age--;
+  c.age = age;
+  const el = document.getElementById('edit-age-'+i);
+  if (el) el.value = age;
+  sauver();
+}
+
+function formatRdv(rdv) {
+  if (!rdv) return '';
+  const JOURS = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.'];
+  const parts = (rdv+' ').split(' ');
+  const [y,m,d] = (parts[0]||'').split('-');
+  if (!y||!m||!d) return rdv;
+  const h = (parts[1]||'').trim();
+  const dateObj = new Date(+y,+m-1,+d);
+  return JOURS[dateObj.getDay()]+' '+d.padStart(2,'0')+'/'+m.padStart(2,'0')+'/'+y+(h?' '+h:'');
+}
+
+function toggleEdit(i) {
+  const el = document.getElementById('edit-'+i);
+  // Édition paresseuse : le formulaire n'est construit qu'au premier clic,
+  // pas pour les centaines de fiches à chaque rendu.
+  if (!el.dataset.built) {
+    el.innerHTML = buildEditForm(i);
+    el.dataset.built = '1';
+  }
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) document.getElementById('edit-prenom-'+i).focus();
+}
+
+// Ouvre (et construit si besoin) le formulaire d'édition d'une fiche
+function ouvrirEdit(i) {
+  const el = document.getElementById('edit-'+i);
+  if (!el) return null;
+  if (!el.dataset.built) { el.innerHTML = buildEditForm(i); el.dataset.built = '1'; }
+  el.classList.add('open');
+  return el;
+}
+
+// Génère le contenu du formulaire d'édition d'une fiche (à la demande)
+function buildEditForm(i) {
+  const c   = contacts()[i];
+  const _p  = parseAdresse(c.adresse);
+  const def = statutDef(c.statut || statutDefaut());
+  return `
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div class="edit-row" style="flex:1">
+            <label>Prénom</label>
+            <input type="text" id="edit-prenom-${i}" value="${esc(c.prenom)}">
+          </div>
+          <div class="edit-row" style="flex:2">
+            <label>Nom</label>
+            <input type="text" id="edit-nom-${i}" value="${esc(c.nom)}">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div class="edit-row" style="flex:1">
+            <label>🏠 Rue et numéro</label>
+            <input type="text" id="edit-rue-${i}" value="${esc(_p.rue)}" placeholder="Rue des Chardons 18">
+          </div>
+          <div class="edit-row" style="width:140px;min-width:0;flex-shrink:0">
+            <label>📬 Boîte / Étage</label>
+            <input type="text" id="edit-boite-${i}" value="${esc(_p.boite)}" placeholder="bte 2" style="width:100%">
+          </div>
+        </div>
+        <div class="edit-row">
+          <label>📮 Code postal et ville</label>
+          <input type="text" id="edit-cpville-${i}" value="${esc(_p.cpville)}" placeholder="1030 Schaerbeek">
+        </div>
+
+        <!-- Démographie -->
+        <details class="demo-section" ${(c.sexe||c.birth_date||c.nationality)?'open':''}>
+          <summary>Données démographiques</summary>
+          <div class="demo-grid">
+            <div class="demo-item">
+              <label>⚧ Sexe</label>
+              <select id="edit-sexe-${i}" onchange="contacts()[${i}].sexe=this.value;sauver()">
+                <option value="">—</option>
+                <option value="M" ${c.sexe==='M'?'selected':''}>M — Masculin</option>
+                <option value="F" ${c.sexe==='F'?'selected':''}>F — Féminin</option>
+              </select>
+            </div>
+            <div class="demo-item">
+              <label>🎂 Date de naissance</label>
+              <input type="date" id="edit-birth-${i}" value="${c.birth_date||''}"
+                onchange="contacts()[${i}].birth_date=this.value||null;majAge(${i});sauver()">
+            </div>
+            <div class="demo-item">
+              <label>📅 Âge</label>
+              <input type="number" id="edit-age-${i}" value="${c.age||''}" min="0" max="130"
+                onchange="contacts()[${i}].age=parseInt(this.value)||null;sauver()" placeholder="calculé auto">
+            </div>
+            <div class="demo-item">
+              <label>💍 État civil</label>
+              <select id="edit-mrtl-${i}" onchange="contacts()[${i}].marital_status=this.value||null;sauver()">
+                <option value="">—</option>
+                <option value="Célibataire" ${c.marital_status==='Célibataire'?'selected':''}>Célibataire</option>
+                <option value="Marié(e)" ${c.marital_status==='Marié(e)'?'selected':''}>Marié(e)</option>
+                <option value="Divorcé(e)/Séparé(e)" ${c.marital_status==='Divorcé(e)/Séparé(e)'?'selected':''}>Divorcé(e)/Séparé(e)</option>
+              </select>
+            </div>
+            <div class="demo-item">
+              <label>🌍 Nationalité (ISO)</label>
+              <input type="text" id="edit-nlty-${i}" value="${esc(c.nationality||'')}" placeholder="BEL, TUR, MAR..."
+                oninput="contacts()[${i}].nationality=this.value.toUpperCase()||null;sauver()" maxlength="3" style="text-transform:uppercase">
+            </div>
+            <div class="demo-item">
+              <label>🗺️ Pays de naissance (ISO)</label>
+              <input type="text" id="edit-birth-country-${i}" value="${esc(c.birth_country||'')}" placeholder="BEL, TUR, MAR..."
+                oninput="contacts()[${i}].birth_country=this.value.toUpperCase()||null;sauver()" maxlength="3" style="text-transform:uppercase">
+            </div>
+          </div>
+        </details>
+
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div class="edit-row" style="flex:0.45">
+            <label>📞 GSM</label>
+            <input type="tel" placeholder="+32 4xx xx xx xx" value="${esc(c.gsm||'')}"
+              oninput="changerGsm(${i},this)" style="max-width:150px"
+              ondblclick="if(this.value)window.location.href='tel:'+this.value">
+          </div>
+          <div class="edit-row" style="flex:1">
+            <label>✉️ Email</label>
+            <div class="email-wrap">
+              <input type="email" placeholder="Email" value="${esc(c.email||'')}"
+                oninput="changerEmail(${i},this.value);emailSuggest(this,'esug-${i}')"
+                onkeydown="emailKeydown(event,'esug-${i}')"
+                onblur="setTimeout(()=>fermerSuggestions('esug-${i}'),150)"
+                ondblclick="if(this.value)window.location.href='mailto:'+this.value"
+                autocomplete="off">
+              <div class="email-suggestions" id="esug-${i}"></div>
+            </div>
+          </div>
+        </div>
+        <div class="edit-row">
+          <label>📝 Notes</label>
+          <textarea placeholder="Notes..." oninput="changerNotes(${i},this.value)"
+            style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;min-height:60px">${esc(c.notes||'')}</textarea>
+        </div>
+        ${def.rdv ? `
+        <div class="edit-row" style="background:#e3f2fd;padding:8px;border-radius:8px;border:1px solid #90caf9;">
+          <label style="color:#1565c0;">📅 Date et heure du rendez-vous</label>
+          <div style="display:flex;gap:8px;">
+            <input type="date" id="edit-rdv-date-${i}" value="${(c.rdv||'').split(' ')[0]||''}"
+              oninput="changerRdvDH(${i})" style="flex:1;border-color:#90caf9;background:#fff;">
+            <input type="time" id="edit-rdv-heure-${i}" value="${(c.rdv||'').split(' ')[1]||''}"
+              oninput="changerRdvDH(${i})" style="width:110px;border-color:#90caf9;background:#fff;">
+          </div>
+        </div>` : ''}
+        <div class="edit-btns">
+          <button class="btn-cancel-edit" onclick="toggleEdit(${i})">Fermer</button>
+          <button class="btn-vcard" onclick="exporterVCard(${i})" title="Exporter contact">📇 vCard</button>
+          <button class="btn-save-edit" onclick="sauverEdit(${i})">✅ Enregistrer</button>
+        </div>
+  `;
+}
+
+function sauverEdit(i) {
+  const c = contacts()[i];
+  const ancAdresse = c.adresse;
+  c.prenom  = document.getElementById('edit-prenom-'+i).value.trim();
+  c.nom     = document.getElementById('edit-nom-'+i).value.trim();
+  const rdvD = (document.getElementById('edit-rdv-date-'+i)||{}).value||'';
+  const rdvH = (document.getElementById('edit-rdv-heure-'+i)||{}).value||'';
+  if (rdvD) c.rdv = rdvH ? rdvD+' '+rdvH : rdvD; else c.rdv='';
+  const rue    = document.getElementById('edit-rue-'+i).value.trim();
+  const boite  = document.getElementById('edit-boite-'+i).value.trim();
+  const cpville= document.getElementById('edit-cpville-'+i).value.trim();
+  c.adresse = composeAdresse(rue, boite, cpville);
+  if (c.adresse !== ancAdresse) localStorage.removeItem('coords_'+adresseSansBoite(ancAdresse));
+  sauver();
+  rendu();
+  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+}
+
+function filtrer(f) {
+  filtreActif = f;
+  renderFilters();
+  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+  else rendu();
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// IMPORT — Lecture CSV / XLSX, modal de nommage
+// ════════════════════════════════════════════════════════════════════
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return null;
+  const sep     = lines[0].includes(';') ? ';' : ',';
+  const headers = splitLine(lines[0], sep).map(h => h.toLowerCase().trim().replace(/[^a-z_]/g,''));
+  const idx = names => { for (const n of names) { const i = headers.indexOf(n); if (i>=0) return i; } return -1; };
+  const iOrdre   = idx(['ordre','order','nr','no']);
+  const iPrenom  = idx(['prenom','firstname','first_name','prénom']);
+  const iNom     = idx(['nom','lastname','last_name','name']);
+  const iAdresse = idx(['adresse','address','adr']);
+  const iStatut  = idx(['statut','status','etat']);
+  const iDate    = idx(['date_interview','date','date_fait']);
+  const iNotes   = idx(['notes','note','remarques']);
+  const iRdv     = idx(['rdv','date_rdv','rendez_vous','appointment']);
+  const iSexe    = idx(['sexe','sex','genre','gender']);
+  const iBirth   = idx(['birth_date','date_naissance','dob']);
+  const iAge     = idx(['age']);
+  const iBirthC  = idx(['birth_country','pays_naissance','country_birth']);
+  const iNatly   = idx(['nationality','nationalite','nationalité']);
+  const iMarital = idx(['marital_status','etat_civil','état_civil']);
+  const iGsm     = idx(['gsm','tel','telephone','phone','gsm_tel']);
+  const iEmail   = idx(['email','mail','e_mail']);
+  if (iPrenom < 0 && iNom < 0) return null;
+  const g = (cols, i) => i >= 0 ? (cols[i]||'').trim() : '';
+  return lines.slice(1).filter(l => l.trim()).map((l, li) => {
+    const cols = splitLine(l, sep);
+    return {
+      ordre:          g(cols,iOrdre)  || String(li+1).padStart(2,'0'),
+      prenom:         g(cols,iPrenom),
+      nom:            g(cols,iNom),
+      adresse:        g(cols,iAdresse),
+      statut:         g(cols,iStatut) || 'À faire',
+      date:           g(cols,iDate),
+      notes:          g(cols,iNotes),
+      rdv:            g(cols,iRdv),
+      sexe:           g(cols,iSexe)   || null,
+      birth_date:     g(cols,iBirth)  || null,
+      age:            iAge>=0 ? parseInt(cols[iAge])||null : null,
+      birth_country:  g(cols,iBirthC) || null,
+      nationality:    g(cols,iNatly)  || null,
+      marital_status: g(cols,iMarital)|| null,
+      gsm:            g(cols,iGsm),
+      email:          g(cols,iEmail),
+    };
+  });
+}
+
+function splitLine(line, sep) {
+  const result = []; let cur='', inQ=false;
+  for (const c of line) {
+    if (c==='"') inQ=!inQ;
+    else if (c===sep && !inQ) { result.push(cur.trim()); cur=''; }
+    else cur+=c;
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function importerFichier(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const defaultName = file.name.replace(/\.(csv|xlsx|xls)$/i, '');
+  const reader = new FileReader();
+  if (/\.(xlsx|xls)$/i.test(file.name)) {
+    reader.onload = e => {
+      try {
+        const wb  = XLSX.read(new Uint8Array(e.target.result), { type:'array' });
+        const csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]], { FS:',', RS:'\n' });
+        const parsed = parseCSV(csv);
+        if (!parsed?.length) { alert('Fichier Excel invalide ou vide.'); return; }
+        ouvrirModalImport(parsed, defaultName);
+      } catch(err) { alert('Erreur lecture Excel : '+err.message); }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.onload = e => {
+      const parsed = parseCSV(e.target.result);
+      if (!parsed?.length) { alert('Fichier CSV invalide ou vide.'); return; }
+      ouvrirModalImport(parsed, defaultName);
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+  event.target.value = '';
+}
+
+function ouvrirModalImport(parsed, defaultName) {
+  csvEnAttente = parsed;
+  document.getElementById('inputNomEnquete').value = defaultName;
+  document.getElementById('modalNom').classList.add('open');
+  setTimeout(() => document.getElementById('inputNomEnquete').select(), 100);
+}
+
+function confirmerImport() {
+  const nom = document.getElementById('inputNomEnquete').value.trim();
+  if (!nom) { alert('Veuillez entrer un nom.'); return; }
+  if (enquetes[nom] && !confirm('L\'enquête "'+nom+'" existe déjà. Remplacer ?')) return;
+  enquetes[nom] = csvEnAttente;
+  enqueteActive = nom;
+  csvEnAttente  = null;
+  fermerModal();
+  sauver();
+  refreshSelect();
+  filtreActif = 'Tous';
+  renderFilters();
+  rendu();
+}
+
+function fermerModal() {
+  document.getElementById('modalNom').classList.remove('open');
+  csvEnAttente = null;
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// EXPORT — CSV et vCard
+// ════════════════════════════════════════════════════════════════════
+
+function csvCell(v) { return '"'+(v||'').toString().replace(/"/g,'""')+'"'; }
+
+function genererCSV() {
+  const rows = [['ordre','prenom','nom','adresse','statut','date_interview','rdv','sexe','birth_date','age','birth_country','nationality','marital_status','gsm','email','notes']];
+  contacts().forEach(c => rows.push([
+    c.ordre, csvCell(c.prenom), csvCell(c.nom), csvCell(c.adresse),
+    c.statut||'À faire', c.date||'', c.rdv||'', c.sexe||'',
+    c.birth_date||'', c.age||'', c.birth_country||'', c.nationality||'',
+    c.marital_status||'', csvCell(c.gsm), csvCell(c.email), csvCell(c.notes)
+  ]));
+  return '﻿' + rows.map(r => r.join(',')).join('\n');
+}
+
+function exporterCSV() {
+  if (!enqueteActive) { alert('Aucune enquête active.'); return; }
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([genererCSV()], {type:'text/csv;charset=utf-8'})),
+    download: enqueteActive + '.csv'
+  });
+  a.click();
+}
+
+function exporterVCard(i) {
+  const c      = contacts()[i];
+  const prenom = (document.getElementById('edit-prenom-'+i)||{}).value?.trim() || c.prenom;
+  const nom    = (document.getElementById('edit-nom-'+i)||{}).value?.trim()    || c.nom;
+  const rue    = (document.getElementById('edit-rue-'+i)||{}).value?.trim()    || '';
+  const boite  = (document.getElementById('edit-boite-'+i)||{}).value?.trim()  || '';
+  const cpv    = (document.getElementById('edit-cpville-'+i)||{}).value?.trim()|| '';
+  const adresse= composeAdresse(rue, boite, cpv) || c.adresse;
+  const parts  = adresse.split(',');
+  const street = (parts[0]||'').trim();
+  const cityRaw= (parts[1]||'').trim();
+  const zip    = (cityRaw.match(/^[0-9]+/)||[''])[0];
+  const city   = cityRaw.replace(/^[0-9]+ */,'').trim();
+  const CRLF   = '\r\n';
+  let vcard    = 'BEGIN:VCARD'+CRLF+'VERSION:3.0'+CRLF;
+  vcard += 'FN:'+prenom+' '+nom+CRLF+'N:'+nom+';'+prenom+';;;'+CRLF;
+  if (street)  vcard += 'ADR;TYPE=HOME:;;'+street+';'+city+';;'+zip+';Belgique'+CRLF;
+  if (c.gsm)   vcard += 'TEL;TYPE=CELL:'+c.gsm+CRLF;
+  if (c.email) vcard += 'EMAIL:'+c.email+CRLF;
+  if (c.notes) vcard += 'NOTE:'+c.notes.split('\n').join(' ')+CRLF;
+  vcard += 'ORG:Statbel LFS'+CRLF+'END:VCARD';
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([vcard], {type:'text/vcard;charset=utf-8'})),
+    download: prenom+'_'+nom+'.vcf'
+  });
+  a.click();
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// RENDU — Génération HTML des cards et filtres
+// ════════════════════════════════════════════════════════════════════
+
+function renderFilters() {
+  const all = contacts(), total = all.length, cpt = {};
+  all.forEach(c => { const s = c.statut||statutDefaut(); cpt[s]=(cpt[s]||0)+1; });
+  let html = `<button class="filter-btn${filtreActif==='Tous'?' active':''}" onclick="filtrer('Tous')">Tous${total>0?' ('+total+')':''}</button>`;
+  statutDefs().forEach((s, si) => {
+    const n = cpt[s.label] || 0;
+    const on = filtreActif === s.label;
+    html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" onclick="filtrer(statutDefs()[${si}].label)">${s.icon} ${esc(s.label)}${n>0?' ('+n+')':''}</button>`;
+  });
+  document.querySelector('.filters').innerHTML = html;
+  document.getElementById('filters') && (document.getElementById('filters').innerHTML = html);
+}
+
+// Sélecteur de statut du header (vue carte) — reflète le filtre actif
+
+function rendu() {
+  renderFilters();
+  const liste = document.getElementById('liste');
+  liste.innerHTML = '';
+  const all = contacts();
+  if (all.length === 0) {
+    liste.innerHTML = '<div class="empty-state">Aucun contact.<br>Importez un fichier CSV ou Excel pour commencer.<button onclick="document.getElementById(\'importFile\').click()">⬆️ Importer CSV / Excel</button></div>';
+    return;
+  }
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase().trim();
+  all.forEach((c, i) => {
+    const statut = c.statut || statutDefaut();
+    if (filtreActif !== 'Tous' && statut !== filtreActif) return;
+    if (q && !(c.prenom+' '+c.nom+' '+c.adresse).toLowerCase().includes(q)) return;
+    const def = statutDef(statut);
+    const badges = [];
+    if (c.gsm)   badges.push(`<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>`);
+    if (c.email) badges.push(`<span class="badge">✉️ ${esc(c.email)}</span>`);
+    if (c.date)  badges.push(`<span class="badge" style="color:${def.color};background:${def.color}22">${def.icon} ${esc(c.date)}</span>`);
+    if (c.rdv && def.rdv) badges.push(`<span class="badge badge-rdv">📅 ${formatRdv(c.rdv)}</span>`);
+    const _p = parseAdresse(c.adresse);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.borderLeftColor = def.color;
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-ordre">N° ${esc(c.ordre)}</span>
+        <div class="card-name">${esc(c.prenom)} ${esc(c.nom)}</div>
+        <button class="btn-edit" onclick="toggleEdit(${i})" title="Modifier">🖊️</button>
+      </div>
+      <div class="card-adresse-row">
+        <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank">📍 ${esc(c.adresse)}</a>
+        ${distanceBadge(c.adresse)}
+      </div>
+      ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
+      ${buildHistoriqueHTML(c)}
+      <div class="card-bottom">
+        <div class="statut-bar">
+          ${statutDefs().map((s, si) => {
+            const on = s.label === statut;
+            return `<button class="s-btn${on?' actif':''}" style="color:${s.color};${on?`border-color:${s.color};background:${s.color}22;`:''}" onclick="changerStatut(${i},statutDefs()[${si}].label)">${s.icon} ${esc(s.label)}</button>`;
+          }).join('')}
+        </div>
+      </div>
+      ${!coordsCache(c.adresse) ? '<div class="no-coords">⚠️ Adresse non trouvée sur la carte</div>' : ''}
+      <div class="edit-area" id="edit-${i}"></div>
+    `;
+    liste.appendChild(card);
+  });
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// GÉOLOC — Position GPS, Haversine, marqueur Ma position
+// ════════════════════════════════════════════════════════════════════
+
+let maPosition = null;
+let markerMoi  = null;
+
+function haversine(lat1, lng1, lat2, lng2) {
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function formatDist(m) { return m<1000 ? Math.round(m)+' m' : (m/1000).toFixed(1)+' km'; }
+
+function distanceBadge(adresse) {
+  if (!maPosition) return '';
+  const c = coordsCache(adresse);
+  if (!c) return '';
+  const d = haversine(maPosition.lat, maPosition.lng, c.lat, c.lng);
+  return `<span class="badge-dist" style="display:inline-block;margin-top:3px;">🚶 ${formatDist(d)}</span>`;
+}
+
+function afficherToast(msg, duree) {
+  let t = document.getElementById('geoToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'geoToast';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(30,30,30,0.92);color:white;padding:12px 18px;border-radius:12px;font-size:13px;z-index:9999;max-width:320px;text-align:center;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.display='block'; t.style.opacity='1';
+  clearTimeout(t._hide);
+  t._hide = setTimeout(() => { t.style.transition='opacity 0.5s'; t.style.opacity='0'; setTimeout(()=>{t.style.display='none';t.style.transition='';},500); }, duree||3000);
+}
+
+function toggleMaPosition() {
+  const btn = document.getElementById('btnGeo');
+  if (maPosition) {
+    maPosition=null;
+    if (markerMoi && leafletMap) leafletMap.removeLayer(markerMoi);
+    markerMoi=null; btn.classList.remove('active'); btn.textContent='🎯'; btn.title='Ma position';
+    rendu(); return;
+  }
+  if (!navigator.geolocation) { afficherToast('Géolocalisation non supportée.',4000); return; }
+  if (navigator.permissions) {
+    navigator.permissions.query({name:'geolocation'}).then(r => {
+      if (r.state==='denied') { afficherToast('Localisation bloquée.',6000); return; }
+      demanderPosition(btn);
+    }).catch(()=>demanderPosition(btn));
+  } else demanderPosition(btn);
+}
+
+function demanderPosition(btn) {
+  btn.textContent='⏳'; btn.title='Localisation en cours...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      maPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      btn.textContent='🎯'; btn.classList.add('active'); btn.title='Position active';
+      afficherToast('Position obtenue !',2000);
+      if (vueActive==='carte') { placerMarqueurMoi(); afficherMarqueurs(); }
+      rendu();
+    },
+    err => {
+      btn.textContent='🎯'; btn.classList.remove('active'); btn.title='Ma position';
+      const msgs={1:'Permission refusée.',2:'Position indisponible.',3:'Délai dépassé.'};
+      afficherToast(msgs[err.code]||'Erreur '+err.code,6000);
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:30000}
+  );
+}
+
+function placerMarqueurMoi() {
+  if (!leafletMap||!maPosition) return;
+  if (markerMoi) leafletMap.removeLayer(markerMoi);
+  markerMoi = L.marker([maPosition.lat,maPosition.lng],{
+    icon:L.divIcon({className:'',html:'<div class="marker-moi"></div>',iconSize:[20,20],iconAnchor:[10,10],popupAnchor:[0,-14]}),
+    zIndexOffset:1000
+  }).addTo(leafletMap).bindPopup('<div style="font-weight:bold;color:#1a73e8;">📍 Ma position</div>');
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// CARTE — Leaflet, marqueurs, géocodage UrbIS (CIRB, Région bruxelloise)
+// ════════════════════════════════════════════════════════════════════
+
+function recentrerCarte() {
+  if (!leafletMap||!markersLayer) return;
+  leafletMap.invalidateSize();   // recalcule la taille (corrige tuiles grises sur mobile)
+  const bounds = markersLayer.getLayers().filter(l=>l.getLatLng).map(l=>l.getLatLng());
+  if (bounds.length===1) leafletMap.setView(bounds[0],16);
+  else if (bounds.length>1) leafletMap.fitBounds(L.latLngBounds(bounds),{padding:[40,40],maxZoom:16});
+}
+
+function changerStatutCarte(idx, val) { changerStatut(idx,val); if (markersLayer) afficherMarqueurs(); }
+
+function ouvrirFicheDepuisCarte(idx) {
+  setView('liste');
+  setTimeout(()=>{ const el=ouvrirEdit(idx); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); },150);
+}
+
+function renderLegend() {
+  const el = document.getElementById('mapLegend');
+  if (!el) return;
+  el.innerHTML = statutDefs().map(s =>
+    `<div class="leg-item"><div class="leg-dot" style="background:${s.color}"></div> ${esc(s.label)}</div>`
+  ).join('') +
+    '<div class="leg-item"><div class="leg-dot" style="background:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,0.3)"></div> Ma position</div>';
+}
+
+function initCarte() {
+  if (!leafletMap) {
+    leafletMap = L.map('map',{wheelPxPerZoomLevel:120,wheelDebounceTime:100}).setView([50.8670,4.3800],14);
+    baseLayer = L.tileLayer(GEO.tileUrl(settings.mapStyle),{attribution:GEO.tileAttribution,maxZoom:GEO.maxZoom}).addTo(leafletMap);
+    markersLayer = L.layerGroup().addTo(leafletMap);
+  }
+  renderLegend();
+  afficherMarqueurs();
+  if (maPosition) placerMarqueurMoi();
+  // Mobile : la hauteur du conteneur peut changer (barre d'adresse) → recalcul
+  setTimeout(() => leafletMap.invalidateSize(), 250);
+}
+
+// Recalcule la taille de la carte quand la fenêtre change (rotation, barre
+// d'adresse mobile qui apparaît/disparaît) — évite les tuiles grises.
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  if (vueActive !== 'carte' || !leafletMap) return;
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => leafletMap.invalidateSize(), 200);
+});
+window.addEventListener('orientationchange', () => {
+  if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 300);
+});
+
+function afficherMarqueurs() {
+  markersLayer.clearLayers();
+  const all = contactsFiltres();
+  if (all.filter(c=>!coordsCache(c.adresse)).length > 0)
+    document.getElementById('geocodeProgress').style.display = 'block';
+
+  function placerMarqueur(c, lat, lng) {
+    const statut = c.statut||statutDefaut();
+    const def    = statutDef(statut);
+    const icon   = L.divIcon({className:'',html:`<div class="marker-pin" style="background:${def.color}"><span>${esc(c.ordre)}</span></div>`,iconSize:[30,30],iconAnchor:[15,30],popupAnchor:[0,-32]});
+    const idx    = enquetes[enqueteActive].indexOf(c);
+    const gsm    = c.gsm   ? `<div style="margin-top:5px">📞 <a href="tel:${esc(c.gsm)}" style="color:#1a73e8;text-decoration:none;">${esc(c.gsm)}</a></div>` : '';
+    const email  = c.email ? `<div style="margin-top:3px">✉️ <a href="mailto:${esc(c.email)}" style="color:#1a73e8;text-decoration:none;">${esc(c.email)}</a></div>` : '';
+    let distPopup='';
+    if (maPosition) {
+      const cd=coordsCache(c.adresse);
+      if (cd) distPopup='<div style="margin-top:5px"><span style="background:#e3f2fd;color:#1a73e8;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;">🚶 '+formatDist(haversine(maPosition.lat,maPosition.lng,cd.lat,cd.lng))+'</span></div>';
+    }
+    let rdvPopup='';
+    if (c.rdv && def.rdv) rdvPopup='<div style="margin-top:6px"><span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:bold;">📅 '+formatRdv(c.rdv)+'</span></div>';
+    const popup=`
+      <div class="popup-titre">N° ${esc(c.ordre)} — ${esc(c.prenom)} ${esc(c.nom)}</div>
+      <div style="margin-bottom:8px"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${def.color};vertical-align:middle"></span> <span class="popup-statut" style="background:${def.color}22;color:${def.color}">${esc(statut)}</span>${c.date?' <span style="font-size:11px;color:#666">— '+esc(c.date)+'</span>':''}</div>
+      <a href="${mapsUrl(c.adresse)}" target="_blank" style="color:#1a73e8;text-decoration:none;font-size:13px;">📍 ${esc(c.adresse)}</a>
+      ${distPopup}${rdvPopup}${gsm}${email}
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">
+        ${statutDefs().map((s,si)=>{const on=s.label===statut;return `<button onclick="changerStatutCarte(${idx},statutDefs()[${si}].label)" style="flex:1;min-width:60px;padding:5px 4px;border:2px solid ${s.color};border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;background:${on?s.color:'transparent'};color:${on?'white':s.color};">${esc(s.label)}</button>`;}).join('')}
+      </div>
+      <div style="margin-top:6px"><button onclick="ouvrirFicheDepuisCarte(${idx})" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ Éditer la fiche</button></div>`;
+    L.marker([lat,lng],{icon}).addTo(markersLayer).bindPopup(popup,{maxWidth:260});
+  }
+
+  function zoomSurMarqueurs() {
+    const bounds=markersLayer.getLayers().filter(l=>l.getLatLng).map(l=>l.getLatLng());
+    if (bounds.length===1) leafletMap.setView(bounds[0],16);
+    else if (bounds.length>1) leafletMap.fitBounds(L.latLngBounds(bounds),{padding:[40,40],maxZoom:16});
+  }
+
+  const queue=[];
+  all.forEach(c=>{ const cc=coordsCache(c.adresse); if(cc) placerMarqueur(c,cc.lat,cc.lng); else queue.push(c); });
+  if (markersLayer.getLayers().length>0) zoomSurMarqueurs();
+
+  let qi=0;
+  function nextGeocode() {
+    if (qi>=queue.length){ document.getElementById('geocodeProgress').style.display='none'; zoomSurMarqueurs(); return; }
+    const c=queue[qi++];
+    document.getElementById('geocodeCount').textContent=qi+' / '+queue.length;
+    GEO.geocode(c.adresse).then(coords=>{
+      if(coords){ saveCoords(c.adresse,coords.lat,coords.lng); placerMarqueur(c,coords.lat,coords.lng); zoomSurMarqueurs(); }
+      setTimeout(nextGeocode,300);
+    });
+  }
+  nextGeocode();
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// VUE RDV — Agenda des rendez-vous chronologique
+// ════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════
+// VUE RDV — Suivi chronologique de tous les statuts sauf "À faire"
+// ════════════════════════════════════════════════════════════════════
+
+let filtreRdv = 'Tous';
+
+/** Titre et icône contextuels selon le statut filtré */
+function rdvTitreStatut(label) {
+  if (!label || label === 'Tous') return { icon: '📅', titre: 'Suivi des interviews' };
+  const def = statutDef(label);
+  const icon = def.icon || '•';
+  // Titres sémantiques selon la nature du statut
+  if (def.rdv)  return { icon, titre: 'Rendez-vous planifiés — ' + label };
+  if (def.done) return { icon, titre: 'Interviews terminées — ' + label };
+  return        { icon, titre: 'Contacts — ' + label };
+}
+
+function renderRdvFilters() {
+  const bar = document.getElementById('rdvFilters');
+  if (!bar) return;
+
+  // Statuts éligibles : tout sauf le premier (= "À faire" = statutDefaut)
+  const eligible = statutDefs().filter(s => s.label !== statutDefaut());
+  const all = contacts();
+  const cpt = {};
+  all.forEach(c => { const s = c.statut || statutDefaut(); cpt[s] = (cpt[s]||0)+1; });
+
+  const total = eligible.reduce((acc, s) => acc + (cpt[s.label]||0), 0);
+  const on0   = filtreRdv === 'Tous';
+  let html = `<button class="filter-btn${on0?' active':''}" onclick="filtrerRdv('Tous')">Tous (${total})</button>`;
+
+  eligible.forEach(s => {
+    const n  = cpt[s.label] || 0;
+    const on = filtreRdv === s.label;
+    html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" onclick="filtrerRdv('${s.label.replace(/'/g,"\\'")}')">
+      ${s.icon} ${esc(s.label)}${n > 0 ? ' ('+n+')' : ''}
+    </button>`;
+  });
+  bar.innerHTML = html;
+
+  // Titre dynamique
+  const { icon, titre } = rdvTitreStatut(filtreRdv);
+  const el = document.getElementById('rdvTitle');
+  if (el) el.textContent = icon + ' ' + titre;
+}
+
+function filtrerRdv(statut) {
+  filtreRdv = statut;
+  renduRdv();
+}
+
+function renduRdv() {
+  renderRdvFilters();
+  const container = document.getElementById('rdvListe');
+  container.innerHTML = '';
+
+  const q = (document.getElementById('rdvSearch')?.value||'').toLowerCase().trim();
+  const defaut = statutDefaut();
+
+  // Statuts éligibles (tout sauf "À faire")
+  const eligible = new Set(statutDefs().filter(s => s.label !== defaut).map(s => s.label));
+
+  // Filtrer les contacts
+  let liste = contacts().map((c, i) => ({ c, i })).filter(({ c }) => {
+    const st = c.statut || defaut;
+    if (!eligible.has(st)) return false;                                          // exclure À faire
+    if (filtreRdv !== 'Tous' && st !== filtreRdv) return false;                   // filtre statut
+    if (q && !(c.prenom+' '+c.nom+' '+c.adresse).toLowerCase().includes(q)) return false; // recherche
+    return true;
+  });
+
+  if (!liste.length) {
+    container.innerHTML = q || filtreRdv !== 'Tous'
+      ? '<div class="rdv-empty">🔍 Aucun contact ne correspond à ce filtre.</div>'
+      : '<div class="rdv-empty">📋 Aucun contact avec un statut actif.<br><small>Les contacts "À faire" ne s\'affichent pas ici.</small></div>';
+    return;
+  }
+
+  // Tri :
+  // - Statuts RDV (En cours) : chronologique (prochain RDV en premier)
+  // - Statuts done (Fait/Absent/Refus…) : antichronologique (dernier passage en premier)
+  // - Sans date : par numéro d'ordre
+  liste.sort((a, b) => {
+    const da = statutDef(a.c.statut || defaut);
+    const db = statutDef(b.c.statut || defaut);
+    const ra = a.c.rdv || '', rb = b.c.rdv || '';
+    const dateA = da.rdv ? ra : (a.c.date ? dateFrToISO(a.c.date) : '');
+    const dateB = db.rdv ? rb : (b.c.date ? dateFrToISO(b.c.date) : '');
+    // RDV datés : croissant (prochain en premier)
+    if (da.rdv && db.rdv) {
+      if (dateA && dateB) return dateA < dateB ? -1 : 1;
+      if (dateA) return -1;
+      if (dateB) return  1;
+    }
+    // Done datés : décroissant (plus récent en premier)
+    if (da.done && db.done) {
+      if (dateA && dateB) return dateA > dateB ? -1 : 1;
+      if (dateA) return -1;
+      if (dateB) return  1;
+    }
+    // Mixte : RDV avant done
+    if (da.rdv && !db.rdv) return -1;
+    if (!da.rdv && db.rdv) return  1;
+    return (a.c.ordre || '').localeCompare(b.c.ordre || '');
+  });
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Grouper par statut si "Tous"
+  if (filtreRdv === 'Tous') {
+    // Ordre des groupes = ordre des statuts configurés (sauf À faire)
+    const groupes = {};
+    statutDefs().filter(s => s.label !== defaut).forEach(s => { groupes[s.label] = []; });
+    liste.forEach(item => {
+      const st = item.c.statut || defaut;
+      if (!groupes[st]) groupes[st] = [];
+      groupes[st].push(item);
+    });
+
+    Object.entries(groupes).forEach(([label, items]) => {
+      if (!items.length) return;
+      const def = statutDef(label);
+      // En-tête de groupe
+      const h = document.createElement('div');
+      h.style.cssText = `display:flex;align-items:center;gap:8px;margin:6px 0 4px;`;
+      h.innerHTML = `
+        <div style="flex:1;height:2px;background:${def.color};opacity:.4;border-radius:1px;"></div>
+        <span style="font-size:12px;font-weight:bold;color:${def.color};white-space:nowrap;">${def.icon} ${esc(label)} (${items.length})</span>
+        <div style="flex:1;height:2px;background:${def.color};opacity:.4;border-radius:1px;"></div>`;
+      container.appendChild(h);
+      items.forEach(item => container.appendChild(buildRdvCard(item.c, item.i, today, def)));
+    });
+  } else {
+    liste.forEach(item => {
+      const def = statutDef(item.c.statut || defaut);
+      container.appendChild(buildRdvCard(item.c, item.i, today, def));
+    });
+  }
+}
+
+/** Construit le bloc HTML de l'historique des passages d'un contact */
+function buildHistoriqueHTML(c) {
+  if (!Array.isArray(c.historique) || c.historique.length === 0) return '';
+  // Afficher du plus récent au plus ancien
+  const lignes = [...c.historique].reverse().map(h => {
+    const def = statutDef(h.statut);
+    return `<div class="historique-ligne">
+      <div class="historique-dot" style="background:${def.color}"></div>
+      <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(h.statut)}</span>
+      <span>— ${esc(h.date)}</span>
+    </div>`;
+  }).join('');
+  return `<div class="historique-wrap">
+    <div class="historique-title">🕐 Historique (${c.historique.length})</div>
+    ${lignes}
+  </div>`;
+}
+
+function buildRdvCard(c, i, today, def) {
+  const hasRdv   = !!(c.rdv && def.rdv);
+  const rdvDate  = hasRdv ? (c.rdv + ' ').split(' ')[0] : '';
+  const isPast   = rdvDate && rdvDate < today;
+  const isToday  = rdvDate && rdvDate === today;
+  const tag      = isPast ? 'rdv-past' : (isToday ? 'rdv-today' : '');
+
+  const distHtml = (() => {
+    if (!maPosition) return '';
+    const cc = coordsCache(c.adresse);
+    if (!cc) return '';
+    return `<span class="badge-dist" style="margin-left:6px;">🚶 ${formatDist(haversine(maPosition.lat, maPosition.lng, cc.lat, cc.lng))}</span>`;
+  })();
+
+  const div = document.createElement('div');
+  div.className = 'rdv-card ' + tag;
+  // Bordure gauche colorée selon statut
+  div.style.borderLeft = `5px solid ${def.color}`;
+
+  let headerHtml = '';
+  if (hasRdv) {
+    const label = isPast ? '⏰ Passé' : (isToday ? '📍 Aujourd\'hui' : '');
+    headerHtml = `<div class="rdv-header">
+      <span class="rdv-datetime">${formatRdv(c.rdv)}</span>
+      ${label ? `<span style="font-size:11px;color:${isToday?'#2e7d32':'#999'};font-weight:bold;">${label}</span>` : ''}
+    </div>`;
+  } else if (c.date) {
+    // Statut "done" avec date d'action
+    headerHtml = `<div class="rdv-header">
+      <span class="rdv-datetime" style="background:${def.color}22;color:${def.color}">${def.icon} ${esc(c.date)}</span>
+    </div>`;
+  }
+
+  div.innerHTML = `
+    ${headerHtml}
+    <div class="card-top" style="padding-right:32px;position:relative;">
+      <span class="card-ordre">N° ${esc(c.ordre)}</span>
+      <div class="card-name">${esc(c.prenom)} ${esc(c.nom)}</div>
+      <button class="btn-edit" onclick="setView('liste');setTimeout(()=>{const el=ouvrirEdit(${i});if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},150)">🖊️</button>
+    </div>
+    <div class="card-adresse-row">
+      <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank">📍 ${esc(c.adresse)}</a>
+      ${distHtml}
+    </div>
+    ${c.gsm   ? `<div style="margin-top:4px"><a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a></div>` : ''}
+    ${c.notes ? `<div style="margin-top:6px;font-size:12px;color:var(--text3);">📝 ${esc(c.notes)}</div>` : ''}
+    ${buildHistoriqueHTML(c)}`;
+  return div;
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// UI — Navigation vues, thème, menu ⋮, email autocomplete
+// ════════════════════════════════════════════════════════════════════
+
+let vueActive    = 'liste';
+let leafletMap   = null;
+let markersLayer = null;
+let baseLayer    = null;
+
+function setView(v) {
+  vueActive = v;
+  ['liste','carte','rdv','resume'].forEach(id => {
+    const btn = document.getElementById('btn'+id.charAt(0).toUpperCase()+id.slice(1));
+    if (btn) btn.classList.toggle('active', v===id);
+  });
+  document.querySelector('.filters').style.display         = v==='liste'  ? '' : 'none';
+  document.getElementById('liste').style.display           = v==='liste'  ? '' : 'none';
+  document.querySelector('.search-bar').style.display      = v==='liste'  ? '' : 'none';
+  document.getElementById('mapContainer').style.display    = v==='carte'  ? 'block' : 'none';
+  document.getElementById('rdvContainer').style.display    = v==='rdv'    ? 'flex'  : 'none';
+  document.getElementById('resumeContainer').style.display = v==='resume' ? 'flex'  : 'none';
+  if (v==='carte')  { initCarte(); }
+  if (v==='liste')  rendu();
+  if (v==='rdv')    renduRdv();
+  if (v==='resume') renduResume();
+}
+
+// ── Thème (clair / sombre / auto) ───────────────────────────────────
+function appliquerTheme() {
+  let dark = settings.theme === 'dark';
+  if (settings.theme === 'auto')
+    dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.body.classList.toggle('dark', dark);
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (settings.theme === 'auto') appliquerTheme();
+  });
+}
+
+// ── Panneau Paramètres ──────────────────────────────────────────────
+function ouvrirSettings() {
+  document.getElementById('setTheme').value    = settings.theme;
+  document.getElementById('setProvider').value = settings.provider;
+  document.getElementById('setMapStyle').value = settings.mapStyle;
+  document.getElementById('setNav').value      = settings.navMode;
+  renderStatutsEditor();
+  majSettingsUI();
+  document.getElementById('modalSettings').classList.add('open');
+}
+function fermerSettings() { document.getElementById('modalSettings').classList.remove('open'); }
+function ouvrirAide()  { document.getElementById('modalAide').classList.add('open'); }
+function fermerAide()  { document.getElementById('modalAide').classList.remove('open'); }
+
+function majSettingsUI() {
+  // Le style de carte ne concerne qu'UrbIS (Bruxelles)
+  document.getElementById('setStyleRow').style.display = settings.provider === 'bruxelles' ? '' : 'none';
+  const hint = document.getElementById('setProviderHint');
+  hint.textContent = settings.provider === 'osm'
+    ? '⚠️ Tiers hors UE — à éviter pour des données personnelles.'
+    : '✅ Service public belge — pas de transfert hors UE.';
+  hint.style.color = settings.provider === 'osm' ? '#e65100' : '#2e7d32';
+  // Stats données
+  const nbEnq = Object.keys(enquetes).length;
+  const nbCnt = Object.values(enquetes).reduce((s,a)=>s+a.length,0);
+  const nbCoords = Object.keys(localStorage).filter(k=>k.startsWith('coords_')).length;
+  document.getElementById('dataStats').textContent =
+    `${nbEnq} enquête(s), ${nbCnt} contact(s), ${nbCoords} adresse(s) géocodée(s) en cache.`;
+}
+
+function changerProvider(val) {
+  settings.provider = val;
+  GEO = GEO_PROVIDERS[val] || GEO_PROVIDERS.bruxelles;
+  saveSettings();
+  majSettingsUI();
+  rafraichirFond();
+}
+
+// Remplace le fond de carte sans recréer la carte entière
+function rafraichirFond() {
+  if (!leafletMap) return;
+  if (baseLayer) leafletMap.removeLayer(baseLayer);
+  baseLayer = L.tileLayer(GEO.tileUrl(settings.mapStyle),
+    { attribution: GEO.tileAttribution, maxZoom: GEO.maxZoom }).addTo(leafletMap);
+}
+
+// ── Sauvegarde / restauration complète (toutes les enquêtes) ────────
+
+/** Construit le HTML du détail enquêtes × statuts pour un objet enquetes */
+function buildBackupDetailHTML(src, meta) {
+  const statutsCfg = settings.statuts;
+
+  function colorFor(label) {
+    const s = statutsCfg.find(s => s.label === label);
+    return s ? s.color : '#90a4ae';
+  }
+  function iconFor(label) {
+    const s = statutsCfg.find(s => s.label === label);
+    return s ? s.icon : '•';
+  }
+
+  const noms = Object.keys(src);
+  let grandTotal = 0;
+  let html = '';
+
+  if (meta) {
+    html += `<div class="backup-meta">${meta}</div>`;
+  }
+
+  noms.forEach(nom => {
+    const arr = src[nom] || [];
+    const cpt = {};
+    arr.forEach(c => {
+      const st = c.statut || 'À faire';
+      cpt[st] = (cpt[st] || 0) + 1;
+    });
+    const tot = arr.length;
+    grandTotal += tot;
+
+    let pillsHtml = '';
+    // Statuts configurés d'abord, dans l'ordre
+    statutsCfg.forEach(s => {
+      const nb = cpt[s.label] || 0;
+      if (!nb) return;
+      const pct = tot ? Math.round(nb / tot * 100) : 0;
+      pillsHtml += `<span class="backup-statut-pill" style="background:${s.color}22;color:${s.color}">
+        ${esc(s.icon)} ${esc(s.label)} <strong>${nb}</strong> <span style="opacity:.7">(${pct}%)</span>
+      </span>`;
+    });
+    // Statuts hors config (données orphelines)
+    Object.entries(cpt).forEach(([st, nb]) => {
+      if (statutsCfg.find(s => s.label === st)) return;
+      pillsHtml += `<span class="backup-statut-pill" style="background:#eee;color:#666">
+        ${esc(st)} <strong>${nb}</strong>
+      </span>`;
+    });
+
+    html += `
+      <div class="backup-enq-block">
+        <div class="backup-enq-header">
+          <span title="${esc(nom)}">${esc(nom)}</span>
+          <span class="backup-enq-total">${tot} contact${tot > 1 ? 's' : ''}</span>
+        </div>
+        <div class="backup-statuts">${pillsHtml || '<span style="font-size:12px;color:var(--text3)">Aucun contact</span>'}</div>
+      </div>`;
+  });
+
+  html += `<div class="backup-grand-total">
+    <span>📊 Total</span>
+    <span>${grandTotal} contact${grandTotal > 1 ? 's' : ''} · ${noms.length} enquête${noms.length > 1 ? 's' : ''}</span>
+  </div>`;
+
+  return html;
+}
+
+function fermerBackupDetail() {
+  document.getElementById('modalBackupDetail').classList.remove('open');
+}
+
+function exporterBackup() {
+  const date   = new Date();
+  const isoNow = date.toISOString();
+  const data   = JSON.stringify({ version: 1, date: isoNow, enquetes }, null, 2);
+  const blob   = new Blob([data], { type: 'application/json' });
+  const url    = URL.createObjectURL(blob);
+  const fname  = 'statbel_sauvegarde_' + isoNow.slice(0, 10) + '.json';
+
+  const meta = `📅 Date : ${date.toLocaleDateString('fr-BE', {day:'2-digit',month:'long',year:'numeric'})}
+&nbsp;&nbsp;🗂️ Fichier : <code>${fname}</code>`;
+
+  const detailHtml = buildBackupDetailHTML(enquetes, meta);
+
+  document.getElementById('modalBackupTitle').textContent = '💾 Détail de la sauvegarde';
+  document.getElementById('modalBackupBody').innerHTML    = detailHtml;
+
+  const btnConfirm = document.getElementById('btnBackupConfirm');
+  btnConfirm.textContent = '⬇️ Télécharger';
+  btnConfirm.onclick = () => {
+    const a = Object.assign(document.createElement('a'), { href: url, download: fname });
+    a.click();
+    fermerBackupDetail();
+  };
+
+  // Bouton annuler = juste fermer (pas de téléchargement)
+  document.querySelector('#modalBackupDetail .btn-secondary').textContent = 'Annuler';
+
+  document.getElementById('modalBackupDetail').classList.add('open');
+}
+
+// Stockage temporaire pour la restauration (entre l'aperçu et la confirmation)
+let _pendingRestore = null;
+
+function importerBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const src  = data.enquetes || data;
+      const noms = Object.keys(src);
+      if (!noms.length) { alert('Aucune enquête dans ce fichier.'); return; }
+
+      const dateBackup = data.date
+        ? new Date(data.date).toLocaleDateString('fr-BE', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})
+        : 'inconnue';
+
+      // Détecter conflits (enquêtes de même nom déjà en mémoire)
+      const conflits = noms.filter(n => enquetes[n]);
+      const metaHtml = `📅 Sauvegarde du : ${dateBackup}
+&nbsp;&nbsp;📂 Fichier : <code>${esc(file.name)}</code>${conflits.length ? `<br>⚠️ <strong style="color:#e65100">${conflits.length} enquête${conflits.length>1?'s':''} sera${conflits.length>1?'ont':''} remplacée${conflits.length>1?'s':''}</strong> : ${conflits.map(n=>`<em>${esc(n)}</em>`).join(', ')}` : ''}`;
+
+      const detailHtml = buildBackupDetailHTML(src, metaHtml);
+
+      document.getElementById('modalBackupTitle').textContent = '⬆️ Aperçu de la restauration';
+      document.getElementById('modalBackupBody').innerHTML    = detailHtml;
+
+      const btnConfirm = document.getElementById('btnBackupConfirm');
+      btnConfirm.textContent = '✅ Confirmer la restauration';
+      _pendingRestore = src;
+      btnConfirm.onclick = () => {
+        if (!_pendingRestore) return;
+        const noms2 = Object.keys(_pendingRestore);
+        noms2.forEach(n => enquetes[n] = _pendingRestore[n]);
+        enqueteActive = enqueteActive || noms2[0];
+        _pendingRestore = null;
+        sauver();
+        refreshSelect();
+        rendu();
+        majSettingsUI();
+        fermerBackupDetail();
+        // Petit toast de confirmation
+        afficherToast('✅ Restauration terminée — ' + noms2.length + ' enquête(s) importée(s)', 3000);
+      };
+
+      document.querySelector('#modalBackupDetail .btn-secondary').textContent = 'Annuler';
+      document.getElementById('modalBackupDetail').classList.add('open');
+
+    } catch(err) { alert('Fichier de sauvegarde invalide : ' + err.message); }
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+
+function viderCacheCoords() {
+  const keys = Object.keys(localStorage).filter(k=>k.startsWith('coords_'));
+  if (!keys.length) { alert('Le cache est déjà vide.'); return; }
+  if (!confirm(`Supprimer ${keys.length} adresse(s) géocodée(s) ? Elles seront recalculées au prochain affichage de la carte.`)) return;
+  keys.forEach(k => localStorage.removeItem(k));
+  majSettingsUI();
+  rendu();
+  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+}
+
+// ── Lister les adresses non géocodées ───────────────────────────────
+function listerNonGeocodees() {
+  const box = document.getElementById('nonGeoList');
+  const items = [];
+  Object.entries(enquetes).forEach(([enq, arr]) => {
+    arr.forEach((c, idx) => {
+      if (!coordsCache(c.adresse)) items.push({ enq, idx, c });
+    });
+  });
+  if (!items.length) {
+    box.innerHTML = '<div class="nongeo-ok">✅ Toutes les adresses sont géocodées.</div>';
+    return;
+  }
+  box.innerHTML =
+    `<div class="nongeo-head">${items.length} adresse(s) non géocodée(s) — cliquez pour ouvrir la fiche :</div>` +
+    items.map(({enq, idx, c}) =>
+      `<button class="nongeo-item" onclick="allerAFiche('${enq.replace(/'/g,"\\'")}',${idx})">
+        <span class="nongeo-ref">${esc(enq)} › N°${esc(c.ordre)}</span>
+        <span class="nongeo-name">${esc(c.prenom)} ${esc(c.nom)}</span>
+        <span class="nongeo-adr">📍 ${esc(c.adresse||'(adresse vide)')}</span>
+      </button>`
+    ).join('');
+}
+
+function allerAFiche(enq, idx) {
+  enqueteActive = enq;
+  sauver();
+  refreshSelect();
+  filtreActif = 'Tous';
+  fermerSettings();
+  setView('liste');
+  setTimeout(() => {
+    const el = ouvrirEdit(idx);
+    if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 250);
+}
+
+// ── Éditeur de statuts ──────────────────────────────────────────────
+function renderStatutsEditor() {
+  const box = document.getElementById('statutsEditor');
+  if (!box) return;
+  box.innerHTML = settings.statuts.map((s, i) => `
+    <div class="statut-edit-row">
+      <input type="color" value="${s.color}" onchange="modifierStatut(${i},'color',this.value)" title="Couleur">
+      <input type="text" class="se-icon" value="${esc(s.icon)}" maxlength="2" onchange="modifierStatut(${i},'icon',this.value)" title="Icône">
+      <input type="text" class="se-label" value="${esc(s.label)}" onchange="modifierStatut(${i},'label',this.value)" title="Libellé">
+      <label class="se-flag" title="Horodate : enregistre la date de l'action (entretien fait, refus…)"><input type="checkbox" ${s.done?'checked':''} onchange="modifierStatut(${i},'done',this.checked)"> ✓</label>
+      <label class="se-flag" title="Statut rendez-vous : active la date/heure et la vue agenda"><input type="checkbox" ${s.rdv?'checked':''} onchange="modifierStatut(${i},'rdv',this.checked)"> 📅</label>
+      <button class="se-del" onclick="supprimerStatut(${i})" title="Supprimer ce statut"${settings.statuts.length<=1?' disabled':''}>🗑️</button>
+    </div>`).join('');
+}
+
+// Rafraîchit toutes les vues dépendant des statuts (sans toucher à l'éditeur)
+function rafraichirStatutsVues() {
+  renderFilters();
+  renderLegend();
+  rendu();
+  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+  if (vueActive === 'rdv') renduRdv();
+  majSettingsUI();
+}
+
+function modifierStatut(idx, field, value) {
+  const st = settings.statuts[idx];
+  if (!st) return;
+  if (field === 'label') {
+    const old = st.label, nw = (value || '').trim() || old;
+    if (nw !== old) {
+      // Migrer les contacts existants vers le nouveau libellé
+      Object.values(enquetes).forEach(arr => arr.forEach(c => { if ((c.statut||'') === old) c.statut = nw; }));
+      if (filtreActif === old) filtreActif = nw;
+      st.label = nw;
+      sauver();
+    }
+  } else {
+    st[field] = value;
+  }
+  saveSettings();
+  rafraichirStatutsVues();
+}
+
+function ajouterStatut() {
+  settings.statuts.push({ label:'Nouveau', color:'#607d8b', icon:'•', done:false, rdv:false });
+  saveSettings();
+  renderStatutsEditor();
+  rafraichirStatutsVues();
+}
+
+function supprimerStatut(idx) {
+  if (settings.statuts.length <= 1) return;
+  const st = settings.statuts[idx];
+  if (!confirm(`Supprimer le statut « ${st.label} » ? Les fiches qui le portent retomberont sur « ${settings.statuts[0].label === st.label ? (settings.statuts[1]||{}).label : settings.statuts[0].label} » à l'affichage.`)) return;
+  settings.statuts.splice(idx, 1);
+  if (filtreActif === st.label) filtreActif = 'Tous';
+  saveSettings();
+  renderStatutsEditor();
+  rafraichirStatutsVues();
+}
+
+function toggleKebab() { document.getElementById('kebabMenu').classList.toggle('open'); }
+document.addEventListener('click', e => {
+  const wrap=document.querySelector('.kebab-wrap');
+  if (wrap&&!wrap.contains(e.target)) document.getElementById('kebabMenu').classList.remove('open');
+});
+
+// Autocomplétion email
+const EMAIL_DOMAINES = ['gmail.com','skynet.be','yahoo.com','hotmail.com','outlook.com','live.be','telenet.be','proximus.be','icloud.com'];
+
+function emailSuggest(input, sugId) {
+  const val=input.value, at=val.indexOf('@'), box=document.getElementById(sugId);
+  if (!box) return;
+  if (at<0){fermerSuggestions(sugId);return;}
+  const avant=val.slice(0,at+1), apres=val.slice(at+1).toLowerCase();
+  const filtres=EMAIL_DOMAINES.filter(d=>d.startsWith(apres));
+  if (!filtres.length){fermerSuggestions(sugId);return;}
+  box.innerHTML=filtres.map((d,idx)=>`<button class="email-sug-item" data-idx="${idx}" onmousedown="choisirSuggestion(event,'${sugId}','${avant}${d}')">${avant}${d}</button>`).join('');
+  box.classList.add('open');
+}
+
+function choisirSuggestion(e, sugId, valeur) {
+  e.preventDefault();
+  const box=document.getElementById(sugId); if(!box) return;
+  const input=box.closest('.email-wrap').querySelector('input'); if(!input) return;
+  input.value=valeur;
+  changerEmail(parseInt(sugId.replace('esug-','')), valeur);
+  fermerSuggestions(sugId); input.focus();
+}
+
+function fermerSuggestions(sugId) { const b=document.getElementById(sugId); if(b) b.classList.remove('open'); }
+
+function emailKeydown(e, sugId) {
+  const box=document.getElementById(sugId); if(!box||!box.classList.contains('open')) return;
+  const items=box.querySelectorAll('.email-sug-item'), focused=box.querySelector('.focused');
+  let idx=focused?parseInt(focused.dataset.idx):-1;
+  if (e.key==='ArrowDown'){e.preventDefault();if(focused)focused.classList.remove('focused');items[(idx+1)%items.length].classList.add('focused');}
+  else if (e.key==='ArrowUp'){e.preventDefault();if(focused)focused.classList.remove('focused');items[(idx-1+items.length)%items.length].classList.add('focused');}
+  else if (e.key==='Enter'&&focused){e.preventDefault();focused.dispatchEvent(new MouseEvent('mousedown'));}
+  else if (e.key==='Escape') fermerSuggestions(sugId);
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// INIT — Démarrage asynchrone de l'application
+// ════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════
+// EXPORT RÉSUMÉ — XLSX et PDF (impression navigateur)
+// ════════════════════════════════════════════════════════════════════
+
+function exporterResumeXLSX() {
+  const wb = XLSX.utils.book_new();
+  const nomEnquetes = Object.keys(enquetes);
+  const statutsCfg  = settings.statuts;
+
+  // ── Feuille 1 : Tableau croisé ──────────────────────────────────
+  const header = ['Enquête', ...statutsCfg.map(s => s.icon + ' ' + s.label), 'Total'];
+  const rows   = [header];
+
+  const totauxParStatut = {};
+  statutsCfg.forEach(s => totauxParStatut[s.label] = 0);
+  let grandTotal = 0;
+
+  nomEnquetes.forEach(nom => {
+    const cpt = {};
+    statutsCfg.forEach(s => cpt[s.label] = 0);
+    (enquetes[nom] || []).forEach(c => {
+      const st = c.statut || statutDefaut();
+      if (cpt[st] !== undefined) cpt[st]++;
+      else cpt[st] = 1;
+      totauxParStatut[st] = (totauxParStatut[st] || 0) + 1;
+      grandTotal++;
+    });
+    const tot = Object.values(cpt).reduce((a,b)=>a+b, 0);
+    rows.push([nom, ...statutsCfg.map(s => cpt[s.label] || 0), tot]);
+  });
+
+  // Ligne totaux
+  rows.push(['TOTAL', ...statutsCfg.map(s => totauxParStatut[s.label] || 0), grandTotal]);
+
+  const ws1 = XLSX.utils.aoa_to_sheet(rows);
+
+  // Largeurs de colonnes
+  ws1['!cols'] = [
+    { wch: 35 },
+    ...statutsCfg.map(() => ({ wch: 12 })),
+    { wch: 10 }
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws1, 'Résumé');
+
+  // ── Feuille 2 : Détail par statut (%) ──────────────────────────
+  const header2 = ['Enquête', 'Total', ...statutsCfg.map(s => s.label + ' (%)') ];
+  const rows2   = [header2];
+
+  nomEnquetes.forEach(nom => {
+    const cpt = {};
+    statutsCfg.forEach(s => cpt[s.label] = 0);
+    (enquetes[nom] || []).forEach(c => {
+      const st = c.statut || statutDefaut();
+      if (cpt[st] !== undefined) cpt[st]++;
+    });
+    const tot = Object.values(cpt).reduce((a,b)=>a+b, 0);
+    rows2.push([
+      nom, tot,
+      ...statutsCfg.map(s => tot ? +(cpt[s.label]/tot*100).toFixed(1) : 0)
+    ]);
+  });
+
+  const ws2 = XLSX.utils.aoa_to_sheet(rows2);
+  ws2['!cols'] = [{ wch: 35 }, { wch: 8 }, ...statutsCfg.map(() => ({ wch: 14 }))];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Pourcentages');
+
+  // ── Feuille 3 : KPI global ──────────────────────────────────────
+  const rows3 = [
+    ['Indicateur', 'Valeur', '%'],
+    ['Total contacts', grandTotal, '100%'],
+    ...statutsCfg.map(s => {
+      const nb  = totauxParStatut[s.label] || 0;
+      const pct = grandTotal ? (nb/grandTotal*100).toFixed(1)+'%' : '0%';
+      return [s.icon + ' ' + s.label, nb, pct];
+    }),
+    [],
+    ['Nombre d\'enquêtes', nomEnquetes.length, ''],
+    ['Date export', new Date().toLocaleDateString('fr-BE'), ''],
+  ];
+  const ws3 = XLSX.utils.aoa_to_sheet(rows3);
+  ws3['!cols'] = [{ wch: 22 }, { wch: 12 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, ws3, 'KPI');
+
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `statbel_resume_${date}.xlsx`);
+}
+
+function exporterResumePDF() {
+  // Bascule sur la vue résumé si on n'y est pas déjà
+  if (vueActive !== 'resume') setView('resume');
+  setTimeout(() => window.print(), 150);
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// VUE RÉSUMÉ — KPI cards + barre de progression + tableau croisé
+// ════════════════════════════════════════════════════════════════════
+
+function renduResume() {
+  const box = document.getElementById('resumeContainer');
+  if (!box) return;
+
+  // ── Collecte des données ──────────────────────────────────────────
+  const nomEnquetes = Object.keys(enquetes);
+  const statutsCfg  = settings.statuts; // [{ label, color, icon }]
+
+  // Pour chaque statut, couleur et icône
+  const statutMap = {};
+  statutsCfg.forEach(s => { statutMap[s.label] = s; });
+
+  // Couleur de fallback pour un statut inconnu
+  function colorFor(label) {
+    return (statutMap[label] && statutMap[label].color) || '#90a4ae';
+  }
+  function iconFor(label) {
+    return (statutMap[label] && statutMap[label].icon) || '•';
+  }
+
+  // Tous les statuts présents dans les données (+ ceux de la config)
+  const statutsPresents = new Set(statutsCfg.map(s => s.label));
+  Object.values(enquetes).forEach(arr =>
+    arr.forEach(c => statutsPresents.add(c.statut || 'À faire'))
+  );
+  const statutsListe = [...statutsPresents];
+
+  // Matrice : { [enquete]: { [statut]: count } }
+  const matrice = {};
+  let grandTotal = 0;
+  const totauxParStatut = {};
+  statutsListe.forEach(s => totauxParStatut[s] = 0);
+
+  nomEnquetes.forEach(nom => {
+    matrice[nom] = {};
+    statutsListe.forEach(s => matrice[nom][s] = 0);
+    (enquetes[nom] || []).forEach(c => {
+      const st = c.statut || 'À faire';
+      if (!matrice[nom][st]) matrice[nom][st] = 0;
+      matrice[nom][st]++;
+      totauxParStatut[st] = (totauxParStatut[st] || 0) + 1;
+      grandTotal++;
+    });
+  });
+
+  // Totaux par enquête
+  const totauxParEnquete = {};
+  nomEnquetes.forEach(nom => {
+    totauxParEnquete[nom] = Object.values(matrice[nom]).reduce((a,b) => a+b, 0);
+  });
+
+  // ── KPI cards ────────────────────────────────────────────────────
+  // Trouver "Fait" et "À faire" dynamiquement
+  const doneStatuts  = statutsCfg.filter(s => s.done).map(s => s.label);
+  const rdvStatuts   = statutsCfg.filter(s => s.rdv).map(s => s.label);
+
+  const nbFait   = doneStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
+  const nbAfaire = (totauxParStatut['À faire'] || 0);
+  const nbRdv    = rdvStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
+  const pctFait  = grandTotal ? Math.round(nbFait / grandTotal * 100) : 0;
+
+  let kpiHtml = `
+    <div class="kpi-card" style="border-top-color:#1a237e">
+      <div class="kpi-val">${grandTotal}</div>
+      <div class="kpi-lbl">Total contacts</div>
+      <div class="kpi-pct">${nomEnquetes.length} enquête${nomEnquetes.length>1?'s':''}</div>
+    </div>`;
+
+  statutsCfg.forEach(s => {
+    const nb  = totauxParStatut[s.label] || 0;
+    const pct = grandTotal ? Math.round(nb / grandTotal * 100) : 0;
+    kpiHtml += `
+    <div class="kpi-card" style="border-top-color:${s.color}">
+      <div class="kpi-val" style="color:${s.color}">${nb}</div>
+      <div class="kpi-lbl">${esc(s.icon)} ${esc(s.label)}</div>
+      <div class="kpi-pct">${pct}%</div>
+    </div>`;
+  });
+
+  // ── Barre de progression empilée ─────────────────────────────────
+  let barHtml = '<div class="progress-stacked">';
+  statutsCfg.forEach(s => {
+    const nb  = totauxParStatut[s.label] || 0;
+    if (!nb || !grandTotal) return;
+    const pct = (nb / grandTotal * 100).toFixed(1);
+    barHtml += `<div class="progress-seg" style="width:${pct}%;background:${s.color}" title="${s.label} : ${nb} (${pct}%)"></div>`;
+  });
+  barHtml += '</div>';
+
+  let legendHtml = '<div class="progress-legend">';
+  statutsCfg.forEach(s => {
+    const nb  = totauxParStatut[s.label] || 0;
+    if (!nb) return;
+    const pct = grandTotal ? (nb / grandTotal * 100).toFixed(1) : 0;
+    legendHtml += `
+      <div class="prog-leg-item">
+        <div class="prog-leg-dot" style="background:${s.color}"></div>
+        <span>${esc(s.icon)} ${esc(s.label)} — <strong>${nb}</strong> (${pct}%)</span>
+      </div>`;
+  });
+  legendHtml += '</div>';
+
+  // ── Tableau croisé ───────────────────────────────────────────────
+  let thStatuts = statutsCfg.map(s =>
+    `<th style="border-bottom:3px solid ${s.color}">${esc(s.icon)}<br>${esc(s.label)}</th>`
+  ).join('');
+
+  let tableHtml = `
+    <div class="resume-table-wrap">
+      <table class="resume-table">
+        <thead>
+          <tr>
+            <th>Enquête</th>
+            ${thStatuts}
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+  nomEnquetes.forEach(nom => {
+    const tot = totauxParEnquete[nom] || 0;
+    let cells = statutsCfg.map(s => {
+      const nb = matrice[nom][s.label] || 0;
+      if (!nb) return `<td><span class="cell-zero">—</span></td>`;
+      const pct = tot ? Math.round(nb/tot*100) : 0;
+      return `<td>
+        <div class="cell-bar-wrap">
+          <span class="cell-badge" style="background:${s.color}22;color:${s.color}">${nb}</span>
+          <span style="font-size:10px;color:var(--text3)">${pct}%</span>
+        </div>
+      </td>`;
+    }).join('');
+
+    // Barre mini de progression dans la colonne Total
+    let miniBar = '<div style="height:6px;border-radius:3px;overflow:hidden;display:flex;min-width:60px;margin-top:4px">';
+    statutsCfg.forEach(s => {
+      const nb = matrice[nom][s.label] || 0;
+      if (!nb || !tot) return;
+      const pct = (nb/tot*100).toFixed(1);
+      miniBar += `<div style="width:${pct}%;background:${s.color};height:100%"></div>`;
+    });
+    miniBar += '</div>';
+
+    tableHtml += `
+      <tr>
+        <td title="${esc(nom)}">${esc(nom)}</td>
+        ${cells}
+        <td>
+          <strong>${tot}</strong>
+          ${miniBar}
+        </td>
+      </tr>`;
+  });
+
+  // Ligne totaux
+  let totalCells = statutsCfg.map(s => {
+    const nb = totauxParStatut[s.label] || 0;
+    const pct = grandTotal ? Math.round(nb/grandTotal*100) : 0;
+    return nb
+      ? `<td><span class="cell-badge" style="background:${s.color}22;color:${s.color}">${nb}</span> <small style="color:var(--text3)">${pct}%</small></td>`
+      : `<td><span class="cell-zero">—</span></td>`;
+  }).join('');
+
+  tableHtml += `
+        <tr class="resume-total">
+          <td>📊 TOTAL</td>
+          ${totalCells}
+          <td><strong>${grandTotal}</strong></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  // ── Assemblage final ──────────────────────────────────────────────
+  box.innerHTML = `
+    <div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div class="resume-title">📊 Résumé — ${nomEnquetes.length} enquête${nomEnquetes.length>1?'s':''}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">
+            Toutes les enquêtes · Mis à jour : ${new Date().toLocaleTimeString('fr-BE', {hour:'2-digit',minute:'2-digit'})}
+          </div>
+        </div>
+        <div class="resume-export-bar">
+          <button class="btn-export btn-export-xlsx" onclick="exporterResumeXLSX()">📊 Exporter Excel</button>
+          <button class="btn-export btn-export-pdf"  onclick="exporterResumePDF()">🖨️ Imprimer / PDF</button>
+        </div>
+      </div>
+      <div class="resume-print-header" style="margin-top:8px;font-size:11px;color:#666;">
+        Statbel – Interviews · Exporté le ${new Date().toLocaleDateString('fr-BE', {day:'2-digit',month:'long',year:'numeric'})}
+      </div>
+    </div>
+    <div>
+      <div class="resume-section-title">Indicateurs clés</div>
+      <div class="kpi-grid">${kpiHtml}</div>
+    </div>
+    <div>
+      <div class="resume-section-title">Progression globale</div>
+      ${barHtml}
+      ${legendHtml}
+    </div>
+    <div>
+      <div class="resume-section-title">Tableau par enquête et statut</div>
+      ${tableHtml}
+    </div>`;
+}
+
+
+async function init() {
+  chargerSettings();
+  appliquerTheme();
+  await charger();
+
+  // Purger les coordonnées invalides ou hors Belgique du localStorage
+  Object.keys(localStorage).forEach(k => {
+    if (!k.startsWith('coords_')) return;
+    if (/bte\s*\d+|ET\w+|b\d{2,}/i.test(k)) { localStorage.removeItem(k); return; }
+    try {
+      const v = JSON.parse(localStorage.getItem(k));
+      if (!v||!v.lat||!v.lng||v.lat<49.5||v.lat>51.5||v.lng<2.5||v.lng>6.5)
+        localStorage.removeItem(k);
+    } catch(e) { localStorage.removeItem(k); }
+  });
+
+  refreshSelect();
+  rendu();
+  restaurerIndicateur();
+}
+
+init();
+
+</script>
+</body>
+</html>
