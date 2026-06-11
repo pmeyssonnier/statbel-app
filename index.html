@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statbel – Interviews</title>
 <link rel="icon" href="data:,">
+<meta name="theme-color" content="#1a237e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+  // PWA : actif uniquement quand l'app est servie en http(s) (ex. GitHub Pages).
+  // En file:// on ne fait rien (service workers indisponibles, manifeste inutile).
+  if (location.protocol === 'https:' || location.protocol === 'http:') {
+    const m = document.createElement('link');
+    m.rel = 'manifest'; m.href = 'manifest.webmanifest';
+    document.head.appendChild(m);
+    const ai = document.createElement('link');
+    ai.rel = 'apple-touch-icon'; ai.href = 'icon-192.png';
+    document.head.appendChild(ai);
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  }
+</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
