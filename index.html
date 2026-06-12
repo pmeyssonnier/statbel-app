@@ -1541,6 +1541,7 @@ function ligneDemographie(c) {
   const ec = etatCivilGenre(c.marital_status, c.sexe);
   if (ec) parts.push(esc(ec));
   if (c.nationality) parts.push(esc(c.nationality));
+  if (c.taille_menage) parts.push('👥 ' + esc(c.taille_menage) + ' pers.');
   return parts.join(' · ');
 }
 
@@ -1690,6 +1691,7 @@ function parseCSV(text) {
   const iBirthC  = idx(['birth_country','pays_naissance','country_birth']);
   const iNatly   = idx(['nationality','nationalite','nationalité']);
   const iMarital = idx(['marital_status','etat_civil','état_civil']);
+  const iTaille  = idx(['taille_menage','taille_ménage','household_size','taille','menage','ménage']);
   const iGsm     = idx(['gsm','tel','telephone','phone','gsm_tel']);
   const iEmail   = idx(['email','mail','e_mail']);
   if (iPrenom < 0 && iNom < 0) return null;
@@ -1711,6 +1713,7 @@ function parseCSV(text) {
       birth_country:  g(cols,iBirthC) || null,
       nationality:    g(cols,iNatly)  || null,
       marital_status: g(cols,iMarital)|| null,
+      taille_menage:  iTaille>=0 ? (parseInt(cols[iTaille])||null) : null,
       gsm:            g(cols,iGsm),
       email:          g(cols,iEmail),
     };
@@ -1794,12 +1797,12 @@ function csvCell(v) {
 }
 
 function genererCSV() {
-  const rows = [['ordre','prenom','nom','adresse','statut','date_interview','rdv','sexe','birth_date','age','birth_country','nationality','marital_status','gsm','email','notes']];
+  const rows = [['ordre','prenom','nom','adresse','statut','date_interview','rdv','sexe','birth_date','age','birth_country','nationality','marital_status','taille_menage','gsm','email','notes']];
   contacts().forEach(c => rows.push([
     csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
     csvCell(c.statut||'À faire'), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
     csvCell(c.birth_date||''), csvCell(c.age||''), csvCell(c.birth_country||''), csvCell(c.nationality||''),
-    csvCell(c.marital_status||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||'')
+    csvCell(c.marital_status||''), csvCell(c.taille_menage||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||'')
   ]));
   return '\ufeff' + rows.map(r => r.join(',')).join('\n');
 }
