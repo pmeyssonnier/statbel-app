@@ -680,7 +680,7 @@
     flex-shrink: 0;
   }
   .historique-date {
-    font-size: 11px; padding: 1px 4px;
+    font-size: 11px; padding: 1px 4px; width: 84px; text-align: center;
     border: 1px solid var(--input-border); border-radius: 4px;
     background: var(--input-bg); color: var(--text); font-family: inherit;
   }
@@ -2282,8 +2282,10 @@ function buildHistoriqueHTML(c, i) {
       <div class="historique-dot" style="background:${def.color}"></div>
       <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(h.statut)}</span>
       <span>—</span>
-      <input type="date" class="historique-date" value="${dateFrToISO(h.date)}"
-        onchange="changerDateHistorique(${i},${idx},this.value)" title="Modifier la date">
+      <input type="text" inputmode="numeric" class="historique-date" value="${esc(h.date)}"
+        placeholder="jj/mm/aaaa" maxlength="10" title="Modifier la date (jj/mm/aaaa)"
+        oninput="this.value=formatDateFrSaisie(this.value)"
+        onchange="changerDateHistorique(${i},${idx},this.value)">
       <button class="historique-del" title="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
     </div>`;
   }).join('');
@@ -2293,15 +2295,30 @@ function buildHistoriqueHTML(c, i) {
   </div>`;
 }
 
+/** Insère les barres obliques pendant la saisie : 12062026 → 12/06/2026 */
+function formatDateFrSaisie(v) {
+  const d = (v || '').replace(/\D/g, '').slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return d.slice(0, 2) + '/' + d.slice(2);
+  return d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4);
+}
+
 /** Modifie la date d'une entrée d'historique (et synchronise c.date si c'est l'état courant) */
-function changerDateHistorique(i, idx, iso) {
+function changerDateHistorique(i, idx, val) {
   const c = contacts()[i];
-  if (!Array.isArray(c.historique) || !c.historique[idx] || !iso) return;
+  if (!Array.isArray(c.historique) || !c.historique[idx]) return;
+  val = (val || '').trim();
+  // Valider le format jj/mm/aaaa
+  const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12) {
+    alert('Date invalide. Format attendu : jj/mm/aaaa');
+    rendu();
+    return;
+  }
   const ancienne = c.historique[idx].date;
-  const fr = dateISOToFr(iso);
-  c.historique[idx].date = fr;
+  c.historique[idx].date = val;
   // Si cette entrée reflète l'état courant de la fiche, mettre aussi à jour c.date
-  if (c.historique[idx].statut === c.statut && c.date === ancienne) c.date = fr;
+  if (c.historique[idx].statut === c.statut && c.date === ancienne) c.date = val;
   sauver();
   rendu();
   if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
