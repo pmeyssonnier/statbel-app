@@ -241,6 +241,8 @@
   .card-name { font-size: 15px; font-weight: bold; color: var(--filter-text); flex: 1; }
   .card-ordre { font-size: 12px; color: var(--ordre-color); background: var(--ordre-bg); padding: 2px 8px; border-radius: 10px; white-space: nowrap; flex-shrink:0; }
   .card-demo { font-size: 12px; color: var(--text3); margin: 4px 0 2px; }
+  .card-statut { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 14px; }
+  .card-statut-date { color: var(--text3); font-size: 13px; }
   .card-adresse-row { display:block; margin: 6px 0 8px 0; }
   .card-adresse { font-size: 13px; color: var(--text2); line-height: 1.4; text-decoration: none; }
   .card-adresse:hover { color: #1a73e8; text-decoration: underline; }
@@ -1455,6 +1457,16 @@ function dateISOToFr(iso) {
   return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : '';
 }
 
+/** Ajoute le jour de la semaine devant une date DD/MM/YYYY → « Mer. 10/06/2026 » */
+function formatDateJour(fr) {
+  if (!fr) return '';
+  const iso = dateFrToISO(fr);
+  if (!iso) return fr;
+  const [y, m, d] = iso.split('-');
+  const JOURS = ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'];
+  return JOURS[new Date(+y, +m - 1, +d).getDay()] + ' ' + fr;
+}
+
 function changerStatut(i, val) {
   const c   = contacts()[i];
   const old = c.statut || statutDefaut();
@@ -1623,10 +1635,20 @@ function ouvrirEdit(i) {
 
 // Génère le contenu du formulaire d'édition d'une fiche (à la demande)
 function buildEditForm(i) {
-  const c   = contacts()[i];
-  const _p  = parseAdresse(c.adresse);
-  const def = statutDef(c.statut || statutDefaut());
+  const c      = contacts()[i];
+  const _p     = parseAdresse(c.adresse);
+  const statut = c.statut || statutDefaut();
+  const def    = statutDef(statut);
   return `
+        <div class="edit-row">
+          <label>Statut</label>
+          <div class="statut-bar">
+            ${statutDefs().map((s, si) => {
+              const on = s.label === statut;
+              return `<button class="s-btn${on?' actif':''}" style="color:${s.color};${on?`border-color:${s.color};background:${s.color}22;`:''}" onclick="changerStatut(${i},statutDefs()[${si}].label)">${s.icon} ${esc(s.label)}</button>`;
+            }).join('')}
+          </div>
+        </div>
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:1">
             <label>Prénom</label>
@@ -1691,6 +1713,7 @@ function buildEditForm(i) {
               style="width:70px;border-color:#90caf9;background:#fff;text-align:center;">
           </div>
         </div>` : ''}
+        ${buildHistoriqueHTML(c, i)}
         <div class="edit-btns">
           <button class="btn-cancel-edit" onclick="toggleEdit(${i})">Fermer</button>
           <button class="btn-vcard" onclick="exporterVCard(${i})" title="Exporter contact">📇 vCard</button>
@@ -1938,7 +1961,6 @@ function rendu() {
     const badges = [];
     if (c.gsm)   badges.push(`<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>`);
     if (c.email) badges.push(`<span class="badge">✉️ ${esc(c.email)}</span>`);
-    if (c.date)  badges.push(`<span class="badge" style="color:${def.color};background:${def.color}22">${def.icon} ${esc(c.date)}</span>`);
     if (c.rdv && def.rdv) badges.push(`<span class="badge badge-rdv">📅 ${formatRdv(c.rdv)}</span>`);
     const _p = parseAdresse(c.adresse);
     const card = document.createElement('div');
@@ -1956,14 +1978,9 @@ function rendu() {
         ${distanceBadge(c.adresse)}
       </div>
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
-      ${buildHistoriqueHTML(c, i)}
-      <div class="card-bottom">
-        <div class="statut-bar">
-          ${statutDefs().map((s, si) => {
-            const on = s.label === statut;
-            return `<button class="s-btn${on?' actif':''}" style="color:${s.color};${on?`border-color:${s.color};background:${s.color}22;`:''}" onclick="changerStatut(${i},statutDefs()[${si}].label)">${s.icon} ${esc(s.label)}</button>`;
-          }).join('')}
-        </div>
+      <div class="card-statut">
+        <span style="color:${def.color};font-weight:700">${esc(def.icon)} ${esc(statut)}</span>
+        ${c.date ? `<span class="card-statut-date">${esc(formatDateJour(c.date))}</span>` : ''}
       </div>
       ${!coordsCache(c.adresse) ? '<div class="no-coords">⚠️ Adresse non trouvée sur la carte</div>' : ''}
       <div class="edit-area" id="edit-${i}"></div>
