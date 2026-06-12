@@ -679,6 +679,13 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
+  .historique-del {
+    margin-left: auto; flex-shrink: 0;
+    background: none; border: none; cursor: pointer;
+    color: var(--text3); font-size: 13px; line-height: 1;
+    padding: 2px 4px; border-radius: 4px;
+  }
+  .historique-del:hover { background: #ffebee; color: #b71c1c; }
 
   .email-wrap { position: relative; flex: 1; min-width: 0; width: 100%; }
   .email-wrap input { width: 100%; }
@@ -1900,7 +1907,7 @@ function rendu() {
         ${distanceBadge(c.adresse)}
       </div>
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
-      ${buildHistoriqueHTML(c)}
+      ${buildHistoriqueHTML(c, i)}
       <div class="card-bottom">
         <div class="statut-bar">
           ${statutDefs().map((s, si) => {
@@ -2254,21 +2261,36 @@ function renduRdv() {
 }
 
 /** Construit le bloc HTML de l'historique des passages d'un contact */
-function buildHistoriqueHTML(c) {
+function buildHistoriqueHTML(c, i) {
   if (!Array.isArray(c.historique) || c.historique.length === 0) return '';
-  // Afficher du plus récent au plus ancien
-  const lignes = [...c.historique].reverse().map(h => {
+  // Du plus récent au plus ancien (en conservant l'index réel pour la suppression)
+  const lignes = c.historique.map((h, idx) => ({ h, idx })).reverse().map(({ h, idx }) => {
     const def = statutDef(h.statut);
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
       <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(h.statut)}</span>
       <span>— ${esc(h.date)}</span>
+      <button class="historique-del" title="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
     </div>`;
   }).join('');
   return `<div class="historique-wrap">
     <div class="historique-title">🕐 Historique (${c.historique.length})</div>
     ${lignes}
   </div>`;
+}
+
+/** Supprime une entrée erronée de l'historique d'un contact */
+function supprimerHistorique(i, idx) {
+  const c = contacts()[i];
+  if (!Array.isArray(c.historique) || !c.historique[idx]) return;
+  const e = c.historique[idx];
+  if (!confirm(`Supprimer cette entrée d'historique : « ${e.statut} — ${e.date} » ?`)) return;
+  c.historique.splice(idx, 1);
+  if (!c.historique.length) delete c.historique;
+  sauver();
+  rendu();
+  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+  if (vueActive === 'rdv') renduRdv();
 }
 
 function buildRdvCard(c, i, today, def) {
@@ -2317,7 +2339,7 @@ function buildRdvCard(c, i, today, def) {
     </div>
     ${c.gsm   ? `<div style="margin-top:4px"><a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a></div>` : ''}
     ${c.notes ? `<div style="margin-top:6px;font-size:12px;color:var(--text3);">📝 ${esc(c.notes)}</div>` : ''}
-    ${buildHistoriqueHTML(c)}`;
+    ${buildHistoriqueHTML(c, i)}`;
   return div;
 }
 
