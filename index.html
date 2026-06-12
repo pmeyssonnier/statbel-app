@@ -1678,7 +1678,7 @@ function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return null;
   const sep     = lines[0].includes(';') ? ';' : ',';
-  const headers = splitLine(lines[0], sep).map(h => h.toLowerCase().trim().replace(/[^a-z_]/g,''));
+  const headers = splitLine(lines[0], sep).map(h => h.toLowerCase().trim().replace(/\s+/g,'_').replace(/[^a-zàâäéèêëïîôöœûüçæ_0-9]/gi,''));
   const idx = names => { for (const n of names) { const i = headers.indexOf(n); if (i>=0) return i; } return -1; };
   const iOrdre   = idx(['ordre','order','nr','no']);
   const iPrenom  = idx(['prenom','firstname','first_name','prénom']);
@@ -1791,17 +1791,21 @@ function fermerModal() {
 // EXPORT — CSV et vCard
 // ════════════════════════════════════════════════════════════════════
 
-function csvCell(v) { return '"'+(v||'').toString().replace(/"/g,'""')+'"'; }
+function csvCell(v) {
+  const str = (v||'').toString().trim();
+  const escaped = str.replace(/"/g,'""');
+  return /[,"\r\n]/.test(str) || escaped !== str ? '"'+escaped+'"' : escaped;
+}
 
 function genererCSV() {
   const rows = [['ordre','prenom','nom','adresse','statut','date_interview','rdv','sexe','birth_date','age','birth_country','nationality','marital_status','gsm','email','notes']];
   contacts().forEach(c => rows.push([
-    c.ordre, csvCell(c.prenom), csvCell(c.nom), csvCell(c.adresse),
-    c.statut||'À faire', c.date||'', c.rdv||'', c.sexe||'',
-    c.birth_date||'', c.age||'', c.birth_country||'', c.nationality||'',
-    c.marital_status||'', csvCell(c.gsm), csvCell(c.email), csvCell(c.notes)
+    csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
+    csvCell(c.statut||'À faire'), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
+    csvCell(c.birth_date||''), csvCell(c.age||''), csvCell(c.birth_country||''), csvCell(c.nationality||''),
+    csvCell(c.marital_status||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||'')
   ]));
-  return '﻿' + rows.map(r => r.join(',')).join('\n');
+  return '\ufeff' + rows.map(r => r.join(',')).join('\n');
 }
 
 function exporterCSV() {
@@ -2662,10 +2666,19 @@ function ajouterStatut() {
 
 function supprimerStatut(idx) {
   if (settings.statuts.length <= 1) return;
-  const st = settings.statuts[idx];
-  if (!confirm(`Supprimer le statut « ${st.label} » ? Les fiches qui le portent retomberont sur « ${settings.statuts[0].label === st.label ? (settings.statuts[1]||{}).label : settings.statuts[0].label} » à l'affichage.`)) return;
+  const st    = settings.statuts[idx];
+  // Statut de repli = premier statut restant après suppression
+  const cible = (settings.statuts[idx === 0 ? 1 : 0] || {}).label;
+  if (!confirm(`Supprimer le statut « ${st.label} » ? Les fiches qui le portent seront réassignées à « ${cible} ».`)) return;
   settings.statuts.splice(idx, 1);
+  // Migration : réassigner les contacts orphelins (toutes enquêtes) vers le repli
+  const repli = statutDefaut();   // = settings.statuts[0].label après splice
+  let migres = 0;
+  Object.values(enquetes).forEach(arr => arr.forEach(c => {
+    if ((c.statut || '') === st.label) { c.statut = repli; migres++; }
+  }));
   if (filtreActif === st.label) filtreActif = 'Tous';
+  if (migres) sauver();
   saveSettings();
   renderStatutsEditor();
   rafraichirStatutsVues();
