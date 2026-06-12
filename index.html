@@ -684,6 +684,11 @@
     border: 1px solid var(--input-border); border-radius: 4px;
     background: var(--input-bg); color: var(--text); font-family: inherit;
   }
+  .historique-cal {
+    flex-shrink: 0; background: none; border: none; cursor: pointer;
+    font-size: 13px; line-height: 1; padding: 2px 3px; border-radius: 4px;
+  }
+  .historique-cal:hover { background: var(--badge-bg); }
   .historique-del {
     margin-left: auto; flex-shrink: 0;
     background: none; border: none; cursor: pointer;
@@ -971,6 +976,9 @@
 <input type="file" id="restoreFile" accept=".json"
   style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden"
   onchange="importerBackup(event)">
+<!-- Sélecteur de date partagé pour le calendrier de l'historique -->
+<input type="date" id="histDatePicker"
+  style="position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0;">
 
 <!-- Modal détail sauvegarde / restauration -->
 <div class="modal-overlay" id="modalBackupDetail">
@@ -2286,6 +2294,7 @@ function buildHistoriqueHTML(c, i) {
         placeholder="jj/mm/aaaa" maxlength="10" title="Modifier la date (jj/mm/aaaa)"
         oninput="this.value=formatDateFrSaisie(this.value)"
         onchange="changerDateHistorique(${i},${idx},this.value)">
+      <button class="historique-cal" title="Ouvrir le calendrier" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
       <button class="historique-del" title="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
     </div>`;
   }).join('');
@@ -2301,6 +2310,19 @@ function formatDateFrSaisie(v) {
   if (d.length <= 2) return d;
   if (d.length <= 4) return d.slice(0, 2) + '/' + d.slice(2);
   return d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4);
+}
+
+/** Ouvre le calendrier natif pour choisir la date d'une entrée d'historique */
+function ouvrirCalendrierHist(i, idx, fr) {
+  const p = document.getElementById('histDatePicker');
+  if (!p) return;
+  p.value = dateFrToISO(fr) || '';
+  p.onchange = function () {
+    if (p.value) changerDateHistorique(i, idx, dateISOToFr(p.value));
+    p.onchange = null;
+  };
+  if (typeof p.showPicker === 'function') { try { p.showPicker(); return; } catch (e) {} }
+  p.focus(); p.click();
 }
 
 /** Modifie la date d'une entrée d'historique (et synchronise c.date si c'est l'état courant) */
