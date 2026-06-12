@@ -240,6 +240,7 @@
   .card-top { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 32px; }
   .card-name { font-size: 15px; font-weight: bold; color: var(--filter-text); flex: 1; }
   .card-ordre { font-size: 12px; color: var(--ordre-color); background: var(--ordre-bg); padding: 2px 8px; border-radius: 10px; white-space: nowrap; flex-shrink:0; }
+  .card-demo { font-size: 12px; color: var(--text3); margin: 4px 0 2px; }
   .card-adresse-row { display:block; margin: 6px 0 8px 0; }
   .card-adresse { font-size: 13px; color: var(--text2); line-height: 1.4; text-decoration: none; }
   .card-adresse:hover { color: #1a73e8; text-decoration: underline; }
@@ -1505,6 +1506,41 @@ function formatRdv(rdv) {
   return JOURS[dateObj.getDay()]+' '+d.padStart(2,'0')+'/'+m.padStart(2,'0')+'/'+y+(h?' '+h:'');
 }
 
+// ── Synthèse démographique (lecture seule, issue de l'import) ────────
+function calcAge(birthDate) {
+  if (!birthDate) return null;
+  const n = new Date(birthDate);
+  if (isNaN(n)) return null;
+  const now = new Date();
+  let age = now.getFullYear() - n.getFullYear();
+  const m = now.getMonth() - n.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < n.getDate())) age--;
+  return age >= 0 && age < 130 ? age : null;
+}
+
+// État civil accordé au genre (M/F)
+function etatCivilGenre(status, sexe) {
+  if (!status) return '';
+  const f = sexe === 'F';
+  const map = {
+    'Marié(e)':              f ? 'Mariée'            : 'Marié',
+    'Divorcé(e)/Séparé(e)':  f ? 'Divorcée/Séparée'  : 'Divorcé/Séparé',
+    'Célibataire':           'Célibataire'
+  };
+  return map[status] || status;
+}
+
+// Construit « 45 ans · Mariée · BEL » à partir des données disponibles
+function ligneDemographie(c) {
+  const parts = [];
+  const age = c.age || calcAge(c.birth_date);
+  if (age) parts.push(age + ' ans');
+  const ec = etatCivilGenre(c.marital_status, c.sexe);
+  if (ec) parts.push(esc(ec));
+  if (c.nationality) parts.push(esc(c.nationality));
+  return parts.join(' · ');
+}
+
 function toggleEdit(i) {
   const el = document.getElementById('edit-'+i);
   // Édition paresseuse : le formulaire n'est construit qu'au premier clic,
@@ -1557,49 +1593,6 @@ function buildEditForm(i) {
           <input type="text" id="edit-cpville-${i}" value="${esc(_p.cpville)}" placeholder="1030 Schaerbeek">
         </div>
 
-        <!-- Démographie -->
-        <details class="demo-section" ${(c.sexe||c.birth_date||c.nationality)?'open':''}>
-          <summary>Données démographiques</summary>
-          <div class="demo-grid">
-            <div class="demo-item">
-              <label>⚧ Sexe</label>
-              <select id="edit-sexe-${i}" onchange="contacts()[${i}].sexe=this.value;sauver()">
-                <option value="">—</option>
-                <option value="M" ${c.sexe==='M'?'selected':''}>M — Masculin</option>
-                <option value="F" ${c.sexe==='F'?'selected':''}>F — Féminin</option>
-              </select>
-            </div>
-            <div class="demo-item">
-              <label>🎂 Date de naissance</label>
-              <input type="date" id="edit-birth-${i}" value="${c.birth_date||''}"
-                onchange="contacts()[${i}].birth_date=this.value||null;majAge(${i});sauver()">
-            </div>
-            <div class="demo-item">
-              <label>📅 Âge</label>
-              <input type="number" id="edit-age-${i}" value="${c.age||''}" min="0" max="130"
-                onchange="contacts()[${i}].age=parseInt(this.value)||null;sauver()" placeholder="calculé auto">
-            </div>
-            <div class="demo-item">
-              <label>💍 État civil</label>
-              <select id="edit-mrtl-${i}" onchange="contacts()[${i}].marital_status=this.value||null;sauver()">
-                <option value="">—</option>
-                <option value="Célibataire" ${c.marital_status==='Célibataire'?'selected':''}>Célibataire</option>
-                <option value="Marié(e)" ${c.marital_status==='Marié(e)'?'selected':''}>Marié(e)</option>
-                <option value="Divorcé(e)/Séparé(e)" ${c.marital_status==='Divorcé(e)/Séparé(e)'?'selected':''}>Divorcé(e)/Séparé(e)</option>
-              </select>
-            </div>
-            <div class="demo-item">
-              <label>🌍 Nationalité (ISO)</label>
-              <input type="text" id="edit-nlty-${i}" value="${esc(c.nationality||'')}" placeholder="BEL, TUR, MAR..."
-                oninput="contacts()[${i}].nationality=this.value.toUpperCase()||null;sauver()" maxlength="3" style="text-transform:uppercase">
-            </div>
-            <div class="demo-item">
-              <label>🗺️ Pays de naissance (ISO)</label>
-              <input type="text" id="edit-birth-country-${i}" value="${esc(c.birth_country||'')}" placeholder="BEL, TUR, MAR..."
-                oninput="contacts()[${i}].birth_country=this.value.toUpperCase()||null;sauver()" maxlength="3" style="text-transform:uppercase">
-            </div>
-          </div>
-        </details>
 
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:0.45">
@@ -1895,6 +1888,7 @@ function rendu() {
         <div class="card-name">${esc(c.prenom)} ${esc(c.nom)}</div>
         <button class="btn-edit" onclick="toggleEdit(${i})" title="Modifier">🖊️</button>
       </div>
+      ${(() => { const d = ligneDemographie(c); return d ? `<div class="card-demo">👤 ${d}</div>` : ''; })()}
       <div class="card-adresse-row">
         <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank">📍 ${esc(c.adresse)}</a>
         ${distanceBadge(c.adresse)}
