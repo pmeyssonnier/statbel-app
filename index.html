@@ -1504,11 +1504,39 @@ function formaterGsm(val) {
   return '+' + d.slice(0,2) + ' ' + d.slice(2,5) + ' ' + d.slice(5,7) + ' ' + d.slice(7,9) + ' ' + d.slice(9,11);
 }
 
+/** Insère les ':' pendant la saisie de l'heure : 0930 → 09:30 */
+function formatHeureSaisie(v) {
+  const d = (v || '').replace(/\D/g, '').slice(0, 4);
+  return d.length <= 2 ? d : d.slice(0, 2) + ':' + d.slice(2);
+}
+
+/** Lit les champs RDV (date jj/mm/aaaa + heure hh:mm) et renvoie la valeur
+ *  stockée en interne « YYYY-MM-DD HH:MM » (ISO, pour tri/affichage). */
+function lireRdvFields(i) {
+  const dFr = ((document.getElementById('edit-rdv-date-' +i)||{}).value||'').trim();
+  let h     = ((document.getElementById('edit-rdv-heure-'+i)||{}).value||'').trim();
+  const iso = dateFrToISO(dFr);                 // '' si incomplet/invalide
+  if (h && !/^([01]\d|2[0-3]):[0-5]\d$/.test(h)) h = '';  // heure 24h valide
+  return iso ? (h ? iso + ' ' + h : iso) : '';
+}
+
 function changerRdvDH(i) {
-  const d = (document.getElementById('edit-rdv-date-' +i)||{}).value||'';
-  const h = (document.getElementById('edit-rdv-heure-'+i)||{}).value||'';
-  contacts()[i].rdv = d ? (h ? d+' '+h : d) : '';
+  contacts()[i].rdv = lireRdvFields(i);
   sauver();
+}
+
+/** Ouvre le calendrier natif pour le champ date du RDV */
+function ouvrirCalendrierRdv(i) {
+  const p = document.getElementById('histDatePicker');
+  const champ = document.getElementById('edit-rdv-date-' + i);
+  if (!p || !champ) return;
+  p.value = dateFrToISO((champ.value || '').trim()) || '';
+  p.onchange = function () {
+    if (p.value) { champ.value = dateISOToFr(p.value); changerRdvDH(i); }
+    p.onchange = null;
+  };
+  if (typeof p.showPicker === 'function') { try { p.showPicker(); return; } catch (e) {} }
+  p.focus(); p.click();
 }
 
 function majAge(i) {
@@ -1653,11 +1681,14 @@ function buildEditForm(i) {
         ${def.rdv ? `
         <div class="edit-row" style="background:#e3f2fd;padding:8px;border-radius:8px;border:1px solid #90caf9;">
           <label style="color:#1565c0;">📅 Date et heure du rendez-vous</label>
-          <div style="display:flex;gap:8px;">
-            <input type="date" id="edit-rdv-date-${i}" value="${(c.rdv||'').split(' ')[0]||''}"
-              oninput="changerRdvDH(${i})" style="flex:1;border-color:#90caf9;background:#fff;">
-            <input type="time" id="edit-rdv-heure-${i}" value="${(c.rdv||'').split(' ')[1]||''}"
-              oninput="changerRdvDH(${i})" style="width:110px;border-color:#90caf9;background:#fff;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" inputmode="numeric" id="edit-rdv-date-${i}" value="${dateISOToFr((c.rdv||'').split(' ')[0]||'')}"
+              placeholder="jj/mm/aaaa" maxlength="10" oninput="this.value=formatDateFrSaisie(this.value)" onchange="changerRdvDH(${i})"
+              style="flex:1;border-color:#90caf9;background:#fff;">
+            <button type="button" class="historique-cal" title="Ouvrir le calendrier" onclick="ouvrirCalendrierRdv(${i})" style="font-size:16px;">📅</button>
+            <input type="text" inputmode="numeric" id="edit-rdv-heure-${i}" value="${(c.rdv||'').split(' ')[1]||''}"
+              placeholder="hh:mm" maxlength="5" oninput="this.value=formatHeureSaisie(this.value)" onchange="changerRdvDH(${i})"
+              style="width:70px;border-color:#90caf9;background:#fff;text-align:center;">
           </div>
         </div>` : ''}
         <div class="edit-btns">
@@ -1673,9 +1704,7 @@ function sauverEdit(i) {
   const ancAdresse = c.adresse;
   c.prenom  = document.getElementById('edit-prenom-'+i).value.trim();
   c.nom     = document.getElementById('edit-nom-'+i).value.trim();
-  const rdvD = (document.getElementById('edit-rdv-date-'+i)||{}).value||'';
-  const rdvH = (document.getElementById('edit-rdv-heure-'+i)||{}).value||'';
-  if (rdvD) c.rdv = rdvH ? rdvD+' '+rdvH : rdvD; else c.rdv='';
+  c.rdv = lireRdvFields(i);
   const rue    = document.getElementById('edit-rue-'+i).value.trim();
   const boite  = document.getElementById('edit-boite-'+i).value.trim();
   const cpville= document.getElementById('edit-cpville-'+i).value.trim();
