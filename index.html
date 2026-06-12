@@ -679,6 +679,11 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
+  .historique-date {
+    font-size: 11px; padding: 1px 4px;
+    border: 1px solid var(--input-border); border-radius: 4px;
+    background: var(--input-bg); color: var(--text); font-family: inherit;
+  }
   .historique-del {
     margin-left: auto; flex-shrink: 0;
     background: none; border: none; cursor: pointer;
@@ -1433,6 +1438,13 @@ function dateFrToISO(d) {
   if (!d) return '';
   const p = d.split('/');
   return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : '';
+}
+
+/** Convertit YYYY-MM-DD (input date) en DD/MM/YYYY */
+function dateISOToFr(iso) {
+  if (!iso) return '';
+  const p = iso.split('-');
+  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : '';
 }
 
 function changerStatut(i, val) {
@@ -2269,7 +2281,9 @@ function buildHistoriqueHTML(c, i) {
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
       <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(h.statut)}</span>
-      <span>— ${esc(h.date)}</span>
+      <span>—</span>
+      <input type="date" class="historique-date" value="${dateFrToISO(h.date)}"
+        onchange="changerDateHistorique(${i},${idx},this.value)" title="Modifier la date">
       <button class="historique-del" title="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
     </div>`;
   }).join('');
@@ -2277,6 +2291,21 @@ function buildHistoriqueHTML(c, i) {
     <div class="historique-title">🕐 Historique (${c.historique.length})</div>
     ${lignes}
   </div>`;
+}
+
+/** Modifie la date d'une entrée d'historique (et synchronise c.date si c'est l'état courant) */
+function changerDateHistorique(i, idx, iso) {
+  const c = contacts()[i];
+  if (!Array.isArray(c.historique) || !c.historique[idx] || !iso) return;
+  const ancienne = c.historique[idx].date;
+  const fr = dateISOToFr(iso);
+  c.historique[idx].date = fr;
+  // Si cette entrée reflète l'état courant de la fiche, mettre aussi à jour c.date
+  if (c.historique[idx].statut === c.statut && c.date === ancienne) c.date = fr;
+  sauver();
+  rendu();
+  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+  if (vueActive === 'rdv') renduRdv();
 }
 
 /** Supprime une entrée erronée de l'historique d'un contact */
