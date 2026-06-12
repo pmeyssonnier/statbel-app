@@ -1939,7 +1939,7 @@ function rendu() {
     if (c.gsm)   badges.push(`<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>`);
     if (c.email) badges.push(`<span class="badge">✉️ ${esc(c.email)}</span>`);
     if (c.date)  badges.push(`<span class="badge" style="color:${def.color};background:${def.color}22">${def.icon} ${esc(c.date)}</span>`);
-    if (c.rdv && def.rdv) badges.push(`<span class="badge badge-rdv">📅 Rdv : ${formatRdv(c.rdv)}</span>`);
+    if (c.rdv && def.rdv) badges.push(`<span class="badge badge-rdv">📅 ${formatRdv(c.rdv)}</span>`);
     const _p = parseAdresse(c.adresse);
     const card = document.createElement('div');
     card.className = 'card';
