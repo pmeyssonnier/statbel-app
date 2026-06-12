@@ -2601,7 +2601,7 @@ function fermerBackupDetail() {
 function exporterBackup() {
   const date   = new Date();
   const isoNow = date.toISOString();
-  const data   = JSON.stringify({ version: 1, date: isoNow, enquetes }, null, 2);
+  const data   = JSON.stringify({ version: 2, date: isoNow, settings, enquetes }, null, 2);
   const blob   = new Blob([data], { type: 'application/json' });
   const url    = URL.createObjectURL(blob);
   const fname  = 'statbel_sauvegarde_' + isoNow.slice(0, 10) + '.json';
@@ -2630,6 +2630,7 @@ function exporterBackup() {
 
 // Stockage temporaire pour la restauration (entre l'aperçu et la confirmation)
 let _pendingRestore = null;
+let _pendingSettings = null;
 
 function importerBackup(event) {
   const file = event.target.files[0];
@@ -2659,12 +2660,22 @@ function importerBackup(event) {
       const btnConfirm = document.getElementById('btnBackupConfirm');
       btnConfirm.textContent = '✅ Confirmer la restauration';
       _pendingRestore = src;
+      _pendingSettings = data.settings || null;
       btnConfirm.onclick = () => {
         if (!_pendingRestore) return;
         const noms2 = Object.keys(_pendingRestore);
         noms2.forEach(n => enquetes[n] = _pendingRestore[n]);
         enqueteActive = enqueteActive || noms2[0];
-        _pendingRestore = null;
+        // Restaurer aussi les paramètres (statuts personnalisés, thème, fournisseur…)
+        if (_pendingSettings) {
+          settings = Object.assign({}, SETTINGS_DEFAULTS, _pendingSettings);
+          if (!Array.isArray(settings.statuts) || !settings.statuts.length) settings.statuts = cloneStatuts();
+          GEO = GEO_PROVIDERS[settings.provider] || GEO_PROVIDERS.bruxelles;
+          saveSettings();
+          appliquerTheme();
+          if (leafletMap) rafraichirFond();
+        }
+        _pendingRestore = null; _pendingSettings = null;
         sauver();
         refreshSelect();
         rendu();
