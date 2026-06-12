@@ -680,9 +680,9 @@
     flex-shrink: 0;
   }
   .historique-date {
-    font-size: 11px; padding: 1px 4px; width: 84px; text-align: center;
-    border: 1px solid var(--input-border); border-radius: 4px;
-    background: var(--input-bg); color: var(--text); font-family: inherit;
+    font-size: 11px; padding: 0; width: 76px;
+    border: none; background: transparent; color: var(--text3);
+    font-family: inherit; cursor: default; pointer-events: none;
   }
   .historique-cal {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
@@ -2319,11 +2319,9 @@ function buildHistoriqueHTML(c, i) {
       <div class="historique-dot" style="background:${def.color}"></div>
       <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(h.statut)}</span>
       <span>—</span>
-      <input type="text" inputmode="numeric" class="historique-date" value="${esc(h.date)}"
-        placeholder="jj/mm/aaaa" maxlength="10" title="Modifier la date (jj/mm/aaaa)"
-        oninput="this.value=formatDateFrSaisie(this.value)"
-        onchange="changerDateHistorique(${i},${idx},this.value)">
-      <button class="historique-cal" title="Ouvrir le calendrier" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
+      <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1"
+        title="Cliquez sur 📅 pour modifier la date">
+      <button class="historique-cal" title="Modifier la date" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
       <button class="historique-del" title="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
     </div>`;
   }).join('');
