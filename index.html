@@ -949,7 +949,7 @@
     </div>
 
     <hr class="kebab-sep" style="margin:9px 0;">
-    <p class="aide-copyright" style="margin-top:10px;">Version 2 · © Consultora sprl 2026</p>
+    <p class="aide-copyright" style="margin-top:10px;">Version <span class="app-version">…</span> · © Consultora sprl 2026</p>
 
     <div class="modal-btns">
       <button class="btn-primary" onclick="fermerSettings()">Fermer</button>
@@ -1015,7 +1015,7 @@
         <li>Thème clair / sombre / automatique dans les Paramètres.</li>
       </ul>
       <hr class="kebab-sep" style="margin:12px 0;">
-      <p class="aide-copyright">Version 2 · © Consultora sprl 2026</p>
+      <p class="aide-copyright">Version <span class="app-version">…</span> · © Consultora sprl 2026</p>
     </div>
     <div class="modal-btns">
       <button class="btn-primary" onclick="fermerAide()">Compris</button>
@@ -1173,6 +1173,9 @@ const STATUTS_DEFAULTS = [
 const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
+// Version de l'application (source unique, affichée dans Paramètres et Aide)
+const APP_VERSION = '2.4';
+
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
   provider: 'bruxelles',  // 'bruxelles' | 'osm'
@@ -3050,6 +3053,7 @@ async function init() {
   refreshSelect();
   rendu();
   restaurerIndicateur();
+  document.querySelectorAll('.app-version').forEach(el => el.textContent = APP_VERSION);
 }
 
 init();
