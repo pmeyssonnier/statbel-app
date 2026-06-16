@@ -2145,17 +2145,18 @@ function afficherMarqueurs() {
       const cd=coordsCache(c.adresse);
       if (cd) distPopup='<div style="margin-top:5px"><span style="background:#e3f2fd;color:#1a73e8;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;">🚶 '+formatDist(haversine(maPosition.lat,maPosition.lng,cd.lat,cd.lng))+'</span></div>';
     }
-    let rdvPopup='';
-    if (c.rdv && def.rdv) rdvPopup='<div style="margin-top:6px"><span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:bold;">📅 '+formatRdv(c.rdv)+'</span></div>';
+    const demo = ligneDemographie(c);
+    const dateStatut = (c.rdv && def.rdv) ? '📅 ' + formatRdv(c.rdv) : (c.date ? formatDateJour(c.date) : '');
     const popup=`
       <div class="popup-titre">N° ${esc(c.ordre)} — ${esc(c.prenom)} ${esc(c.nom)}</div>
-      <div style="margin-bottom:8px"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${def.color};vertical-align:middle"></span> <span class="popup-statut" style="background:${def.color}22;color:${def.color}">${esc(statut)}</span>${c.date?' <span style="font-size:11px;color:#666">— '+esc(c.date)+'</span>':''}</div>
+      ${demo ? `<div style="font-size:12px;color:#666;margin-bottom:4px">👤 ${demo}</div>` : ''}
       <a href="${mapsUrl(c.adresse)}" target="_blank" style="color:#1a73e8;text-decoration:none;font-size:13px;">📍 ${esc(c.adresse)}</a>
-      ${distPopup}${rdvPopup}${gsm}${email}
-      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">
-        ${statutDefs().map((s,si)=>{const on=s.label===statut;return `<button onclick="changerStatutCarte(${idx},statutDefs()[${si}].label)" style="flex:1;min-width:60px;padding:5px 4px;border:2px solid ${s.color};border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;background:${on?s.color:'transparent'};color:${on?'white':s.color};">${esc(s.label)}</button>`;}).join('')}
+      ${distPopup}${gsm}${email}
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statut)}</span>
+        ${dateStatut ? `<span style="font-size:12px;color:#666">${esc(dateStatut)}</span>` : ''}
       </div>
-      <div style="margin-top:6px"><button onclick="ouvrirFicheDepuisCarte(${idx})" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ Éditer la fiche</button></div>`;
+      <div style="margin-top:8px"><button onclick="ouvrirFicheDepuisCarte(${idx})" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ Éditer la fiche</button></div>`;
     L.marker([lat,lng],{icon}).addTo(markersLayer).bindPopup(popup,{maxWidth:260});
   }
 
