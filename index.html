@@ -864,7 +864,7 @@
 </header>
 
 <div class="search-bar">
-  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom ou adresse…" oninput="debounce(rendu)" autocomplete="off">
+  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" oninput="debounce(rendu)" autocomplete="off">
 </div>
 
 <div class="filters"></div>
@@ -882,7 +882,7 @@
 <div id="rdvContainer" style="display:none; padding:10px 12px; flex-direction:column; gap:10px;">
   <h2 class="rdv-title" id="rdvTitle">📅 Suivi des interviews</h2>
   <div class="rdv-search">
-    <input type="search" id="rdvSearch" placeholder="Filtrer par nom, prénom ou adresse…" oninput="debounce(renduRdv)" autocomplete="off">
+    <input type="search" id="rdvSearch" placeholder="Filtrer par nom, prénom, adresse ou téléphone…" oninput="debounce(renduRdv)" autocomplete="off">
   </div>
   <div class="filters" id="rdvFilters" style="padding:0;border:none;background:none;"></div>
   <div id="rdvListe"></div>
@@ -1066,6 +1066,19 @@ function esc(s) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/** Recherche libre : nom, prénom, adresse, et numéro de téléphone
+ *  (tolérant au formatage — comparaison des chiffres seuls). */
+function correspondRecherche(c, q) {
+  if (!q) return true;
+  const hay = (c.prenom + ' ' + c.nom + ' ' + c.adresse + ' ' + (c.gsm || '')).toLowerCase();
+  if (hay.includes(q)) return true;
+  const qd = q.replace(/\D/g, '');
+  if (!qd) return false;
+  const dg = (c.gsm || '').replace(/\D/g, '');
+  // équivalence numéro belge : 0467… ↔ +32 467…
+  return dg.includes(qd) || dg.includes(qd.replace(/^0/, '32'));
 }
 
 
@@ -1355,7 +1368,7 @@ function contactsFiltres() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
   return contacts().filter(c => {
     if (filtreActif !== 'Tous' && (c.statut || 'À faire') !== filtreActif) return false;
-    if (q && !(c.prenom + ' ' + c.nom + ' ' + c.adresse).toLowerCase().includes(q)) return false;
+    if (!correspondRecherche(c, q)) return false;
     return true;
   });
 }
@@ -1956,7 +1969,7 @@ function rendu() {
   all.forEach((c, i) => {
     const statut = c.statut || statutDefaut();
     if (filtreActif !== 'Tous' && statut !== filtreActif) return;
-    if (q && !(c.prenom+' '+c.nom+' '+c.adresse).toLowerCase().includes(q)) return;
+    if (!correspondRecherche(c, q)) return;
     const def = statutDef(statut);
     const badges = [];
     if (c.gsm)   badges.push(`<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>`);
@@ -2255,7 +2268,7 @@ function renduRdv() {
     const st = c.statut || defaut;
     if (!eligible.has(st)) return false;                                          // exclure À faire
     if (filtreRdv !== 'Tous' && st !== filtreRdv) return false;                   // filtre statut
-    if (q && !(c.prenom+' '+c.nom+' '+c.adresse).toLowerCase().includes(q)) return false; // recherche
+    if (!correspondRecherche(c, q)) return false; // recherche (nom, adresse, téléphone)
     return true;
   });
 
