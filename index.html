@@ -1901,15 +1901,17 @@ function parseCSV(text) {
   const bodyLines = lines.slice(1).filter(l => l.trim());
   const rows = [];
   const motifs = { sansIdentite: 0, adresseVide: 0, doublonOrdre: 0 };
+  const rejets = [];              // détail des lignes ignorées : { ligne, ordre, motif }
   const ordresVus = new Set();
-  bodyLines.forEach(l => {
+  bodyLines.forEach((l, bi) => {
     const cols = splitLine(l, sep);
     const prenom = g(cols, map.prenom), nom = g(cols, map.nom);
     const adresse = g(cols, map.adresse);
     const ordreVal = g(cols, map.ordre);
-    if (!prenom && !nom) { motifs.sansIdentite++; return; }       // ni nom ni prénom
-    if (!adresse)        { motifs.adresseVide++;  return; }       // adresse vide
-    if (ordreVal && ordresVus.has(ordreVal)) { motifs.doublonOrdre++; return; } // N° d'ordre déjà vu
+    const rejet = motif => rejets.push({ ligne: bi + 2, ordre: ordreVal || '—', motif });
+    if (!prenom && !nom) { motifs.sansIdentite++; rejet('sans nom ni prénom'); return; }
+    if (!adresse)        { motifs.adresseVide++;  rejet('sans adresse');        return; }
+    if (ordreVal && ordresVus.has(ordreVal)) { motifs.doublonOrdre++; rejet("N° d'ordre en doublon"); return; }
     if (ordreVal) ordresVus.add(ordreVal);
     rows.push({
       ordre:          ordreVal || String(rows.length+1).padStart(2,'0'),
@@ -1930,7 +1932,7 @@ function parseCSV(text) {
     });
   });
   const rejetees = motifs.sansIdentite + motifs.adresseVide + motifs.doublonOrdre;
-  return { rows, stats: { lues: bodyLines.length, importees: rows.length, rejetees, motifs, reconnues, nonReconnues } };
+  return { rows, stats: { lues: bodyLines.length, importees: rows.length, rejetees, motifs, rejets, reconnues, nonReconnues } };
 }
 
 function splitLine(line, sep) {
@@ -2001,6 +2003,13 @@ function renderImportApercu(s) {
       if (m.doublonOrdre) det.push(`${m.doublonOrdre} N° d'ordre en doublon`);
       return det.length ? `<div style="font-size:11px;color:#b71c1c;margin-bottom:8px;">⚠️ Lignes ignorées : ${esc(det.join(' · '))}.</div>` : '';
     })()}
+    ${(s.rejets && s.rejets.length) ? `
+      <details style="margin-bottom:8px;">
+        <summary style="font-size:12px;cursor:pointer;color:#b71c1c;">Détail des lignes ignorées (${s.rejets.length})</summary>
+        <div style="max-height:120px;overflow:auto;margin-top:4px;font-size:11px;">
+          ${s.rejets.map(r => `<div>• ligne ${r.ligne} — N° ${esc(String(r.ordre))} — ${esc(r.motif)}</div>`).join('')}
+        </div>
+      </details>` : ''}
     <div style="font-size:12px;margin-bottom:4px;"><strong>Colonnes reconnues</strong></div>
     <div style="margin-bottom:8px;">${recon}</div>
     <div style="font-size:12px;margin-bottom:4px;"><strong>Colonnes ignorées</strong></div>
