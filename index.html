@@ -979,7 +979,10 @@
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
         <button class="btn-secondary" onclick="exporterBackup()">⬇️ Sauvegarder tout (JSON)</button>
         <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆️ Restaurer</button>
-        <button class="btn-secondary" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
+        <span style="display:inline-flex;gap:4px;align-items:center;">
+          <select id="viderCacheScope" style="max-width:220px;"></select>
+          <button class="btn-secondary" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
+        </span>
         <button class="btn-secondary" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
       </div>
       <small id="dataStats"></small>
@@ -2623,6 +2626,16 @@ function majSettingsUI() {
   const nbCoords = Object.keys(localStorage).filter(k=>k.startsWith('coords_')).length;
   document.getElementById('dataStats').textContent =
     `${nbEnq} enquête(s), ${nbCnt} contact(s), ${nbCoords} adresse(s) géocodée(s) en cache.`;
+  // Sélecteur de portée pour la purge du cache : « toutes » + chaque enquête
+  const sel = document.getElementById('viderCacheScope');
+  if (sel) {
+    const prev = sel.value;
+    const noms = Object.keys(enquetes);
+    sel.innerHTML = '<option value="__all__">Toutes les enquêtes</option>'
+      + noms.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    sel.value = (prev && [...sel.options].some(o => o.value === prev))
+      ? prev : (enqueteActive && noms.includes(enqueteActive) ? enqueteActive : '__all__');
+  }
 }
 
 function changerProvider(val) {
@@ -2811,9 +2824,19 @@ function importerBackup(event) {
 }
 
 function viderCacheCoords() {
-  const keys = Object.keys(localStorage).filter(k=>k.startsWith('coords_'));
-  if (!keys.length) { alert('Le cache est déjà vide.'); return; }
-  if (!confirm(`Supprimer ${keys.length} adresse(s) géocodée(s) ? Elles seront recalculées au prochain affichage de la carte.`)) return;
+  const sel = document.getElementById('viderCacheScope');
+  const scope = sel ? sel.value : '__all__';
+  let keys;
+  if (scope && scope !== '__all__' && enquetes[scope]) {
+    // Ne purger que les adresses appartenant à cette enquête
+    const cles = new Set(enquetes[scope].map(c => 'coords_' + adresseSansBoite(c.adresse)));
+    keys = Object.keys(localStorage).filter(k => cles.has(k));
+  } else {
+    keys = Object.keys(localStorage).filter(k => k.startsWith('coords_'));
+  }
+  if (!keys.length) { alert('Aucune adresse géocodée en cache pour cette sélection.'); return; }
+  const portee = (scope && scope !== '__all__') ? ` de « ${scope} »` : '';
+  if (!confirm(`Supprimer ${keys.length} adresse(s) géocodée(s)${portee} ? Elles seront recalculées au prochain affichage de la carte.`)) return;
   keys.forEach(k => localStorage.removeItem(k));
   majSettingsUI();
   rendu();
