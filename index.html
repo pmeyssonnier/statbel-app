@@ -934,6 +934,7 @@
     <div class="set-row">
       <label>🌍 Région / fournisseur géo</label>
       <select id="setProvider" onchange="changerProvider(this.value)">
+        <option value="auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
         <option value="bruxelles">Bruxelles (UrbIS — CIRB)</option>
         <option value="wallonie">Wallonie (SPW + IGN)</option>
         <option value="flandre">Flandre (Geopunt + IGN)</option>
@@ -1108,7 +1109,33 @@ function correspondRecherche(c, q) {
 // géocodage (adresse → coordonnées). Le choix se fait désormais dans le
 // panneau ⚙️ Paramètres (plus besoin d'éditer le code).
 //
+// Détermine la région d'un code postal belge (pour le mode « Automatique »).
+//  1000-1299 → Bruxelles ; 1300-1499 + 4000-7999 → Wallonie ; le reste → Flandre.
+function regionPourCP(cp) {
+  const n = parseInt(cp, 10);
+  if (!n) return 'bruxelles';
+  if (n >= 1000 && n <= 1299) return 'bruxelles';
+  if ((n >= 1300 && n <= 1499) || (n >= 4000 && n <= 7999)) return 'wallonie';
+  return 'flandre';
+}
+
 const GEO_PROVIDERS = {
+
+  // Mode automatique : route chaque adresse vers le bon géocodeur régional
+  // selon son code postal. Fond de carte IGN/NGI (couvre toute la Belgique).
+  auto: {
+    label: 'Automatique (selon le code postal)',
+    tileAttribution: '© <a href="https://www.ngi.be" target="_blank">IGN/NGI</a> · géocodage UrbIS / SPW / Geopunt',
+    maxZoom: 17,
+    tileUrl: function() {
+      return 'https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png';
+    },
+    geocode: function(adresse) {
+      const cpm = (parseAdresse(adresse).cpville || '').match(/\d{4}/);
+      const region = regionPourCP(cpm ? cpm[0] : '');
+      return GEO_PROVIDERS[region].geocode(adresse);
+    }
+  },
 
   // Région de Bruxelles-Capitale — service public régional (CIRB / UrbIS).
   // Données belges, hébergées en Belgique, pas de transfert hors UE.
@@ -1231,7 +1258,7 @@ const APP_VERSION = '2.6';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
-  provider: 'bruxelles',  // 'bruxelles' | 'osm'
+  provider: 'auto',  // 'auto' | 'bruxelles' | 'wallonie' | 'flandre' | 'osm'
   mapStyle: 'gray',       // 'gray' | 'color'  (Bruxelles uniquement)
   navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
   statuts:  cloneStatuts(),
@@ -2582,9 +2609,13 @@ function majSettingsUI() {
   // Le style de carte ne concerne qu'UrbIS (Bruxelles)
   document.getElementById('setStyleRow').style.display = settings.provider === 'bruxelles' ? '' : 'none';
   const hint = document.getElementById('setProviderHint');
-  hint.textContent = settings.provider === 'osm'
-    ? '⚠️ Tiers hors UE — à éviter pour des données personnelles.'
-    : '✅ Service public belge — pas de transfert hors UE.';
+  if (settings.provider === 'osm') {
+    hint.textContent = '⚠️ Tiers hors UE — à éviter pour des données personnelles.';
+  } else if (settings.provider === 'auto') {
+    hint.textContent = '✅ Chaque adresse est routée vers UrbIS (Bxl), SPW (Wallonie) ou Geopunt (Flandre) selon son code postal.';
+  } else {
+    hint.textContent = '✅ Service public belge — pas de transfert hors UE.';
+  }
   hint.style.color = settings.provider === 'osm' ? '#e65100' : '#2e7d32';
   // Stats données
   const nbEnq = Object.keys(enquetes).length;
