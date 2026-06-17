@@ -2804,6 +2804,7 @@ function listerNonGeocodees() {
         <span class="nongeo-ref">${esc(enq)} › N°${esc(c.ordre)}</span>
         <span class="nongeo-name">${esc(c.prenom)} ${esc(c.nom)}</span>
         <span class="nongeo-adr">📍 ${esc(c.adresse||'(adresse vide)')}</span>
+        <span class="nongeo-adr" style="color:#1a73e8">🔎 envoyé : ${esc(adresseSansBoite(c.adresse)||'(vide)')}</span>
       </button>`
     ).join('');
 }
