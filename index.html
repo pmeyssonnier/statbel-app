@@ -2201,7 +2201,9 @@ function renderLegend() {
 function initCarte() {
   if (!leafletMap) {
     leafletMap = L.map('map',{wheelPxPerZoomLevel:120,wheelDebounceTime:100}).setView([50.8670,4.3800],14);
-    baseLayer = L.tileLayer(GEO.tileUrl(settings.mapStyle),{attribution:GEO.tileAttribution,maxZoom:GEO.maxZoom}).addTo(leafletMap);
+    const F = fondEffectif();
+    baseLayer = L.tileLayer(F.tileUrl(settings.mapStyle),{attribution:F.tileAttribution,maxZoom:F.maxZoom}).addTo(leafletMap);
+    _fondActuel = F;
     markersLayer = L.layerGroup().addTo(leafletMap);
   }
   renderLegend();
@@ -2224,6 +2226,8 @@ window.addEventListener('orientationchange', () => {
 });
 
 function afficherMarqueurs() {
+  // Mode auto : le fond peut changer si l'enquête active relève d'une autre région
+  if (settings.provider === 'auto' && fondEffectif() !== _fondActuel) rafraichirFond();
   markersLayer.clearLayers();
   const all = contactsFiltres();
   if (all.filter(c=>!coordsCache(c.adresse)).length > 0)
@@ -2610,7 +2614,9 @@ function fermerAide()  { document.getElementById('modalAide').classList.remove('
 
 function majSettingsUI() {
   // Le style de carte ne concerne qu'UrbIS (Bruxelles)
-  document.getElementById('setStyleRow').style.display = settings.provider === 'bruxelles' ? '' : 'none';
+  const fondUrbis = settings.provider === 'bruxelles'
+    || (settings.provider === 'auto' && regionDominante() === 'bruxelles');
+  document.getElementById('setStyleRow').style.display = fondUrbis ? '' : 'none';
   const hint = document.getElementById('setProviderHint');
   if (settings.provider === 'osm') {
     hint.textContent = '⚠️ Tiers hors UE — à éviter pour des données personnelles.';
@@ -2646,12 +2652,37 @@ function changerProvider(val) {
   rafraichirFond();
 }
 
+// Région majoritaire des contacts affichés (mode auto) — détermine le fond.
+function regionDominante() {
+  const arrs = (enqueteActive && enquetes[enqueteActive])
+    ? [enquetes[enqueteActive]] : Object.values(enquetes);
+  const cpt = {};
+  arrs.forEach(a => a.forEach(c => {
+    const m = (parseAdresse(c.adresse).cpville || '').match(/\d{4}/);
+    const r = regionPourCP(m ? m[0] : '');
+    cpt[r] = (cpt[r] || 0) + 1;
+  }));
+  let best = 'bruxelles', n = -1;
+  Object.entries(cpt).forEach(([r, v]) => { if (v > n) { n = v; best = r; } });
+  return best;
+}
+
+// Fond de carte effectif : en mode auto, on choisit selon la région dominante
+// (UrbIS pour Bruxelles — ses tuiles ne couvrent que Bruxelles —, sinon IGN).
+function fondEffectif() {
+  if (settings.provider !== 'auto') return GEO;
+  return GEO_PROVIDERS[regionDominante()] || GEO_PROVIDERS.bruxelles;
+}
+
 // Remplace le fond de carte sans recréer la carte entière
+let _fondActuel = null;
 function rafraichirFond() {
   if (!leafletMap) return;
+  const F = fondEffectif();
   if (baseLayer) leafletMap.removeLayer(baseLayer);
-  baseLayer = L.tileLayer(GEO.tileUrl(settings.mapStyle),
-    { attribution: GEO.tileAttribution, maxZoom: GEO.maxZoom }).addTo(leafletMap);
+  baseLayer = L.tileLayer(F.tileUrl(settings.mapStyle),
+    { attribution: F.tileAttribution, maxZoom: F.maxZoom }).addTo(leafletMap);
+  _fondActuel = F;
 }
 
 // ── Sauvegarde / restauration complète (toutes les enquêtes) ────────
