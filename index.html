@@ -1972,13 +1972,17 @@ function csvCell(v) {
 }
 
 function genererCSV() {
-  const rows = [['ordre','prenom','nom','adresse','statut','date_interview','rdv','sexe','birth_date','age','birth_country','nationality','marital_status','taille_menage','gsm','email','notes']];
-  contacts().forEach(c => rows.push([
-    csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
-    csvCell(c.statut||'À faire'), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
-    csvCell(c.birth_date||''), csvCell(c.age||''), csvCell(c.birth_country||''), csvCell(c.nationality||''),
-    csvCell(c.marital_status||''), csvCell(c.taille_menage||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||'')
-  ]));
+  const rows = [['ordre','prenom','nom','adresse','statut','date_interview','rdv','sexe','birth_date','age','birth_country','nationality','marital_status','taille_menage','gsm','email','notes','lat','lng']];
+  contacts().forEach(c => {
+    const cc = coordsCache(c.adresse);
+    rows.push([
+      csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
+      csvCell(c.statut||'À faire'), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
+      csvCell(c.birth_date||''), csvCell(c.age||''), csvCell(c.birth_country||''), csvCell(c.nationality||''),
+      csvCell(c.marital_status||''), csvCell(c.taille_menage||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||''),
+      csvCell(cc?cc.lat:''), csvCell(cc?cc.lng:'')
+    ]);
+  });
   return '\ufeff' + rows.map(r => r.join(',')).join('\n');
 }
 
@@ -2769,7 +2773,13 @@ function fermerBackupDetail() {
 function exporterBackup() {
   const date   = new Date();
   const isoNow = date.toISOString();
-  const data   = JSON.stringify({ version: 2, date: isoNow, settings, enquetes }, null, 2);
+  // Inclure le cache de géocodage (coords_<adresse> → {lat,lng})
+  const coords = {};
+  Object.keys(localStorage).forEach(k => {
+    if (!k.startsWith('coords_')) return;
+    try { coords[k.slice(7)] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
+  });
+  const data   = JSON.stringify({ version: 2, date: isoNow, settings, enquetes, coords }, null, 2);
   const blob   = new Blob([data], { type: 'application/json' });
   const url    = URL.createObjectURL(blob);
   const fname  = 'statbel_sauvegarde_' + isoNow.slice(0, 10) + '.json';
@@ -2799,6 +2809,7 @@ function exporterBackup() {
 // Stockage temporaire pour la restauration (entre l'aperçu et la confirmation)
 let _pendingRestore = null;
 let _pendingSettings = null;
+let _pendingCoords = null;
 
 function importerBackup(event) {
   const file = event.target.files[0];
@@ -2829,11 +2840,17 @@ function importerBackup(event) {
       btnConfirm.textContent = '✅ Confirmer la restauration';
       _pendingRestore = src;
       _pendingSettings = data.settings || null;
+      _pendingCoords = data.coords || null;
       btnConfirm.onclick = () => {
         if (!_pendingRestore) return;
         const noms2 = Object.keys(_pendingRestore);
         noms2.forEach(n => enquetes[n] = _pendingRestore[n]);
         enqueteActive = enqueteActive || noms2[0];
+        // Restaurer le cache de géocodage s'il était présent dans la sauvegarde
+        if (_pendingCoords) Object.entries(_pendingCoords).forEach(([adr, v]) => {
+          if (v && typeof v.lat === 'number' && typeof v.lng === 'number')
+            try { localStorage.setItem('coords_' + adr, JSON.stringify(v)); } catch(e) {}
+        });
         // Restaurer aussi les paramètres (statuts personnalisés, thème, fournisseur…)
         if (_pendingSettings) {
           settings = Object.assign({}, SETTINGS_DEFAULTS, _pendingSettings);
@@ -2843,7 +2860,7 @@ function importerBackup(event) {
           appliquerTheme();
           if (leafletMap) rafraichirFond();
         }
-        _pendingRestore = null; _pendingSettings = null;
+        _pendingRestore = null; _pendingSettings = null; _pendingCoords = null;
         sauver();
         refreshSelect();
         rendu();
