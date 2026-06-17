@@ -904,6 +904,18 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modalRename">
+  <div class="modal">
+    <h2>Renommer l'enquête</h2>
+    <input type="text" id="inputRename" placeholder="Ex: 2026-12305 - GD RUE AU BOIS"
+      onkeydown="if(event.key==='Enter')confirmerRename()">
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="fermerRename()">Annuler</button>
+      <button class="btn-primary" onclick="confirmerRename()">Renommer</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalSettings">
   <div class="modal">
     <h2>⚙️ Paramètres</h2>
@@ -1398,9 +1410,20 @@ function changerEnquete(nom) {
 
 function renommerEnquete() {
   if (!enqueteActive) { alert('Aucune enquête active.'); return; }
+  const inp = document.getElementById('inputRename');
+  inp.value = enqueteActive;
+  document.getElementById('modalRename').classList.add('open');
+  setTimeout(() => inp.select(), 100);
+}
+
+function fermerRename() {
+  document.getElementById('modalRename').classList.remove('open');
+}
+
+function confirmerRename() {
   const ancien  = enqueteActive;
-  const nouveau = (prompt('Nouveau nom de l\'enquête :', ancien) || '').trim();
-  if (!nouveau || nouveau === ancien) return;
+  const nouveau = (document.getElementById('inputRename').value || '').trim();
+  if (!nouveau || nouveau === ancien) { fermerRename(); return; }
   if (enquetes[nouveau]) { alert('Une enquête porte déjà ce nom.'); return; }
   // Renommer la clé en conservant l'ordre des enquêtes
   const renomme = {};
@@ -1410,6 +1433,7 @@ function renommerEnquete() {
   sauver();
   refreshSelect();
   rendu();
+  fermerRename();
 }
 
 function supprimerEnquete() {
