@@ -1317,19 +1317,22 @@ function statutDef(label)   {
 const DB_NAME    = 'StatbelInterviewer';
 const DB_VERSION = 1;
 let db = null;
+let dbPromise = null;   // promesse de connexion mémorisée (évite double ouverture / race)
 
-/** Ouvre (ou crée) la base IndexedDB */
+/** Ouvre (ou crée) la base IndexedDB — une seule connexion, partagée. */
 function ouvrirDB() {
-  return new Promise((resolve, reject) => {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = e => {
       const idb = e.target.result;
       if (!idb.objectStoreNames.contains('enquetes'))
         idb.createObjectStore('enquetes', { keyPath: 'nom' });
     };
-    req.onsuccess = e => resolve(e.target.result);
-    req.onerror   = e => reject(e.target.error);
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror   = e => { dbPromise = null; reject(e.target.error); };
   });
+  return dbPromise;
 }
 
 /** Promesse sur un IDBRequest */
@@ -1350,7 +1353,10 @@ function idbTx(tx) {
 
 /** Sauvegarde toutes les enquêtes dans IndexedDB (fire-and-forget) */
 async function sauver() {
-  if (!db) return;
+  if (!db) {
+    // db pas encore prête : on attend l'initialisation au lieu d'abandonner
+    try { await ouvrirDB(); } catch(e) { console.error('sauver(): DB indisponible', e); return; }
+  }
   try {
     const tx    = db.transaction('enquetes', 'readwrite');
     const store = tx.objectStore('enquetes');
@@ -2270,16 +2276,22 @@ function afficherMarqueurs() {
     else if (bounds.length>1) leafletMap.fitBounds(L.latLngBounds(bounds),{padding:[40,40],maxZoom:16});
   }
 
+  // Jeton de session : tout réaffichage (changement d'enquête, de filtre…)
+  // invalide la file de géocodage précédente pour éviter une boucle fantôme.
+  const session = ++_geoSession;
+
   const queue=[];
   all.forEach(c=>{ const cc=coordsCache(c.adresse); if(cc) placerMarqueur(c,cc.lat,cc.lng); else queue.push(c); });
   if (markersLayer.getLayers().length>0) zoomSurMarqueurs();
 
   let qi=0;
   function nextGeocode() {
+    if (session!==_geoSession) return;   // session annulée : on arrête l'ancienne boucle
     if (qi>=queue.length){ document.getElementById('geocodeProgress').style.display='none'; zoomSurMarqueurs(); return; }
     const c=queue[qi++];
     document.getElementById('geocodeCount').textContent=qi+' / '+queue.length;
     GEO.geocode(c.adresse).then(coords=>{
+      if (session!==_geoSession) return; // résultat obsolète : on l'ignore
       if(coords){ saveCoords(c.adresse,coords.lat,coords.lng); placerMarqueur(c,coords.lat,coords.lng); zoomSurMarqueurs(); }
       setTimeout(nextGeocode,300);
     });
@@ -2570,6 +2582,7 @@ let vueActive    = 'liste';
 let leafletMap   = null;
 let markersLayer = null;
 let baseLayer    = null;
+let _geoSession  = 0;   // jeton d'annulation des files de géocodage
 
 function setView(v) {
   vueActive = v;
@@ -2583,7 +2596,7 @@ function setView(v) {
   document.getElementById('mapContainer').style.display    = v==='carte'  ? 'block' : 'none';
   document.getElementById('rdvContainer').style.display    = v==='rdv'    ? 'flex'  : 'none';
   document.getElementById('resumeContainer').style.display = v==='resume' ? 'flex'  : 'none';
-  if (v==='carte')  { initCarte(); }
+  if (v==='carte')  { initCarte(); if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 50); }
   if (v==='liste')  rendu();
   if (v==='rdv')    renduRdv();
   if (v==='resume') renduResume();
