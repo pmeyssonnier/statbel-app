@@ -897,7 +897,9 @@
 
 <div class="modal-overlay" id="modalNom">
   <div class="modal">
-    <h2>Nom de l'enquête</h2>
+    <h2>Aperçu de l'import</h2>
+    <div id="importApercu"></div>
+    <label style="display:block;margin-top:12px;font-size:13px;font-weight:600;">Nom de l'enquête</label>
     <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305">
     <div class="modal-btns">
       <button class="btn-secondary" onclick="fermerModal()">Annuler</button>
@@ -1852,53 +1854,77 @@ function filtrer(f) {
 // IMPORT — Lecture CSV / XLSX, modal de nommage
 // ════════════════════════════════════════════════════════════════════
 
+// Champs reconnus : clé interne, libellé affiché, alias acceptés dans l'en-tête.
+const CHAMPS_IMPORT = [
+  ['ordre',          'Ordre',           ['ordre','order','nr','no']],
+  ['prenom',         'Prénom',          ['prenom','firstname','first_name','prénom']],
+  ['nom',            'Nom',             ['nom','lastname','last_name','name']],
+  ['adresse',        'Adresse',         ['adresse','address','adr']],
+  ['statut',         'Statut',          ['statut','status','etat']],
+  ['date',           'Date interview',  ['date_interview','date','date_fait']],
+  ['notes',          'Notes',           ['notes','note','remarques']],
+  ['rdv',            'Rendez-vous',     ['rdv','date_rdv','rendez_vous','appointment']],
+  ['sexe',           'Sexe',            ['sexe','sex','genre','gender']],
+  ['birth_date',     'Date naissance',  ['birth_date','date_naissance','dob']],
+  ['age',            'Âge',             ['age']],
+  ['birth_country',  'Pays naissance',  ['birth_country','pays_naissance','country_birth']],
+  ['nationality',    'Nationalité',     ['nationality','nationalite','nationalité']],
+  ['marital_status', 'État civil',      ['marital_status','etat_civil','état_civil']],
+  ['taille_menage',  'Taille ménage',   ['taille_menage','taille_ménage','household_size','taille','menage','ménage']],
+  ['gsm',            'Téléphone',       ['gsm','tel','telephone','phone','gsm_tel']],
+  ['email',          'Email',           ['email','mail','e_mail']],
+];
+
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return null;
   const sep     = lines[0].includes(';') ? ';' : ',';
   const headers = splitLine(lines[0], sep).map(h => h.toLowerCase().trim().replace(/\s+/g,'_').replace(/[^a-zàâäéèêëïîôöœûüçæ_0-9]/gi,''));
-  const idx = names => { for (const n of names) { const i = headers.indexOf(n); if (i>=0) return i; } return -1; };
-  const iOrdre   = idx(['ordre','order','nr','no']);
-  const iPrenom  = idx(['prenom','firstname','first_name','prénom']);
-  const iNom     = idx(['nom','lastname','last_name','name']);
-  const iAdresse = idx(['adresse','address','adr']);
-  const iStatut  = idx(['statut','status','etat']);
-  const iDate    = idx(['date_interview','date','date_fait']);
-  const iNotes   = idx(['notes','note','remarques']);
-  const iRdv     = idx(['rdv','date_rdv','rendez_vous','appointment']);
-  const iSexe    = idx(['sexe','sex','genre','gender']);
-  const iBirth   = idx(['birth_date','date_naissance','dob']);
-  const iAge     = idx(['age']);
-  const iBirthC  = idx(['birth_country','pays_naissance','country_birth']);
-  const iNatly   = idx(['nationality','nationalite','nationalité']);
-  const iMarital = idx(['marital_status','etat_civil','état_civil']);
-  const iTaille  = idx(['taille_menage','taille_ménage','household_size','taille','menage','ménage']);
-  const iGsm     = idx(['gsm','tel','telephone','phone','gsm_tel']);
-  const iEmail   = idx(['email','mail','e_mail']);
-  if (iPrenom < 0 && iNom < 0) return null;
-  const g = (cols, i) => i >= 0 ? (cols[i]||'').trim() : '';
-  return lines.slice(1).filter(l => l.trim()).map((l, li) => {
-    const cols = splitLine(l, sep);
-    return {
-      ordre:          g(cols,iOrdre)  || String(li+1).padStart(2,'0'),
-      prenom:         g(cols,iPrenom),
-      nom:            g(cols,iNom),
-      adresse:        g(cols,iAdresse),
-      statut:         g(cols,iStatut) || 'À faire',
-      date:           g(cols,iDate),
-      notes:          g(cols,iNotes),
-      rdv:            g(cols,iRdv),
-      sexe:           g(cols,iSexe)   || null,
-      birth_date:     g(cols,iBirth)  || null,
-      age:            iAge>=0 ? parseInt(cols[iAge])||null : null,
-      birth_country:  g(cols,iBirthC) || null,
-      nationality:    g(cols,iNatly)  || null,
-      marital_status: g(cols,iMarital)|| null,
-      taille_menage:  iTaille>=0 ? (parseInt(cols[iTaille])||null) : null,
-      gsm:            g(cols,iGsm),
-      email:          g(cols,iEmail),
-    };
+
+  // Associer chaque champ connu à une colonne ; mémoriser les colonnes utilisées
+  const map = {}, used = new Set();
+  CHAMPS_IMPORT.forEach(([key, , alias]) => {
+    let i = -1;
+    for (const n of alias) { const j = headers.indexOf(n); if (j >= 0) { i = j; break; } }
+    map[key] = i;
+    if (i >= 0) used.add(i);
   });
+  if (map.prenom < 0 && map.nom < 0) return null;
+
+  const reconnues = CHAMPS_IMPORT.filter(([k]) => map[k] >= 0).map(([, lbl]) => lbl);
+  const nonReconnues = headers
+    .map((h, i) => ({ h, i }))
+    .filter(x => x.h && !used.has(x.i))
+    .map(x => x.h);
+
+  const g = (cols, i) => i >= 0 ? (cols[i]||'').trim() : '';
+  const bodyLines = lines.slice(1).filter(l => l.trim());
+  const rows = [];
+  let rejetees = 0;
+  bodyLines.forEach(l => {
+    const cols = splitLine(l, sep);
+    const prenom = g(cols, map.prenom), nom = g(cols, map.nom);
+    if (!prenom && !nom) { rejetees++; return; }   // ligne sans identité → rejetée
+    rows.push({
+      ordre:          g(cols,map.ordre) || String(rows.length+1).padStart(2,'0'),
+      prenom, nom,
+      adresse:        g(cols,map.adresse),
+      statut:         g(cols,map.statut) || 'À faire',
+      date:           g(cols,map.date),
+      notes:          g(cols,map.notes),
+      rdv:            g(cols,map.rdv),
+      sexe:           g(cols,map.sexe)   || null,
+      birth_date:     g(cols,map.birth_date) || null,
+      age:            map.age>=0 ? parseInt(cols[map.age])||null : null,
+      birth_country:  g(cols,map.birth_country) || null,
+      nationality:    g(cols,map.nationality)  || null,
+      marital_status: g(cols,map.marital_status)|| null,
+      taille_menage:  map.taille_menage>=0 ? (parseInt(cols[map.taille_menage])||null) : null,
+      gsm:            g(cols,map.gsm),
+      email:          g(cols,map.email),
+    });
+  });
+  return { rows, stats: { lues: bodyLines.length, importees: rows.length, rejetees, reconnues, nonReconnues } };
 }
 
 function splitLine(line, sep) {
@@ -1923,7 +1949,7 @@ function importerFichier(event) {
         const wb  = XLSX.read(new Uint8Array(e.target.result), { type:'array' });
         const csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]], { FS:',', RS:'\n' });
         const parsed = parseCSV(csv);
-        if (!parsed?.length) { alert('Fichier Excel invalide ou vide.'); return; }
+        if (!parsed?.rows.length) { alert('Fichier Excel invalide ou vide (colonne Nom/Prénom introuvable).'); return; }
         ouvrirModalImport(parsed, defaultName);
       } catch(err) { alert('Erreur lecture Excel : '+err.message); }
     };
@@ -1931,7 +1957,7 @@ function importerFichier(event) {
   } else {
     reader.onload = e => {
       const parsed = parseCSV(e.target.result);
-      if (!parsed?.length) { alert('Fichier CSV invalide ou vide.'); return; }
+      if (!parsed?.rows.length) { alert('Fichier CSV invalide ou vide (colonne Nom/Prénom introuvable).'); return; }
       ouvrirModalImport(parsed, defaultName);
     };
     reader.readAsText(file, 'UTF-8');
@@ -1940,10 +1966,32 @@ function importerFichier(event) {
 }
 
 function ouvrirModalImport(parsed, defaultName) {
-  csvEnAttente = parsed;
+  csvEnAttente = parsed.rows;
+  document.getElementById('importApercu').innerHTML = renderImportApercu(parsed.stats);
   document.getElementById('inputNomEnquete').value = defaultName;
   document.getElementById('modalNom').classList.add('open');
   setTimeout(() => document.getElementById('inputNomEnquete').select(), 100);
+}
+
+function renderImportApercu(s) {
+  const chip = (txt, bg, fg) => `<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:12px;font-weight:600;background:${bg};color:${fg};margin:2px 4px 2px 0;">${esc(txt)}</span>`;
+  const recon = s.reconnues.length
+    ? s.reconnues.map(c => chip('✓ '+c, '#e8f5e9', '#2e7d32')).join('')
+    : '<em style="color:#b71c1c;">aucune</em>';
+  const nonRecon = s.nonReconnues.length
+    ? s.nonReconnues.map(c => chip(c, '#fff3e0', '#e65100')).join('')
+    : '<span style="color:#2e7d32;">aucune ✓</span>';
+  return `
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px;">
+      <div><div style="font-size:22px;font-weight:700;">${s.lues}</div><div style="font-size:11px;color:#888;">lignes lues</div></div>
+      <div><div style="font-size:22px;font-weight:700;color:#2e7d32;">${s.importees}</div><div style="font-size:11px;color:#888;">à importer</div></div>
+      <div><div style="font-size:22px;font-weight:700;color:${s.rejetees?'#b71c1c':'#888'};">${s.rejetees}</div><div style="font-size:11px;color:#888;">rejetées</div></div>
+    </div>
+    ${s.rejetees ? `<div style="font-size:11px;color:#b71c1c;margin-bottom:8px;">⚠️ ${s.rejetees} ligne(s) sans nom ni prénom ignorée(s).</div>` : ''}
+    <div style="font-size:12px;margin-bottom:4px;"><strong>Colonnes reconnues</strong></div>
+    <div style="margin-bottom:8px;">${recon}</div>
+    <div style="font-size:12px;margin-bottom:4px;"><strong>Colonnes ignorées</strong></div>
+    <div>${nonRecon}</div>`;
 }
 
 function confirmerImport() {
