@@ -2044,7 +2044,7 @@ function rendu() {
         <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statut)}</span>
         ${dateStatut ? `<span class="card-statut-date">${esc(dateStatut)}</span>` : ''}
       </div>
-      ${!coordsCache(c.adresse) ? '<div class="no-coords">⚠️ Adresse non trouvée sur la carte</div>' : ''}
+      ${!coordsCache(c.adresse) ? '<div class="no-coords">📍 Pas encore localisée — ouvrez la 🗺️ Carte</div>' : ''}
       <div class="edit-area" id="edit-${i}"></div>
     `;
     liste.appendChild(card);
