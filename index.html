@@ -937,7 +937,8 @@
         <option value="bruxelles">Bruxelles (UrbIS — CIRB)</option>
         <option value="wallonie">Wallonie (SPW + IGN)</option>
         <option value="flandre">Flandre (Geopunt + IGN)</option>
-        <option value="osm">Belgique générique (OSM + Nominatim)</option>
+<!-- Option OSM/Nominatim masquée : géocodage en masse bloqué (403) par le serveur public.
+        <option value="osm">Belgique générique (OSM + Nominatim)</option> -->
       </select>
       <small id="setProviderHint"></small>
     </div>
@@ -1260,6 +1261,8 @@ function chargerSettings() {
     settings.statutsV = 3;
     saveSettings();
   }
+  // OSM/Nominatim retiré (géocodage en masse bloqué) → bascule vers UrbIS
+  if (settings.provider === 'osm') { settings.provider = 'bruxelles'; saveSettings(); }
   // Compat : ancien réglage de thème isolé
   const legacy = localStorage.getItem('statbel_theme');
   if (legacy && !('statbel_settings' in localStorage)) settings.theme = legacy;
