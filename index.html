@@ -1462,8 +1462,13 @@ function parseAdresse(adresse) {
     avant.match(/\s+(ET[-]?[A-Z0-9]{1,4})$/i) ||
     avant.match(/\s+(app?t?\.?\s*\d+[a-z]?)$/i) ||
     avant.match(/(\s*\/[A-Z0-9]+)$/i);
-  const boite = bteMatch ? bteMatch[1].trim() : '';
-  const rue   = bteMatch ? avant.slice(0, bteMatch.index).trim() : avant;
+  let boite = bteMatch ? bteMatch[1].trim() : '';
+  let rue   = bteMatch ? avant.slice(0, bteMatch.index).trim() : avant;
+  // Boîte/appartement en numéro nu après le numéro de rue : « 192 5 » → rue « 192 », boîte « 5 »
+  if (!bteMatch) {
+    const m = avant.match(/^(.*\d)\s+(\d{1,4}[a-z]?)$/i);
+    if (m) { rue = m[1].trim(); boite = m[2].trim(); }
+  }
   return { rue, boite, cpville: apres };
 }
 
