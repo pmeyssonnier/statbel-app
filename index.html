@@ -851,6 +851,9 @@
             ⬇️ Exporter CSV
           </button>
           <hr class="kebab-sep">
+          <button class="kebab-item" onclick="renommerEnquete();toggleKebab()">
+            ✏️ Renommer cette enquête
+          </button>
           <button class="kebab-item danger" onclick="supprimerEnquete();toggleKebab()">
             🗑️ Supprimer cette enquête
           </button>
@@ -1391,6 +1394,22 @@ function changerEnquete(nom) {
   else if (vueActive === 'rdv')                   renduRdv();
   else if (vueActive === 'resume')                renduResume();
   else                                            rendu();
+}
+
+function renommerEnquete() {
+  if (!enqueteActive) { alert('Aucune enquête active.'); return; }
+  const ancien  = enqueteActive;
+  const nouveau = (prompt('Nouveau nom de l\'enquête :', ancien) || '').trim();
+  if (!nouveau || nouveau === ancien) return;
+  if (enquetes[nouveau]) { alert('Une enquête porte déjà ce nom.'); return; }
+  // Renommer la clé en conservant l'ordre des enquêtes
+  const renomme = {};
+  Object.keys(enquetes).forEach(k => { renomme[k === ancien ? nouveau : k] = enquetes[k]; });
+  enquetes = renomme;
+  enqueteActive = nouveau;
+  sauver();
+  refreshSelect();
+  rendu();
 }
 
 function supprimerEnquete() {
