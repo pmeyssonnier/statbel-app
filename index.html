@@ -1900,15 +1900,20 @@ function parseCSV(text) {
   const g = (cols, i) => i >= 0 ? (cols[i]||'').trim() : '';
   const bodyLines = lines.slice(1).filter(l => l.trim());
   const rows = [];
-  let rejetees = 0;
+  const motifs = { sansIdentite: 0, adresseVide: 0, doublonOrdre: 0 };
+  const ordresVus = new Set();
   bodyLines.forEach(l => {
     const cols = splitLine(l, sep);
     const prenom = g(cols, map.prenom), nom = g(cols, map.nom);
-    if (!prenom && !nom) { rejetees++; return; }   // ligne sans identité → rejetée
+    const adresse = g(cols, map.adresse);
+    const ordreVal = g(cols, map.ordre);
+    if (!prenom && !nom) { motifs.sansIdentite++; return; }       // ni nom ni prénom
+    if (!adresse)        { motifs.adresseVide++;  return; }       // adresse vide
+    if (ordreVal && ordresVus.has(ordreVal)) { motifs.doublonOrdre++; return; } // N° d'ordre déjà vu
+    if (ordreVal) ordresVus.add(ordreVal);
     rows.push({
-      ordre:          g(cols,map.ordre) || String(rows.length+1).padStart(2,'0'),
-      prenom, nom,
-      adresse:        g(cols,map.adresse),
+      ordre:          ordreVal || String(rows.length+1).padStart(2,'0'),
+      prenom, nom, adresse,
       statut:         g(cols,map.statut) || 'À faire',
       date:           g(cols,map.date),
       notes:          g(cols,map.notes),
@@ -1924,7 +1929,8 @@ function parseCSV(text) {
       email:          g(cols,map.email),
     });
   });
-  return { rows, stats: { lues: bodyLines.length, importees: rows.length, rejetees, reconnues, nonReconnues } };
+  const rejetees = motifs.sansIdentite + motifs.adresseVide + motifs.doublonOrdre;
+  return { rows, stats: { lues: bodyLines.length, importees: rows.length, rejetees, motifs, reconnues, nonReconnues } };
 }
 
 function splitLine(line, sep) {
@@ -1987,7 +1993,14 @@ function renderImportApercu(s) {
       <div><div style="font-size:22px;font-weight:700;color:#2e7d32;">${s.importees}</div><div style="font-size:11px;color:#888;">à importer</div></div>
       <div><div style="font-size:22px;font-weight:700;color:${s.rejetees?'#b71c1c':'#888'};">${s.rejetees}</div><div style="font-size:11px;color:#888;">rejetées</div></div>
     </div>
-    ${s.rejetees ? `<div style="font-size:11px;color:#b71c1c;margin-bottom:8px;">⚠️ ${s.rejetees} ligne(s) sans nom ni prénom ignorée(s).</div>` : ''}
+    ${(() => {
+      const m = s.motifs || {};
+      const det = [];
+      if (m.sansIdentite) det.push(`${m.sansIdentite} sans nom ni prénom`);
+      if (m.adresseVide)  det.push(`${m.adresseVide} sans adresse`);
+      if (m.doublonOrdre) det.push(`${m.doublonOrdre} N° d'ordre en doublon`);
+      return det.length ? `<div style="font-size:11px;color:#b71c1c;margin-bottom:8px;">⚠️ Lignes ignorées : ${esc(det.join(' · '))}.</div>` : '';
+    })()}
     <div style="font-size:12px;margin-bottom:4px;"><strong>Colonnes reconnues</strong></div>
     <div style="margin-bottom:8px;">${recon}</div>
     <div style="font-size:12px;margin-bottom:4px;"><strong>Colonnes ignorées</strong></div>
