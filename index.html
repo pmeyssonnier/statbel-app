@@ -751,6 +751,8 @@
   .nongeo-ref  { display:inline-block; font-size:11px; color:#e65100; font-weight:bold; }
   .nongeo-name { display:block; font-size:13px; font-weight:bold; }
   .nongeo-adr  { display:block; font-size:12px; color:var(--text3); }
+  .nongeo-filtre { width:100%; padding:7px 9px; margin-bottom:8px; border:1px solid var(--input-border);
+                   border-radius:8px; font-size:13px; background:var(--input-bg); color:var(--text); }
   .set-accordion { margin-bottom:10px; border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
   .set-accordion > summary { font-size:12px; font-weight:bold; color:var(--text3); text-transform:uppercase; letter-spacing:0.4px; cursor:pointer; list-style:none; }
   .set-accordion > summary::before { content:'▶ '; font-size:10px; }
@@ -2785,20 +2787,34 @@ function viderCacheCoords() {
 }
 
 // ── Lister les adresses non géocodées ───────────────────────────────
+let _nonGeoAll = [];
+let _nonGeoFiltre = 'Tous';
+
 function listerNonGeocodees() {
-  const box = document.getElementById('nonGeoList');
-  const items = [];
+  _nonGeoAll = [];
   Object.entries(enquetes).forEach(([enq, arr]) => {
-    arr.forEach((c, idx) => {
-      if (!coordsCache(c.adresse)) items.push({ enq, idx, c });
-    });
+    arr.forEach((c, idx) => { if (!coordsCache(c.adresse)) _nonGeoAll.push({ enq, idx, c }); });
   });
-  if (!items.length) {
+  // Par défaut, filtrer sur l'enquête active si elle a des non-géocodées
+  const enqs = [...new Set(_nonGeoAll.map(x => x.enq))];
+  _nonGeoFiltre = (enqueteActive && enqs.includes(enqueteActive)) ? enqueteActive : 'Tous';
+  renderNonGeo();
+}
+
+function renderNonGeo() {
+  const box = document.getElementById('nonGeoList');
+  if (!_nonGeoAll.length) {
     box.innerHTML = '<div class="nongeo-ok">✅ Toutes les adresses sont géocodées.</div>';
     return;
   }
+  const enqs = [...new Set(_nonGeoAll.map(x => x.enq))];
+  const cnt  = e => _nonGeoAll.filter(x => x.enq === e).length;
+  const items = _nonGeoFiltre === 'Tous' ? _nonGeoAll : _nonGeoAll.filter(x => x.enq === _nonGeoFiltre);
+  const opts = `<option value="Tous"${_nonGeoFiltre === 'Tous' ? ' selected' : ''}>Toutes les enquêtes (${_nonGeoAll.length})</option>` +
+    enqs.map(e => `<option value="${esc(e)}"${e === _nonGeoFiltre ? ' selected' : ''}>${esc(e)} (${cnt(e)})</option>`).join('');
   box.innerHTML =
-    `<div class="nongeo-head">${items.length} adresse(s) non géocodée(s) — cliquez pour ouvrir la fiche :</div>` +
+    `<select class="nongeo-filtre" onchange="_nonGeoFiltre=this.value;renderNonGeo()">${opts}</select>
+     <div class="nongeo-head">${items.length} adresse(s) non géocodée(s) — cliquez pour ouvrir la fiche :</div>` +
     items.map(({enq, idx, c}) =>
       `<button class="nongeo-item" onclick="allerAFiche('${enq.replace(/'/g,"\\'")}',${idx})">
         <span class="nongeo-ref">${esc(enq)} › N°${esc(c.ordre)}</span>
