@@ -2614,14 +2614,13 @@ function fermerAide()  { document.getElementById('modalAide').classList.remove('
 
 function majSettingsUI() {
   // Le style de carte ne concerne qu'UrbIS (Bruxelles)
-  const fondUrbis = settings.provider === 'bruxelles'
-    || (settings.provider === 'auto' && regionDominante() === 'bruxelles');
-  document.getElementById('setStyleRow').style.display = fondUrbis ? '' : 'none';
+  // Le style gris/couleur ne concerne qu'UrbIS (mode Bruxelles explicite)
+  document.getElementById('setStyleRow').style.display = settings.provider === 'bruxelles' ? '' : 'none';
   const hint = document.getElementById('setProviderHint');
   if (settings.provider === 'osm') {
     hint.textContent = '⚠️ Tiers hors UE — à éviter pour des données personnelles.';
   } else if (settings.provider === 'auto') {
-    hint.textContent = '✅ Chaque adresse est routée vers UrbIS (Bxl), SPW (Wallonie) ou Geopunt (Flandre) selon son code postal.';
+    hint.textContent = '✅ Géocodage routé par code postal (UrbIS/SPW/Geopunt) · fond de carte OpenStreetMap (toutes régions).';
   } else {
     hint.textContent = '✅ Service public belge — pas de transfert hors UE.';
   }
@@ -2667,11 +2666,20 @@ function regionDominante() {
   return best;
 }
 
-// Fond de carte effectif : en mode auto, on choisit selon la région dominante
-// (UrbIS pour Bruxelles — ses tuiles ne couvrent que Bruxelles —, sinon IGN).
+// Fond de carte « plan de rue » universel (OpenStreetMap), couvre toute la
+// Belgique. Les tuiles ne contiennent que l'image de la carte (pas de donnée
+// personnelle) → conforme RGPD. Utilisé pour le fond en mode auto.
+const FOND_OSM = {
+  tileUrl: function() { return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; },
+  tileAttribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
+  maxZoom: 19
+};
+
+// Fond de carte effectif : en mode auto, on affiche un plan de rue OSM unique
+// pour toutes les régions (le géocodage, lui, reste routé par région).
 function fondEffectif() {
   if (settings.provider !== 'auto') return GEO;
-  return GEO_PROVIDERS[regionDominante()] || GEO_PROVIDERS.bruxelles;
+  return FOND_OSM;
 }
 
 // Remplace le fond de carte sans recréer la carte entière
