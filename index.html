@@ -463,6 +463,21 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
+  /* Graphe activité quotidienne (colonnes empilées) */
+  .activite-chart {
+    display: flex; align-items: flex-end; gap: 3px;
+    height: 170px; overflow-x: auto; padding: 4px 2px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .activite-col { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
+  .activite-bars {
+    display: flex; flex-direction: column-reverse; justify-content: flex-start;
+    width: 22px; height: 140px;
+  }
+  .activite-seg { width: 100%; }
+  .activite-seg:first-child { border-radius: 3px 3px 0 0; }
+  .activite-tot { font-size: 9px; color: var(--text3); margin-bottom: 2px; min-height: 11px; }
+  .activite-lbl { font-size: 8px; color: var(--text3); margin-top: 3px; white-space: nowrap; transform: rotate(-90deg); transform-origin: center; height: 34px; }
   /* Tableau croisé */
   .resume-table-wrap {
     overflow-x: auto;
@@ -3038,6 +3053,9 @@ const I18N = {
   "done_on": { fr:"le", nl:"op", en:"on", de:"am" },
   "rdv_past": { fr:"⏰ Passé", nl:"⏰ Verlopen", en:"⏰ Past", de:"⏰ Vergangen" },
   "rdv_today": { fr:"📍 Aujourd'hui", nl:"📍 Vandaag", en:"📍 Today", de:"📍 Heute" },
+  "res_activity": { fr:"📈 Activité quotidienne (visites)", nl:"📈 Dagelijkse activiteit (bezoeken)", en:"📈 Daily activity (visits)", de:"📈 Tägliche Aktivität (Besuche)" },
+  "res_activity_none": { fr:"Aucune visite enregistrée pour l'instant.", nl:"Nog geen bezoeken geregistreerd.", en:"No visits recorded yet.", de:"Noch keine Besuche erfasst." },
+  "res_visits": { fr:["visite","visites"], nl:["bezoek","bezoeken"], en:["visit","visits"], de:["Besuch","Besuche"] },
   "ed_status": { fr:"Statut", nl:"Status", en:"Status", de:"Status" },
   "ed_firstname": { fr:"Prénom", nl:"Voornaam", en:"First name", de:"Vorname" },
   "ed_lastname": { fr:"Nom", nl:"Naam", en:"Last name", de:"Name" },
@@ -4143,6 +4161,59 @@ function exporterResumePDF() {
 // VUE RÉSUMÉ — KPI cards + barre de progression + tableau croisé
 // ════════════════════════════════════════════════════════════════════
 
+// Graphe « activité quotidienne » : nombre de visites par statut et par jour,
+// depuis le 1er passage enregistré jusqu'à aujourd'hui. Source : c.historique
+// (chaque passage « done » daté — y compris plusieurs absences pour un contact).
+function renderActiviteQuotidienne() {
+  const parJour = {};                 // { isoDate: { statutLabel: count } }
+  const presents = new Set();
+  Object.values(enquetes).forEach(arr => arr.forEach(c => {
+    (c.historique || []).forEach(h => {
+      const iso = dateFrToISO(h.date);
+      if (!iso) return;
+      (parJour[iso] = parJour[iso] || {})[h.statut] = (parJour[iso][h.statut] || 0) + 1;
+      presents.add(h.statut);
+    });
+  }));
+  const dates = Object.keys(parJour).sort();
+  let html = `<div class="resume-section-title">${t('res_activity')}</div>`;
+  if (!dates.length) return html + `<div style="font-size:12px;color:var(--text3);">${t('res_activity_none')}</div>`;
+
+  // Statuts présents, dans l'ordre configuré
+  const statutsOrdre = statutDefs().filter(s => presents.has(s.label));
+  // Légende
+  html += '<div class="progress-legend" style="margin-bottom:6px;">' + statutsOrdre.map(s =>
+    `<div class="prog-leg-item"><div class="prog-leg-dot" style="background:${s.color}"></div>${esc(s.icon)} ${esc(statutLabel(s.label))}</div>`
+  ).join('') + '</div>';
+
+  // Liste des jours : du 1er passage à aujourd'hui (inclus)
+  const today = new Date().toISOString().slice(0, 10);
+  const fin = today > dates[dates.length - 1] ? today : dates[dates.length - 1];
+  const jours = [];
+  for (let d = new Date(dates[0] + 'T00:00'); d.toISOString().slice(0, 10) <= fin; d.setDate(d.getDate() + 1)) {
+    jours.push(d.toISOString().slice(0, 10));
+  }
+  const totalJour = iso => Object.values(parJour[iso] || {}).reduce((a, b) => a + b, 0);
+  const maxTot = Math.max(1, ...jours.map(totalJour));
+
+  html += '<div class="activite-chart">' + jours.map(iso => {
+    const cpt = parJour[iso] || {};
+    const tot = totalJour(iso);
+    const segs = statutsOrdre.filter(s => cpt[s.label]).map(s => {
+      const hPct = (cpt[s.label] / maxTot) * 100;
+      const d = statutDef(s.label);
+      return `<div class="activite-seg" style="height:${hPct}%;background:${s.color}" title="${esc(statutLabel(s.label))} : ${cpt[s.label]}"></div>`;
+    }).join('');
+    const [y, m, dd] = iso.split('-');
+    return `<div class="activite-col" title="${dd}/${m}/${y} — ${tot} ${tPlural('res_visits', tot)}">
+      <div class="activite-tot">${tot || ''}</div>
+      <div class="activite-bars">${segs}</div>
+      <div class="activite-lbl">${dd}/${m}</div>
+    </div>`;
+  }).join('') + '</div>';
+  return html;
+}
+
 function renduResume() {
   const box = document.getElementById('resumeContainer');
   if (!box) return;
@@ -4347,7 +4418,8 @@ function renduResume() {
     <div>
       <div class="resume-section-title">${t('res_table')}</div>
       ${tableHtml}
-    </div>`;
+    </div>
+    <div>${renderActiviteQuotidienne()}</div>`;
 }
 
 
