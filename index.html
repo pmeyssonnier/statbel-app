@@ -653,6 +653,63 @@
     display: flex;
     justify-content: space-between;
   }
+  /* ── Comparaison restore vs existant ─────────────────────────────── */
+  .compare-block {
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .compare-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--badge-bg);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .compare-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .compare-tag.nouveau   { background:#e8f5e9; color:#2e7d32; }
+  .compare-tag.identique { background:#eceff1; color:#607d8b; }
+  .compare-tag.modifie   { background:#fff3e0; color:#e65100; }
+  .compare-rows { padding: 6px 12px 10px; display:flex; flex-direction:column; gap:4px; }
+  .compare-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    gap: 8px;
+  }
+  .compare-row.add    { background:#e8f5e9; }
+  .compare-row.removed{ background:#ffebee; }
+  .compare-row.changed{ background:#fff3e0; }
+  .compare-row .cr-nom { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .compare-row .cr-detail { font-size:11px; color:var(--text3); }
+  .compare-summary {
+    display:flex; gap:6px; flex-wrap:wrap; padding: 0 12px 10px;
+  }
+  .compare-summary span {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight:600;
+  }
+  .cs-add    { background:#e8f5e9; color:#2e7d32; }
+  .cs-rem    { background:#ffebee; color:#b71c1c; }
+  .cs-mod    { background:#fff3e0; color:#e65100; }
+  .cs-unch   { background:#eceff1; color:#607d8b; }
+  .compare-toggle {
+    font-size: 11px; color: var(--filter-text); cursor: pointer;
+    padding: 4px 12px 8px; text-decoration: underline;
+  }
+  .compare-rows.hidden { display: none; }
+  .hidden { display: none !important; }
 
   /* ── Historique des passages ─────────────────────────────────────── */
   .historique-wrap {
@@ -896,14 +953,15 @@
 <div id="resumeContainer"></div>
 
 <div class="modal-overlay" id="modalNom">
-  <div class="modal">
+  <div class="modal" style="max-width:500px;max-height:85vh;display:flex;flex-direction:column;">
     <h2>Aperçu de l'import</h2>
-    <div id="importApercu"></div>
+    <div id="importApercu" style="overflow-y:auto;"></div>
+    <div id="importCompareWrap" class="hidden" style="overflow-y:auto;margin-top:6px;"></div>
     <label style="display:block;margin-top:12px;font-size:13px;font-weight:600;">Nom de l'enquête</label>
-    <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305">
+    <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" oninput="majComparaisonImport()">
     <div class="modal-btns">
       <button class="btn-secondary" onclick="fermerModal()">Annuler</button>
-      <button class="btn-primary" onclick="confirmerImport()">Importer</button>
+      <button class="btn-primary" id="btnConfirmerImport" onclick="confirmerImport()">Importer</button>
     </div>
   </div>
 </div>
@@ -1978,7 +2036,40 @@ function ouvrirModalImport(parsed, defaultName) {
   document.getElementById('importApercu').innerHTML = renderImportApercu(parsed.stats);
   document.getElementById('inputNomEnquete').value = defaultName;
   document.getElementById('modalNom').classList.add('open');
+  majComparaisonImport();
   setTimeout(() => document.getElementById('inputNomEnquete').select(), 100);
+}
+
+// Met à jour la comparaison "csvEnAttente" vs l'enquête existante portant
+// le même nom que celui actuellement saisi dans le champ. N'affiche rien
+// si aucune enquête de ce nom n'existe (cas d'une création).
+function majComparaisonImport() {
+  const wrap = document.getElementById('importCompareWrap');
+  const btn  = document.getElementById('btnConfirmerImport');
+  if (!csvEnAttente) { wrap.classList.add('hidden'); wrap.innerHTML = ''; return; }
+
+  const nom = document.getElementById('inputNomEnquete').value.trim();
+  const existante = nom ? enquetes[nom] : null;
+
+  if (!existante) {
+    wrap.classList.add('hidden');
+    wrap.innerHTML = '';
+    btn.textContent = 'Importer';
+    return;
+  }
+
+  const src = { [nom]: csvEnAttente };
+  const savedEnquetes = enquetes[nom];
+  // buildCompareHTML compare contre enquetes[nom] global — déjà correct
+  // puisque `existante` provient bien de enquetes[nom].
+  const { html, stats } = buildCompareHTML(src, `⚠️ Une enquête <strong>"${esc(nom)}"</strong> existe déjà — comparaison avec son contenu actuel :`);
+  wrap.innerHTML = html;
+  wrap.classList.remove('hidden');
+
+  const totChanges = stats.add + stats.rem + stats.mod;
+  btn.textContent = totChanges
+    ? `Importer (remplacer — ${totChanges} changement${totChanges>1?'s':''})`
+    : 'Importer (remplacer — aucun changement)';
 }
 
 function renderImportApercu(s) {
@@ -2019,7 +2110,8 @@ function renderImportApercu(s) {
 function confirmerImport() {
   const nom = document.getElementById('inputNomEnquete').value.trim();
   if (!nom) { alert('Veuillez entrer un nom.'); return; }
-  if (enquetes[nom] && !confirm('L\'enquête "'+nom+'" existe déjà. Remplacer ?')) return;
+  // Pas de confirm() natif ici : la comparaison détaillée (majComparaisonImport)
+  // est déjà visible dans la modale avant que l'utilisateur ne clique sur ce bouton.
   enquetes[nom] = csvEnAttente;
   enqueteActive = nom;
   csvEnAttente  = null;
@@ -2849,6 +2941,136 @@ function buildBackupDetailHTML(src, meta) {
   return html;
 }
 
+// ── Comparaison données existantes vs fichier à restaurer ──────────────
+// Identifie un contact par une clé stable : ordre + nom + prénom (fallback adresse)
+function _contactKey(c) {
+  const ordre  = (c.ordre || '').toString().trim();
+  const nom    = (c.nom || '').toString().trim().toLowerCase();
+  const prenom = (c.prenom || '').toString().trim().toLowerCase();
+  if (ordre || nom || prenom) return `${ordre}|${nom}|${prenom}`;
+  return `adr:${(c.adresse || '').toString().trim().toLowerCase()}`;
+}
+
+// Champs comparés pour détecter une "modification" (les champs purement
+// d'horodatage ou de cache ne sont pas pris en compte)
+const _CHAMPS_COMPARES = [
+  'prenom','nom','adresse','statut','date','gsm','email','notes',
+  'sexe','birth_date','age','birth_country','nationality','marital_status',
+  'taille_menage','rdv'
+];
+
+function _diffContacts(a, b) {
+  const diffs = [];
+  _CHAMPS_COMPARES.forEach(champ => {
+    const va = (a[champ] ?? '').toString();
+    const vb = (b[champ] ?? '').toString();
+    if (va !== vb) diffs.push({ champ, avant: va, apres: vb });
+  });
+  return diffs;
+}
+
+// Construit le HTML de comparaison entre les enquêtes existantes (enquetes)
+// et celles du fichier importé (src). Retourne { html, stats } où stats
+// contient les compteurs globaux (ajouts, suppressions, modifs, identiques).
+function buildCompareHTML(src, meta) {
+  const noms = Object.keys(src);
+  let html = '';
+  if (meta) html += `<div class="backup-meta">${meta}</div>`;
+
+  let totAdd = 0, totRem = 0, totMod = 0, totUnch = 0;
+
+  noms.forEach(nom => {
+    const arrNew = src[nom] || [];
+    const arrOld = enquetes[nom] || null; // null = enquête entièrement nouvelle
+
+    const mapOld = {};
+    if (arrOld) arrOld.forEach(c => { mapOld[_contactKey(c)] = c; });
+    const mapNew = {};
+    arrNew.forEach(c => { mapNew[_contactKey(c)] = c; });
+
+    const rowsAdd = [], rowsRem = [], rowsMod = [];
+    let unch = 0;
+
+    arrNew.forEach(c => {
+      const k = _contactKey(c);
+      const old = mapOld[k];
+      if (!old) { rowsAdd.push(c); return; }
+      const diffs = _diffContacts(old, c);
+      if (diffs.length) rowsMod.push({ c, diffs });
+      else unch++;
+    });
+    if (arrOld) {
+      arrOld.forEach(c => {
+        const k = _contactKey(c);
+        if (!mapNew[k]) rowsRem.push(c);
+      });
+    }
+
+    totAdd += rowsAdd.length;
+    totRem += rowsRem.length;
+    totMod += rowsMod.length;
+    totUnch += unch;
+
+    const estNouvelle = !arrOld;
+    const tagCls   = estNouvelle ? 'nouveau' : (rowsAdd.length || rowsRem.length || rowsMod.length) ? 'modifie' : 'identique';
+    const tagLabel = estNouvelle ? '✨ Nouvelle enquête' : (tagCls === 'modifie' ? '✏️ Modifiée' : '✅ Identique');
+
+    const blockId = 'cmp_' + Math.random().toString(36).slice(2, 9);
+
+    let rowsHtml = '';
+    rowsAdd.forEach(c => {
+      rowsHtml += `<div class="compare-row add">
+        <span class="cr-nom">➕ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
+        <span class="cr-detail">nouveau</span>
+      </div>`;
+    });
+    rowsMod.forEach(({ c, diffs }) => {
+      const detail = diffs.slice(0, 3).map(d => esc(d.champ)).join(', ') + (diffs.length > 3 ? '…' : '');
+      rowsHtml += `<div class="compare-row changed">
+        <span class="cr-nom">✏️ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
+        <span class="cr-detail">${detail}</span>
+      </div>`;
+    });
+    rowsRem.forEach(c => {
+      rowsHtml += `<div class="compare-row removed">
+        <span class="cr-nom">➖ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
+        <span class="cr-detail">supprimé</span>
+      </div>`;
+    });
+
+    const hasChanges = rowsAdd.length || rowsRem.length || rowsMod.length;
+
+    html += `
+      <div class="compare-block">
+        <div class="compare-header">
+          <span title="${esc(nom)}">${esc(nom)}</span>
+          <span class="compare-tag ${tagCls}">${tagLabel}</span>
+        </div>
+        <div class="compare-summary">
+          ${rowsAdd.length ? `<span class="cs-add">➕ ${rowsAdd.length} ajout${rowsAdd.length>1?'s':''}</span>` : ''}
+          ${rowsMod.length ? `<span class="cs-mod">✏️ ${rowsMod.length} modifié${rowsMod.length>1?'s':''}</span>` : ''}
+          ${rowsRem.length ? `<span class="cs-rem">➖ ${rowsRem.length} supprimé${rowsRem.length>1?'s':''}</span>` : ''}
+          ${unch ? `<span class="cs-unch">✅ ${unch} identique${unch>1?'s':''}</span>` : ''}
+        </div>
+        ${hasChanges ? `
+          <div class="compare-toggle" onclick="document.getElementById('${blockId}').classList.toggle('hidden')">Afficher / masquer le détail</div>
+          <div class="compare-rows hidden" id="${blockId}">${rowsHtml}</div>
+        ` : ''}
+      </div>`;
+  });
+
+  const stats = { add: totAdd, rem: totRem, mod: totMod, unch: totUnch };
+  const grandTotalLabel = `➕${stats.add} ✏️${stats.mod} ➖${stats.rem} ✅${stats.unch}`;
+  html += `<div class="backup-grand-total">
+    <span>📊 Comparaison globale</span>
+    <span>${grandTotalLabel}</span>
+  </div>`;
+
+  return { html, stats };
+}
+
+
+
 function fermerBackupDetail() {
   document.getElementById('modalBackupDetail').classList.remove('open');
 }
@@ -2912,15 +3134,18 @@ function importerBackup(event) {
       // Détecter conflits (enquêtes de même nom déjà en mémoire)
       const conflits = noms.filter(n => enquetes[n]);
       const metaHtml = `📅 Sauvegarde du : ${dateBackup}
-&nbsp;&nbsp;📂 Fichier : <code>${esc(file.name)}</code>${conflits.length ? `<br>⚠️ <strong style="color:#e65100">${conflits.length} enquête${conflits.length>1?'s':''} sera${conflits.length>1?'ont':''} remplacée${conflits.length>1?'s':''}</strong> : ${conflits.map(n=>`<em>${esc(n)}</em>`).join(', ')}` : ''}`;
+&nbsp;&nbsp;📂 Fichier : <code>${esc(file.name)}</code>${conflits.length ? `<br>⚠️ <strong style="color:#e65100">${conflits.length} enquête${conflits.length>1?'s':''} sera${conflits.length>1?'ont':''} comparée${conflits.length>1?'s':''} aux données existantes</strong>` : ''}`;
 
-      const detailHtml = buildBackupDetailHTML(src, metaHtml);
+      const { html: detailHtml, stats } = buildCompareHTML(src, metaHtml);
 
-      document.getElementById('modalBackupTitle').textContent = '⬆️ Aperçu de la restauration';
+      document.getElementById('modalBackupTitle').textContent = '⬆️ Comparaison avant restauration';
       document.getElementById('modalBackupBody').innerHTML    = detailHtml;
 
       const btnConfirm = document.getElementById('btnBackupConfirm');
-      btnConfirm.textContent = '✅ Confirmer la restauration';
+      const totChanges = stats.add + stats.rem + stats.mod;
+      btnConfirm.textContent = totChanges
+        ? `✅ Confirmer la restauration (${totChanges} changement${totChanges>1?'s':''})`
+        : '✅ Confirmer la restauration';
       _pendingRestore = src;
       _pendingSettings = data.settings || null;
       _pendingCoords = data.coords || null;
