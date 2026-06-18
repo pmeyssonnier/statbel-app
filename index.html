@@ -1009,7 +1009,7 @@
 <div id="rdvContainer" style="display:none; padding:10px 12px; flex-direction:column; gap:10px;">
   <h2 class="rdv-title" id="rdvTitle">📅 Suivi des interviews</h2>
   <div class="rdv-search">
-    <input type="search" id="rdvSearch" placeholder="Filtrer par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_rdv" oninput="debounce(renduRdv)" autocomplete="off">
+    <input type="search" id="rdvSearch" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" oninput="debounce(renduRdv)" autocomplete="off">
   </div>
   <div class="filters" id="rdvFilters" style="padding:0;border:none;background:none;"></div>
   <div id="rdvListe"></div>
@@ -2990,10 +2990,9 @@ const I18N = {
   "menu_help": { fr:"❓ Aide", nl:"❓ Help", en:"❓ Help", de:"❓ Hilfe" },
   "menu_import": { fr:"⬆️ Importer CSV / Excel", nl:"⬆️ CSV / Excel importeren", en:"⬆️ Import CSV / Excel", de:"⬆️ CSV / Excel importieren" },
   "menu_export": { fr:"⬇️ Exporter CSV", nl:"⬇️ CSV exporteren", en:"⬇️ Export CSV", de:"⬇️ CSV exportieren" },
-  "menu_rename": { fr:"✏️ Renommer cette enquête", nl:"✏️ Deze onderzoek hernoemen", en:"✏️ Rename this survey", de:"✏️ Diese Umfrage umbenennen" },
-  "menu_delete": { fr:"🗑️ Supprimer cette enquête", nl:"🗑️ Deze onderzoek verwijderen", en:"🗑️ Delete this survey", de:"🗑️ Diese Umfrage löschen" },
+  "menu_rename": { fr:"✏️ Renommer cette enquête", nl:"✏️ Dit onderzoek hernoemen", en:"✏️ Rename this survey", de:"✏️ Diese Umfrage umbenennen" },
+  "menu_delete": { fr:"🗑️ Supprimer cette enquête", nl:"🗑️ Dit onderzoek verwijderen", en:"🗑️ Delete this survey", de:"🗑️ Diese Umfrage löschen" },
   "ph_search": { fr:"Rechercher par nom, prénom, adresse ou téléphone…", nl:"Zoeken op naam, voornaam, adres of telefoon…", en:"Search by name, first name, address or phone…", de:"Nach Name, Vorname, Adresse oder Telefon suchen…" },
-  "ph_rdv": { fr:"Filtrer par nom, prénom, adresse ou téléphone…", nl:"Filteren op naam, voornaam, adres of telefoon…", en:"Filter by name, first name, address or phone…", de:"Nach Name, Vorname, Adresse oder Telefon filtern…" },
   "f_all": { fr:"Tous", nl:"Alle", en:"All", de:"Alle" },
   "age_unit": { fr:"ans", nl:"jaar", en:"yrs", de:"Jahre" },
   "persons": { fr:"pers.", nl:"pers.", en:"ppl", de:"Pers." },
@@ -3075,7 +3074,7 @@ const I18N = {
   "motif_no_address": { fr:"sans adresse", nl:"zonder adres", en:"no address", de:"ohne Adresse" },
   "motif_dup_order": { fr:"N° d'ordre en doublon", nl:"dubbel volgnummer", en:"duplicate order no.", de:"Doppelte laufende Nummer" },
   "modal_import_title": { fr:"Aperçu de l'import", nl:"Voorbeeld van de import", en:"Import preview", de:"Importvorschau" },
-  "lbl_survey_name": { fr:"Nom de l'enquête", nl:"Naam van de onderzoek", en:"Survey name", de:"Name der Umfrage" },
+  "lbl_survey_name": { fr:"Nom de l'enquête", nl:"Naam van het onderzoek", en:"Survey name", de:"Name der Umfrage" },
   "ip_btn_import": { fr:"Importer", nl:"Importeren", en:"Import", de:"Importieren" },
   "ip_btn_replace": { fr:"Importer (remplacer — {n} {word})", nl:"Importeren (vervangen — {n} {word})", en:"Import (replace — {n} {word})", de:"Importieren (ersetzen — {n} {word})" },
   "ip_btn_replace0": { fr:"Importer (remplacer — aucun changement)", nl:"Importeren (vervangen — geen wijzigingen)", en:"Import (replace — no changes)", de:"Importieren (ersetzen — keine Änderungen)" },
