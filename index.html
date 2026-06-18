@@ -2902,6 +2902,7 @@ function buildRdvCard(c, i, today, def) {
       <div class="card-name">${esc(c.prenom)} ${esc(c.nom)}</div>
       <button class="btn-edit" onclick="setView('liste');setTimeout(()=>{const el=ouvrirEdit(${i});if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},150)">🖊️</button>
     </div>
+    ${(() => { const d = ligneDemographie(c); return d ? `<div class="card-demo">👤 ${d}</div>` : ''; })()}
     <div class="card-adresse-row">
       <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank">📍 ${esc(c.adresse)}</a>
       ${distHtml}
