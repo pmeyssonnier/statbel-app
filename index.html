@@ -3014,6 +3014,22 @@ const I18N = {
   backup_none:  { fr:'⚠️ Aucune sauvegarde effectuée sur cet appareil.', nl:'⚠️ Nog geen back-up op dit toestel.', en:'⚠️ No backup made on this device.' },
   backup_at:    { fr:'à', nl:'om', en:'at' },
   no_coords:    { fr:'📍 Pas encore localisée — ouvrez la 🗺️ Carte', nl:'📍 Nog niet gelokaliseerd — open de 🗺️ Kaart', en:'📍 Not located yet — open the 🗺️ Map' },
+  // Vue Résumé
+  res_title:    { fr:'📊 Résumé', nl:'📊 Overzicht', en:'📊 Summary' },
+  res_survey:   { fr:'enquête', nl:'enquête', en:'survey' },
+  res_surveys:  { fr:'enquêtes', nl:'enquêtes', en:'surveys' },
+  res_allsurveys:{ fr:'Toutes les enquêtes', nl:'Alle enquêtes', en:'All surveys' },
+  res_updated:  { fr:'Mis à jour :', nl:'Bijgewerkt:', en:'Updated:' },
+  res_total_contacts:{ fr:'Total contacts', nl:'Totaal contacten', en:'Total contacts' },
+  res_kpi:      { fr:'Indicateurs clés', nl:'Kernindicatoren', en:'Key indicators' },
+  res_progress: { fr:'Progression globale', nl:'Globale voortgang', en:'Overall progress' },
+  res_table:    { fr:'Tableau par enquête et statut', nl:'Tabel per enquête en status', en:'Table by survey and status' },
+  res_col_survey:{ fr:'Enquête', nl:'Enquête', en:'Survey' },
+  res_col_total:{ fr:'Total', nl:'Totaal', en:'Total' },
+  res_total_row:{ fr:'📊 TOTAL', nl:'📊 TOTAAL', en:'📊 TOTAL' },
+  res_exported: { fr:'Exporté le', nl:'Geëxporteerd op', en:'Exported on' },
+  btn_xlsx:     { fr:'📊 Exporter Excel', nl:'📊 Naar Excel', en:'📊 Export Excel' },
+  btn_pdf:      { fr:'🖨️ Imprimer / PDF', nl:'🖨️ Afdrukken / PDF', en:'🖨️ Print / PDF' },
   // Paramètres — sections
   set_title:    { fr:'⚙️ Paramètres', nl:'⚙️ Instellingen', en:'⚙️ Settings' },
   sec_appear:   { fr:'🎨 Apparence', nl:'🎨 Weergave', en:'🎨 Appearance' },
@@ -3101,6 +3117,10 @@ function localeApp() {
 function nomJourCourt(dateObj) {
   const s = dateObj.toLocaleDateString(localeApp(), { weekday: 'short' });
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+// « N enquête(s) » localisé
+function labelNbEnquetes(n) {
+  return n + ' ' + (n > 1 ? t('res_surveys') : t('res_survey'));
 }
 
 // ── Panneau Paramètres ──────────────────────────────────────────────
@@ -3903,8 +3923,8 @@ function renduResume() {
   let kpiHtml = `
     <div class="kpi-card" style="border-top-color:#1a237e">
       <div class="kpi-val">${grandTotal}</div>
-      <div class="kpi-lbl">Total contacts</div>
-      <div class="kpi-pct">${nomEnquetes.length} enquête${nomEnquetes.length>1?'s':''}</div>
+      <div class="kpi-lbl">${t('res_total_contacts')}</div>
+      <div class="kpi-pct">${labelNbEnquetes(nomEnquetes.length)}</div>
     </div>`;
 
   statutsCfg.forEach(s => {
@@ -3924,7 +3944,7 @@ function renduResume() {
     const nb  = totauxParStatut[s.label] || 0;
     if (!nb || !grandTotal) return;
     const pct = (nb / grandTotal * 100).toFixed(1);
-    barHtml += `<div class="progress-seg" style="width:${pct}%;background:${s.color}" title="${s.label} : ${nb} (${pct}%)"></div>`;
+    barHtml += `<div class="progress-seg" style="width:${pct}%;background:${s.color}" title="${esc(statutLabel(s.label))} : ${nb} (${pct}%)"></div>`;
   });
   barHtml += '</div>';
 
@@ -3943,7 +3963,7 @@ function renduResume() {
 
   // ── Tableau croisé ───────────────────────────────────────────────
   let thStatuts = statutsCfg.map(s =>
-    `<th style="border-bottom:3px solid ${s.color}">${esc(s.icon)}<br>${esc(s.label)}</th>`
+    `<th style="border-bottom:3px solid ${s.color}">${esc(s.icon)}<br>${esc(statutLabel(s.label))}</th>`
   ).join('');
 
   let tableHtml = `
@@ -3951,9 +3971,9 @@ function renduResume() {
       <table class="resume-table">
         <thead>
           <tr>
-            <th>Enquête</th>
+            <th>${t('res_col_survey')}</th>
             ${thStatuts}
-            <th>Total</th>
+            <th>${t('res_col_total')}</th>
           </tr>
         </thead>
         <tbody>`;
@@ -4004,7 +4024,7 @@ function renduResume() {
 
   tableHtml += `
         <tr class="resume-total">
-          <td>📊 TOTAL</td>
+          <td>${t('res_total_row')}</td>
           ${totalCells}
           <td><strong>${grandTotal}</strong></td>
         </tr>
@@ -4017,31 +4037,31 @@ function renduResume() {
     <div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div>
-          <div class="resume-title">📊 Résumé — ${nomEnquetes.length} enquête${nomEnquetes.length>1?'s':''}</div>
+          <div class="resume-title">${t('res_title')} — ${labelNbEnquetes(nomEnquetes.length)}</div>
           <div style="font-size:12px;color:var(--text3);margin-top:2px">
-            Toutes les enquêtes · Mis à jour : ${new Date().toLocaleTimeString('fr-BE', {hour:'2-digit',minute:'2-digit'})}
+            ${t('res_allsurveys')} · ${t('res_updated')} ${new Date().toLocaleTimeString(localeApp(), {hour:'2-digit',minute:'2-digit'})}
           </div>
         </div>
         <div class="resume-export-bar">
-          <button class="btn-export btn-export-xlsx" onclick="exporterResumeXLSX()">📊 Exporter Excel</button>
-          <button class="btn-export btn-export-pdf"  onclick="exporterResumePDF()">🖨️ Imprimer / PDF</button>
+          <button class="btn-export btn-export-xlsx" onclick="exporterResumeXLSX()">${t('btn_xlsx')}</button>
+          <button class="btn-export btn-export-pdf"  onclick="exporterResumePDF()">${t('btn_pdf')}</button>
         </div>
       </div>
       <div class="resume-print-header" style="margin-top:8px;font-size:11px;color:#666;">
-        Statbel – Interviews · Exporté le ${new Date().toLocaleDateString('fr-BE', {day:'2-digit',month:'long',year:'numeric'})}
+        Statbel – Interviews · ${t('res_exported')} ${new Date().toLocaleDateString(localeApp(), {day:'2-digit',month:'long',year:'numeric'})}
       </div>
     </div>
     <div>
-      <div class="resume-section-title">Indicateurs clés</div>
+      <div class="resume-section-title">${t('res_kpi')}</div>
       <div class="kpi-grid">${kpiHtml}</div>
     </div>
     <div>
-      <div class="resume-section-title">Progression globale</div>
+      <div class="resume-section-title">${t('res_progress')}</div>
       ${barHtml}
       ${legendHtml}
     </div>
     <div>
-      <div class="resume-section-title">Tableau par enquête et statut</div>
+      <div class="resume-section-title">${t('res_table')}</div>
       ${tableHtml}
     </div>`;
 }
