@@ -1069,7 +1069,7 @@
         <div class="set-row">
           <label data-i18n="lbl_font">🔤 Police de caractères</label>
           <select id="setFontFamily" onchange="settings.fontFamily=this.value;saveSettings();appliquerPolice()">
-            <option value="system">Police système (par défaut)</option>
+            <option value="system" data-i18n="opt_font_system">Police système (par défaut)</option>
             <option value="arial">Arial</option>
             <option value="georgia">Georgia</option>
             <option value="verdana">Verdana</option>
@@ -1094,10 +1094,10 @@
         <div class="set-row">
           <label data-i18n="lbl_provider">🌍 Région / fournisseur géo</label>
           <select id="setProvider" onchange="changerProvider(this.value)">
-            <option value="auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
-            <option value="bruxelles">Bruxelles (UrbIS — CIRB)</option>
-            <option value="wallonie">Wallonie (SPW + IGN)</option>
-            <option value="flandre">Flandre (Geopunt + IGN)</option>
+            <option value="auto" data-i18n="opt_prov_auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
+            <option value="bruxelles" data-i18n="opt_prov_bxl">Bruxelles (UrbIS — CIRB)</option>
+            <option value="wallonie" data-i18n="opt_prov_wal">Wallonie (SPW + IGN)</option>
+            <option value="flandre" data-i18n="opt_prov_fla">Flandre (Geopunt + IGN)</option>
 <!-- Option OSM/Nominatim masquée : géocodage en masse bloqué (403) par le serveur public.
             <option value="osm">Belgique générique (OSM + Nominatim)</option> -->
           </select>
@@ -1116,7 +1116,7 @@
             <option value="coords" data-i18n="opt_nav_coords">Coordonnées GPS (respect vie privée)</option>
             <option value="adresse" data-i18n="opt_nav_addr">Adresse postale complète</option>
           </select>
-          <small>« Coordonnées GPS » n'envoie qu'un point au service de navigation, sans nom ni adresse.</small>
+          <small data-i18n="hint_nav">« Coordonnées GPS » n'envoie qu'un point au service de navigation, sans nom ni adresse.</small>
         </div>
       </div>
     </details>
@@ -3125,6 +3125,19 @@ const I18N = {
   bk_total:    { fr:'📊 Total', nl:'📊 Totaal', en:'📊 Total' },
   bk_w_contact:{ fr:['contact','contacts'], nl:['contact','contacten'], en:['contact','contacts'] },
   bk_w_survey: { fr:['enquête','enquêtes'], nl:['enquête','enquêtes'], en:['survey','surveys'] },
+  // Paramètres — options police / fournisseur + hints
+  opt_font_system:{ fr:'Police système (par défaut)', nl:'Systeemlettertype (standaard)', en:'System font (default)' },
+  opt_prov_auto:{ fr:'🇧🇪 Automatique (selon le code postal) — recommandé', nl:'🇧🇪 Automatisch (volgens postcode) — aanbevolen', en:'🇧🇪 Automatic (by postal code) — recommended' },
+  opt_prov_bxl:{ fr:'Bruxelles (UrbIS — CIRB)', nl:'Brussel (UrbIS — CIBG)', en:'Brussels (UrbIS — CIRB)' },
+  opt_prov_wal:{ fr:'Wallonie (SPW + IGN)', nl:'Wallonië (SPW + NGI)', en:'Wallonia (SPW + NGI)' },
+  opt_prov_fla:{ fr:'Flandre (Geopunt + IGN)', nl:'Vlaanderen (Geopunt + NGI)', en:'Flanders (Geopunt + NGI)' },
+  hint_prov_osm:{ fr:'⚠️ Tiers hors UE — à éviter pour des données personnelles.', nl:'⚠️ Derde partij buiten de EU — vermijd voor persoonsgegevens.', en:'⚠️ Non-EU third party — avoid for personal data.' },
+  hint_prov_auto:{ fr:'✅ Géocodage routé par code postal (UrbIS/SPW/Geopunt) · fond de carte OpenStreetMap (toutes régions).', nl:'✅ Geocodering via postcode (UrbIS/SPW/Geopunt) · achtergrondkaart OpenStreetMap (alle regio\'s).', en:'✅ Geocoding routed by postal code (UrbIS/SPW/Geopunt) · OpenStreetMap base map (all regions).' },
+  hint_prov_be:{ fr:'✅ Service public belge — pas de transfert hors UE.', nl:'✅ Belgische overheidsdienst — geen overdracht buiten de EU.', en:'✅ Belgian public service — no transfer outside the EU.' },
+  hint_nav:    { fr:'« Coordonnées GPS » n\'envoie qu\'un point au service de navigation, sans nom ni adresse.', nl:'“GPS-coördinaten” stuurt alleen een punt naar de navigatiedienst, zonder naam of adres.', en:'“GPS coordinates” sends only a point to the navigation service, without name or address.' },
+  hint_pin_on: { fr:'✅ Verrouillage actif — le code sera demandé selon le délai choisi ci-dessus.', nl:'✅ Vergrendeling actief — de code wordt gevraagd volgens de gekozen tijd hierboven.', en:'✅ Lock active — the code will be requested per the delay chosen above.' },
+  hint_pin_off:{ fr:'Protège l\'accès à l\'application (données nominatives) par un code à 4 chiffres.', nl:'Beschermt de toegang tot de app (persoonsgegevens) met een 4-cijferige code.', en:'Protects access to the app (personal data) with a 4-digit code.' },
+  data_stats:  { fr:'{e} enquête(s), {c} contact(s), {g} adresse(s) géocodée(s) en cache.', nl:'{e} enquête(s), {c} contact(en), {g} gegeocodeerd(e) adres(sen) in cache.', en:'{e} survey(s), {c} contact(s), {g} geocoded address(es) cached.' },
   // Paramètres — sections
   set_title:    { fr:'⚙️ Paramètres', nl:'⚙️ Instellingen', en:'⚙️ Settings' },
   sec_appear:   { fr:'🎨 Apparence', nl:'🎨 Weergave', en:'🎨 Appearance' },
@@ -3255,11 +3268,11 @@ function majSettingsUI() {
   document.getElementById('setStyleRow').style.display = settings.provider === 'bruxelles' ? '' : 'none';
   const hint = document.getElementById('setProviderHint');
   if (settings.provider === 'osm') {
-    hint.textContent = '⚠️ Tiers hors UE — à éviter pour des données personnelles.';
+    hint.textContent = t('hint_prov_osm');
   } else if (settings.provider === 'auto') {
-    hint.textContent = '✅ Géocodage routé par code postal (UrbIS/SPW/Geopunt) · fond de carte OpenStreetMap (toutes régions).';
+    hint.textContent = t('hint_prov_auto');
   } else {
-    hint.textContent = '✅ Service public belge — pas de transfert hors UE.';
+    hint.textContent = t('hint_prov_be');
   }
   hint.style.color = settings.provider === 'osm' ? '#e65100' : '#2e7d32';
   // Stats données
@@ -3267,13 +3280,13 @@ function majSettingsUI() {
   const nbCnt = Object.values(enquetes).reduce((s,a)=>s+a.length,0);
   const nbCoords = Object.keys(localStorage).filter(k=>k.startsWith('coords_')).length;
   document.getElementById('dataStats').textContent =
-    `${nbEnq} enquête(s), ${nbCnt} contact(s), ${nbCoords} adresse(s) géocodée(s) en cache.`;
+    tf('data_stats', { e: nbEnq, c: nbCnt, g: nbCoords });
   // Sélecteur de portée pour la purge du cache : « toutes » + chaque enquête
   const sel = document.getElementById('viderCacheScope');
   if (sel) {
     const prev = sel.value;
     const noms = Object.keys(enquetes);
-    sel.innerHTML = '<option value="__all__">Toutes les enquêtes</option>'
+    sel.innerHTML = `<option value="__all__">${t('res_allsurveys')}</option>`
       + noms.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
     sel.value = (prev && [...sel.options].some(o => o.value === prev))
       ? prev : (enqueteActive && noms.includes(enqueteActive) ? enqueteActive : '__all__');
@@ -4347,10 +4360,10 @@ function majPinUI() {
   if (!btn) return;
   if (pinEstActif()) {
     btn.textContent = t('pin_active');
-    hint.textContent = '✅ Verrouillage actif — le code sera demandé selon le délai choisi ci-dessus.';
+    hint.textContent = t('hint_pin_on');
   } else {
     btn.textContent = t('pin_define');
-    hint.textContent = "Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.";
+    hint.textContent = t('hint_pin_off');
   }
   const sel = document.getElementById('setPinTimeout');
   if (sel) sel.value = String(settings.pinTimeout ?? 5);
