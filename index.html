@@ -2421,7 +2421,7 @@ function rendu() {
         <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statutLabel(statut))}</span>
         ${dateStatut ? `<span class="card-statut-date">${esc(dateStatut)}</span>` : ''}
       </div>
-      ${!coordsCache(c.adresse) ? '<div class="no-coords">📍 Pas encore localisée — ouvrez la 🗺️ Carte</div>' : ''}
+      ${!coordsCache(c.adresse) ? `<div class="no-coords">${t('no_coords')}</div>` : ''}
       <div class="edit-area" id="edit-${i}"></div>
     `;
     liste.appendChild(card);
@@ -3013,6 +3013,7 @@ const I18N = {
   backup_last:  { fr:'✅ Dernière sauvegarde :', nl:'✅ Laatste back-up:', en:'✅ Last backup:' },
   backup_none:  { fr:'⚠️ Aucune sauvegarde effectuée sur cet appareil.', nl:'⚠️ Nog geen back-up op dit toestel.', en:'⚠️ No backup made on this device.' },
   backup_at:    { fr:'à', nl:'om', en:'at' },
+  no_coords:    { fr:'📍 Pas encore localisée — ouvrez la 🗺️ Carte', nl:'📍 Nog niet gelokaliseerd — open de 🗺️ Kaart', en:'📍 Not located yet — open the 🗺️ Map' },
   // Paramètres — sections
   set_title:    { fr:'⚙️ Paramètres', nl:'⚙️ Instellingen', en:'⚙️ Settings' },
   sec_appear:   { fr:'🎨 Apparence', nl:'🎨 Weergave', en:'🎨 Appearance' },
