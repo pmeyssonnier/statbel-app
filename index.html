@@ -1127,7 +1127,7 @@
       <div class="set-row" style="margin-top:8px;">
         <div id="statutsEditor"></div>
         <button class="btn-secondary" style="align-self:flex-start" data-i18n="btn_addstatus" onclick="ajouterStatut()">＋ Ajouter un statut</button>
-        <small>« ✓ » horodate la date de l'action (entretien, refus…). « 📅 » active la date/heure et la vue agenda.</small>
+        <small data-i18n="statut_hint">« ✓ » horodate la date de l'action (entretien, refus…). « 📅 » active la date/heure et la vue agenda.</small>
       </div>
     </details>
 
@@ -3139,6 +3139,13 @@ const I18N = {
   btn_clearcache:{ fr:'🗑️ Vider le cache des coordonnées', nl:'🗑️ Coördinatencache wissen', en:'🗑️ Clear coordinates cache' },
   btn_nongeo:   { fr:'🔍 Adresses non géocodées', nl:'🔍 Niet-gegeocodeerde adressen', en:'🔍 Non-geocoded addresses' },
   btn_addstatus:{ fr:'＋ Ajouter un statut', nl:'＋ Status toevoegen', en:'＋ Add a status' },
+  statut_hint:  { fr:'« ✓ » horodate la date de l\'action (entretien, refus…). « 📅 » active la date/heure et la vue agenda.', nl:'"✓" registreert de datum van de actie (interview, weigering…). "📅" activeert datum/uur en de agenda.', en:'"✓" timestamps the date of the action (interview, refusal…). "📅" enables date/time and the agenda view.', de:'„✓" erfasst das Datum der Aktion (Befragung, Verweigerung…). „📅" aktiviert Datum/Uhrzeit und die Agenda-Ansicht.' },
+  ed_color:     { fr:'Couleur', nl:'Kleur', en:'Color', de:'Farbe' },
+  ed_icon:      { fr:'Icône', nl:'Pictogram', en:'Icon', de:'Symbol' },
+  ed_label:     { fr:'Libellé', nl:'Label', en:'Label', de:'Bezeichnung' },
+  flag_done_title:{ fr:'Horodate : enregistre la date de l\'action (entretien fait, refus…)', nl:'Tijdstempel: registreert de datum van de actie (interview gedaan, weigering…)', en:'Timestamp: records the date of the action (interview done, refusal…)', de:'Zeitstempel: erfasst das Datum der Aktion (Befragung erledigt, Verweigerung…)' },
+  flag_rdv_title:{ fr:'Statut rendez-vous : active la date/heure et la vue agenda', nl:'Afspraakstatus: activeert datum/uur en de agendaweergave', en:'Appointment status: enables date/time and the agenda view', de:'Termin-Status: aktiviert Datum/Uhrzeit und die Agenda-Ansicht' },
+  del_status_title:{ fr:'Supprimer ce statut', nl:'Deze status verwijderen', en:'Delete this status', de:'Diesen Status löschen' },
   btn_close:    { fr:'Fermer', nl:'Sluiten', en:'Close' },
   btn_cancel:   { fr:'Annuler', nl:'Annuleren', en:'Cancel' },
   btn_import:   { fr:'Importer', nl:'Importeren', en:'Import' },
@@ -3189,6 +3196,7 @@ function changerLangue(v) {
   appliquerLangue();
   majPinUI();
   if (typeof renderFilters === 'function') renderFilters();
+  if (typeof renderStatutsEditor === 'function') renderStatutsEditor();
   rendu();
 }
 
@@ -3842,12 +3850,12 @@ function renderStatutsEditor() {
   if (!box) return;
   box.innerHTML = settings.statuts.map((s, i) => `
     <div class="statut-edit-row">
-      <input type="color" value="${s.color}" onchange="modifierStatut(${i},'color',this.value)" title="Couleur">
-      <input type="text" class="se-icon" value="${esc(s.icon)}" maxlength="2" onchange="modifierStatut(${i},'icon',this.value)" title="Icône">
-      <input type="text" class="se-label" value="${esc(s.label)}" onchange="modifierStatut(${i},'label',this.value)" title="Libellé">
-      <label class="se-flag" title="Horodate : enregistre la date de l'action (entretien fait, refus…)"><input type="checkbox" ${s.done?'checked':''} onchange="modifierStatut(${i},'done',this.checked)"> ✓</label>
-      <label class="se-flag" title="Statut rendez-vous : active la date/heure et la vue agenda"><input type="checkbox" ${s.rdv?'checked':''} onchange="modifierStatut(${i},'rdv',this.checked)"> 📅</label>
-      <button class="se-del" onclick="supprimerStatut(${i})" title="Supprimer ce statut"${settings.statuts.length<=1?' disabled':''}>🗑️</button>
+      <input type="color" value="${s.color}" onchange="modifierStatut(${i},'color',this.value)" title="${t('ed_color')}">
+      <input type="text" class="se-icon" value="${esc(s.icon)}" maxlength="2" onchange="modifierStatut(${i},'icon',this.value)" title="${t('ed_icon')}">
+      <input type="text" class="se-label" value="${esc(statutLabel(s.label))}" onchange="modifierStatut(${i},'label',this.value)" title="${t('ed_label')}">
+      <label class="se-flag" title="${esc(t('flag_done_title'))}"><input type="checkbox" ${s.done?'checked':''} onchange="modifierStatut(${i},'done',this.checked)"> ✓</label>
+      <label class="se-flag" title="${esc(t('flag_rdv_title'))}"><input type="checkbox" ${s.rdv?'checked':''} onchange="modifierStatut(${i},'rdv',this.checked)"> 📅</label>
+      <button class="se-del" onclick="supprimerStatut(${i})" title="${t('del_status_title')}"${settings.statuts.length<=1?' disabled':''}>🗑️</button>
     </div>`).join('');
 }
 
