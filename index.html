@@ -2910,15 +2910,16 @@ function buildRdvCard(c, i, today, def) {
 
   let headerHtml = '';
   if (hasRdv) {
-    const label = isPast ? '⏰ Passé' : (isToday ? '📍 Aujourd\'hui' : '');
+    // Statut « rendez-vous » : « Rendez-vous <jour DD/MM/YYYY hh:mm> »
+    const label = isPast ? t('rdv_past') : (isToday ? t('rdv_today') : '');
     headerHtml = `<div class="rdv-header">
-      <span class="rdv-datetime">${formatRdv(c.rdv)}</span>
-      ${label ? `<span style="font-size:11px;color:${isToday?'#2e7d32':'#999'};font-weight:bold;">${label}</span>` : ''}
+      <span class="rdv-datetime">${t('rdv_label')} ${esc(formatRdv(c.rdv))}</span>
+      ${label ? `<span style="font-size:11px;color:${isToday?'#2e7d32':'#999'};font-weight:bold;">${esc(label)}</span>` : ''}
     </div>`;
   } else if (c.date) {
-    // Statut "done" avec date d'action
+    // Statut « done » : « <Statut> le <jour DD/MM/YYYY> » (date de clôture)
     headerHtml = `<div class="rdv-header">
-      <span class="rdv-datetime" style="background:${def.color}22;color:${def.color}">${def.icon} ${esc(c.date)}</span>
+      <span class="rdv-datetime" style="background:${def.color}22;color:${def.color}">${def.icon} ${esc(statutLabel(c.statut || statutDefaut()))} ${t('done_on')} ${esc(formatDateJour(c.date))}</span>
     </div>`;
   }
 
@@ -3033,6 +3034,10 @@ const I18N = {
   "rdv_planned": { fr:"Rendez-vous planifiés", nl:"Geplande afspraken", en:"Scheduled appointments", de:"Geplante Termine" },
   "rdv_done": { fr:"Interviews terminées", nl:"Afgeronde interviews", en:"Completed interviews", de:"Abgeschlossene Interviews" },
   "rdv_contacts": { fr:"Personnes à contacter", nl:"Contacten", en:"Contacts", de:"Kontakte" },
+  "rdv_label": { fr:"Rendez-vous", nl:"Afspraak", en:"Appointment", de:"Termin" },
+  "done_on": { fr:"le", nl:"op", en:"on", de:"am" },
+  "rdv_past": { fr:"⏰ Passé", nl:"⏰ Verlopen", en:"⏰ Past", de:"⏰ Vergangen" },
+  "rdv_today": { fr:"📍 Aujourd'hui", nl:"📍 Vandaag", en:"📍 Today", de:"📍 Heute" },
   "ed_status": { fr:"Statut", nl:"Status", en:"Status", de:"Status" },
   "ed_firstname": { fr:"Prénom", nl:"Voornaam", en:"First name", de:"Vorname" },
   "ed_lastname": { fr:"Nom", nl:"Naam", en:"Last name", de:"Name" },
