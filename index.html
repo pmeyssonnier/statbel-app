@@ -1950,7 +1950,7 @@ function ligneDemographie(c) {
   const ec = etatCivilGenre(c.marital_status, c.sexe);
   if (ec) parts.push(esc(ec));
   if (c.nationality) parts.push(esc(paysNom(c.nationality)));
-  if (c.taille_menage) parts.push('👥 ' + esc(c.taille_menage) + ' ' + t('persons'));
+  if (c.taille_menage) parts.push('👥 ' + esc(c.taille_menage) + ' ' + tPlural('persons', c.taille_menage));
   return parts.join(' · ');
 }
 
@@ -3028,7 +3028,7 @@ const I18N = {
   "ph_search": { fr:"Rechercher par nom, prénom, adresse ou téléphone…", nl:"Zoeken op naam, voornaam, adres of telefoon…", en:"Search by name, first name, address or phone…", de:"Nach Name, Vorname, Adresse oder Telefon suchen…" },
   "f_all": { fr:"Tous", nl:"Alle", en:"All", de:"Alle" },
   "age_unit": { fr:"ans", nl:"jaar", en:"yrs", de:"Jahre" },
-  "persons": { fr:"pers.", nl:"pers.", en:"ppl", de:"Pers." },
+  "persons": { fr:["pers.","pers."], nl:["pers.","pers."], en:["person","ppl"], de:["Pers.","Pers."] },
   "track_title_plain": { fr:"Suivi des interviews", nl:"Opvolging van interviews", en:"Interview follow-up", de:"Interviewverfolgung" },
   "rdv_planned": { fr:"Rendez-vous planifiés", nl:"Geplande afspraken", en:"Scheduled appointments", de:"Geplante Termine" },
   "rdv_done": { fr:"Interviews terminées", nl:"Afgeronde interviews", en:"Completed interviews", de:"Abgeschlossene Interviews" },
