@@ -1872,27 +1872,79 @@ function calcAge(birthDate) {
   return age >= 0 && age < 130 ? age : null;
 }
 
-// État civil accordé au genre (M/F)
+// État civil : traduit + accordé au genre (clés = valeurs canoniques FR de
+// l'import). Tableau [masculin, féminin] par langue ; repli sur la valeur brute.
+const MARITAL_I18N = {
+  'Célibataire':            { fr:['Célibataire','Célibataire'], nl:['Ongehuwd','Ongehuwd'], en:['Single','Single'] },
+  'Marié(e)':               { fr:['Marié','Mariée'],            nl:['Gehuwd','Gehuwd'],     en:['Married','Married'] },
+  'Divorcé(e)/Séparé(e)':   { fr:['Divorcé/Séparé','Divorcée/Séparée'], nl:['Gescheiden','Gescheiden'], en:['Divorced/Separated','Divorced/Separated'] },
+  'Veuf(ve)':               { fr:['Veuf','Veuve'],              nl:['Weduwnaar','Weduwe'],  en:['Widower','Widow'] },
+  'Cohabitant légal':       { fr:['Cohabitant légal','Cohabitante légale'], nl:['Wettelijk samenwonend','Wettelijk samenwonend'], en:['Legal cohabitant','Legal cohabitant'] },
+};
 function etatCivilGenre(status, sexe) {
   if (!status) return '';
-  const f = sexe === 'F';
-  const map = {
-    'Marié(e)':              f ? 'Mariée'            : 'Marié',
-    'Divorcé(e)/Séparé(e)':  f ? 'Divorcée/Séparée'  : 'Divorcé/Séparé',
-    'Célibataire':           'Célibataire'
-  };
-  return map[status] || status;
+  const e = MARITAL_I18N[status];
+  if (!e) return status;
+  const arr = e[settings.lang] || e.fr;
+  return sexe === 'F' ? arr[1] : arr[0];
 }
 
-// Construit « 45 ans · Mariée · BEL » à partir des données disponibles
+// Nom de pays traduit à partir d'un code ISO-3 (issu de l'import). Liste des
+// nationalités les plus fréquentes en Belgique ; repli sur le code si absent.
+const PAYS_I18N = {
+  BEL:{fr:'Belgique',nl:'België',en:'Belgium'}, FRA:{fr:'France',nl:'Frankrijk',en:'France'},
+  NLD:{fr:'Pays-Bas',nl:'Nederland',en:'Netherlands'}, DEU:{fr:'Allemagne',nl:'Duitsland',en:'Germany'},
+  LUX:{fr:'Luxembourg',nl:'Luxemburg',en:'Luxembourg'}, ITA:{fr:'Italie',nl:'Italië',en:'Italy'},
+  ESP:{fr:'Espagne',nl:'Spanje',en:'Spain'}, PRT:{fr:'Portugal',nl:'Portugal',en:'Portugal'},
+  GBR:{fr:'Royaume-Uni',nl:'Verenigd Koninkrijk',en:'United Kingdom'}, IRL:{fr:'Irlande',nl:'Ierland',en:'Ireland'},
+  POL:{fr:'Pologne',nl:'Polen',en:'Poland'}, ROU:{fr:'Roumanie',nl:'Roemenië',en:'Romania'},
+  BGR:{fr:'Bulgarie',nl:'Bulgarije',en:'Bulgaria'}, GRC:{fr:'Grèce',nl:'Griekenland',en:'Greece'},
+  HRV:{fr:'Croatie',nl:'Kroatië',en:'Croatia'}, HUN:{fr:'Hongrie',nl:'Hongarije',en:'Hungary'},
+  CZE:{fr:'Tchéquie',nl:'Tsjechië',en:'Czechia'}, SVK:{fr:'Slovaquie',nl:'Slowakije',en:'Slovakia'},
+  LTU:{fr:'Lituanie',nl:'Litouwen',en:'Lithuania'}, LVA:{fr:'Lettonie',nl:'Letland',en:'Latvia'},
+  MAR:{fr:'Maroc',nl:'Marokko',en:'Morocco'}, DZA:{fr:'Algérie',nl:'Algerije',en:'Algeria'},
+  TUN:{fr:'Tunisie',nl:'Tunesië',en:'Tunisia'}, TUR:{fr:'Turquie',nl:'Turkije',en:'Turkey'},
+  COD:{fr:'RD Congo',nl:'DR Congo',en:'DR Congo'}, COG:{fr:'Congo',nl:'Congo',en:'Congo'},
+  RWA:{fr:'Rwanda',nl:'Rwanda',en:'Rwanda'}, CMR:{fr:'Cameroun',nl:'Kameroen',en:'Cameroon'},
+  SYR:{fr:'Syrie',nl:'Syrië',en:'Syria'}, AFG:{fr:'Afghanistan',nl:'Afghanistan',en:'Afghanistan'},
+  IRQ:{fr:'Irak',nl:'Irak',en:'Iraq'}, IRN:{fr:'Iran',nl:'Iran',en:'Iran'},
+  RUS:{fr:'Russie',nl:'Rusland',en:'Russia'}, UKR:{fr:'Ukraine',nl:'Oekraïne',en:'Ukraine'},
+  CHN:{fr:'Chine',nl:'China',en:'China'}, IND:{fr:'Inde',nl:'India',en:'India'},
+  PAK:{fr:'Pakistan',nl:'Pakistan',en:'Pakistan'}, USA:{fr:'États-Unis',nl:'Verenigde Staten',en:'United States'},
+  BRA:{fr:'Brésil',nl:'Brazilië',en:'Brazil'}, COL:{fr:'Colombie',nl:'Colombia',en:'Colombia'},
+};
+function paysNom(code) {
+  if (!code) return '';
+  const e = PAYS_I18N[String(code).trim().toUpperCase()];
+  return e ? (e[settings.lang] || e.fr) : code;
+}
+
+// Libellé de statut traduit pour l'affichage (les 6 statuts par défaut).
+// La valeur stockée reste le libellé FR (= identifiant) ; on ne traduit que
+// l'affichage. Statuts personnalisés : affichés tels quels.
+const STATUT_I18N = {
+  'À faire':     { nl:'Te doen',   en:'To do' },
+  'En cours':    { nl:'Bezig',     en:'In progress' },
+  'Fait':        { nl:'Klaar',     en:'Done' },
+  'Absent':      { nl:'Afwezig',   en:'Absent' },
+  'Refus':       { nl:'Weigering', en:'Refusal' },
+  'A déménager': { nl:'Verhuisd',  en:'Moved' },
+};
+function statutLabel(label) {
+  if (settings.lang === 'fr') return label;
+  const e = STATUT_I18N[label];
+  return (e && e[settings.lang]) || label;
+}
+
+// Construit « 45 ans · Mariée · Belgique » à partir des données disponibles
 function ligneDemographie(c) {
   const parts = [];
   const age = c.age || calcAge(c.birth_date);
-  if (age) parts.push(age + ' ans');
+  if (age) parts.push(age + ' ' + t('age_unit'));
   const ec = etatCivilGenre(c.marital_status, c.sexe);
   if (ec) parts.push(esc(ec));
-  if (c.nationality) parts.push(esc(c.nationality));
-  if (c.taille_menage) parts.push('👥 ' + esc(c.taille_menage) + ' pers.');
+  if (c.nationality) parts.push(esc(paysNom(c.nationality)));
+  if (c.taille_menage) parts.push('👥 ' + esc(c.taille_menage) + ' ' + t('persons'));
   return parts.join(' · ');
 }
 
@@ -1930,7 +1982,7 @@ function buildEditForm(i) {
           <div class="statut-bar">
             ${statutDefs().map((s, si) => {
               const on = s.label === statut;
-              return `<button class="s-btn${on?' actif':''}" style="color:${s.color};${on?`border-color:${s.color};background:${s.color}22;`:''}" onclick="changerStatut(${i},statutDefs()[${si}].label)">${s.icon} ${esc(s.label)}</button>`;
+              return `<button class="s-btn${on?' actif':''}" style="color:${s.color};${on?`border-color:${s.color};background:${s.color}22;`:''}" onclick="changerStatut(${i},statutDefs()[${si}].label)">${s.icon} ${esc(statutLabel(s.label))}</button>`;
             }).join('')}
           </div>
         </div>
@@ -2323,7 +2375,7 @@ function renderFilters() {
   statutDefs().forEach((s, si) => {
     const n = cpt[s.label] || 0;
     const on = filtreActif === s.label;
-    html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" onclick="filtrer(statutDefs()[${si}].label)">${s.icon} ${esc(s.label)}${n>0?' ('+n+')':''}</button>`;
+    html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" onclick="filtrer(statutDefs()[${si}].label)">${s.icon} ${esc(statutLabel(s.label))}${n>0?' ('+n+')':''}</button>`;
   });
   document.querySelector('.filters').innerHTML = html;
   document.getElementById('filters') && (document.getElementById('filters').innerHTML = html);
@@ -2485,9 +2537,9 @@ function renderLegend() {
   const el = document.getElementById('mapLegend');
   if (!el) return;
   el.innerHTML = statutDefs().map(s =>
-    `<div class="leg-item"><div class="leg-dot" style="background:${s.color}"></div> ${esc(s.label)}</div>`
+    `<div class="leg-item"><div class="leg-dot" style="background:${s.color}"></div> ${esc(statutLabel(s.label))}</div>`
   ).join('') +
-    '<div class="leg-item"><div class="leg-dot" style="background:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,0.3)"></div> Ma position</div>';
+    `<div class="leg-item"><div class="leg-dot" style="background:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,0.3)"></div> ${t('title_mypos')}</div>`;
 }
 
 function initCarte() {
@@ -2598,9 +2650,9 @@ function rdvTitreStatut(label) {
   const def = statutDef(label);
   const icon = def.icon || '•';
   // Titres sémantiques selon la nature du statut
-  if (def.rdv)  return { icon, titre: 'Rendez-vous planifiés — ' + label };
-  if (def.done) return { icon, titre: 'Interviews terminées — ' + label };
-  return        { icon, titre: 'Contacts — ' + label };
+  if (def.rdv)  return { icon, titre: t('rdv_planned') + ' — ' + statutLabel(label) };
+  if (def.done) return { icon, titre: t('rdv_done')    + ' — ' + statutLabel(label) };
+  return        { icon, titre: t('rdv_contacts') + ' — ' + statutLabel(label) };
 }
 
 function renderRdvFilters() {
@@ -2621,7 +2673,7 @@ function renderRdvFilters() {
     const n  = cpt[s.label] || 0;
     const on = filtreRdv === s.label;
     html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" onclick="filtrerRdv('${s.label.replace(/'/g,"\\'")}')">
-      ${s.icon} ${esc(s.label)}${n > 0 ? ' ('+n+')' : ''}
+      ${s.icon} ${esc(statutLabel(s.label))}${n > 0 ? ' ('+n+')' : ''}
     </button>`;
   });
   bar.innerHTML = html;
@@ -2713,7 +2765,7 @@ function renduRdv() {
       h.style.cssText = `display:flex;align-items:center;gap:8px;margin:6px 0 4px;`;
       h.innerHTML = `
         <div style="flex:1;height:2px;background:${def.color};opacity:.4;border-radius:1px;"></div>
-        <span style="font-size:12px;font-weight:bold;color:${def.color};white-space:nowrap;">${def.icon} ${esc(label)} (${items.length})</span>
+        <span style="font-size:12px;font-weight:bold;color:${def.color};white-space:nowrap;">${def.icon} ${esc(statutLabel(label))} (${items.length})</span>
         <div style="flex:1;height:2px;background:${def.color};opacity:.4;border-radius:1px;"></div>`;
       container.appendChild(h);
       items.forEach(item => container.appendChild(buildRdvCard(item.c, item.i, today, def)));
@@ -2734,7 +2786,7 @@ function buildHistoriqueHTML(c, i) {
     const def = statutDef(h.statut);
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
-      <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(h.statut)}</span>
+      <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(statutLabel(h.statut))}</span>
       <span>—</span>
       <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1"
         title="Cliquez sur 📅 pour modifier la date">
@@ -2940,7 +2992,12 @@ const I18N = {
   ph_search:    { fr:'Rechercher par nom, prénom, adresse ou téléphone…', nl:'Zoeken op naam, voornaam, adres of telefoon…', en:'Search by name, first name, address or phone…' },
   ph_rdv:       { fr:'Filtrer par nom, prénom, adresse ou téléphone…', nl:'Filteren op naam, voornaam, adres of telefoon…', en:'Filter by name, first name, address or phone…' },
   f_all:        { fr:'Tous', nl:'Alle', en:'All' },
+  age_unit:     { fr:'ans', nl:'jaar', en:'yrs' },
+  persons:      { fr:'pers.', nl:'pers.', en:'ppl' },
   track_title_plain: { fr:'Suivi des interviews', nl:'Opvolging van de interviews', en:'Interview tracking' },
+  rdv_planned:  { fr:'Rendez-vous planifiés', nl:'Geplande afspraken', en:'Scheduled appointments' },
+  rdv_done:     { fr:'Interviews terminées', nl:'Afgeronde interviews', en:'Completed interviews' },
+  rdv_contacts: { fr:'Contacts', nl:'Contacten', en:'Contacts' },
   // Paramètres — sections
   set_title:    { fr:'⚙️ Paramètres', nl:'⚙️ Instellingen', en:'⚙️ Settings' },
   sec_appear:   { fr:'🎨 Apparence', nl:'🎨 Weergave', en:'🎨 Appearance' },
@@ -3160,7 +3217,7 @@ function buildBackupDetailHTML(src, meta) {
       if (!nb) return;
       const pct = tot ? Math.round(nb / tot * 100) : 0;
       pillsHtml += `<span class="backup-statut-pill" style="background:${s.color}22;color:${s.color}">
-        ${esc(s.icon)} ${esc(s.label)} <strong>${nb}</strong> <span style="opacity:.7">(${pct}%)</span>
+        ${esc(s.icon)} ${esc(statutLabel(s.label))} <strong>${nb}</strong> <span style="opacity:.7">(${pct}%)</span>
       </span>`;
     });
     // Statuts hors config (données orphelines)
@@ -3830,7 +3887,7 @@ function renduResume() {
     kpiHtml += `
     <div class="kpi-card" style="border-top-color:${s.color}">
       <div class="kpi-val" style="color:${s.color}">${nb}</div>
-      <div class="kpi-lbl">${esc(s.icon)} ${esc(s.label)}</div>
+      <div class="kpi-lbl">${esc(s.icon)} ${esc(statutLabel(s.label))}</div>
       <div class="kpi-pct">${pct}%</div>
     </div>`;
   });
@@ -3853,7 +3910,7 @@ function renduResume() {
     legendHtml += `
       <div class="prog-leg-item">
         <div class="prog-leg-dot" style="background:${s.color}"></div>
-        <span>${esc(s.icon)} ${esc(s.label)} — <strong>${nb}</strong> (${pct}%)</span>
+        <span>${esc(s.icon)} ${esc(statutLabel(s.label))} — <strong>${nb}</strong> (${pct}%)</span>
       </div>`;
   });
   legendHtml += '</div>';
