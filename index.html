@@ -3100,7 +3100,6 @@ const I18N = {
   "bk_unknown": { fr:"inconnue", nl:"onbekend", en:"unknown", de:"unbekannt" },
   "bk_save_title": { fr:"💾 Détail de la sauvegarde", nl:"💾 Detail van de back-up", en:"💾 Backup details", de:"💾 Backup-Details" },
   "bk_date": { fr:"📅 Date :", nl:"📅 Datum:", en:"📅 Date:", de:"📅 Datum:" },
-  "bk_file2": { fr:"🗂️ Fichier :", nl:"🗂️ Bestand:", en:"🗂️ File:", de:"🗂️ Datei:" },
   "bk_download": { fr:"⬇️ Télécharger", nl:"⬇️ Downloaden", en:"⬇️ Download", de:"⬇️ Herunterladen" },
   "bk_total": { fr:"📊 Total", nl:"📊 Totaal", en:"📊 Total", de:"📊 Gesamt" },
   "bk_w_contact": { fr:["contact","contacts"], nl:["contact","contacten"], en:["contact","contacts"], de:["Kontakt","Kontakte"] },
@@ -3699,7 +3698,7 @@ function exporterBackup() {
   const fname  = 'statbel_sauvegarde_' + isoNow.slice(0, 10) + '.json';
 
   const meta = `${t('bk_date')} ${date.toLocaleDateString(localeApp(), {day:'2-digit',month:'long',year:'numeric'})}
-&nbsp;&nbsp;${t('bk_file2')} <code>${fname}</code>`;
+&nbsp;&nbsp;${t('bk_file')} <code>${fname}</code>`;
 
   const detailHtml = buildBackupDetailHTML(enquetes, meta);
 
