@@ -1145,6 +1145,7 @@
           <button class="btn-secondary" data-i18n="btn_nongeo" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
         </div>
         <small id="dataStats"></small>
+        <div id="i18nMissing"></div>
         <div id="nonGeoList"></div>
       </div>
     </details>
@@ -1898,6 +1899,31 @@ function paysNom(code) {
   return e ? (e[settings.lang] || e.fr) : code;
 }
 
+// Détecte les valeurs présentes dans les données mais absentes des dictionnaires
+// de traduction (pays / état civil) → affichées telles quelles. `contacts` :
+// tableau de contacts à analyser (défaut : toutes les enquêtes).
+function detecterNonTraduits(contacts) {
+  const arr = contacts || Object.values(enquetes).reduce((a, b) => a.concat(b), []);
+  const pays = new Set(), marital = new Set();
+  arr.forEach(c => {
+    const n = (c.nationality || '').trim();
+    if (n && !PAYS_I18N[n.toUpperCase()]) pays.add(n);
+    const m = (c.marital_status || '').trim();
+    if (m && !MARITAL_I18N[m]) marital.add(m);
+  });
+  return { pays: [...pays], marital: [...marital] };
+}
+
+// Construit le HTML d'alerte « valeurs non traduites » (ou '' si tout est traduit)
+function renderNonTraduits(contacts) {
+  const { pays, marital } = detecterNonTraduits(contacts);
+  if (!pays.length && !marital.length) return '';
+  const det = [];
+  if (pays.length)    det.push(`${champLabel('nationality')} : ${pays.map(esc).join(', ')}`);
+  if (marital.length) det.push(`${champLabel('marital_status')} : ${marital.map(esc).join(', ')}`);
+  return `<div style="font-size:11px;color:#e65100;margin-top:6px;">${t('i18n_missing')} ${det.join(' · ')}</div>`;
+}
+
 // Libellé de statut traduit pour l'affichage (les 6 statuts par défaut).
 // La valeur stockée reste le libellé FR (= identifiant) ; on ne traduit que
 // l'affichage. Statuts personnalisés : affichés tels quels.
@@ -2281,7 +2307,8 @@ function renderImportApercu(s) {
     <div style="font-size:12px;margin-bottom:4px;"><strong>${t('ip_cols_ok')}</strong></div>
     <div style="margin-bottom:8px;">${recon}</div>
     <div style="font-size:12px;margin-bottom:4px;"><strong>${t('ip_cols_ko')}</strong></div>
-    <div>${nonRecon}</div>`;
+    <div>${nonRecon}</div>
+    ${renderNonTraduits(csvEnAttente)}`;
 }
 
 function confirmerImport() {
@@ -3119,6 +3146,7 @@ const I18N = {
   "hint_pin_on": { fr:"✅ Verrouillage actif — le code sera demandé selon le délai choisi ci-dessus.", nl:"✅ Vergrendeling actief — de code wordt gevraagd volgens de gekozen tijd hierboven.", en:"✅ Lock active — the code will be requested per the delay chosen above.", de:"✅ Sperre aktiv — der Code wird entsprechend der oben gewählten Verzögerung abgefragt." },
   "hint_pin_off": { fr:"Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.", nl:"Beschermt de toegang tot de app (persoonsgegevens) met een 4-cijferige code.", en:"Protects access to the app (personal data) with a 4-digit code.", de:"Schützt den Zugang zur Anwendung (personenbezogene Daten) mit einem 4-stelligen Code." },
   "data_stats": { fr:"{e} enquête(s), {c} contact(s), {g} adresse(s) géocodée(s) en cache.", nl:"{e} onderzoek(en), {c} contact(en), {g} gegeocodeerd(e) adres(sen) in cache.", en:"{e} survey(s), {c} contact(s), {g} geocoded address(es) cached.", de:"{e} Umfrage(n), {c} Kontakt(e), {g} geokodierte Adresse(n) im Cache." },
+  "i18n_missing": { fr:"⚠️ Valeurs non traduites (affichées telles quelles) :", nl:"⚠️ Niet-vertaalde waarden (worden ongewijzigd getoond):", en:"⚠️ Untranslated values (shown as-is):", de:"⚠️ Nicht übersetzte Werte (werden unverändert angezeigt):" },
   "sec_appear": { fr:"🎨 Apparence", nl:"🎨 Weergave", en:"🎨 Appearance", de:"🎨 Aussehen" },
   "sec_map": { fr:"🗺️ Carte & géocodage", nl:"🗺️ Kaart & geocodering", en:"🗺️ Map & geocoding", de:"🗺️ Karte & Geokodierung" },
   "sec_status": { fr:"🏷️ Statuts disponibles", nl:"🏷️ Beschikbare statussen", en:"🏷️ Available statuses", de:"🏷️ Verfügbare Status" },
@@ -3406,6 +3434,7 @@ function majSettingsUI() {
   const nbCoords = Object.keys(localStorage).filter(k=>k.startsWith('coords_')).length;
   document.getElementById('dataStats').textContent =
     tf('data_stats', { e: nbEnq, c: nbCnt, g: nbCoords });
+  document.getElementById('i18nMissing').innerHTML = renderNonTraduits();
   // Sélecteur de portée pour la purge du cache : « toutes » + chaque enquête
   const sel = document.getElementById('viderCacheScope');
   if (sel) {
