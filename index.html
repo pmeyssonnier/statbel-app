@@ -1056,6 +1056,7 @@
             <option value="fr">🇫🇷 Français</option>
             <option value="nl">🇳🇱 Nederlands</option>
             <option value="en">🇬🇧 English</option>
+            <option value="de">🇩🇪 Deutsch</option>
           </select>
         </div>
         <div class="set-row">
@@ -1406,7 +1407,7 @@ const SETTINGS_DEFAULTS = {
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
   fontSize:   'normal',   // 'small' | 'normal' (défaut/système) | 'large' | 'xlarge'
   // Langue : détectée depuis le navigateur au 1er lancement (fr/nl/en), défaut fr
-  lang: (() => { const l = (navigator.language || 'fr').slice(0,2).toLowerCase(); return ['fr','nl','en'].includes(l) ? l : 'fr'; })(),
+  lang: (() => { const l = (navigator.language || 'fr').slice(0,2).toLowerCase(); return ['fr','nl','en','de'].includes(l) ? l : 'fr'; })(),
 };
 let settings = Object.assign({}, SETTINGS_DEFAULTS, { statuts: cloneStatuts() });
 let GEO = GEO_PROVIDERS[settings.provider];
@@ -2948,7 +2949,7 @@ function appliquerPolice() {
 // ── Internationalisation (FR / NL / EN) ─────────────────────────────
 // Phase 1 : interface visible (en-tête, menus, vues, paramètres, boutons).
 // Les messages d'alerte, l'aperçu d'import et l'aide restent à traduire.
-const LANGS = ['fr', 'nl', 'en'];
+const LANGS = ['fr', 'nl', 'en', 'de'];
 const I18N = {
   // En-tête / vues / menu
   tip_list:     { fr:'Liste',   nl:'Lijst',     en:'List' },
@@ -3193,7 +3194,7 @@ function changerLangue(v) {
 
 // Locale BCP-47 dérivée de la langue de l'app (pour Intl / toLocaleDateString)
 function localeApp() {
-  return { fr:'fr-BE', nl:'nl-BE', en:'en-GB' }[settings.lang] || 'fr-BE';
+  return { fr:'fr-BE', nl:'nl-BE', en:'en-GB', de:'de-BE' }[settings.lang] || 'fr-BE';
 }
 // Jour de semaine abrégé localisé (« Mar. » / « di » / « Tue ») + majuscule initiale
 function nomJourCourt(dateObj) {
