@@ -4168,11 +4168,20 @@ function renderActiviteQuotidienne() {
   const parJour = {};                 // { isoDate: { statutLabel: count } }
   const presents = new Set();
   Object.values(enquetes).forEach(arr => arr.forEach(c => {
-    (c.historique || []).forEach(h => {
-      const iso = dateFrToISO(h.date);
+    // Visites = entrées d'historique datées…
+    const visites = (c.historique || []).filter(h => h && h.date && h.statut).map(h => ({ statut: h.statut, date: h.date }));
+    // … + l'état courant s'il est « terminé » et daté mais absent de l'historique
+    // (cas des contacts importés ou dont le statut a été posé sans historique).
+    const dCur = statutDef(c.statut || '');
+    if (c.statut && c.date && dCur && dCur.done &&
+        !visites.some(v => v.statut === c.statut && v.date === c.date)) {
+      visites.push({ statut: c.statut, date: c.date });
+    }
+    visites.forEach(v => {
+      const iso = dateFrToISO(v.date);
       if (!iso) return;
-      (parJour[iso] = parJour[iso] || {})[h.statut] = (parJour[iso][h.statut] || 0) + 1;
-      presents.add(h.statut);
+      (parJour[iso] = parJour[iso] || {})[v.statut] = (parJour[iso][v.statut] || 0) + 1;
+      presents.add(v.statut);
     });
   }));
   const dates = Object.keys(parJour).sort();
