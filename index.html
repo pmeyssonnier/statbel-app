@@ -1978,7 +1978,7 @@ function buildEditForm(i) {
   return `
         ${buildHistoriqueHTML(c, i)}
         <div class="edit-row">
-          <label>Statut</label>
+          <label>${t('ed_status')}</label>
           <div class="statut-bar">
             ${statutDefs().map((s, si) => {
               const on = s.label === statut;
@@ -1988,41 +1988,41 @@ function buildEditForm(i) {
         </div>
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:1">
-            <label>Prénom</label>
+            <label>${t('ed_firstname')}</label>
             <input type="text" id="edit-prenom-${i}" value="${esc(c.prenom)}">
           </div>
           <div class="edit-row" style="flex:2">
-            <label>Nom</label>
+            <label>${t('ed_lastname')}</label>
             <input type="text" id="edit-nom-${i}" value="${esc(c.nom)}">
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:1">
-            <label>🏠 Rue et numéro</label>
+            <label>${t('ed_street')}</label>
             <input type="text" id="edit-rue-${i}" value="${esc(_p.rue)}" placeholder="Rue des Chardons 18">
           </div>
           <div class="edit-row" style="width:140px;min-width:0;flex-shrink:0">
-            <label>📬 Boîte / Étage</label>
+            <label>${t('ed_box')}</label>
             <input type="text" id="edit-boite-${i}" value="${esc(_p.boite)}" placeholder="bte 2" style="width:100%">
           </div>
         </div>
         <div class="edit-row">
-          <label>📮 Code postal et ville</label>
+          <label>${t('ed_cpcity')}</label>
           <input type="text" id="edit-cpville-${i}" value="${esc(_p.cpville)}" placeholder="1030 Schaerbeek">
         </div>
 
 
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:0.45">
-            <label>📞 GSM</label>
+            <label>${t('ed_gsm')}</label>
             <input type="tel" placeholder="+32 4xx xx xx xx" value="${esc(c.gsm||'')}"
               oninput="changerGsm(${i},this)" style="max-width:150px"
               ondblclick="if(this.value)window.location.href='tel:'+this.value">
           </div>
           <div class="edit-row" style="flex:1">
-            <label>✉️ Email</label>
+            <label>${t('ed_email')}</label>
             <div class="email-wrap">
-              <input type="email" placeholder="Email" value="${esc(c.email||'')}"
+              <input type="email" placeholder="${t('ph_email')}" value="${esc(c.email||'')}"
                 oninput="changerEmail(${i},this.value);emailSuggest(this,'esug-${i}')"
                 onkeydown="emailKeydown(event,'esug-${i}')"
                 onblur="setTimeout(()=>fermerSuggestions('esug-${i}'),150)"
@@ -2033,13 +2033,13 @@ function buildEditForm(i) {
           </div>
         </div>
         <div class="edit-row">
-          <label>📝 Notes</label>
-          <textarea placeholder="Notes..." oninput="changerNotes(${i},this.value)"
+          <label>${t('ed_notes')}</label>
+          <textarea placeholder="${t('ph_notes')}" oninput="changerNotes(${i},this.value)"
             style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;min-height:60px">${esc(c.notes||'')}</textarea>
         </div>
         ${def.rdv ? `
         <div class="edit-row" style="background:#e3f2fd;padding:8px;border-radius:8px;border:1px solid #90caf9;">
-          <label style="color:#1565c0;">📅 Date et heure du rendez-vous</label>
+          <label style="color:#1565c0;">${t('ed_rdv')}</label>
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="text" inputmode="numeric" id="edit-rdv-date-${i}" value="${dateISOToFr((c.rdv||'').split(' ')[0]||'')}"
               placeholder="jj/mm/aaaa" maxlength="10" oninput="this.value=formatDateFrSaisie(this.value)" onchange="changerRdvDH(${i})"
@@ -2051,9 +2051,9 @@ function buildEditForm(i) {
           </div>
         </div>` : ''}
         <div class="edit-btns">
-          <button class="btn-cancel-edit" onclick="toggleEdit(${i})">Fermer</button>
+          <button class="btn-cancel-edit" onclick="toggleEdit(${i})">${t('btn_close')}</button>
           <button class="btn-vcard" onclick="exporterVCard(${i})" title="Exporter contact">📇 vCard</button>
-          <button class="btn-save-edit" onclick="sauverEdit(${i})">✅ Enregistrer</button>
+          <button class="btn-save-edit" onclick="sauverEdit(${i})">${t('ed_save')}</button>
         </div>
   `;
 }
@@ -2420,7 +2420,7 @@ function rendu() {
       </div>
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
       <div class="card-statut">
-        <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statut)}</span>
+        <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statutLabel(statut))}</span>
         ${dateStatut ? `<span class="card-statut-date">${esc(dateStatut)}</span>` : ''}
       </div>
       ${!coordsCache(c.adresse) ? '<div class="no-coords">📍 Pas encore localisée — ouvrez la 🗺️ Carte</div>' : ''}
@@ -2597,7 +2597,7 @@ function afficherMarqueurs() {
       <a href="${mapsUrl(c.adresse)}" target="_blank" style="color:#1a73e8;text-decoration:none;font-size:13px;">📍 ${esc(c.adresse)}</a>
       ${distPopup}${gsm}${email}
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statut)}</span>
+        <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statutLabel(statut))}</span>
         ${dateStatut ? `<span style="font-size:12px;color:#666">${esc(dateStatut)}</span>` : ''}
       </div>
       <div style="margin-top:8px"><button onclick="ouvrirFicheDepuisCarte(${idx})" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ Éditer la fiche</button></div>`;
@@ -2998,6 +2998,20 @@ const I18N = {
   rdv_planned:  { fr:'Rendez-vous planifiés', nl:'Geplande afspraken', en:'Scheduled appointments' },
   rdv_done:     { fr:'Interviews terminées', nl:'Afgeronde interviews', en:'Completed interviews' },
   rdv_contacts: { fr:'Contacts', nl:'Contacten', en:'Contacts' },
+  // Formulaire d'édition d'une fiche
+  ed_status:    { fr:'Statut', nl:'Status', en:'Status' },
+  ed_firstname: { fr:'Prénom', nl:'Voornaam', en:'First name' },
+  ed_lastname:  { fr:'Nom', nl:'Naam', en:'Last name' },
+  ed_street:    { fr:'🏠 Rue et numéro', nl:'🏠 Straat en nummer', en:'🏠 Street and number' },
+  ed_box:       { fr:'📬 Boîte / Étage', nl:'📬 Bus / Verdieping', en:'📬 Box / Floor' },
+  ed_cpcity:    { fr:'📮 Code postal et ville', nl:'📮 Postcode en gemeente', en:'📮 Postal code and city' },
+  ed_gsm:       { fr:'📞 GSM', nl:'📞 Gsm', en:'📞 Phone' },
+  ed_email:     { fr:'✉️ Email', nl:'✉️ E-mail', en:'✉️ Email' },
+  ed_notes:     { fr:'📝 Notes', nl:'📝 Notities', en:'📝 Notes' },
+  ed_rdv:       { fr:'📅 Date et heure du rendez-vous', nl:'📅 Datum en uur van de afspraak', en:'📅 Appointment date and time' },
+  ed_save:      { fr:'✅ Enregistrer', nl:'✅ Opslaan', en:'✅ Save' },
+  ph_notes:     { fr:'Notes...', nl:'Notities...', en:'Notes...' },
+  ph_email:     { fr:'Email', nl:'E-mail', en:'Email' },
   // Paramètres — sections
   set_title:    { fr:'⚙️ Paramètres', nl:'⚙️ Instellingen', en:'⚙️ Settings' },
   sec_appear:   { fr:'🎨 Apparence', nl:'🎨 Weergave', en:'🎨 Appearance' },
