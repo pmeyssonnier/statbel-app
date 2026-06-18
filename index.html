@@ -1747,8 +1747,7 @@ function formatDateJour(fr) {
   const iso = dateFrToISO(fr);
   if (!iso) return fr;
   const [y, m, d] = iso.split('-');
-  const JOURS = ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'];
-  return JOURS[new Date(+y, +m - 1, +d).getDay()] + ' ' + fr;
+  return nomJourCourt(new Date(+y, +m - 1, +d)) + ' ' + fr;
 }
 
 function changerStatut(i, val) {
@@ -1851,13 +1850,12 @@ function majAge(i) {
 
 function formatRdv(rdv) {
   if (!rdv) return '';
-  const JOURS = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.'];
   const parts = (rdv+' ').split(' ');
   const [y,m,d] = (parts[0]||'').split('-');
   if (!y||!m||!d) return rdv;
   const h = (parts[1]||'').trim();
   const dateObj = new Date(+y,+m-1,+d);
-  return JOURS[dateObj.getDay()]+' '+d.padStart(2,'0')+'/'+m.padStart(2,'0')+'/'+y+(h?' '+h:'');
+  return nomJourCourt(dateObj)+' '+d.padStart(2,'0')+'/'+m.padStart(2,'0')+'/'+y+(h?' '+h:'');
 }
 
 // ── Synthèse démographique (lecture seule, issue de l'import) ────────
@@ -3012,6 +3010,9 @@ const I18N = {
   ed_save:      { fr:'✅ Enregistrer', nl:'✅ Opslaan', en:'✅ Save' },
   ph_notes:     { fr:'Notes...', nl:'Notities...', en:'Notes...' },
   ph_email:     { fr:'Email', nl:'E-mail', en:'Email' },
+  backup_last:  { fr:'✅ Dernière sauvegarde :', nl:'✅ Laatste back-up:', en:'✅ Last backup:' },
+  backup_none:  { fr:'⚠️ Aucune sauvegarde effectuée sur cet appareil.', nl:'⚠️ Nog geen back-up op dit toestel.', en:'⚠️ No backup made on this device.' },
+  backup_at:    { fr:'à', nl:'om', en:'at' },
   // Paramètres — sections
   set_title:    { fr:'⚙️ Paramètres', nl:'⚙️ Instellingen', en:'⚙️ Settings' },
   sec_appear:   { fr:'🎨 Apparence', nl:'🎨 Weergave', en:'🎨 Appearance' },
@@ -3089,6 +3090,16 @@ function changerLangue(v) {
   majPinUI();
   if (typeof renderFilters === 'function') renderFilters();
   rendu();
+}
+
+// Locale BCP-47 dérivée de la langue de l'app (pour Intl / toLocaleDateString)
+function localeApp() {
+  return { fr:'fr-BE', nl:'nl-BE', en:'en-GB' }[settings.lang] || 'fr-BE';
+}
+// Jour de semaine abrégé localisé (« Mar. » / « di » / « Tue ») + majuscule initiale
+function nomJourCourt(dateObj) {
+  const s = dateObj.toLocaleDateString(localeApp(), { weekday: 'short' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 // ── Panneau Paramètres ──────────────────────────────────────────────
@@ -3449,14 +3460,14 @@ function majLastBackupInfo() {
   if (!el) return;
   const iso = localStorage.getItem('statbel_last_backup');
   if (!iso) {
-    el.textContent = '⚠️ Aucune sauvegarde effectuée sur cet appareil.';
+    el.textContent = t('backup_none');
     el.style.color = '#e65100';
     return;
   }
   const d = new Date(iso);
-  el.textContent = '✅ Dernière sauvegarde : ' + d.toLocaleDateString('fr-BE',
+  el.textContent = t('backup_last') + ' ' + d.toLocaleDateString(localeApp(),
       { day:'2-digit', month:'long', year:'numeric' })
-    + ' à ' + d.toLocaleTimeString('fr-BE', { hour:'2-digit', minute:'2-digit' });
+    + ' ' + t('backup_at') + ' ' + d.toLocaleTimeString(localeApp(), { hour:'2-digit', minute:'2-digit' });
   el.style.color = '';
 }
 
