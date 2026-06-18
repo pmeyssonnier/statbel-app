@@ -52,6 +52,8 @@
     --header-bg: #1a237e;
     --modal-bg: #ffffff;
     --legend-bg: #ffffff;
+    --app-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --app-font-size: 14px;
   }
   body.dark {
     --bg:       #121212;
@@ -77,7 +79,7 @@
     --legend-bg: #1e1e2e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
+  body { font-family: var(--app-font); font-size: var(--app-font-size); background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
 
   header {
     background: var(--header-bg);
@@ -773,6 +775,53 @@
 
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; }
   .modal-overlay.open { display:flex; }
+
+  /* ── Écran de verrouillage PIN ─────────────────────────────────────── */
+  #lockScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--header-bg);
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; padding: 24px; color: white;
+  }
+  #lockScreen.open { display: flex; }
+  .lock-icon { font-size: 40px; }
+  .lock-title { font-size: 16px; font-weight: 600; opacity: 0.95; text-align: center; }
+  .lock-dots { display: flex; gap: 14px; }
+  .lock-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.7); background: transparent;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .lock-dot.filled { background: white; transform: scale(1.1); }
+  .lock-dot.error { border-color:#ff8a80; background:#ff8a80; }
+  .lock-keypad {
+    display: grid; grid-template-columns: repeat(3, 64px); gap: 14px;
+    margin-top: 6px;
+  }
+  .lock-key {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+    color: white; font-size: 22px; font-weight: 500;
+    display:flex; align-items:center; justify-content:center;
+    cursor: pointer; user-select: none;
+  }
+  .lock-key:active { background: rgba(255,255,255,0.3); }
+  .lock-key.empty { visibility: hidden; cursor: default; }
+  .lock-error-msg {
+    font-size: 13px; color: #ff8a80; min-height: 18px; text-align: center;
+  }
+  .lock-footer {
+    margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.65);
+    text-align: center; cursor: pointer; text-decoration: underline;
+  }
+  .lock-shake { animation: lockShake 0.4s; }
+  @keyframes lockShake {
+    10%,90% { transform: translateX(-1px); }
+    20%,80% { transform: translateX(2px); }
+    30%,50%,70% { transform: translateX(-4px); }
+    40%,60% { transform: translateX(4px); }
+  }
   .modal { background:var(--modal-bg); border-radius:12px; padding:20px; width:90%; max-width:400px; color:var(--text); }
   .modal h2 { font-size:16px; margin-bottom:14px; color:var(--filter-text); }
   .modal input[type="text"] { width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; font-size:14px; margin-bottom:10px; background:var(--input-bg); color:var(--text); }
@@ -876,6 +925,29 @@
 </style>
 </head>
 <body>
+
+<!-- Écran de verrouillage PIN -->
+<div id="lockScreen">
+  <div class="lock-icon">🔒</div>
+  <div class="lock-title" id="lockTitle">Entrez le code PIN</div>
+  <div class="lock-dots" id="lockDots"></div>
+  <div class="lock-error-msg" id="lockErrorMsg">&nbsp;</div>
+  <div class="lock-keypad" id="lockKeypad"></div>
+  <div class="lock-footer hidden" id="lockSetupHint">Ce code sera demandé à chaque ouverture de l'application.</div>
+</div>
+
+<!-- Gestion d'un PIN déjà actif (changer / désactiver) -->
+<div class="modal-overlay" id="modalPin">
+  <div class="modal">
+    <h2>🔒 Verrouillage par code PIN</h2>
+    <p style="font-size:13px;margin-bottom:14px;">Un code PIN est déjà actif. Que veux-tu faire ?</p>
+    <div class="modal-btns" style="flex-direction:column;gap:8px;align-items:stretch;">
+      <button class="btn-primary" onclick="pinChanger()">🔁 Changer le code</button>
+      <button class="btn-secondary" onclick="pinDesactiver()" style="color:#b71c1c;">🔓 Désactiver le verrouillage</button>
+      <button class="btn-secondary" onclick="fermerModalPin()">Annuler</button>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="header-row">
@@ -992,6 +1064,27 @@
     </div>
 
     <div class="set-row">
+      <label>🔤 Police de caractères</label>
+      <select id="setFontFamily" onchange="settings.fontFamily=this.value;saveSettings();appliquerPolice()">
+        <option value="system">Police système (par défaut)</option>
+        <option value="arial">Arial</option>
+        <option value="georgia">Georgia</option>
+        <option value="verdana">Verdana</option>
+        <option value="monospace">Monospace</option>
+      </select>
+    </div>
+
+    <div class="set-row">
+      <label>🔍 Taille du texte</label>
+      <select id="setFontSize" onchange="settings.fontSize=this.value;saveSettings();appliquerPolice()">
+        <option value="small">Petite</option>
+        <option value="normal">Normale (par défaut)</option>
+        <option value="large">Grande</option>
+        <option value="xlarge">Très grande</option>
+      </select>
+    </div>
+
+    <div class="set-row">
       <label>🌍 Région / fournisseur géo</label>
       <select id="setProvider" onchange="changerProvider(this.value)">
         <option value="auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
@@ -1047,6 +1140,23 @@
       </div>
       <small id="dataStats"></small>
       <div id="nonGeoList"></div>
+    </div>
+
+    <hr class="kebab-sep" style="margin:9px 0;">
+
+    <div class="set-row">
+      <label>🔒 Verrouillage par code PIN</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <button class="btn-secondary" id="btnPinToggle" onclick="ouvrirGestionPin()">Définir un code PIN</button>
+        <select id="setPinTimeout" onchange="settings.pinTimeout=parseInt(this.value);saveSettings()" style="max-width:200px;">
+          <option value="0">Re-verrouiller : jamais (sauf fermeture)</option>
+          <option value="1">Re-verrouiller après 1 min</option>
+          <option value="5">Re-verrouiller après 5 min</option>
+          <option value="15">Re-verrouiller après 15 min</option>
+          <option value="30">Re-verrouiller après 30 min</option>
+        </select>
+      </div>
+      <small id="pinStatusHint">Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.</small>
     </div>
 
     <hr class="kebab-sep" style="margin:9px 0;">
@@ -1326,6 +1436,10 @@ const SETTINGS_DEFAULTS = {
   navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
   statuts:  cloneStatuts(),
   statutsV: 2,            // version de schéma des statuts (pour migrations)
+  pinCode:    '',         // code PIN de verrouillage de l'app ('' = désactivé)
+  pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
+  fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
+  fontSize:   'normal',   // 'small' | 'normal' (défaut/système) | 'large' | 'xlarge'
 };
 let settings = Object.assign({}, SETTINGS_DEFAULTS, { statuts: cloneStatuts() });
 let GEO = GEO_PROVIDERS[settings.provider];
@@ -2059,9 +2173,7 @@ function majComparaisonImport() {
   }
 
   const src = { [nom]: csvEnAttente };
-  const savedEnquetes = enquetes[nom];
-  // buildCompareHTML compare contre enquetes[nom] global — déjà correct
-  // puisque `existante` provient bien de enquetes[nom].
+  // buildCompareHTML compare contre enquetes[nom] global (déjà correct).
   const { html, stats } = buildCompareHTML(src, `⚠️ Une enquête <strong>"${esc(nom)}"</strong> existe déjà — comparaison avec son contenu actuel :`);
   wrap.innerHTML = html;
   wrap.classList.remove('hidden');
@@ -2777,14 +2889,38 @@ if (window.matchMedia) {
   });
 }
 
+// ── Police et taille des caractères ─────────────────────────────────
+const FONT_FAMILIES = {
+  system:    `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`,
+  arial:     `Arial, Helvetica, sans-serif`,
+  georgia:   `Georgia, "Times New Roman", serif`,
+  verdana:   `Verdana, Geneva, sans-serif`,
+  monospace: `"Courier New", Consolas, monospace`,
+};
+const FONT_SIZES = {
+  small:  '13px',
+  normal: '14px',
+  large:  '16px',
+  xlarge: '18px',
+};
+function appliquerPolice() {
+  const fam  = FONT_FAMILIES[settings.fontFamily] || FONT_FAMILIES.system;
+  const size = FONT_SIZES[settings.fontSize]      || FONT_SIZES.normal;
+  document.documentElement.style.setProperty('--app-font', fam);
+  document.documentElement.style.setProperty('--app-font-size', size);
+}
+
 // ── Panneau Paramètres ──────────────────────────────────────────────
 function ouvrirSettings() {
-  document.getElementById('setTheme').value    = settings.theme;
+  document.getElementById('setTheme').value      = settings.theme;
+  document.getElementById('setFontFamily').value = settings.fontFamily;
+  document.getElementById('setFontSize').value   = settings.fontSize;
   document.getElementById('setProvider').value = settings.provider;
   document.getElementById('setMapStyle').value = settings.mapStyle;
   document.getElementById('setNav').value      = settings.navMode;
   renderStatutsEditor();
   majSettingsUI();
+  majPinUI();
   document.getElementById('modalSettings').classList.add('open');
 }
 function fermerSettings() { document.getElementById('modalSettings').classList.remove('open'); }
@@ -3683,9 +3819,244 @@ function renduResume() {
 }
 
 
+// ══════════════════════════════════════════════════════════════════════
+//  VERROUILLAGE PAR CODE PIN
+// ══════════════════════════════════════════════════════════════════════
+// Le hash du code (jamais le code en clair) est stocké dans settings.pinCode.
+// Stratégie de hash simple (pas de crypto forte nécessaire : protection
+// d'accès local sur l'appareil de l'enquêteur, pas un secret serveur).
+function _pinHash(code) {
+  let h = 0;
+  const s = 'statbel_pin_' + code;
+  for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) >>> 0; }
+  return h.toString(36);
+}
+
+let _pinSaisie = '';
+let _pinLongueurCible = 4;
+let _pinModeSetup = false;     // true pendant la définition d'un nouveau code
+let _pinSetupEtape1 = '';      // 1er code saisi en mode setup (confirmation)
+let _pinDernierActivite = Date.now();
+let _pinVerrouille = false;
+
+function pinEstActif() { return !!(settings.pinCode && settings.pinCode.length); }
+
+function renderLockDots() {
+  const wrap = document.getElementById('lockDots');
+  wrap.innerHTML = '';
+  for (let i = 0; i < _pinLongueurCible; i++) {
+    const d = document.createElement('div');
+    d.className = 'lock-dot' + (i < _pinSaisie.length ? ' filled' : '');
+    wrap.appendChild(d);
+  }
+}
+
+function renderLockKeypad() {
+  const wrap = document.getElementById('lockKeypad');
+  wrap.innerHTML = '';
+  const touches = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  touches.forEach(t => {
+    const btn = document.createElement('div');
+    if (t === '') { btn.className = 'lock-key empty'; }
+    else {
+      btn.className = 'lock-key';
+      btn.textContent = t;
+      btn.onclick = () => pinToucheAppuyee(t);
+    }
+    wrap.appendChild(btn);
+  });
+}
+
+function pinToucheAppuyee(t) {
+  if (t === '⌫') {
+    _pinSaisie = _pinSaisie.slice(0, -1);
+    renderLockDots();
+    return;
+  }
+  if (_pinSaisie.length >= 6) return; // garde-fou
+  _pinSaisie += t;
+  renderLockDots();
+
+  // Auto-validation à 4 chiffres si on n'attend pas explicitement plus
+  if (_pinSaisie.length === _pinLongueurCible) {
+    setTimeout(pinValiderSaisie, 120);
+  }
+}
+
+function pinAfficherErreur(msg) {
+  const el = document.getElementById('lockErrorMsg');
+  el.textContent = msg;
+  document.getElementById('lockDots').classList.add('lock-shake');
+  document.querySelectorAll('.lock-dot').forEach(d => d.classList.add('error'));
+  setTimeout(() => {
+    document.getElementById('lockDots').classList.remove('lock-shake');
+    document.querySelectorAll('.lock-dot').forEach(d => d.classList.remove('error'));
+  }, 400);
+}
+
+function pinValiderSaisie() {
+  if (_pinModeSetup) {
+    // Mode définition d'un nouveau code : 1ère saisie puis confirmation
+    if (!_pinSetupEtape1) {
+      _pinSetupEtape1 = _pinSaisie;
+      _pinSaisie = '';
+      document.getElementById('lockTitle').textContent = 'Confirmez le code PIN';
+      renderLockDots();
+      return;
+    }
+    if (_pinSaisie !== _pinSetupEtape1) {
+      pinAfficherErreur('Les codes ne correspondent pas — recommencez');
+      _pinSetupEtape1 = '';
+      _pinSaisie = '';
+      document.getElementById('lockTitle').textContent = 'Définir un nouveau code PIN';
+      renderLockDots();
+      return;
+    }
+    // Codes identiques → on enregistre
+    settings.pinCode = _pinHash(_pinSaisie);
+    saveSettings();
+    _pinModeSetup = false;
+    _pinSetupEtape1 = '';
+    _pinSaisie = '';
+    fermerLockScreen();
+    afficherToast('🔒 Code PIN activé', 2500);
+    majPinUI();
+    return;
+  }
+
+  // Mode vérification normale
+  if (_pinHash(_pinSaisie) === settings.pinCode) {
+    _pinSaisie = '';
+    _pinVerrouille = false;
+    _pinDernierActivite = Date.now();
+    fermerLockScreen();
+  } else {
+    pinAfficherErreur('Code incorrect');
+    _pinSaisie = '';
+    setTimeout(renderLockDots, 200);
+  }
+}
+
+function ouvrirLockScreen(modeSetup) {
+  _pinModeSetup = !!modeSetup;
+  _pinSetupEtape1 = '';
+  _pinSaisie = '';
+  document.getElementById('lockTitle').textContent = modeSetup
+    ? 'Définir un nouveau code PIN'
+    : 'Entrez le code PIN';
+  document.getElementById('lockErrorMsg').textContent = '\u00a0';
+  document.getElementById('lockSetupHint').classList.toggle('hidden', !modeSetup);
+  renderLockKeypad();
+  renderLockDots();
+  document.getElementById('lockScreen').classList.add('open');
+}
+
+function fermerLockScreen() {
+  document.getElementById('lockScreen').classList.remove('open');
+}
+
+// Appelée depuis les Paramètres : définit le code, ou ouvre la modale de
+// gestion (changer / désactiver) si un code est déjà actif.
+function ouvrirGestionPin() {
+  if (pinEstActif()) {
+    document.getElementById('modalPin').classList.add('open');
+    return;
+  }
+  fermerSettings();
+  ouvrirLockScreen(true);
+}
+
+function fermerModalPin() {
+  document.getElementById('modalPin').classList.remove('open');
+}
+
+// Modale PIN → « Changer le code »
+function pinChanger() {
+  fermerModalPin();
+  fermerSettings();
+  ouvrirLockScreen(true);
+}
+
+// Modale PIN → « Désactiver le verrouillage »
+function pinDesactiver() {
+  settings.pinCode = '';
+  saveSettings();
+  fermerModalPin();
+  afficherToast('🔓 Verrouillage désactivé', 2000);
+  majPinUI();
+}
+
+function majPinUI() {
+  const btn = document.getElementById('btnPinToggle');
+  const hint = document.getElementById('pinStatusHint');
+  if (!btn) return;
+  if (pinEstActif()) {
+    btn.textContent = '🔁 Changer / désactiver le code';
+    hint.textContent = '✅ Verrouillage actif — le code sera demandé selon le délai choisi ci-dessus.';
+  } else {
+    btn.textContent = 'Définir un code PIN';
+    hint.textContent = "Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.";
+  }
+  const sel = document.getElementById('setPinTimeout');
+  if (sel) sel.value = String(settings.pinTimeout ?? 5);
+}
+
+// Vérifie au chargement si l'app doit démarrer verrouillée
+function pinVerifierAuDemarrage() {
+  if (!pinEstActif()) return;
+  _pinVerrouille = true;
+  ouvrirLockScreen(false);
+}
+
+// Re-verrouillage automatique après inactivité (si pinTimeout > 0)
+function pinSurveillerInactivite() {
+  ['click','keydown','touchstart','scroll'].forEach(evt => {
+    document.addEventListener(evt, () => { _pinDernierActivite = Date.now(); }, { passive: true });
+  });
+  // Saisie au clavier physique quand l'écran de verrouillage est ouvert
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('lockScreen').classList.contains('open')) return;
+    if (/^[0-9]$/.test(e.key))      { e.preventDefault(); pinToucheAppuyee(e.key); }
+    else if (e.key === 'Backspace') { e.preventDefault(); pinToucheAppuyee('⌫'); }
+    else if (e.key === 'Enter')     { e.preventDefault(); if (_pinSaisie.length === _pinLongueurCible) pinValiderSaisie(); }
+  });
+  setInterval(() => {
+    if (!pinEstActif() || _pinVerrouille) return;
+    const timeoutMin = settings.pinTimeout ?? 5;
+    if (!timeoutMin) return; // 0 = jamais de re-verrouillage auto
+    if (Date.now() - _pinDernierActivite > timeoutMin * 60 * 1000) {
+      _pinVerrouille = true;
+      ouvrirLockScreen(false);
+    }
+  }, 15000);
+  // Re-verrouiller aussi quand l'app repasse au premier plan après avoir
+  // été masquée plus longtemps que le délai choisi (changement d'appli mobile)
+  let _masqueDepuis = null;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      _masqueDepuis = Date.now();
+    } else if (_masqueDepuis && pinEstActif() && !_pinVerrouille) {
+      const timeoutMin = settings.pinTimeout ?? 5;
+      const seuil = timeoutMin ? timeoutMin * 60 * 1000 : 0;
+      if (seuil && Date.now() - _masqueDepuis > seuil) {
+        _pinVerrouille = true;
+        ouvrirLockScreen(false);
+      }
+      _masqueDepuis = null;
+    }
+  });
+}
+
+
 async function init() {
   chargerSettings();
   appliquerTheme();
+  appliquerPolice();
+
+  // Verrouillage PIN affiché AVANT tout rendu : l'overlay opaque (z-index 9999)
+  // recouvre l'écran dès le départ → aucune donnée nominative ne « flashe ».
+  pinVerifierAuDemarrage();
+
   await charger();
 
   // Purger les coordonnées invalides ou hors Belgique du localStorage
@@ -3703,6 +4074,8 @@ async function init() {
   rendu();
   restaurerIndicateur();
   document.querySelectorAll('.app-version').forEach(el => el.textContent = APP_VERSION);
+
+  pinSurveillerInactivite();
 }
 
 init();
