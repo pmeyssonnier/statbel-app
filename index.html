@@ -710,6 +710,11 @@
     font-size: 11px; color: var(--filter-text); cursor: pointer;
     padding: 4px 12px 8px; text-decoration: underline;
   }
+  .compare-legend {
+    display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;
+    padding-bottom:8px; border-bottom:1px solid var(--border);
+  }
+  .compare-legend span { font-size:11px; padding:2px 8px; border-radius:10px; font-weight:600; }
   .compare-rows.hidden { display: none; }
   .hidden { display: none !important; }
 
@@ -1054,67 +1059,71 @@
   <div class="modal">
     <h2>⚙️ Paramètres</h2>
 
-    <div class="set-row">
-      <label>🎨 Thème</label>
-      <select id="setTheme" onchange="settings.theme=this.value;saveSettings();appliquerTheme()">
-        <option value="light">Clair</option>
-        <option value="dark">Sombre</option>
-        <option value="auto">Automatique (système)</option>
-      </select>
-    </div>
+    <details class="set-accordion" open>
+      <summary>🎨 Apparence</summary>
+      <div style="margin-top:8px;">
+        <div class="set-row">
+          <label>🎨 Thème</label>
+          <select id="setTheme" onchange="settings.theme=this.value;saveSettings();appliquerTheme()">
+            <option value="light">Clair</option>
+            <option value="dark">Sombre</option>
+            <option value="auto">Automatique (système)</option>
+          </select>
+        </div>
+        <div class="set-row">
+          <label>🔤 Police de caractères</label>
+          <select id="setFontFamily" onchange="settings.fontFamily=this.value;saveSettings();appliquerPolice()">
+            <option value="system">Police système (par défaut)</option>
+            <option value="arial">Arial</option>
+            <option value="georgia">Georgia</option>
+            <option value="verdana">Verdana</option>
+            <option value="monospace">Monospace</option>
+          </select>
+        </div>
+        <div class="set-row">
+          <label>🔍 Taille du texte</label>
+          <select id="setFontSize" onchange="settings.fontSize=this.value;saveSettings();appliquerPolice()">
+            <option value="small">Petite</option>
+            <option value="normal">Normale (par défaut)</option>
+            <option value="large">Grande</option>
+            <option value="xlarge">Très grande</option>
+          </select>
+        </div>
+      </div>
+    </details>
 
-    <div class="set-row">
-      <label>🔤 Police de caractères</label>
-      <select id="setFontFamily" onchange="settings.fontFamily=this.value;saveSettings();appliquerPolice()">
-        <option value="system">Police système (par défaut)</option>
-        <option value="arial">Arial</option>
-        <option value="georgia">Georgia</option>
-        <option value="verdana">Verdana</option>
-        <option value="monospace">Monospace</option>
-      </select>
-    </div>
-
-    <div class="set-row">
-      <label>🔍 Taille du texte</label>
-      <select id="setFontSize" onchange="settings.fontSize=this.value;saveSettings();appliquerPolice()">
-        <option value="small">Petite</option>
-        <option value="normal">Normale (par défaut)</option>
-        <option value="large">Grande</option>
-        <option value="xlarge">Très grande</option>
-      </select>
-    </div>
-
-    <div class="set-row">
-      <label>🌍 Région / fournisseur géo</label>
-      <select id="setProvider" onchange="changerProvider(this.value)">
-        <option value="auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
-        <option value="bruxelles">Bruxelles (UrbIS — CIRB)</option>
-        <option value="wallonie">Wallonie (SPW + IGN)</option>
-        <option value="flandre">Flandre (Geopunt + IGN)</option>
+    <details class="set-accordion">
+      <summary>🗺️ Carte &amp; géocodage</summary>
+      <div style="margin-top:8px;">
+        <div class="set-row">
+          <label>🌍 Région / fournisseur géo</label>
+          <select id="setProvider" onchange="changerProvider(this.value)">
+            <option value="auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
+            <option value="bruxelles">Bruxelles (UrbIS — CIRB)</option>
+            <option value="wallonie">Wallonie (SPW + IGN)</option>
+            <option value="flandre">Flandre (Geopunt + IGN)</option>
 <!-- Option OSM/Nominatim masquée : géocodage en masse bloqué (403) par le serveur public.
-        <option value="osm">Belgique générique (OSM + Nominatim)</option> -->
-      </select>
-      <small id="setProviderHint"></small>
-    </div>
-
-    <div class="set-row" id="setStyleRow">
-      <label>🗺️ Fond de carte</label>
-      <select id="setMapStyle" onchange="settings.mapStyle=this.value;saveSettings();rafraichirFond()">
-        <option value="gray">Sobre (niveaux de gris)</option>
-        <option value="color">Couleur</option>
-      </select>
-    </div>
-
-    <div class="set-row">
-      <label>🧭 Liens de navigation</label>
-      <select id="setNav" onchange="settings.navMode=this.value;saveSettings();rendu()">
-        <option value="coords">Coordonnées GPS (respect vie privée)</option>
-        <option value="adresse">Adresse postale complète</option>
-      </select>
-      <small>« Coordonnées GPS » n'envoie qu'un point au service de navigation, sans nom ni adresse.</small>
-    </div>
-
-    <hr class="kebab-sep" style="margin:9px 0;">
+            <option value="osm">Belgique générique (OSM + Nominatim)</option> -->
+          </select>
+          <small id="setProviderHint"></small>
+        </div>
+        <div class="set-row" id="setStyleRow">
+          <label>🗺️ Fond de carte</label>
+          <select id="setMapStyle" onchange="settings.mapStyle=this.value;saveSettings();rafraichirFond()">
+            <option value="gray">Sobre (niveaux de gris)</option>
+            <option value="color">Couleur</option>
+          </select>
+        </div>
+        <div class="set-row">
+          <label>🧭 Liens de navigation</label>
+          <select id="setNav" onchange="settings.navMode=this.value;saveSettings();rendu()">
+            <option value="coords">Coordonnées GPS (respect vie privée)</option>
+            <option value="adresse">Adresse postale complète</option>
+          </select>
+          <small>« Coordonnées GPS » n'envoie qu'un point au service de navigation, sans nom ni adresse.</small>
+        </div>
+      </div>
+    </details>
 
     <details class="set-accordion">
       <summary>🏷️ Statuts disponibles</summary>
@@ -1125,39 +1134,40 @@
       </div>
     </details>
 
-    <hr class="kebab-sep" style="margin:9px 0;">
-
-    <div class="set-row">
-      <label>💾 Données</label>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        <button class="btn-secondary" onclick="exporterBackup()">⬇️ Sauvegarder tout (JSON)</button>
-        <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆️ Restaurer</button>
-        <span style="display:inline-flex;gap:4px;align-items:center;">
-          <select id="viderCacheScope" style="max-width:220px;"></select>
-          <button class="btn-secondary" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
-        </span>
-        <button class="btn-secondary" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
+    <details class="set-accordion">
+      <summary>💾 Données &amp; sauvegarde</summary>
+      <div class="set-row" style="margin-top:8px;">
+        <small id="lastBackupInfo" style="margin-bottom:4px;"></small>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <button class="btn-secondary" onclick="exporterBackup()">⬇️ Sauvegarder tout (JSON)</button>
+          <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆️ Restaurer</button>
+          <span style="display:inline-flex;gap:4px;align-items:center;">
+            <select id="viderCacheScope" style="max-width:220px;"></select>
+            <button class="btn-secondary" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
+          </span>
+          <button class="btn-secondary" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
+        </div>
+        <small id="dataStats"></small>
+        <div id="nonGeoList"></div>
       </div>
-      <small id="dataStats"></small>
-      <div id="nonGeoList"></div>
-    </div>
+    </details>
 
-    <hr class="kebab-sep" style="margin:9px 0;">
-
-    <div class="set-row">
-      <label>🔒 Verrouillage par code PIN</label>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-        <button class="btn-secondary" id="btnPinToggle" onclick="ouvrirGestionPin()">Définir un code PIN</button>
-        <select id="setPinTimeout" onchange="settings.pinTimeout=parseInt(this.value);saveSettings()" style="max-width:200px;">
-          <option value="0">Re-verrouiller : jamais (sauf fermeture)</option>
-          <option value="1">Re-verrouiller après 1 min</option>
-          <option value="5">Re-verrouiller après 5 min</option>
-          <option value="15">Re-verrouiller après 15 min</option>
-          <option value="30">Re-verrouiller après 30 min</option>
-        </select>
+    <details class="set-accordion">
+      <summary>🔒 Sécurité — code PIN</summary>
+      <div class="set-row" style="margin-top:8px;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <button class="btn-secondary" id="btnPinToggle" onclick="ouvrirGestionPin()">Définir un code PIN</button>
+          <select id="setPinTimeout" onchange="settings.pinTimeout=parseInt(this.value);saveSettings()" style="max-width:200px;">
+            <option value="0">Re-verrouiller : jamais (sauf fermeture)</option>
+            <option value="1">Re-verrouiller après 1 min</option>
+            <option value="5">Re-verrouiller après 5 min</option>
+            <option value="15">Re-verrouiller après 15 min</option>
+            <option value="30">Re-verrouiller après 30 min</option>
+          </select>
+        </div>
+        <small id="pinStatusHint">Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.</small>
       </div>
-      <small id="pinStatusHint">Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.</small>
-    </div>
+    </details>
 
     <hr class="kebab-sep" style="margin:9px 0;">
     <p class="aide-copyright" style="margin-top:10px;">Version <span class="app-version">…</span> · © Consultora sprl 2026</p>
@@ -2921,6 +2931,7 @@ function ouvrirSettings() {
   renderStatutsEditor();
   majSettingsUI();
   majPinUI();
+  majLastBackupInfo();
   document.getElementById('modalSettings').classList.add('open');
 }
 function fermerSettings() { document.getElementById('modalSettings').classList.remove('open'); }
@@ -3113,6 +3124,14 @@ function buildCompareHTML(src, meta) {
   let html = '';
   if (meta) html += `<div class="backup-meta">${meta}</div>`;
 
+  // Légende : signification des 4 états
+  html += `<div class="compare-legend">
+    <span class="cs-add">➕ Ajouté</span>
+    <span class="cs-mod">✏️ Modifié</span>
+    <span class="cs-rem">➖ Supprimé</span>
+    <span class="cs-unch">✅ Inchangé</span>
+  </div>`;
+
   let totAdd = 0, totRem = 0, totMod = 0, totUnch = 0;
 
   noms.forEach(nom => {
@@ -3241,6 +3260,8 @@ function exporterBackup() {
   btnConfirm.onclick = () => {
     const a = Object.assign(document.createElement('a'), { href: url, download: fname });
     a.click();
+    localStorage.setItem('statbel_last_backup', isoNow);
+    majLastBackupInfo();
     fermerBackupDetail();
   };
 
@@ -3248,6 +3269,23 @@ function exporterBackup() {
   document.querySelector('#modalBackupDetail .btn-secondary').textContent = 'Annuler';
 
   document.getElementById('modalBackupDetail').classList.add('open');
+}
+
+// Affiche « Dernière sauvegarde : … » dans la section Données des Paramètres
+function majLastBackupInfo() {
+  const el = document.getElementById('lastBackupInfo');
+  if (!el) return;
+  const iso = localStorage.getItem('statbel_last_backup');
+  if (!iso) {
+    el.textContent = '⚠️ Aucune sauvegarde effectuée sur cet appareil.';
+    el.style.color = '#e65100';
+    return;
+  }
+  const d = new Date(iso);
+  el.textContent = '✅ Dernière sauvegarde : ' + d.toLocaleDateString('fr-BE',
+      { day:'2-digit', month:'long', year:'numeric' })
+    + ' à ' + d.toLocaleTimeString('fr-BE', { hour:'2-digit', minute:'2-digit' });
+  el.style.color = '';
 }
 
 // Stockage temporaire pour la restauration (entre l'aperçu et la confirmation)
