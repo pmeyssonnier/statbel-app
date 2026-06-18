@@ -3220,7 +3220,10 @@ function exporterBackup() {
     if (!k.startsWith('coords_')) return;
     try { coords[k.slice(7)] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
   });
-  const data   = JSON.stringify({ version: 2, date: isoNow, settings, enquetes, coords }, null, 2);
+  // Exclure le verrouillage PIN du backup : c'est un réglage propre à
+  // l'appareil (et son hash n'a pas à voyager dans un fichier exporté).
+  const { pinCode, pinTimeout, ...settingsExport } = settings;
+  const data   = JSON.stringify({ version: 2, date: isoNow, settings: settingsExport, enquetes, coords }, null, 2);
   const blob   = new Blob([data], { type: 'application/json' });
   const url    = URL.createObjectURL(blob);
   const fname  = 'statbel_sauvegarde_' + isoNow.slice(0, 10) + '.json';
@@ -3297,7 +3300,10 @@ function importerBackup(event) {
         });
         // Restaurer aussi les paramètres (statuts personnalisés, thème, fournisseur…)
         if (_pendingSettings) {
-          settings = Object.assign({}, SETTINGS_DEFAULTS, _pendingSettings);
+          // Préserver le verrouillage PIN local : il ne doit jamais être
+          // écrasé/activé par un backup (évite tout blocage de l'app).
+          const pinLocal = { pinCode: settings.pinCode, pinTimeout: settings.pinTimeout };
+          settings = Object.assign({}, SETTINGS_DEFAULTS, _pendingSettings, pinLocal);
           if (!Array.isArray(settings.statuts) || !settings.statuts.length) settings.statuts = cloneStatuts();
           GEO = GEO_PROVIDERS[settings.provider] || GEO_PROVIDERS.bruxelles;
           saveSettings();
