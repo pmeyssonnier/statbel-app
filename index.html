@@ -478,6 +478,15 @@
   .activite-seg:first-child { border-radius: 3px 3px 0 0; }
   .activite-tot { font-size: 9px; color: var(--text3); margin-bottom: 2px; min-height: 11px; }
   .activite-lbl { font-size: 8px; color: var(--text3); margin-top: 3px; white-space: nowrap; transform: rotate(-90deg); transform-origin: center; height: 34px; }
+  /* Journal chronologique des événements */
+  .evt-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+  .evt-row { display: flex; gap: 10px; align-items: baseline; padding: 5px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .evt-row:last-child { border-bottom: none; }
+  .evt-row:nth-child(odd) { background: var(--badge-bg); }
+  .evt-date { flex: 0 0 130px; color: var(--text3); white-space: nowrap; }
+  .evt-statut { flex: 0 0 130px; font-weight: 600; white-space: nowrap; }
+  .evt-nom { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .evt-enq { flex: 0 0 auto; color: var(--text3); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* Tableau croisé */
   .resume-table-wrap {
     overflow-x: auto;
@@ -3056,6 +3065,7 @@ const I18N = {
   "res_activity": { fr:"📈 Activité quotidienne (visites)", nl:"📈 Dagelijkse activiteit (bezoeken)", en:"📈 Daily activity (visits)", de:"📈 Tägliche Aktivität (Besuche)" },
   "res_activity_none": { fr:"Aucune visite enregistrée pour l'instant.", nl:"Nog geen bezoeken geregistreerd.", en:"No visits recorded yet.", de:"Noch keine Besuche erfasst." },
   "res_visits": { fr:["visite","visites"], nl:["bezoek","bezoeken"], en:["visit","visits"], de:["Besuch","Besuche"] },
+  "res_events": { fr:"🗓️ Journal des événements", nl:"🗓️ Logboek van gebeurtenissen", en:"🗓️ Event log", de:"🗓️ Ereignisprotokoll" },
   "ed_status": { fr:"Statut", nl:"Status", en:"Status", de:"Status" },
   "ed_firstname": { fr:"Prénom", nl:"Voornaam", en:"First name", de:"Vorname" },
   "ed_lastname": { fr:"Nom", nl:"Naam", en:"Last name", de:"Name" },
@@ -4164,14 +4174,13 @@ function exporterResumePDF() {
 // Graphe « activité quotidienne » : nombre de visites par statut et par jour,
 // depuis le 1er passage enregistré jusqu'à aujourd'hui. Source : c.historique
 // (chaque passage « done » daté — y compris plusieurs absences pour un contact).
-function renderActiviteQuotidienne() {
-  const parJour = {};                 // { isoDate: { statutLabel: count } }
-  const presents = new Set();
-  Object.values(enquetes).forEach(arr => arr.forEach(c => {
-    // Visites = entrées d'historique datées…
+// Collecte tous les « événements » (visites datées) de toutes les enquêtes,
+// triés chronologiquement. Base commune du graphe et du journal.
+// Source : historique daté + état courant « terminé » non encore dans l'historique.
+function collecterVisites() {
+  const ev = [];
+  Object.entries(enquetes).forEach(([enq, arr]) => arr.forEach(c => {
     const visites = (c.historique || []).filter(h => h && h.date && h.statut).map(h => ({ statut: h.statut, date: h.date }));
-    // … + l'état courant s'il est « terminé » et daté mais absent de l'historique
-    // (cas des contacts importés ou dont le statut a été posé sans historique).
     const dCur = statutDef(c.statut || '');
     if (c.statut && c.date && dCur && dCur.done &&
         !visites.some(v => v.statut === c.statut && v.date === c.date)) {
@@ -4179,11 +4188,21 @@ function renderActiviteQuotidienne() {
     }
     visites.forEach(v => {
       const iso = dateFrToISO(v.date);
-      if (!iso) return;
-      (parJour[iso] = parJour[iso] || {})[v.statut] = (parJour[iso][v.statut] || 0) + 1;
-      presents.add(v.statut);
+      if (iso) ev.push({ iso, date: v.date, statut: v.statut, prenom: c.prenom, nom: c.nom, ordre: c.ordre, enq });
     });
   }));
+  ev.sort((a, b) => a.iso < b.iso ? -1 : (a.iso > b.iso ? 1 : 0));
+  return ev;
+}
+
+function renderActiviteQuotidienne() {
+  const events = collecterVisites();
+  const parJour = {};                 // { isoDate: { statutLabel: count } }
+  const presents = new Set();
+  events.forEach(e => {
+    (parJour[e.iso] = parJour[e.iso] || {})[e.statut] = (parJour[e.iso][e.statut] || 0) + 1;
+    presents.add(e.statut);
+  });
   const dates = Object.keys(parJour).sort();
   let html = `<div class="resume-section-title">${t('res_activity')}</div>`;
   if (!dates.length) return html + `<div style="font-size:12px;color:var(--text3);">${t('res_activity_none')}</div>`;
@@ -4218,6 +4237,23 @@ function renderActiviteQuotidienne() {
       <div class="activite-tot">${tot || ''}</div>
       <div class="activite-bars">${segs}</div>
       <div class="activite-lbl">${dd}/${m}</div>
+    </div>`;
+  }).join('') + '</div>';
+  return html;
+}
+
+// Journal chronologique des événements (base du graphe), du plus ancien au plus récent.
+function renderEvenementsChrono() {
+  const events = collecterVisites();
+  let html = `<div class="resume-section-title">${t('res_events')}</div>`;
+  if (!events.length) return html + `<div style="font-size:12px;color:var(--text3);">${t('res_activity_none')}</div>`;
+  html += '<div class="evt-list">' + events.map(e => {
+    const d = statutDef(e.statut);
+    return `<div class="evt-row">
+      <span class="evt-date">${esc(formatDateJour(e.date))}</span>
+      <span class="evt-statut" style="color:${d.color}">${esc(d.icon)} ${esc(statutLabel(e.statut))}</span>
+      <span class="evt-nom">N°${esc(e.ordre)} ${esc(e.prenom)} ${esc(e.nom)}</span>
+      <span class="evt-enq" title="${esc(e.enq)}">${esc(e.enq)}</span>
     </div>`;
   }).join('') + '</div>';
   return html;
@@ -4428,7 +4464,8 @@ function renduResume() {
       <div class="resume-section-title">${t('res_table')}</div>
       ${tableHtml}
     </div>
-    <div>${renderActiviteQuotidienne()}</div>`;
+    <div>${renderActiviteQuotidienne()}</div>
+    <div>${renderEvenementsChrono()}</div>`;
 }
 
 
