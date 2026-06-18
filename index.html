@@ -1194,51 +1194,10 @@
 
 <div class="modal-overlay" id="modalAide">
   <div class="modal modal-aide">
-    <h2>❓ Aide — Statbel Interviews</h2>
-    <div class="aide-body">
-      <p>Cette application aide les <strong>enquêteurs Statbel</strong> à suivre leurs contacts à interviewer (enquête sur les forces de travail, LFS). Tout fonctionne <strong>dans votre navigateur</strong> : aucune donnée n'est envoyée vers un serveur, et l'application reste utilisable hors-ligne une fois chargée.</p>
-
-      <h3>🗂️ Enquêtes &amp; import</h3>
-      <ul>
-        <li>Importez vos contacts depuis un fichier <strong>CSV ou Excel</strong> (menu ⋮ → Importer).</li>
-        <li>Vous pouvez gérer <strong>plusieurs enquêtes</strong> et basculer de l'une à l'autre via le sélecteur en haut à gauche.</li>
-        <li>Chaque fiche contient nom, adresse, GSM, e-mail, données démographiques et notes.</li>
-      </ul>
-
-      <h3>👁️ Les trois vues</h3>
-      <ul>
-        <li><strong>☰ Liste</strong> — toutes les fiches, avec recherche et filtres par statut.</li>
-        <li><strong>🗺️ Carte</strong> — localisation des contacts ; filtre par statut dans l'en-tête, recentrage ⊙, et distance depuis votre position.</li>
-        <li><strong>📅 Rendez-vous</strong> — agenda chronologique des RDV planifiés, avec recherche.</li>
-      </ul>
-
-      <h3>🏷️ Statuts</h3>
-      <p>Chaque fiche a un statut (À faire, En cours, Fait, Absent, Refus). Les statuts sont <strong>personnalisables</strong> dans les Paramètres (couleur, icône, ajout/suppression). « Fait » et « Refus » <strong>enregistrent automatiquement la date</strong> de l'action ; « En cours » permet de fixer un <strong>rendez-vous</strong>.</p>
-
-      <h3>📍 Localisation &amp; vie privée</h3>
-      <ul>
-        <li>Le géocodage des adresses passe par <strong>UrbIS (CIRB)</strong>, le service public de la Région bruxelloise — pas de transfert vers un tiers hors UE.</li>
-        <li>Les liens de navigation envoient par défaut de simples <strong>coordonnées GPS</strong> (sans nom ni adresse) pour préserver la vie privée.</li>
-        <li>Hors Bruxelles, basculez le fournisseur sur « Belgique générique » dans les Paramètres.</li>
-      </ul>
-
-      <h3>💾 Données &amp; sécurité</h3>
-      <ul>
-        <li>Les données sont stockées localement (IndexedDB). Pensez à <strong>Sauvegarder tout (JSON)</strong> régulièrement : un nettoyage du navigateur peut effacer les données.</li>
-        <li>Vous pouvez <strong>exporter en CSV</strong>, générer une <strong>vCard</strong> par contact, et restaurer une sauvegarde.</li>
-      </ul>
-
-      <h3>💡 Astuces</h3>
-      <ul>
-        <li>Sur une fiche, le bouton 🖊️ ouvre l'édition (adresse, démographie, RDV, notes).</li>
-        <li>Sur la carte, cliquez un repère pour changer son statut ou éditer la fiche.</li>
-        <li>Thème clair / sombre / automatique dans les Paramètres.</li>
-      </ul>
-      <hr class="kebab-sep" style="margin:12px 0;">
-      <p class="aide-copyright">Version <span class="app-version">…</span> · © Consultora sprl 2026</p>
-    </div>
+    <h2 data-i18n="aide_title">❓ Aide — Statbel Interviews</h2>
+    <div class="aide-body" id="aideBody"></div>
     <div class="modal-btns">
-      <button class="btn-primary" onclick="fermerAide()">Compris</button>
+      <button class="btn-primary" data-i18n="aide_ok" onclick="fermerAide()">Compris</button>
     </div>
   </div>
 </div>
@@ -3125,6 +3084,8 @@ const I18N = {
   bk_total:    { fr:'📊 Total', nl:'📊 Totaal', en:'📊 Total' },
   bk_w_contact:{ fr:['contact','contacts'], nl:['contact','contacten'], en:['contact','contacts'] },
   bk_w_survey: { fr:['enquête','enquêtes'], nl:['enquête','enquêtes'], en:['survey','surveys'] },
+  aide_title:  { fr:'❓ Aide — Statbel Interviews', nl:'❓ Help — Statbel Interviews', en:'❓ Help — Statbel Interviews' },
+  aide_ok:     { fr:'Compris', nl:'Begrepen', en:'Got it' },
   // Paramètres — options police / fournisseur + hints
   opt_font_system:{ fr:'Police système (par défaut)', nl:'Systeemlettertype (standaard)', en:'System font (default)' },
   opt_prov_auto:{ fr:'🇧🇪 Automatique (selon le code postal) — recommandé', nl:'🇧🇪 Automatisch (volgens postcode) — aanbevolen', en:'🇧🇪 Automatic (by postal code) — recommended' },
@@ -3259,7 +3220,117 @@ function ouvrirSettings() {
   document.getElementById('modalSettings').classList.add('open');
 }
 function fermerSettings() { document.getElementById('modalSettings').classList.remove('open'); }
-function ouvrirAide()  { document.getElementById('modalAide').classList.add('open'); }
+// Contenu de l'aide par langue (HTML). La ligne de version est ajoutée par renderAide().
+const AIDE_HTML = {
+  fr: `
+    <p>Cette application aide les <strong>enquêteurs Statbel</strong> à suivre leurs contacts à interviewer (enquête sur les forces de travail, LFS). Tout fonctionne <strong>dans votre navigateur</strong> : aucune donnée n'est envoyée vers un serveur, et l'application reste utilisable hors-ligne une fois chargée.</p>
+    <h3>🗂️ Enquêtes &amp; import</h3>
+    <ul>
+      <li>Importez vos contacts depuis un fichier <strong>CSV ou Excel</strong> (menu ⋮ → Importer).</li>
+      <li>Vous pouvez gérer <strong>plusieurs enquêtes</strong> et basculer de l'une à l'autre via le sélecteur en haut à gauche.</li>
+      <li>Chaque fiche contient nom, adresse, GSM, e-mail, données démographiques et notes.</li>
+    </ul>
+    <h3>👁️ Les trois vues</h3>
+    <ul>
+      <li><strong>☰ Liste</strong> — toutes les fiches, avec recherche et filtres par statut.</li>
+      <li><strong>🗺️ Carte</strong> — localisation des contacts ; filtre par statut, recentrage ⊙, et distance depuis votre position.</li>
+      <li><strong>📅 Suivi</strong> — agenda chronologique des rendez-vous planifiés, avec recherche.</li>
+    </ul>
+    <h3>🏷️ Statuts</h3>
+    <p>Chaque fiche a un statut (À faire, En cours, Fait, Absent, Refus). Les statuts sont <strong>personnalisables</strong> dans les Paramètres (couleur, icône, ajout/suppression). Les statuts « terminés » <strong>enregistrent automatiquement la date</strong> de l'action ; un statut « rendez-vous » permet de fixer une date/heure.</p>
+    <h3>📍 Localisation &amp; vie privée</h3>
+    <ul>
+      <li>Le géocodage est routé automatiquement par code postal vers le service public régional (UrbIS/CIRB pour Bruxelles, SPW pour la Wallonie, Geopunt pour la Flandre) — pas de transfert hors UE.</li>
+      <li>Les liens de navigation envoient par défaut de simples <strong>coordonnées GPS</strong> (sans nom ni adresse).</li>
+    </ul>
+    <h3>💾 Données &amp; sécurité</h3>
+    <ul>
+      <li>Les données sont stockées localement (IndexedDB). Pensez à <strong>Sauvegarder tout (JSON)</strong> régulièrement : un nettoyage du navigateur peut effacer les données.</li>
+      <li>Vous pouvez <strong>exporter en CSV</strong>, générer une <strong>vCard</strong> par contact, et restaurer une sauvegarde.</li>
+      <li>Un <strong>code PIN</strong> optionnel protège l'accès à l'application.</li>
+    </ul>
+    <h3>💡 Astuces</h3>
+    <ul>
+      <li>Sur une fiche, le bouton 🖊️ ouvre l'édition (adresse, démographie, RDV, notes).</li>
+      <li>Sur la carte, cliquez un repère pour changer son statut ou éditer la fiche.</li>
+      <li>Langue, thème et taille du texte se règlent dans les Paramètres.</li>
+    </ul>`,
+  nl: `
+    <p>Deze app helpt <strong>Statbel-enquêteurs</strong> bij het opvolgen van hun te interviewen contacten (enquête naar de arbeidskrachten, LFS). Alles werkt <strong>in uw browser</strong>: er worden geen gegevens naar een server gestuurd en de app blijft offline bruikbaar na het laden.</p>
+    <h3>🗂️ Enquêtes &amp; import</h3>
+    <ul>
+      <li>Importeer uw contacten uit een <strong>CSV- of Excel-bestand</strong> (menu ⋮ → Importeren).</li>
+      <li>U kunt <strong>meerdere enquêtes</strong> beheren en ertussen wisselen via de keuzelijst linksboven.</li>
+      <li>Elke fiche bevat naam, adres, gsm, e-mail, demografische gegevens en notities.</li>
+    </ul>
+    <h3>👁️ De drie weergaven</h3>
+    <ul>
+      <li><strong>☰ Lijst</strong> — alle fiches, met zoeken en filters per status.</li>
+      <li><strong>🗺️ Kaart</strong> — locatie van de contacten; filter per status, hercentreren ⊙, en afstand vanaf uw positie.</li>
+      <li><strong>📅 Opvolging</strong> — chronologische agenda van geplande afspraken, met zoeken.</li>
+    </ul>
+    <h3>🏷️ Statussen</h3>
+    <p>Elke fiche heeft een status (Te doen, Bezig, Klaar, Afwezig, Weigering). De statussen zijn <strong>aanpasbaar</strong> in de Instellingen (kleur, pictogram, toevoegen/verwijderen). "Voltooide" statussen <strong>registreren automatisch de datum</strong> van de actie; een "afspraak"-status laat toe een datum/uur vast te leggen.</p>
+    <h3>📍 Lokalisatie &amp; privacy</h3>
+    <ul>
+      <li>De geocodering wordt automatisch via de postcode naar de regionale overheidsdienst geleid (UrbIS/CIBG voor Brussel, SPW voor Wallonië, Geopunt voor Vlaanderen) — geen overdracht buiten de EU.</li>
+      <li>De navigatielinks sturen standaard enkel <strong>GPS-coördinaten</strong> (zonder naam of adres).</li>
+    </ul>
+    <h3>💾 Gegevens &amp; beveiliging</h3>
+    <ul>
+      <li>De gegevens worden lokaal opgeslagen (IndexedDB). Maak regelmatig een <strong>volledige back-up (JSON)</strong>: het wissen van de browser kan de gegevens verwijderen.</li>
+      <li>U kunt <strong>naar CSV exporteren</strong>, een <strong>vCard</strong> per contact genereren en een back-up herstellen.</li>
+      <li>Een optionele <strong>pincode</strong> beschermt de toegang tot de app.</li>
+    </ul>
+    <h3>💡 Tips</h3>
+    <ul>
+      <li>Op een fiche opent de knop 🖊️ de bewerking (adres, demografie, afspraak, notities).</li>
+      <li>Klik op de kaart op een markering om de status te wijzigen of de fiche te bewerken.</li>
+      <li>Taal, thema en tekstgrootte stelt u in bij de Instellingen.</li>
+    </ul>`,
+  en: `
+    <p>This app helps <strong>Statbel field interviewers</strong> track the contacts they need to interview (Labour Force Survey, LFS). Everything runs <strong>in your browser</strong>: no data is sent to a server, and the app stays usable offline once loaded.</p>
+    <h3>🗂️ Surveys &amp; import</h3>
+    <ul>
+      <li>Import your contacts from a <strong>CSV or Excel file</strong> (⋮ menu → Import).</li>
+      <li>You can manage <strong>several surveys</strong> and switch between them via the selector at the top left.</li>
+      <li>Each record holds name, address, phone, e-mail, demographic data and notes.</li>
+    </ul>
+    <h3>👁️ The three views</h3>
+    <ul>
+      <li><strong>☰ List</strong> — all records, with search and status filters.</li>
+      <li><strong>🗺️ Map</strong> — contact locations; status filter, recenter ⊙, and distance from your position.</li>
+      <li><strong>📅 Tracking</strong> — chronological agenda of scheduled appointments, with search.</li>
+    </ul>
+    <h3>🏷️ Statuses</h3>
+    <p>Each record has a status (To do, In progress, Done, Absent, Refusal). Statuses are <strong>customizable</strong> in Settings (color, icon, add/remove). "Completed" statuses <strong>automatically record the date</strong> of the action; an "appointment" status lets you set a date/time.</p>
+    <h3>📍 Location &amp; privacy</h3>
+    <ul>
+      <li>Geocoding is automatically routed by postal code to the regional public service (UrbIS/CIRB for Brussels, SPW for Wallonia, Geopunt for Flanders) — no transfer outside the EU.</li>
+      <li>Navigation links send only plain <strong>GPS coordinates</strong> by default (no name or address).</li>
+    </ul>
+    <h3>💾 Data &amp; security</h3>
+    <ul>
+      <li>Data is stored locally (IndexedDB). Remember to <strong>Back up all (JSON)</strong> regularly: clearing the browser can erase the data.</li>
+      <li>You can <strong>export to CSV</strong>, generate a <strong>vCard</strong> per contact, and restore a backup.</li>
+      <li>An optional <strong>PIN code</strong> protects access to the app.</li>
+    </ul>
+    <h3>💡 Tips</h3>
+    <ul>
+      <li>On a record, the 🖊️ button opens editing (address, demographics, appointment, notes).</li>
+      <li>On the map, click a marker to change its status or edit the record.</li>
+      <li>Language, theme and text size are set in Settings.</li>
+    </ul>`,
+};
+
+function renderAide() {
+  const body = AIDE_HTML[settings.lang] || AIDE_HTML.fr;
+  document.getElementById('aideBody').innerHTML = body
+    + `<hr class="kebab-sep" style="margin:12px 0;">
+       <p class="aide-copyright">Version <span class="app-version">${APP_VERSION}</span> · © Consultora sprl 2026</p>`;
+}
+
+function ouvrirAide()  { renderAide(); document.getElementById('modalAide').classList.add('open'); }
 function fermerAide()  { document.getElementById('modalAide').classList.remove('open'); }
 
 function majSettingsUI() {
