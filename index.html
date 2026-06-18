@@ -938,18 +938,18 @@
   <div class="lock-dots" id="lockDots"></div>
   <div class="lock-error-msg" id="lockErrorMsg">&nbsp;</div>
   <div class="lock-keypad" id="lockKeypad"></div>
-  <div class="lock-footer hidden" id="lockSetupHint">Ce code sera demandé à chaque ouverture de l'application.</div>
+  <div class="lock-footer hidden" id="lockSetupHint" data-i18n="pin_setup_hint">Ce code sera demandé à chaque ouverture de l'application.</div>
 </div>
 
 <!-- Gestion d'un PIN déjà actif (changer / désactiver) -->
 <div class="modal-overlay" id="modalPin">
   <div class="modal">
-    <h2>🔒 Verrouillage par code PIN</h2>
-    <p style="font-size:13px;margin-bottom:14px;">Un code PIN est déjà actif. Que veux-tu faire ?</p>
+    <h2 data-i18n="pin_modal_title">🔒 Verrouillage par code PIN</h2>
+    <p style="font-size:13px;margin-bottom:14px;" data-i18n="pin_modal_q">Un code PIN est déjà actif. Que veux-tu faire ?</p>
     <div class="modal-btns" style="flex-direction:column;gap:8px;align-items:stretch;">
-      <button class="btn-primary" onclick="pinChanger()">🔁 Changer le code</button>
-      <button class="btn-secondary" onclick="pinDesactiver()" style="color:#b71c1c;">🔓 Désactiver le verrouillage</button>
-      <button class="btn-secondary" onclick="fermerModalPin()">Annuler</button>
+      <button class="btn-primary" data-i18n="pin_change" onclick="pinChanger()">🔁 Changer le code</button>
+      <button class="btn-secondary" data-i18n="pin_disable" onclick="pinDesactiver()" style="color:#b71c1c;">🔓 Désactiver le verrouillage</button>
+      <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerModalPin()">Annuler</button>
     </div>
   </div>
 </div>
@@ -964,35 +964,23 @@
     </div>
     <div class="header-col3">
       <div class="view-toggle">
-        <button class="btn-view active" id="btnListe" data-tip="Liste" onclick="setView('liste')">☰</button>
-        <button class="btn-view" id="btnCarte" data-tip="Carte" onclick="setView('carte')">🗺️</button>
-        <button class="btn-view" id="btnRdv" data-tip="Suivi" onclick="setView('rdv')">📅</button>
-        <button class="btn-view" id="btnResume" data-tip="Résumé" onclick="setView('resume')">📊</button>
+        <button class="btn-view active" id="btnListe" data-tip="Liste" data-i18n-tip="tip_list" onclick="setView('liste')">☰</button>
+        <button class="btn-view" id="btnCarte" data-tip="Carte" data-i18n-tip="tip_map" onclick="setView('carte')">🗺️</button>
+        <button class="btn-view" id="btnRdv" data-tip="Suivi" data-i18n-tip="tip_track" onclick="setView('rdv')">📅</button>
+        <button class="btn-view" id="btnResume" data-tip="Résumé" data-i18n-tip="tip_summary" onclick="setView('resume')">📊</button>
       </div>
-      <button class="btn-ico" id="btnGeo" onclick="toggleMaPosition()" title="Ma position">🎯</button>
+      <button class="btn-ico" id="btnGeo" onclick="toggleMaPosition()" title="Ma position" data-i18n-title="title_mypos">🎯</button>
       <div class="kebab-wrap">
-        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options">⋮</button>
+        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" data-i18n-title="title_more">⋮</button>
         <div class="kebab-menu" id="kebabMenu">
-          <button class="kebab-item" onclick="ouvrirSettings();toggleKebab()">
-            ⚙️ Paramètres
-          </button>
-          <button class="kebab-item" onclick="ouvrirAide();toggleKebab()">
-            ❓ Aide
-          </button>
+          <button class="kebab-item" data-i18n="menu_settings" onclick="ouvrirSettings();toggleKebab()">⚙️ Paramètres</button>
+          <button class="kebab-item" data-i18n="menu_help" onclick="ouvrirAide();toggleKebab()">❓ Aide</button>
           <hr class="kebab-sep">
-          <button class="kebab-item" onclick="document.getElementById('importFile').click();toggleKebab()">
-            ⬆️ Importer CSV / Excel
-          </button>
-          <button class="kebab-item" onclick="exporterCSV();toggleKebab()">
-            ⬇️ Exporter CSV
-          </button>
+          <button class="kebab-item" data-i18n="menu_import" onclick="document.getElementById('importFile').click();toggleKebab()">⬆️ Importer CSV / Excel</button>
+          <button class="kebab-item" data-i18n="menu_export" onclick="exporterCSV();toggleKebab()">⬇️ Exporter CSV</button>
           <hr class="kebab-sep">
-          <button class="kebab-item" onclick="renommerEnquete();toggleKebab()">
-            ✏️ Renommer cette enquête
-          </button>
-          <button class="kebab-item danger" onclick="supprimerEnquete();toggleKebab()">
-            🗑️ Supprimer cette enquête
-          </button>
+          <button class="kebab-item" data-i18n="menu_rename" onclick="renommerEnquete();toggleKebab()">✏️ Renommer cette enquête</button>
+          <button class="kebab-item danger" data-i18n="menu_delete" onclick="supprimerEnquete();toggleKebab()">🗑️ Supprimer cette enquête</button>
         </div>
       </div>
     </div>
@@ -1003,7 +991,7 @@
 </header>
 
 <div class="search-bar">
-  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" oninput="debounce(rendu)" autocomplete="off">
+  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" oninput="debounce(rendu)" autocomplete="off">
 </div>
 
 <div class="filters"></div>
@@ -1021,7 +1009,7 @@
 <div id="rdvContainer" style="display:none; padding:10px 12px; flex-direction:column; gap:10px;">
   <h2 class="rdv-title" id="rdvTitle">📅 Suivi des interviews</h2>
   <div class="rdv-search">
-    <input type="search" id="rdvSearch" placeholder="Filtrer par nom, prénom, adresse ou téléphone…" oninput="debounce(renduRdv)" autocomplete="off">
+    <input type="search" id="rdvSearch" placeholder="Filtrer par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_rdv" oninput="debounce(renduRdv)" autocomplete="off">
   </div>
   <div class="filters" id="rdvFilters" style="padding:0;border:none;background:none;"></div>
   <div id="rdvListe"></div>
@@ -1037,7 +1025,7 @@
     <label style="display:block;margin-top:12px;font-size:13px;font-weight:600;">Nom de l'enquête</label>
     <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" oninput="majComparaisonImport()">
     <div class="modal-btns">
-      <button class="btn-secondary" onclick="fermerModal()">Annuler</button>
+      <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerModal()">Annuler</button>
       <button class="btn-primary" id="btnConfirmerImport" onclick="confirmerImport()">Importer</button>
     </div>
   </div>
@@ -1049,29 +1037,37 @@
     <input type="text" id="inputRename" placeholder="Ex: 2026-12305 - GD RUE AU BOIS"
       onkeydown="if(event.key==='Enter')confirmerRename()">
     <div class="modal-btns">
-      <button class="btn-secondary" onclick="fermerRename()">Annuler</button>
-      <button class="btn-primary" onclick="confirmerRename()">Renommer</button>
+      <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerRename()">Annuler</button>
+      <button class="btn-primary" data-i18n="btn_rename" onclick="confirmerRename()">Renommer</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modalSettings">
   <div class="modal">
-    <h2>⚙️ Paramètres</h2>
+    <h2 data-i18n="set_title">⚙️ Paramètres</h2>
 
     <details class="set-accordion" open>
-      <summary>🎨 Apparence</summary>
+      <summary data-i18n="sec_appear">🎨 Apparence</summary>
       <div style="margin-top:8px;">
         <div class="set-row">
-          <label>🎨 Thème</label>
-          <select id="setTheme" onchange="settings.theme=this.value;saveSettings();appliquerTheme()">
-            <option value="light">Clair</option>
-            <option value="dark">Sombre</option>
-            <option value="auto">Automatique (système)</option>
+          <label data-i18n="lbl_lang">🌐 Langue</label>
+          <select id="setLang" onchange="changerLangue(this.value)">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="en">🇬🇧 English</option>
           </select>
         </div>
         <div class="set-row">
-          <label>🔤 Police de caractères</label>
+          <label data-i18n="lbl_theme">🎨 Thème</label>
+          <select id="setTheme" onchange="settings.theme=this.value;saveSettings();appliquerTheme()">
+            <option value="light" data-i18n="opt_theme_light">Clair</option>
+            <option value="dark" data-i18n="opt_theme_dark">Sombre</option>
+            <option value="auto" data-i18n="opt_theme_auto">Automatique (système)</option>
+          </select>
+        </div>
+        <div class="set-row">
+          <label data-i18n="lbl_font">🔤 Police de caractères</label>
           <select id="setFontFamily" onchange="settings.fontFamily=this.value;saveSettings();appliquerPolice()">
             <option value="system">Police système (par défaut)</option>
             <option value="arial">Arial</option>
@@ -1081,22 +1077,22 @@
           </select>
         </div>
         <div class="set-row">
-          <label>🔍 Taille du texte</label>
+          <label data-i18n="lbl_size">🔍 Taille du texte</label>
           <select id="setFontSize" onchange="settings.fontSize=this.value;saveSettings();appliquerPolice()">
-            <option value="small">Petite</option>
-            <option value="normal">Normale (par défaut)</option>
-            <option value="large">Grande</option>
-            <option value="xlarge">Très grande</option>
+            <option value="small" data-i18n="opt_size_small">Petite</option>
+            <option value="normal" data-i18n="opt_size_normal">Normale (par défaut)</option>
+            <option value="large" data-i18n="opt_size_large">Grande</option>
+            <option value="xlarge" data-i18n="opt_size_xlarge">Très grande</option>
           </select>
         </div>
       </div>
     </details>
 
     <details class="set-accordion">
-      <summary>🗺️ Carte &amp; géocodage</summary>
+      <summary data-i18n="sec_map">🗺️ Carte &amp; géocodage</summary>
       <div style="margin-top:8px;">
         <div class="set-row">
-          <label>🌍 Région / fournisseur géo</label>
+          <label data-i18n="lbl_provider">🌍 Région / fournisseur géo</label>
           <select id="setProvider" onchange="changerProvider(this.value)">
             <option value="auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
             <option value="bruxelles">Bruxelles (UrbIS — CIRB)</option>
@@ -1108,17 +1104,17 @@
           <small id="setProviderHint"></small>
         </div>
         <div class="set-row" id="setStyleRow">
-          <label>🗺️ Fond de carte</label>
+          <label data-i18n="lbl_basemap">🗺️ Fond de carte</label>
           <select id="setMapStyle" onchange="settings.mapStyle=this.value;saveSettings();rafraichirFond()">
-            <option value="gray">Sobre (niveaux de gris)</option>
-            <option value="color">Couleur</option>
+            <option value="gray" data-i18n="opt_map_gray">Sobre (niveaux de gris)</option>
+            <option value="color" data-i18n="opt_map_color">Couleur</option>
           </select>
         </div>
         <div class="set-row">
-          <label>🧭 Liens de navigation</label>
+          <label data-i18n="lbl_nav">🧭 Liens de navigation</label>
           <select id="setNav" onchange="settings.navMode=this.value;saveSettings();rendu()">
-            <option value="coords">Coordonnées GPS (respect vie privée)</option>
-            <option value="adresse">Adresse postale complète</option>
+            <option value="coords" data-i18n="opt_nav_coords">Coordonnées GPS (respect vie privée)</option>
+            <option value="adresse" data-i18n="opt_nav_addr">Adresse postale complète</option>
           </select>
           <small>« Coordonnées GPS » n'envoie qu'un point au service de navigation, sans nom ni adresse.</small>
         </div>
@@ -1126,26 +1122,26 @@
     </details>
 
     <details class="set-accordion">
-      <summary>🏷️ Statuts disponibles</summary>
+      <summary data-i18n="sec_status">🏷️ Statuts disponibles</summary>
       <div class="set-row" style="margin-top:8px;">
         <div id="statutsEditor"></div>
-        <button class="btn-secondary" style="align-self:flex-start" onclick="ajouterStatut()">＋ Ajouter un statut</button>
+        <button class="btn-secondary" style="align-self:flex-start" data-i18n="btn_addstatus" onclick="ajouterStatut()">＋ Ajouter un statut</button>
         <small>« ✓ » horodate la date de l'action (entretien, refus…). « 📅 » active la date/heure et la vue agenda.</small>
       </div>
     </details>
 
     <details class="set-accordion">
-      <summary>💾 Données &amp; sauvegarde</summary>
+      <summary data-i18n="sec_data">💾 Données &amp; sauvegarde</summary>
       <div class="set-row" style="margin-top:8px;">
         <small id="lastBackupInfo" style="margin-bottom:4px;"></small>
         <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          <button class="btn-secondary" onclick="exporterBackup()">⬇️ Sauvegarder tout (JSON)</button>
-          <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆️ Restaurer</button>
+          <button class="btn-secondary" data-i18n="btn_backup" onclick="exporterBackup()">⬇️ Sauvegarder tout (JSON)</button>
+          <button class="btn-secondary" data-i18n="btn_restore" onclick="document.getElementById('restoreFile').click()">⬆️ Restaurer</button>
           <span style="display:inline-flex;gap:4px;align-items:center;">
             <select id="viderCacheScope" style="max-width:220px;"></select>
-            <button class="btn-secondary" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
+            <button class="btn-secondary" data-i18n="btn_clearcache" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
           </span>
-          <button class="btn-secondary" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
+          <button class="btn-secondary" data-i18n="btn_nongeo" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
         </div>
         <small id="dataStats"></small>
         <div id="nonGeoList"></div>
@@ -1153,16 +1149,16 @@
     </details>
 
     <details class="set-accordion">
-      <summary>🔒 Sécurité — code PIN</summary>
+      <summary data-i18n="sec_security">🔒 Sécurité — code PIN</summary>
       <div class="set-row" style="margin-top:8px;">
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
           <button class="btn-secondary" id="btnPinToggle" onclick="ouvrirGestionPin()">Définir un code PIN</button>
           <select id="setPinTimeout" onchange="settings.pinTimeout=parseInt(this.value);saveSettings()" style="max-width:200px;">
-            <option value="0">Re-verrouiller : jamais (sauf fermeture)</option>
-            <option value="1">Re-verrouiller après 1 min</option>
-            <option value="5">Re-verrouiller après 5 min</option>
-            <option value="15">Re-verrouiller après 15 min</option>
-            <option value="30">Re-verrouiller après 30 min</option>
+            <option value="0" data-i18n="opt_pin_never">Re-verrouiller : jamais (sauf fermeture)</option>
+            <option value="1" data-i18n="opt_pin_1">Re-verrouiller après 1 min</option>
+            <option value="5" data-i18n="opt_pin_5">Re-verrouiller après 5 min</option>
+            <option value="15" data-i18n="opt_pin_15">Re-verrouiller après 15 min</option>
+            <option value="30" data-i18n="opt_pin_30">Re-verrouiller après 30 min</option>
           </select>
         </div>
         <small id="pinStatusHint">Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.</small>
@@ -1173,7 +1169,7 @@
     <p class="aide-copyright" style="margin-top:10px;">Version <span class="app-version">…</span> · © Consultora sprl 2026</p>
 
     <div class="modal-btns">
-      <button class="btn-primary" onclick="fermerSettings()">Fermer</button>
+      <button class="btn-primary" data-i18n="btn_close" onclick="fermerSettings()">Fermer</button>
     </div>
   </div>
 </div>
@@ -1450,6 +1446,8 @@ const SETTINGS_DEFAULTS = {
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
   fontSize:   'normal',   // 'small' | 'normal' (défaut/système) | 'large' | 'xlarge'
+  // Langue : détectée depuis le navigateur au 1er lancement (fr/nl/en), défaut fr
+  lang: (() => { const l = (navigator.language || 'fr').slice(0,2).toLowerCase(); return ['fr','nl','en'].includes(l) ? l : 'fr'; })(),
 };
 let settings = Object.assign({}, SETTINGS_DEFAULTS, { statuts: cloneStatuts() });
 let GEO = GEO_PROVIDERS[settings.provider];
@@ -2321,7 +2319,7 @@ function exporterVCard(i) {
 function renderFilters() {
   const all = contacts(), total = all.length, cpt = {};
   all.forEach(c => { const s = c.statut||statutDefaut(); cpt[s]=(cpt[s]||0)+1; });
-  let html = `<button class="filter-btn${filtreActif==='Tous'?' active':''}" onclick="filtrer('Tous')">Tous${total>0?' ('+total+')':''}</button>`;
+  let html = `<button class="filter-btn${filtreActif==='Tous'?' active':''}" onclick="filtrer('Tous')">${t('f_all')}${total>0?' ('+total+')':''}</button>`;
   statutDefs().forEach((s, si) => {
     const n = cpt[s.label] || 0;
     const on = filtreActif === s.label;
@@ -2596,7 +2594,7 @@ let filtreRdv = 'Tous';
 
 /** Titre et icône contextuels selon le statut filtré */
 function rdvTitreStatut(label) {
-  if (!label || label === 'Tous') return { icon: '📅', titre: 'Suivi des interviews' };
+  if (!label || label === 'Tous') return { icon: '📅', titre: t('track_title_plain') };
   const def = statutDef(label);
   const icon = def.icon || '•';
   // Titres sémantiques selon la nature du statut
@@ -2617,7 +2615,7 @@ function renderRdvFilters() {
 
   const total = eligible.reduce((acc, s) => acc + (cpt[s.label]||0), 0);
   const on0   = filtreRdv === 'Tous';
-  let html = `<button class="filter-btn${on0?' active':''}" onclick="filtrerRdv('Tous')">Tous (${total})</button>`;
+  let html = `<button class="filter-btn${on0?' active':''}" onclick="filtrerRdv('Tous')">${t('f_all')} (${total})</button>`;
 
   eligible.forEach(s => {
     const n  = cpt[s.label] || 0;
@@ -2920,8 +2918,111 @@ function appliquerPolice() {
   document.documentElement.style.setProperty('--app-font-size', size);
 }
 
+// ── Internationalisation (FR / NL / EN) ─────────────────────────────
+// Phase 1 : interface visible (en-tête, menus, vues, paramètres, boutons).
+// Les messages d'alerte, l'aperçu d'import et l'aide restent à traduire.
+const LANGS = ['fr', 'nl', 'en'];
+const I18N = {
+  // En-tête / vues / menu
+  tip_list:     { fr:'Liste',   nl:'Lijst',     en:'List' },
+  tip_map:      { fr:'Carte',   nl:'Kaart',     en:'Map' },
+  tip_track:    { fr:'Suivi',   nl:'Opvolging', en:'Tracking' },
+  tip_summary:  { fr:'Résumé',  nl:'Overzicht', en:'Summary' },
+  title_mypos:  { fr:'Ma position',    nl:'Mijn locatie', en:'My location' },
+  title_more:   { fr:"Plus d'options", nl:'Meer opties',  en:'More options' },
+  menu_settings:{ fr:'⚙️ Paramètres',  nl:'⚙️ Instellingen', en:'⚙️ Settings' },
+  menu_help:    { fr:'❓ Aide',         nl:'❓ Help',          en:'❓ Help' },
+  menu_import:  { fr:'⬆️ Importer CSV / Excel', nl:'⬆️ CSV / Excel importeren', en:'⬆️ Import CSV / Excel' },
+  menu_export:  { fr:'⬇️ Exporter CSV', nl:'⬇️ CSV exporteren', en:'⬇️ Export CSV' },
+  menu_rename:  { fr:'✏️ Renommer cette enquête', nl:'✏️ Deze enquête hernoemen', en:'✏️ Rename this survey' },
+  menu_delete:  { fr:'🗑️ Supprimer cette enquête', nl:'🗑️ Deze enquête verwijderen', en:'🗑️ Delete this survey' },
+  // Recherche / filtres
+  ph_search:    { fr:'Rechercher par nom, prénom, adresse ou téléphone…', nl:'Zoeken op naam, voornaam, adres of telefoon…', en:'Search by name, first name, address or phone…' },
+  ph_rdv:       { fr:'Filtrer par nom, prénom, adresse ou téléphone…', nl:'Filteren op naam, voornaam, adres of telefoon…', en:'Filter by name, first name, address or phone…' },
+  f_all:        { fr:'Tous', nl:'Alle', en:'All' },
+  track_title_plain: { fr:'Suivi des interviews', nl:'Opvolging van de interviews', en:'Interview tracking' },
+  // Paramètres — sections
+  set_title:    { fr:'⚙️ Paramètres', nl:'⚙️ Instellingen', en:'⚙️ Settings' },
+  sec_appear:   { fr:'🎨 Apparence', nl:'🎨 Weergave', en:'🎨 Appearance' },
+  sec_map:      { fr:'🗺️ Carte & géocodage', nl:'🗺️ Kaart & geocodering', en:'🗺️ Map & geocoding' },
+  sec_status:   { fr:'🏷️ Statuts disponibles', nl:'🏷️ Beschikbare statussen', en:'🏷️ Available statuses' },
+  sec_data:     { fr:'💾 Données & sauvegarde', nl:'💾 Gegevens & back-up', en:'💾 Data & backup' },
+  sec_security: { fr:'🔒 Sécurité — code PIN', nl:'🔒 Beveiliging — pincode', en:'🔒 Security — PIN code' },
+  // Paramètres — libellés
+  lbl_theme:    { fr:'🎨 Thème', nl:'🎨 Thema', en:'🎨 Theme' },
+  lbl_lang:     { fr:'🌐 Langue', nl:'🌐 Taal', en:'🌐 Language' },
+  lbl_font:     { fr:'🔤 Police de caractères', nl:'🔤 Lettertype', en:'🔤 Font' },
+  lbl_size:     { fr:'🔍 Taille du texte', nl:'🔍 Tekstgrootte', en:'🔍 Text size' },
+  lbl_provider: { fr:'🌍 Région / fournisseur géo', nl:'🌍 Regio / geo-aanbieder', en:'🌍 Region / geo provider' },
+  lbl_basemap:  { fr:'🗺️ Fond de carte', nl:'🗺️ Achtergrondkaart', en:'🗺️ Base map' },
+  lbl_nav:      { fr:'🧭 Liens de navigation', nl:'🧭 Navigatielinks', en:'🧭 Navigation links' },
+  // Options
+  opt_theme_light:{ fr:'Clair', nl:'Licht', en:'Light' },
+  opt_theme_dark: { fr:'Sombre', nl:'Donker', en:'Dark' },
+  opt_theme_auto: { fr:'Automatique (système)', nl:'Automatisch (systeem)', en:'Automatic (system)' },
+  opt_size_small: { fr:'Petite', nl:'Klein', en:'Small' },
+  opt_size_normal:{ fr:'Normale (par défaut)', nl:'Normaal (standaard)', en:'Normal (default)' },
+  opt_size_large: { fr:'Grande', nl:'Groot', en:'Large' },
+  opt_size_xlarge:{ fr:'Très grande', nl:'Zeer groot', en:'Very large' },
+  opt_nav_coords: { fr:'Coordonnées GPS (respect vie privée)', nl:'GPS-coördinaten (privacy)', en:'GPS coordinates (privacy)' },
+  opt_nav_addr:   { fr:'Adresse postale complète', nl:'Volledig postadres', en:'Full postal address' },
+  opt_map_gray:   { fr:'Sobre (niveaux de gris)', nl:'Sober (grijstinten)', en:'Plain (grayscale)' },
+  opt_map_color:  { fr:'Couleur', nl:'Kleur', en:'Color' },
+  opt_pin_never:  { fr:'Re-verrouiller : jamais (sauf fermeture)', nl:'Opnieuw vergrendelen: nooit (behalve bij sluiten)', en:'Re-lock: never (except on close)' },
+  opt_pin_1:      { fr:'Re-verrouiller après 1 min', nl:'Opnieuw vergrendelen na 1 min', en:'Re-lock after 1 min' },
+  opt_pin_5:      { fr:'Re-verrouiller après 5 min', nl:'Opnieuw vergrendelen na 5 min', en:'Re-lock after 5 min' },
+  opt_pin_15:     { fr:'Re-verrouiller après 15 min', nl:'Opnieuw vergrendelen na 15 min', en:'Re-lock after 15 min' },
+  opt_pin_30:     { fr:'Re-verrouiller après 30 min', nl:'Opnieuw vergrendelen na 30 min', en:'Re-lock after 30 min' },
+  // Boutons
+  btn_backup:   { fr:'⬇️ Sauvegarder tout (JSON)', nl:'⬇️ Alles back-uppen (JSON)', en:'⬇️ Back up all (JSON)' },
+  btn_restore:  { fr:'⬆️ Restaurer', nl:'⬆️ Herstellen', en:'⬆️ Restore' },
+  btn_clearcache:{ fr:'🗑️ Vider le cache des coordonnées', nl:'🗑️ Coördinatencache wissen', en:'🗑️ Clear coordinates cache' },
+  btn_nongeo:   { fr:'🔍 Adresses non géocodées', nl:'🔍 Niet-gegeocodeerde adressen', en:'🔍 Non-geocoded addresses' },
+  btn_addstatus:{ fr:'＋ Ajouter un statut', nl:'＋ Status toevoegen', en:'＋ Add a status' },
+  btn_close:    { fr:'Fermer', nl:'Sluiten', en:'Close' },
+  btn_cancel:   { fr:'Annuler', nl:'Annuleren', en:'Cancel' },
+  btn_import:   { fr:'Importer', nl:'Importeren', en:'Import' },
+  btn_rename:   { fr:'Renommer', nl:'Hernoemen', en:'Rename' },
+  // PIN
+  pin_define:   { fr:'Définir un code PIN', nl:'Pincode instellen', en:'Set a PIN code' },
+  pin_change:   { fr:'🔁 Changer le code', nl:'🔁 Code wijzigen', en:'🔁 Change code' },
+  pin_disable:  { fr:'🔓 Désactiver le verrouillage', nl:'🔓 Vergrendeling uitschakelen', en:'🔓 Disable lock' },
+  pin_enter:    { fr:'Entrez le code PIN', nl:'Voer de pincode in', en:'Enter the PIN code' },
+  pin_setup:    { fr:'Définir un nouveau code PIN', nl:'Nieuwe pincode instellen', en:'Set a new PIN code' },
+  pin_confirm:  { fr:'Confirmez le code PIN', nl:'Bevestig de pincode', en:'Confirm the PIN code' },
+  pin_setup_hint:{ fr:"Ce code sera demandé à chaque ouverture de l'application.", nl:'Deze code wordt gevraagd bij elke opening van de app.', en:'This code will be required each time the app opens.' },
+  pin_modal_title:{ fr:'🔒 Verrouillage par code PIN', nl:'🔒 Vergrendeling met pincode', en:'🔒 PIN code lock' },
+  pin_modal_q:  { fr:'Un code PIN est déjà actif. Que veux-tu faire ?', nl:'Er is al een pincode actief. Wat wil je doen?', en:'A PIN code is already active. What do you want to do?' },
+  pin_active:   { fr:'🔁 Changer / désactiver le code', nl:'🔁 Code wijzigen / uitschakelen', en:'🔁 Change / disable code' },
+};
+
+function t(key) {
+  const e = I18N[key];
+  if (!e) return key;
+  return e[settings.lang] || e.fr || key;
+}
+
+// Applique la langue courante à tout le DOM balisé (data-i18n[-ph|-tip|-title]).
+function appliquerLangue() {
+  document.documentElement.lang = settings.lang || 'fr';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('[data-i18n-tip]').forEach(el => { el.setAttribute('data-tip', t(el.getAttribute('data-i18n-tip'))); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+}
+
+function changerLangue(v) {
+  settings.lang = LANGS.includes(v) ? v : 'fr';
+  saveSettings();
+  appliquerLangue();
+  majPinUI();
+  if (typeof renderFilters === 'function') renderFilters();
+  rendu();
+}
+
 // ── Panneau Paramètres ──────────────────────────────────────────────
 function ouvrirSettings() {
+  document.getElementById('setLang').value       = settings.lang;
   document.getElementById('setTheme').value      = settings.theme;
   document.getElementById('setFontFamily').value = settings.fontFamily;
   document.getElementById('setFontSize').value   = settings.fontSize;
@@ -3944,7 +4045,7 @@ function pinValiderSaisie() {
     if (!_pinSetupEtape1) {
       _pinSetupEtape1 = _pinSaisie;
       _pinSaisie = '';
-      document.getElementById('lockTitle').textContent = 'Confirmez le code PIN';
+      document.getElementById('lockTitle').textContent = t('pin_confirm');
       renderLockDots();
       return;
     }
@@ -3952,7 +4053,7 @@ function pinValiderSaisie() {
       pinAfficherErreur('Les codes ne correspondent pas — recommencez');
       _pinSetupEtape1 = '';
       _pinSaisie = '';
-      document.getElementById('lockTitle').textContent = 'Définir un nouveau code PIN';
+      document.getElementById('lockTitle').textContent = t('pin_setup');
       renderLockDots();
       return;
     }
@@ -3986,8 +4087,8 @@ function ouvrirLockScreen(modeSetup) {
   _pinSetupEtape1 = '';
   _pinSaisie = '';
   document.getElementById('lockTitle').textContent = modeSetup
-    ? 'Définir un nouveau code PIN'
-    : 'Entrez le code PIN';
+    ? t('pin_setup')
+    : t('pin_enter');
   document.getElementById('lockErrorMsg').textContent = '\u00a0';
   document.getElementById('lockSetupHint').classList.toggle('hidden', !modeSetup);
   renderLockKeypad();
@@ -4035,10 +4136,10 @@ function majPinUI() {
   const hint = document.getElementById('pinStatusHint');
   if (!btn) return;
   if (pinEstActif()) {
-    btn.textContent = '🔁 Changer / désactiver le code';
+    btn.textContent = t('pin_active');
     hint.textContent = '✅ Verrouillage actif — le code sera demandé selon le délai choisi ci-dessus.';
   } else {
-    btn.textContent = 'Définir un code PIN';
+    btn.textContent = t('pin_define');
     hint.textContent = "Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.";
   }
   const sel = document.getElementById('setPinTimeout');
@@ -4096,6 +4197,7 @@ async function init() {
   chargerSettings();
   appliquerTheme();
   appliquerPolice();
+  appliquerLangue();
 
   // Verrouillage PIN affiché AVANT tout rendu : l'overlay opaque (z-index 9999)
   // recouvre l'écran dès le départ → aucune donnée nominative ne « flashe ».

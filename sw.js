@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v43';
+const CACHE = 'statbel-v44';
 
 const APP_SHELL = [
   './',
