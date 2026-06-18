@@ -1019,10 +1019,10 @@
 
 <div class="modal-overlay" id="modalNom">
   <div class="modal" style="max-width:500px;max-height:85vh;display:flex;flex-direction:column;">
-    <h2>Aperçu de l'import</h2>
+    <h2 data-i18n="modal_import_title">Aperçu de l'import</h2>
     <div id="importApercu" style="overflow-y:auto;"></div>
     <div id="importCompareWrap" class="hidden" style="overflow-y:auto;margin-top:6px;"></div>
-    <label style="display:block;margin-top:12px;font-size:13px;font-weight:600;">Nom de l'enquête</label>
+    <label style="display:block;margin-top:12px;font-size:13px;font-weight:600;" data-i18n="lbl_survey_name">Nom de l'enquête</label>
     <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" oninput="majComparaisonImport()">
     <div class="modal-btns">
       <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerModal()">Annuler</button>
@@ -1632,7 +1632,7 @@ function changerEnquete(nom) {
 }
 
 function renommerEnquete() {
-  if (!enqueteActive) { alert('Aucune enquête active.'); return; }
+  if (!enqueteActive) { alert(t('al_no_active_survey')); return; }
   const inp = document.getElementById('inputRename');
   inp.value = enqueteActive;
   document.getElementById('modalRename').classList.add('open');
@@ -1647,7 +1647,7 @@ function confirmerRename() {
   const ancien  = enqueteActive;
   const nouveau = (document.getElementById('inputRename').value || '').trim();
   if (!nouveau || nouveau === ancien) { fermerRename(); return; }
-  if (enquetes[nouveau]) { alert('Une enquête porte déjà ce nom.'); return; }
+  if (enquetes[nouveau]) { alert(t('al_name_taken')); return; }
   // Renommer la clé en conservant l'ordre des enquêtes
   const renomme = {};
   Object.keys(enquetes).forEach(k => { renomme[k === ancien ? nouveau : k] = enquetes[k]; });
@@ -1661,7 +1661,7 @@ function confirmerRename() {
 
 function supprimerEnquete() {
   if (!enqueteActive) return;
-  if (!confirm('Supprimer l\'enquête "' + enqueteActive + '" et toutes ses données ?')) return;
+  if (!confirm(tf('cf_delete_survey', { name: enqueteActive }))) return;
   delete enquetes[enqueteActive];
   enqueteActive = Object.keys(enquetes)[0] || '';
   sauver();
@@ -2105,6 +2105,23 @@ const CHAMPS_IMPORT = [
   ['email',          'Email',           ['email','mail','e_mail']],
 ];
 
+// Libellés de champs traduits (aperçu d'import — colonnes reconnues)
+const CHAMP_LABEL_I18N = {
+  ordre:{fr:'Ordre',nl:'Volgnr.',en:'Order'}, prenom:{fr:'Prénom',nl:'Voornaam',en:'First name'},
+  nom:{fr:'Nom',nl:'Naam',en:'Last name'}, adresse:{fr:'Adresse',nl:'Adres',en:'Address'},
+  statut:{fr:'Statut',nl:'Status',en:'Status'}, date:{fr:'Date interview',nl:'Interviewdatum',en:'Interview date'},
+  notes:{fr:'Notes',nl:'Notities',en:'Notes'}, rdv:{fr:'Rendez-vous',nl:'Afspraak',en:'Appointment'},
+  sexe:{fr:'Sexe',nl:'Geslacht',en:'Sex'}, birth_date:{fr:'Date naissance',nl:'Geboortedatum',en:'Birth date'},
+  age:{fr:'Âge',nl:'Leeftijd',en:'Age'}, birth_country:{fr:'Pays naissance',nl:'Geboorteland',en:'Birth country'},
+  nationality:{fr:'Nationalité',nl:'Nationaliteit',en:'Nationality'}, marital_status:{fr:'État civil',nl:'Burgerlijke staat',en:'Marital status'},
+  taille_menage:{fr:'Taille ménage',nl:'Gezinsgrootte',en:'Household size'}, gsm:{fr:'Téléphone',nl:'Telefoon',en:'Phone'},
+  email:{fr:'Email',nl:'E-mail',en:'Email'},
+};
+function champLabel(key) {
+  const e = CHAMP_LABEL_I18N[key];
+  return e ? (e[settings.lang] || e.fr) : key;
+}
+
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return null;
@@ -2121,7 +2138,7 @@ function parseCSV(text) {
   });
   if (map.prenom < 0 && map.nom < 0) return null;
 
-  const reconnues = CHAMPS_IMPORT.filter(([k]) => map[k] >= 0).map(([, lbl]) => lbl);
+  const reconnues = CHAMPS_IMPORT.filter(([k]) => map[k] >= 0).map(([k]) => k);
   const nonReconnues = headers
     .map((h, i) => ({ h, i }))
     .filter(x => x.h && !used.has(x.i))
@@ -2138,10 +2155,10 @@ function parseCSV(text) {
     const prenom = g(cols, map.prenom), nom = g(cols, map.nom);
     const adresse = g(cols, map.adresse);
     const ordreVal = g(cols, map.ordre);
-    const rejet = motif => rejets.push({ ligne: bi + 2, ordre: ordreVal || '—', motif });
-    if (!prenom && !nom) { motifs.sansIdentite++; rejet('sans nom ni prénom'); return; }
-    if (!adresse)        { motifs.adresseVide++;  rejet('sans adresse');        return; }
-    if (ordreVal && ordresVus.has(ordreVal)) { motifs.doublonOrdre++; rejet("N° d'ordre en doublon"); return; }
+    const rejet = motifKey => rejets.push({ ligne: bi + 2, ordre: ordreVal || '—', motif: motifKey });
+    if (!prenom && !nom) { motifs.sansIdentite++; rejet('motif_no_identity'); return; }
+    if (!adresse)        { motifs.adresseVide++;  rejet('motif_no_address'); return; }
+    if (ordreVal && ordresVus.has(ordreVal)) { motifs.doublonOrdre++; rejet('motif_dup_order'); return; }
     if (ordreVal) ordresVus.add(ordreVal);
     rows.push({
       ordre:          ordreVal || String(rows.length+1).padStart(2,'0'),
@@ -2187,15 +2204,15 @@ function importerFichier(event) {
         const wb  = XLSX.read(new Uint8Array(e.target.result), { type:'array' });
         const csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]], { FS:',', RS:'\n' });
         const parsed = parseCSV(csv);
-        if (!parsed?.rows.length) { alert('Fichier Excel invalide ou vide (colonne Nom/Prénom introuvable).'); return; }
+        if (!parsed?.rows.length) { alert(t('al_excel_invalid')); return; }
         ouvrirModalImport(parsed, defaultName);
-      } catch(err) { alert('Erreur lecture Excel : '+err.message); }
+      } catch(err) { alert(t('al_excel_error')+err.message); }
     };
     reader.readAsArrayBuffer(file);
   } else {
     reader.onload = e => {
       const parsed = parseCSV(e.target.result);
-      if (!parsed?.rows.length) { alert('Fichier CSV invalide ou vide (colonne Nom/Prénom introuvable).'); return; }
+      if (!parsed?.rows.length) { alert(t('al_csv_invalid')); return; }
       ouvrirModalImport(parsed, defaultName);
     };
     reader.readAsText(file, 'UTF-8');
@@ -2226,60 +2243,60 @@ function majComparaisonImport() {
   if (!existante) {
     wrap.classList.add('hidden');
     wrap.innerHTML = '';
-    btn.textContent = 'Importer';
+    btn.textContent = t('ip_btn_import');
     return;
   }
 
   const src = { [nom]: csvEnAttente };
   // buildCompareHTML compare contre enquetes[nom] global (déjà correct).
-  const { html, stats } = buildCompareHTML(src, `⚠️ Une enquête <strong>"${esc(nom)}"</strong> existe déjà — comparaison avec son contenu actuel :`);
+  const { html, stats } = buildCompareHTML(src, tf('cmp_exists', { name: esc(nom) }));
   wrap.innerHTML = html;
   wrap.classList.remove('hidden');
 
   const totChanges = stats.add + stats.rem + stats.mod;
   btn.textContent = totChanges
-    ? `Importer (remplacer — ${totChanges} changement${totChanges>1?'s':''})`
-    : 'Importer (remplacer — aucun changement)';
+    ? tf('ip_btn_replace', { n: totChanges, word: tPlural('cmp_change', totChanges) })
+    : t('ip_btn_replace0');
 }
 
 function renderImportApercu(s) {
   const chip = (txt, bg, fg) => `<span style="display:inline-block;padding:2px 9px;border-radius:11px;font-size:12px;font-weight:600;background:${bg};color:${fg};margin:2px 4px 2px 0;">${esc(txt)}</span>`;
   const recon = s.reconnues.length
-    ? s.reconnues.map(c => chip('✓ '+c, '#e8f5e9', '#2e7d32')).join('')
-    : '<em style="color:#b71c1c;">aucune</em>';
+    ? s.reconnues.map(k => chip('✓ '+champLabel(k), '#e8f5e9', '#2e7d32')).join('')
+    : `<em style="color:#b71c1c;">${t('ip_none')}</em>`;
   const nonRecon = s.nonReconnues.length
     ? s.nonReconnues.map(c => chip(c, '#fff3e0', '#e65100')).join('')
-    : '<span style="color:#2e7d32;">aucune ✓</span>';
+    : `<span style="color:#2e7d32;">${t('ip_none_ok')}</span>`;
   return `
     <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px;">
-      <div><div style="font-size:22px;font-weight:700;">${s.lues}</div><div style="font-size:11px;color:#888;">lignes lues</div></div>
-      <div><div style="font-size:22px;font-weight:700;color:#2e7d32;">${s.importees}</div><div style="font-size:11px;color:#888;">à importer</div></div>
-      <div><div style="font-size:22px;font-weight:700;color:${s.rejetees?'#b71c1c':'#888'};">${s.rejetees}</div><div style="font-size:11px;color:#888;">rejetées</div></div>
+      <div><div style="font-size:22px;font-weight:700;">${s.lues}</div><div style="font-size:11px;color:#888;">${t('ip_lines_read')}</div></div>
+      <div><div style="font-size:22px;font-weight:700;color:#2e7d32;">${s.importees}</div><div style="font-size:11px;color:#888;">${t('ip_to_import')}</div></div>
+      <div><div style="font-size:22px;font-weight:700;color:${s.rejetees?'#b71c1c':'#888'};">${s.rejetees}</div><div style="font-size:11px;color:#888;">${t('ip_rejected')}</div></div>
     </div>
     ${(() => {
       const m = s.motifs || {};
       const det = [];
-      if (m.sansIdentite) det.push(`${m.sansIdentite} sans nom ni prénom`);
-      if (m.adresseVide)  det.push(`${m.adresseVide} sans adresse`);
-      if (m.doublonOrdre) det.push(`${m.doublonOrdre} N° d'ordre en doublon`);
-      return det.length ? `<div style="font-size:11px;color:#b71c1c;margin-bottom:8px;">⚠️ Lignes ignorées : ${esc(det.join(' · '))}.</div>` : '';
+      if (m.sansIdentite) det.push(`${m.sansIdentite} ${t('motif_no_identity')}`);
+      if (m.adresseVide)  det.push(`${m.adresseVide} ${t('motif_no_address')}`);
+      if (m.doublonOrdre) det.push(`${m.doublonOrdre} ${t('motif_dup_order')}`);
+      return det.length ? `<div style="font-size:11px;color:#b71c1c;margin-bottom:8px;">${tf('ip_ignored', { det: esc(det.join(' · ')) })}</div>` : '';
     })()}
     ${(s.rejets && s.rejets.length) ? `
       <details style="margin-bottom:8px;">
-        <summary style="font-size:12px;cursor:pointer;color:#b71c1c;">Détail des lignes ignorées (${s.rejets.length})</summary>
+        <summary style="font-size:12px;cursor:pointer;color:#b71c1c;">${tf('ip_detail', { n: s.rejets.length })}</summary>
         <div style="max-height:120px;overflow:auto;margin-top:4px;font-size:11px;">
-          ${s.rejets.map(r => `<div>• ligne ${r.ligne} — N° ${esc(String(r.ordre))} — ${esc(r.motif)}</div>`).join('')}
+          ${s.rejets.map(r => `<div>• ${t('ip_line')} ${r.ligne} — N° ${esc(String(r.ordre))} — ${esc(t(r.motif))}</div>`).join('')}
         </div>
       </details>` : ''}
-    <div style="font-size:12px;margin-bottom:4px;"><strong>Colonnes reconnues</strong></div>
+    <div style="font-size:12px;margin-bottom:4px;"><strong>${t('ip_cols_ok')}</strong></div>
     <div style="margin-bottom:8px;">${recon}</div>
-    <div style="font-size:12px;margin-bottom:4px;"><strong>Colonnes ignorées</strong></div>
+    <div style="font-size:12px;margin-bottom:4px;"><strong>${t('ip_cols_ko')}</strong></div>
     <div>${nonRecon}</div>`;
 }
 
 function confirmerImport() {
   const nom = document.getElementById('inputNomEnquete').value.trim();
-  if (!nom) { alert('Veuillez entrer un nom.'); return; }
+  if (!nom) { alert(t('al_enter_name')); return; }
   // Pas de confirm() natif ici : la comparaison détaillée (majComparaisonImport)
   // est déjà visible dans la modale avant que l'utilisateur ne clique sur ce bouton.
   enquetes[nom] = csvEnAttente;
@@ -2325,7 +2342,7 @@ function genererCSV() {
 }
 
 function exporterCSV() {
-  if (!enqueteActive) { alert('Aucune enquête active.'); return; }
+  if (!enqueteActive) { alert(t('al_no_active_survey')); return; }
   const a = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(new Blob([genererCSV()], {type:'text/csv;charset=utf-8'})),
     download: enqueteActive + '.csv'
@@ -2387,7 +2404,7 @@ function rendu() {
   liste.innerHTML = '';
   const all = contacts();
   if (all.length === 0) {
-    liste.innerHTML = '<div class="empty-state">Aucun contact.<br>Importez un fichier CSV ou Excel pour commencer.<button onclick="document.getElementById(\'importFile\').click()">⬆️ Importer CSV / Excel</button></div>';
+    liste.innerHTML = `<div class="empty-state">${t('empty_state')}<button onclick="document.getElementById('importFile').click()">${t('menu_import')}</button></div>`;
     return;
   }
   const q = (document.getElementById('searchInput')?.value||'').toLowerCase().trim();
@@ -2474,10 +2491,10 @@ function toggleMaPosition() {
     markerMoi=null; btn.classList.remove('active'); btn.textContent='🎯'; btn.title='Ma position';
     rendu(); return;
   }
-  if (!navigator.geolocation) { afficherToast('Géolocalisation non supportée.',4000); return; }
+  if (!navigator.geolocation) { afficherToast(t('toast_geo_unsupported'),4000); return; }
   if (navigator.permissions) {
     navigator.permissions.query({name:'geolocation'}).then(r => {
-      if (r.state==='denied') { afficherToast('Localisation bloquée.',6000); return; }
+      if (r.state==='denied') { afficherToast(t('toast_geo_blocked'),6000); return; }
       demanderPosition(btn);
     }).catch(()=>demanderPosition(btn));
   } else demanderPosition(btn);
@@ -2489,14 +2506,14 @@ function demanderPosition(btn) {
     pos => {
       maPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
       btn.textContent='🎯'; btn.classList.add('active'); btn.title='Position active';
-      afficherToast('Position obtenue !',2000);
+      afficherToast(t('toast_geo_ok'),2000);
       if (vueActive==='carte') { placerMarqueurMoi(); afficherMarqueurs(); }
       rendu();
     },
     err => {
-      btn.textContent='🎯'; btn.classList.remove('active'); btn.title='Ma position';
-      const msgs={1:'Permission refusée.',2:'Position indisponible.',3:'Délai dépassé.'};
-      afficherToast(msgs[err.code]||'Erreur '+err.code,6000);
+      btn.textContent='🎯'; btn.classList.remove('active'); btn.title=t('title_mypos');
+      const msgs={1:t('geo_err_1'),2:t('geo_err_2'),3:t('geo_err_3')};
+      afficherToast(msgs[err.code]||(t('geo_err')+err.code),6000);
     },
     {enableHighAccuracy:true,timeout:15000,maximumAge:30000}
   );
@@ -2827,7 +2844,7 @@ function changerDateHistorique(i, idx, val) {
   // Valider le format jj/mm/aaaa
   const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12) {
-    alert('Date invalide. Format attendu : jj/mm/aaaa');
+    alert(t('al_date_invalid'));
     rendu();
     return;
   }
@@ -2846,7 +2863,7 @@ function supprimerHistorique(i, idx) {
   const c = contacts()[i];
   if (!Array.isArray(c.historique) || !c.historique[idx]) return;
   const e = c.historique[idx];
-  if (!confirm(`Supprimer cette entrée d'historique : « ${e.statut} — ${e.date} » ?`)) return;
+  if (!confirm(tf('cf_del_history', { s: e.statut, d: e.date }))) return;
   c.historique.splice(idx, 1);
   if (!c.historique.length) delete c.historique;
   sauver();
@@ -3030,6 +3047,84 @@ const I18N = {
   res_exported: { fr:'Exporté le', nl:'Geëxporteerd op', en:'Exported on' },
   btn_xlsx:     { fr:'📊 Exporter Excel', nl:'📊 Naar Excel', en:'📊 Export Excel' },
   btn_pdf:      { fr:'🖨️ Imprimer / PDF', nl:'🖨️ Afdrukken / PDF', en:'🖨️ Print / PDF' },
+  // Alertes / confirmations / toasts
+  al_no_active_survey:{ fr:'Aucune enquête active.', nl:'Geen actieve enquête.', en:'No active survey.' },
+  al_name_taken:{ fr:'Une enquête porte déjà ce nom.', nl:'Er bestaat al een enquête met deze naam.', en:'A survey already has this name.' },
+  cf_delete_survey:{ fr:'Supprimer l\'enquête « {name} » et toutes ses données ?', nl:'Enquête « {name} » en alle gegevens verwijderen?', en:'Delete survey “{name}” and all its data?' },
+  al_excel_invalid:{ fr:'Fichier Excel invalide ou vide (colonne Nom/Prénom introuvable).', nl:'Ongeldig of leeg Excel-bestand (kolom Naam/Voornaam niet gevonden).', en:'Invalid or empty Excel file (Name/First name column not found).' },
+  al_excel_error:{ fr:'Erreur lecture Excel : ', nl:'Fout bij lezen Excel: ', en:'Excel read error: ' },
+  al_csv_invalid:{ fr:'Fichier CSV invalide ou vide (colonne Nom/Prénom introuvable).', nl:'Ongeldig of leeg CSV-bestand (kolom Naam/Voornaam niet gevonden).', en:'Invalid or empty CSV file (Name/First name column not found).' },
+  al_enter_name:{ fr:'Veuillez entrer un nom.', nl:'Voer een naam in.', en:'Please enter a name.' },
+  al_date_invalid:{ fr:'Date invalide. Format attendu : jj/mm/aaaa', nl:'Ongeldige datum. Verwacht formaat: dd/mm/jjjj', en:'Invalid date. Expected format: dd/mm/yyyy' },
+  cf_del_history:{ fr:'Supprimer cette entrée d\'historique : « {s} — {d} » ?', nl:'Deze geschiedenisregel verwijderen: « {s} — {d} »?', en:'Delete this history entry: “{s} — {d}”?' },
+  al_no_survey_file:{ fr:'Aucune enquête dans ce fichier.', nl:'Geen enquête in dit bestand.', en:'No survey in this file.' },
+  toast_restore_done:{ fr:'✅ Restauration terminée — {n} enquête(s) importée(s)', nl:'✅ Herstel voltooid — {n} enquête(s) geïmporteerd', en:'✅ Restore complete — {n} survey(s) imported' },
+  al_backup_invalid:{ fr:'Fichier de sauvegarde invalide : ', nl:'Ongeldig back-upbestand: ', en:'Invalid backup file: ' },
+  al_cache_empty_sel:{ fr:'Aucune adresse géocodée en cache pour cette sélection.', nl:'Geen gegeocodeerde adressen in cache voor deze selectie.', en:'No geocoded addresses cached for this selection.' },
+  cf_clear_cache:{ fr:'Supprimer {n} adresse(s) géocodée(s){portee} ? Elles seront recalculées au prochain affichage de la carte.', nl:'{n} gegeocodeerd(e) adres(sen){portee} verwijderen? Ze worden opnieuw berekend bij de volgende weergave van de kaart.', en:'Delete {n} geocoded address(es){portee}? They will be recomputed next time the map is shown.' },
+  cf_clear_scope:{ fr:' de « {name} »', nl:' van « {name} »', en:' from “{name}”' },
+  cf_del_status:{ fr:'Supprimer le statut « {label} » ? Les fiches qui le portent seront réassignées à « {cible} ».', nl:'Status « {label} » verwijderen? Records met deze status worden opnieuw toegewezen aan « {cible} ».', en:'Delete status “{label}”? Records using it will be reassigned to “{cible}”.' },
+  toast_geo_unsupported:{ fr:'Géolocalisation non supportée.', nl:'Geolocatie niet ondersteund.', en:'Geolocation not supported.' },
+  toast_geo_blocked:{ fr:'Localisation bloquée.', nl:'Locatie geblokkeerd.', en:'Location blocked.' },
+  toast_geo_ok:{ fr:'Position obtenue !', nl:'Locatie verkregen!', en:'Location obtained!' },
+  geo_err_1:   { fr:'Permission refusée.', nl:'Toestemming geweigerd.', en:'Permission denied.' },
+  geo_err_2:   { fr:'Position indisponible.', nl:'Locatie niet beschikbaar.', en:'Location unavailable.' },
+  geo_err_3:   { fr:'Délai dépassé.', nl:'Time-out.', en:'Timed out.' },
+  geo_err:     { fr:'Erreur ', nl:'Fout ', en:'Error ' },
+  toast_pin_on:{ fr:'🔒 Code PIN activé', nl:'🔒 Pincode geactiveerd', en:'🔒 PIN code enabled' },
+  toast_pin_off:{ fr:'🔓 Verrouillage désactivé', nl:'🔓 Vergrendeling uitgeschakeld', en:'🔓 Lock disabled' },
+  pin_mismatch:{ fr:'Les codes ne correspondent pas — recommencez', nl:'De codes komen niet overeen — probeer opnieuw', en:'Codes do not match — try again' },
+  pin_wrong:   { fr:'Code incorrect', nl:'Onjuiste code', en:'Wrong code' },
+  empty_state: { fr:'Aucun contact.<br>Importez un fichier CSV ou Excel pour commencer.', nl:'Geen contacten.<br>Importeer een CSV- of Excel-bestand om te beginnen.', en:'No contacts.<br>Import a CSV or Excel file to get started.' },
+  // Aperçu d'import
+  ip_lines_read:{ fr:'lignes lues', nl:'gelezen regels', en:'lines read' },
+  ip_to_import:{ fr:'à importer', nl:'te importeren', en:'to import' },
+  ip_rejected: { fr:'rejetées', nl:'geweigerd', en:'rejected' },
+  ip_ignored:  { fr:'⚠️ Lignes ignorées : {det}.', nl:'⚠️ Genegeerde regels: {det}.', en:'⚠️ Ignored lines: {det}.' },
+  ip_detail:   { fr:'Détail des lignes ignorées ({n})', nl:'Detail van genegeerde regels ({n})', en:'Details of ignored lines ({n})' },
+  ip_line:     { fr:'ligne', nl:'regel', en:'line' },
+  ip_cols_ok:  { fr:'Colonnes reconnues', nl:'Herkende kolommen', en:'Recognized columns' },
+  ip_cols_ko:  { fr:'Colonnes ignorées', nl:'Genegeerde kolommen', en:'Ignored columns' },
+  ip_none:     { fr:'aucune', nl:'geen', en:'none' },
+  ip_none_ok:  { fr:'aucune ✓', nl:'geen ✓', en:'none ✓' },
+  motif_no_identity:{ fr:'sans nom ni prénom', nl:'zonder naam of voornaam', en:'no name or first name' },
+  motif_no_address:{ fr:'sans adresse', nl:'zonder adres', en:'no address' },
+  motif_dup_order:{ fr:'N° d\'ordre en doublon', nl:'dubbel volgnummer', en:'duplicate order no.' },
+  modal_import_title:{ fr:'Aperçu de l\'import', nl:'Voorbeeld van de import', en:'Import preview' },
+  lbl_survey_name:{ fr:'Nom de l\'enquête', nl:'Naam van de enquête', en:'Survey name' },
+  ip_btn_import:{ fr:'Importer', nl:'Importeren', en:'Import' },
+  ip_btn_replace:{ fr:'Importer (remplacer — {n} {word})', nl:'Importeren (vervangen — {n} {word})', en:'Import (replace — {n} {word})' },
+  ip_btn_replace0:{ fr:'Importer (remplacer — aucun changement)', nl:'Importeren (vervangen — geen wijzigingen)', en:'Import (replace — no changes)' },
+  // Comparaison
+  cmp_exists:  { fr:'⚠️ Une enquête <strong>« {name} »</strong> existe déjà — comparaison avec son contenu actuel :', nl:'⚠️ Er bestaat al een enquête <strong>« {name} »</strong> — vergelijking met de huidige inhoud:', en:'⚠️ A survey <strong>“{name}”</strong> already exists — comparison with its current content:' },
+  cmp_new_survey:{ fr:'✨ Nouvelle enquête', nl:'✨ Nieuwe enquête', en:'✨ New survey' },
+  cmp_modified:{ fr:'✏️ Modifiée', nl:'✏️ Gewijzigd', en:'✏️ Modified' },
+  cmp_identical:{ fr:'✅ Identique', nl:'✅ Identiek', en:'✅ Identical' },
+  cmp_new_word:{ fr:'nouveau', nl:'nieuw', en:'new' },
+  cmp_removed_word:{ fr:'supprimé', nl:'verwijderd', en:'removed' },
+  cmp_w_add:   { fr:['ajout','ajouts'], nl:['toevoeging','toevoegingen'], en:['addition','additions'] },
+  cmp_w_mod:   { fr:['modifié','modifiés'], nl:['gewijzigd','gewijzigd'], en:['modified','modified'] },
+  cmp_w_rem:   { fr:['supprimé','supprimés'], nl:['verwijderd','verwijderd'], en:['removed','removed'] },
+  cmp_w_unch:  { fr:['identique','identiques'], nl:['identiek','identiek'], en:['identical','identical'] },
+  cmp_toggle:  { fr:'Afficher / masquer le détail', nl:'Detail tonen / verbergen', en:'Show / hide details' },
+  cmp_global:  { fr:'📊 Comparaison globale', nl:'📊 Globale vergelijking', en:'📊 Overall comparison' },
+  cmp_change:  { fr:['changement','changements'], nl:['wijziging','wijzigingen'], en:['change','changes'] },
+  // Restauration (modale)
+  bk_restore_title:{ fr:'⬆️ Comparaison avant restauration', nl:'⬆️ Vergelijking vóór herstel', en:'⬆️ Comparison before restore' },
+  bk_saved_on: { fr:'📅 Sauvegarde du :', nl:'📅 Back-up van:', en:'📅 Backup from:' },
+  bk_file:     { fr:'📂 Fichier :', nl:'📂 Bestand:', en:'📂 File:' },
+  bk_conflict: { fr:'⚠️ <strong style="color:#e65100">{n} enquête(s) sera(ont) comparée(s) aux données existantes</strong>', nl:'⚠️ <strong style="color:#e65100">{n} enquête(s) word(t)(en) vergeleken met bestaande gegevens</strong>', en:'⚠️ <strong style="color:#e65100">{n} survey(s) will be compared with existing data</strong>' },
+  bk_confirm:  { fr:'✅ Confirmer la restauration', nl:'✅ Herstel bevestigen', en:'✅ Confirm restore' },
+  bk_confirm_n:{ fr:'✅ Confirmer la restauration ({n} {word})', nl:'✅ Herstel bevestigen ({n} {word})', en:'✅ Confirm restore ({n} {word})' },
+  bk_unknown:  { fr:'inconnue', nl:'onbekend', en:'unknown' },
+  // Détail de sauvegarde (export)
+  bk_save_title:{ fr:'💾 Détail de la sauvegarde', nl:'💾 Detail van de back-up', en:'💾 Backup details' },
+  bk_date:     { fr:'📅 Date :', nl:'📅 Datum:', en:'📅 Date:' },
+  bk_file2:    { fr:'🗂️ Fichier :', nl:'🗂️ Bestand:', en:'🗂️ File:' },
+  bk_download: { fr:'⬇️ Télécharger', nl:'⬇️ Downloaden', en:'⬇️ Download' },
+  bk_total:    { fr:'📊 Total', nl:'📊 Totaal', en:'📊 Total' },
+  bk_w_contact:{ fr:['contact','contacts'], nl:['contact','contacten'], en:['contact','contacts'] },
+  bk_w_survey: { fr:['enquête','enquêtes'], nl:['enquête','enquêtes'], en:['survey','surveys'] },
   // Paramètres — sections
   set_title:    { fr:'⚙️ Paramètres', nl:'⚙️ Instellingen', en:'⚙️ Settings' },
   sec_appear:   { fr:'🎨 Apparence', nl:'🎨 Weergave', en:'🎨 Appearance' },
@@ -3089,6 +3184,18 @@ function t(key) {
   const e = I18N[key];
   if (!e) return key;
   return e[settings.lang] || e.fr || key;
+}
+
+// Template avec variables : tf('key', {n:3}) remplace {n} dans la chaîne traduite
+function tf(key, vars) {
+  return t(key).replace(/\{(\w+)\}/g, (_, k) => (vars && vars[k] != null) ? vars[k] : '');
+}
+
+// Pluriel : la valeur du dico est [singulier, pluriel] par langue
+function tPlural(key, n) {
+  const e = I18N[key];
+  const arr = (e && (e[settings.lang] || e.fr)) || [key, key];
+  return arr[n > 1 ? 1 : 0];
 }
 
 // Applique la langue courante à tout le DOM balisé (data-i18n[-ph|-tip|-title]).
@@ -3285,8 +3392,8 @@ function buildBackupDetailHTML(src, meta) {
   });
 
   html += `<div class="backup-grand-total">
-    <span>📊 Total</span>
-    <span>${grandTotal} contact${grandTotal > 1 ? 's' : ''} · ${noms.length} enquête${noms.length > 1 ? 's' : ''}</span>
+    <span>${t('bk_total')}</span>
+    <span>${grandTotal} ${tPlural('bk_w_contact',grandTotal)} · ${noms.length} ${tPlural('bk_w_survey',noms.length)}</span>
   </div>`;
 
   return html;
@@ -3330,10 +3437,10 @@ function buildCompareHTML(src, meta) {
 
   // Légende : signification des 4 états
   html += `<div class="compare-legend">
-    <span class="cs-add">➕ Ajouté</span>
-    <span class="cs-mod">✏️ Modifié</span>
-    <span class="cs-rem">➖ Supprimé</span>
-    <span class="cs-unch">✅ Inchangé</span>
+    <span class="cs-add">➕ ${tPlural('cmp_w_add',1)}</span>
+    <span class="cs-mod">✏️ ${tPlural('cmp_w_mod',1)}</span>
+    <span class="cs-rem">➖ ${tPlural('cmp_w_rem',1)}</span>
+    <span class="cs-unch">✅ ${tPlural('cmp_w_unch',1)}</span>
   </div>`;
 
   let totAdd = 0, totRem = 0, totMod = 0, totUnch = 0;
@@ -3372,7 +3479,7 @@ function buildCompareHTML(src, meta) {
 
     const estNouvelle = !arrOld;
     const tagCls   = estNouvelle ? 'nouveau' : (rowsAdd.length || rowsRem.length || rowsMod.length) ? 'modifie' : 'identique';
-    const tagLabel = estNouvelle ? '✨ Nouvelle enquête' : (tagCls === 'modifie' ? '✏️ Modifiée' : '✅ Identique');
+    const tagLabel = estNouvelle ? t('cmp_new_survey') : (tagCls === 'modifie' ? t('cmp_modified') : t('cmp_identical'));
 
     const blockId = 'cmp_' + Math.random().toString(36).slice(2, 9);
 
@@ -3380,7 +3487,7 @@ function buildCompareHTML(src, meta) {
     rowsAdd.forEach(c => {
       rowsHtml += `<div class="compare-row add">
         <span class="cr-nom">➕ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
-        <span class="cr-detail">nouveau</span>
+        <span class="cr-detail">${t('cmp_new_word')}</span>
       </div>`;
     });
     rowsMod.forEach(({ c, diffs }) => {
@@ -3393,7 +3500,7 @@ function buildCompareHTML(src, meta) {
     rowsRem.forEach(c => {
       rowsHtml += `<div class="compare-row removed">
         <span class="cr-nom">➖ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
-        <span class="cr-detail">supprimé</span>
+        <span class="cr-detail">${t('cmp_removed_word')}</span>
       </div>`;
     });
 
@@ -3406,13 +3513,13 @@ function buildCompareHTML(src, meta) {
           <span class="compare-tag ${tagCls}">${tagLabel}</span>
         </div>
         <div class="compare-summary">
-          ${rowsAdd.length ? `<span class="cs-add">➕ ${rowsAdd.length} ajout${rowsAdd.length>1?'s':''}</span>` : ''}
-          ${rowsMod.length ? `<span class="cs-mod">✏️ ${rowsMod.length} modifié${rowsMod.length>1?'s':''}</span>` : ''}
-          ${rowsRem.length ? `<span class="cs-rem">➖ ${rowsRem.length} supprimé${rowsRem.length>1?'s':''}</span>` : ''}
-          ${unch ? `<span class="cs-unch">✅ ${unch} identique${unch>1?'s':''}</span>` : ''}
+          ${rowsAdd.length ? `<span class="cs-add">➕ ${rowsAdd.length} ${tPlural('cmp_w_add',rowsAdd.length)}</span>` : ''}
+          ${rowsMod.length ? `<span class="cs-mod">✏️ ${rowsMod.length} ${tPlural('cmp_w_mod',rowsMod.length)}</span>` : ''}
+          ${rowsRem.length ? `<span class="cs-rem">➖ ${rowsRem.length} ${tPlural('cmp_w_rem',rowsRem.length)}</span>` : ''}
+          ${unch ? `<span class="cs-unch">✅ ${unch} ${tPlural('cmp_w_unch',unch)}</span>` : ''}
         </div>
         ${hasChanges ? `
-          <div class="compare-toggle" onclick="document.getElementById('${blockId}').classList.toggle('hidden')">Afficher / masquer le détail</div>
+          <div class="compare-toggle" onclick="document.getElementById('${blockId}').classList.toggle('hidden')">${t('cmp_toggle')}</div>
           <div class="compare-rows hidden" id="${blockId}">${rowsHtml}</div>
         ` : ''}
       </div>`;
@@ -3421,7 +3528,7 @@ function buildCompareHTML(src, meta) {
   const stats = { add: totAdd, rem: totRem, mod: totMod, unch: totUnch };
   const grandTotalLabel = `➕${stats.add} ✏️${stats.mod} ➖${stats.rem} ✅${stats.unch}`;
   html += `<div class="backup-grand-total">
-    <span>📊 Comparaison globale</span>
+    <span>${t('cmp_global')}</span>
     <span>${grandTotalLabel}</span>
   </div>`;
 
@@ -3451,16 +3558,16 @@ function exporterBackup() {
   const url    = URL.createObjectURL(blob);
   const fname  = 'statbel_sauvegarde_' + isoNow.slice(0, 10) + '.json';
 
-  const meta = `📅 Date : ${date.toLocaleDateString('fr-BE', {day:'2-digit',month:'long',year:'numeric'})}
-&nbsp;&nbsp;🗂️ Fichier : <code>${fname}</code>`;
+  const meta = `${t('bk_date')} ${date.toLocaleDateString(localeApp(), {day:'2-digit',month:'long',year:'numeric'})}
+&nbsp;&nbsp;${t('bk_file2')} <code>${fname}</code>`;
 
   const detailHtml = buildBackupDetailHTML(enquetes, meta);
 
-  document.getElementById('modalBackupTitle').textContent = '💾 Détail de la sauvegarde';
+  document.getElementById('modalBackupTitle').textContent = t('bk_save_title');
   document.getElementById('modalBackupBody').innerHTML    = detailHtml;
 
   const btnConfirm = document.getElementById('btnBackupConfirm');
-  btnConfirm.textContent = '⬇️ Télécharger';
+  btnConfirm.textContent = t('bk_download');
   btnConfirm.onclick = () => {
     const a = Object.assign(document.createElement('a'), { href: url, download: fname });
     a.click();
@@ -3470,7 +3577,7 @@ function exporterBackup() {
   };
 
   // Bouton annuler = juste fermer (pas de téléchargement)
-  document.querySelector('#modalBackupDetail .btn-secondary').textContent = 'Annuler';
+  document.querySelector('#modalBackupDetail .btn-secondary').textContent = t('btn_cancel');
 
   document.getElementById('modalBackupDetail').classList.add('open');
 }
@@ -3506,27 +3613,27 @@ function importerBackup(event) {
       const data = JSON.parse(e.target.result);
       const src  = data.enquetes || data;
       const noms = Object.keys(src);
-      if (!noms.length) { alert('Aucune enquête dans ce fichier.'); return; }
+      if (!noms.length) { alert(t('al_no_survey_file')); return; }
 
       const dateBackup = data.date
-        ? new Date(data.date).toLocaleDateString('fr-BE', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})
-        : 'inconnue';
+        ? new Date(data.date).toLocaleDateString(localeApp(), {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})
+        : t('bk_unknown');
 
       // Détecter conflits (enquêtes de même nom déjà en mémoire)
       const conflits = noms.filter(n => enquetes[n]);
-      const metaHtml = `📅 Sauvegarde du : ${dateBackup}
-&nbsp;&nbsp;📂 Fichier : <code>${esc(file.name)}</code>${conflits.length ? `<br>⚠️ <strong style="color:#e65100">${conflits.length} enquête${conflits.length>1?'s':''} sera${conflits.length>1?'ont':''} comparée${conflits.length>1?'s':''} aux données existantes</strong>` : ''}`;
+      const metaHtml = `${t('bk_saved_on')} ${dateBackup}
+&nbsp;&nbsp;${t('bk_file')} <code>${esc(file.name)}</code>${conflits.length ? `<br>${tf('bk_conflict', { n: conflits.length })}` : ''}`;
 
       const { html: detailHtml, stats } = buildCompareHTML(src, metaHtml);
 
-      document.getElementById('modalBackupTitle').textContent = '⬆️ Comparaison avant restauration';
+      document.getElementById('modalBackupTitle').textContent = t('bk_restore_title');
       document.getElementById('modalBackupBody').innerHTML    = detailHtml;
 
       const btnConfirm = document.getElementById('btnBackupConfirm');
       const totChanges = stats.add + stats.rem + stats.mod;
       btnConfirm.textContent = totChanges
-        ? `✅ Confirmer la restauration (${totChanges} changement${totChanges>1?'s':''})`
-        : '✅ Confirmer la restauration';
+        ? tf('bk_confirm_n', { n: totChanges, word: tPlural('cmp_change', totChanges) })
+        : t('bk_confirm');
       _pendingRestore = src;
       _pendingSettings = data.settings || null;
       _pendingCoords = data.coords || null;
@@ -3559,13 +3666,13 @@ function importerBackup(event) {
         majSettingsUI();
         fermerBackupDetail();
         // Petit toast de confirmation
-        afficherToast('✅ Restauration terminée — ' + noms2.length + ' enquête(s) importée(s)', 3000);
+        afficherToast(tf('toast_restore_done', { n: noms2.length }), 3000);
       };
 
-      document.querySelector('#modalBackupDetail .btn-secondary').textContent = 'Annuler';
+      document.querySelector('#modalBackupDetail .btn-secondary').textContent = t('btn_cancel');
       document.getElementById('modalBackupDetail').classList.add('open');
 
-    } catch(err) { alert('Fichier de sauvegarde invalide : ' + err.message); }
+    } catch(err) { alert(t('al_backup_invalid') + err.message); }
   };
   reader.readAsText(file, 'UTF-8');
   event.target.value = '';
@@ -3582,9 +3689,9 @@ function viderCacheCoords() {
   } else {
     keys = Object.keys(localStorage).filter(k => k.startsWith('coords_'));
   }
-  if (!keys.length) { alert('Aucune adresse géocodée en cache pour cette sélection.'); return; }
-  const portee = (scope && scope !== '__all__') ? ` de « ${scope} »` : '';
-  if (!confirm(`Supprimer ${keys.length} adresse(s) géocodée(s)${portee} ? Elles seront recalculées au prochain affichage de la carte.`)) return;
+  if (!keys.length) { alert(t('al_cache_empty_sel')); return; }
+  const portee = (scope && scope !== '__all__') ? tf('cf_clear_scope', { name: scope }) : '';
+  if (!confirm(tf('cf_clear_cache', { n: keys.length, portee }))) return;
   keys.forEach(k => localStorage.removeItem(k));
   majSettingsUI();
   rendu();
@@ -3699,7 +3806,7 @@ function supprimerStatut(idx) {
   const st    = settings.statuts[idx];
   // Statut de repli = premier statut restant après suppression
   const cible = (settings.statuts[idx === 0 ? 1 : 0] || {}).label;
-  if (!confirm(`Supprimer le statut « ${st.label} » ? Les fiches qui le portent seront réassignées à « ${cible} ».`)) return;
+  if (!confirm(tf('cf_del_status', { label: statutLabel(st.label), cible: statutLabel(cible) }))) return;
   settings.statuts.splice(idx, 1);
   // Migration : réassigner les contacts orphelins (toutes enquêtes) vers le repli
   const repli = statutDefaut();   // = settings.statuts[0].label après splice
@@ -4153,7 +4260,7 @@ function pinValiderSaisie() {
       return;
     }
     if (_pinSaisie !== _pinSetupEtape1) {
-      pinAfficherErreur('Les codes ne correspondent pas — recommencez');
+      pinAfficherErreur(t('pin_mismatch'));
       _pinSetupEtape1 = '';
       _pinSaisie = '';
       document.getElementById('lockTitle').textContent = t('pin_setup');
@@ -4167,7 +4274,7 @@ function pinValiderSaisie() {
     _pinSetupEtape1 = '';
     _pinSaisie = '';
     fermerLockScreen();
-    afficherToast('🔒 Code PIN activé', 2500);
+    afficherToast(t('toast_pin_on'), 2500);
     majPinUI();
     return;
   }
@@ -4179,7 +4286,7 @@ function pinValiderSaisie() {
     _pinDernierActivite = Date.now();
     fermerLockScreen();
   } else {
-    pinAfficherErreur('Code incorrect');
+    pinAfficherErreur(t('pin_wrong'));
     _pinSaisie = '';
     setTimeout(renderLockDots, 200);
   }
@@ -4230,7 +4337,7 @@ function pinDesactiver() {
   settings.pinCode = '';
   saveSettings();
   fermerModalPin();
-  afficherToast('🔓 Verrouillage désactivé', 2000);
+  afficherToast(t('toast_pin_off'), 2000);
   majPinUI();
 }
 
