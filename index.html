@@ -2187,7 +2187,7 @@ const CHAMPS_IMPORT = [
   ['nationality',    'Nationalité',     ['nationality','nationalite','nationalité']],
   ['marital_status', 'État civil',      ['marital_status','etat_civil','état_civil']],
   ['taille_menage',  'Taille ménage',   ['taille_menage','taille_ménage','household_size','taille','menage','ménage']],
-  ['gsm',            'Téléphone',       ['gsm','tel','telephone','phone','gsm_tel']],
+  ['gsm',            'Téléphone',       ['gsm','tel','telephone','phone','gsm_tel','mobile_number']],
   ['email',          'Email',           ['email','mail','e_mail']],
 ];
 
@@ -3808,8 +3808,8 @@ function fermerBackupDetail() {
 }
 
 // Clés de champs : modèle interne (FR) ↔ pivot anglais (export/backup/CSV).
-const KEYMAP_OUT = { prenom:'first_name', nom:'last_name', adresse:'address', ordre:'order', sexe:'sex', statut:'status', historique:'history', taille_menage:'household_size' };
-const KEYMAP_IN  = { first_name:'prenom', last_name:'nom', address:'adresse', order:'ordre', sex:'sexe', status:'statut', history:'historique', household_size:'taille_menage' };
+const KEYMAP_OUT = { prenom:'first_name', nom:'last_name', adresse:'address', ordre:'order', sexe:'sex', statut:'status', historique:'history', taille_menage:'household_size', gsm:'mobile_number' };
+const KEYMAP_IN  = { first_name:'prenom', last_name:'nom', address:'adresse', order:'ordre', sex:'sexe', status:'statut', history:'historique', household_size:'taille_menage', mobile_number:'gsm' };
 function renommerCles(c, map) { const o = {}; for (const k in c) o[map[k] || k] = c[k]; return o; }
 function contactVersEN(c) {
   const o = renommerCles(c, KEYMAP_OUT);
