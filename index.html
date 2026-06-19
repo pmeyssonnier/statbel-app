@@ -1495,13 +1495,13 @@ const STATUTS_DEFAULTS = [
   { label:'To do',       color:'#90a4ae', icon:'✕',  done:false, rdv:false },
   { label:'In progress', color:'#f9a825', icon:'⏳', done:false, rdv:true  },
   { label:'Done',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false },
-  { label:'Absent',      color:'#00897b', icon:'⊘',  done:true,  rdv:false },
+  { label:'Absent',      color:'#6d4c41', icon:'⊘',  done:true,  rdv:false },
   { label:'Refusal',     color:'#c62828', icon:'✗',  done:true,  rdv:false },
   { label:'Moved',       color:'#6a1b9a', icon:'📦', done:true,  rdv:false },
 ];
 // Palette contrastée par défaut (clé = label EN) — appliquée aux statuts standards
-// lors de la migration statutsV→5 pour bien distinguer les segments du graphe.
-const STATUT_COULEURS = { 'To do':'#90a4ae', 'In progress':'#f9a825', 'Done':'#2e7d32', 'Absent':'#00897b', 'Refusal':'#c62828', 'Moved':'#6a1b9a', 'Impossible':'#d81b60' };
+// lors de la migration pour bien distinguer les segments du graphe.
+const STATUT_COULEURS = { 'To do':'#90a4ae', 'In progress':'#f9a825', 'Done':'#2e7d32', 'Absent':'#6d4c41', 'Refusal':'#c62828', 'Moved':'#6a1b9a', 'Impossible':'#d81b60' };
 const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
@@ -1514,7 +1514,7 @@ const SETTINGS_DEFAULTS = {
   mapStyle: 'gray',       // 'gray' | 'color'  (Bruxelles uniquement)
   navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
   statuts:  cloneStatuts(),
-  statutsV: 5,            // version de schéma des statuts (5 = pivot EN + palette contrastée ; installs neuves sautent les migrations)
+  statutsV: 6,            // version de schéma des statuts (6 = pivot EN + palette contrastée ; installs neuves sautent les migrations)
   pinCode:    '',         // code PIN de verrouillage de l'app ('' = désactivé)
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
@@ -1546,13 +1546,13 @@ function chargerSettings() {
     settings.statutsV = 3;
     saveSettings();
   }
-  // Migration v5 : palette contrastée (distinguer En cours/Absent/Refus/Impossible dans le graphe)
-  if (settings.statutsV < 5) {
+  // Migration v6 : palette contrastée (Absent en brun, hors du vert de Fait)
+  if (settings.statutsV < 6) {
     settings.statuts.forEach(s => {
       const en = (typeof statutCanon === 'function') ? statutCanon(s.label) : s.label;
       if (STATUT_COULEURS[en]) s.color = STATUT_COULEURS[en];
     });
-    settings.statutsV = 5;
+    settings.statutsV = 6;
     saveSettings();
   }
   // OSM/Nominatim retiré (géocodage en masse bloqué) → bascule vers UrbIS
