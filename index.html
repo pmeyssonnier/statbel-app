@@ -1981,17 +1981,13 @@ const PAYS_ISO2 = {
   COD:'CD', COG:'CG', RWA:'RW', CMR:'CM', SYR:'SY', AFG:'AF', IRQ:'IQ', IRN:'IR',
   RUS:'RU', UKR:'UA', CHN:'CN', IND:'IN', PAK:'PK', USA:'US', BRA:'BR', COL:'CO',
 };
-// Emoji drapeau à partir d'un code ISO-2 (indicateurs régionaux Unicode)
-function drapeau(cc2) {
-  if (!cc2 || cc2.length !== 2) return '';
-  return cc2.toUpperCase().replace(/[A-Z]/g, c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
-}
-// « 🇧🇪 Belgium (BE) » — drapeau + nom localisé + code ISO-2 ; repli sur le nom seul
+// « Belgium (BE) » — nom localisé + code ISO-2 entre parenthèses.
+// (Pas d'emoji drapeau : Windows/Chrome ne les affichent pas — ils sortent en « BE ».)
 function paysAffiche(code) {
   if (!code) return '';
   const cc2 = PAYS_ISO2[String(code).trim().toUpperCase()];
   const nom = paysNom(code);
-  return cc2 ? `${drapeau(cc2)} ${nom} (${cc2})` : nom;
+  return cc2 ? `${nom} (${cc2})` : nom;
 }
 
 // Détecte les valeurs présentes dans les données mais absentes des dictionnaires
