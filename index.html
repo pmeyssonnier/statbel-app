@@ -3091,11 +3091,20 @@ function renduRdv() {
   // Statuts éligibles (tout sauf "À faire")
   const eligible = new Set(statutDefs().filter(s => s.label !== defaut).map(s => s.label));
 
-  // Filtrer les contacts (recherche + filtre statut si actif)
+  // Jour sélectionné dans le graphe → set des contacts ayant un événement ce jour
+  let contactsDuJour = null;
+  if (_activiteJour) {
+    contactsDuJour = new Set(collecterVisites(enqAct)
+      .filter(e => e.iso.slice(0, 10) === _activiteJour)
+      .map(e => `${e.ordre}|${e.nom}|${e.prenom}`));
+  }
+
+  // Filtrer les contacts (jour + recherche + filtre statut si actif)
   let liste = contacts().map((c, i) => ({ c, i })).filter(({ c }) => {
     const st = c.statut || defaut;
     if (!eligible.has(st)) return false;
     if (filtreRdv !== 'Tous' && st !== filtreRdv) return false;
+    if (contactsDuJour && !contactsDuJour.has(`${c.ordre}|${c.nom}|${c.prenom}`)) return false;
     if (!correspondRecherche(c, q)) return false;
     return true;
   });
