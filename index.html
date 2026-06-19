@@ -3067,7 +3067,7 @@ function renduRdv() {
   const grapheEl = document.createElement('div');
   grapheEl.className = 'rdv-section-card';
   grapheEl.innerHTML = `<div class="rdv-section-title">📊 ${t('res_activity')}</div>`
-    + renderActiviteQuotidienne(enqAct).replace(`<div class="resume-section-title">${t('res_activity')}</div>`, '');
+    + renderActiviteQuotidienne(enqAct, filtreRdv).replace(`<div class="resume-section-title">${t('res_activity')}</div>`, '');
   container.appendChild(grapheEl);
 
   // ── Journal des événements (briques, filtré par statut + recherche) ──
@@ -4578,8 +4578,9 @@ function collecterVisites(enqFilter) {
   return ev;
 }
 
-function renderActiviteQuotidienne(enqFilter) {
-  const events = collecterVisites(enqFilter);
+function renderActiviteQuotidienne(enqFilter, statutFilter) {
+  let events = collecterVisites(enqFilter);
+  if (statutFilter && statutFilter !== 'Tous') events = events.filter(e => e.statut === statutFilter);
   const parJour = {};                 // { isoDate: { statutLabel: count } }
   const presents = new Set();
   events.forEach(e => {
