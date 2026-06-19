@@ -494,6 +494,10 @@
     flex-shrink: 0;
   }
   /* Graphe activité quotidienne (colonnes empilées) */
+  /* Sélecteur de périmètre du Résumé (Toutes / Enquête active) */
+  .resume-scope-btn { font-size: 12px; padding: 4px 11px; border: 1px solid var(--border); border-radius: 14px; background: var(--badge-bg); color: var(--text2); cursor: pointer; font-family: inherit; }
+  .resume-scope-btn.actif { background: #1a237e; color: #fff; border-color: #1a237e; font-weight: 600; }
+  .resume-scope-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   /* Courbe de Fait cumulés (avancement) */
   .rdv-subtitle { font-weight: 600; color: var(--filter-text); font-size: 13px; margin: 16px 0 2px; }
   .cumul-chart { width: 100%; height: auto; max-height: 175px; display: block; }
@@ -3546,6 +3550,8 @@ const I18N = {
   "prog_pending":{ fr:"à traiter", nl:"te doen",  en:"to do",  de:"zu erledigen" },
   "prog_closed": { fr:"clôturés",  nl:"afgesloten", en:"closed", de:"abgeschlossen" },
   "cumul_title": { fr:"Avancement (Fait cumulés)", nl:"Voortgang (cumulatief voltooid)", en:"Progress (cumulative done)", de:"Fortschritt (kumuliert erledigt)" },
+  "res_scope_all":    { fr:"Toutes les enquêtes", nl:"Alle onderzoeken", en:"All surveys", de:"Alle Erhebungen" },
+  "res_scope_active": { fr:"Enquête active", nl:"Actief onderzoek", en:"Active survey", de:"Aktive Erhebung" },
   "field_statut":       { fr:"Statut",        nl:"Status",      en:"Status",       de:"Status"       },
   "field_date":         { fr:"Date",          nl:"Datum",       en:"Date",         de:"Datum"         },
   "field_prenom":       { fr:"Prénom",        nl:"Voornaam",    en:"First name",   de:"Vorname"       },
@@ -5005,12 +5011,17 @@ function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchFilter, 
   return html;
 }
 
+let resumeScope = 'all';   // 'all' = toutes les enquêtes | 'active' = enquête sélectionnée
+function setResumeScope(s) { resumeScope = s; renduResume(); }
+
 function renduResume() {
   const box = document.getElementById('resumeContainer');
   if (!box) return;
 
-  // ── Collecte des données ──────────────────────────────────────────
-  const nomEnquetes = Object.keys(enquetes);
+  // ── Collecte des données (périmètre : toutes les enquêtes ou l'enquête active) ──
+  const toutesEnq   = Object.keys(enquetes);
+  const scopeActive = resumeScope === 'active' && enqueteActive && enquetes[enqueteActive];
+  const nomEnquetes = scopeActive ? [enqueteActive] : toutesEnq;
   const statutsCfg  = settings.statuts; // [{ label, color, icon }]
 
   // Pour chaque statut, couleur et icône
@@ -5184,8 +5195,12 @@ function renduResume() {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div>
           <div class="resume-title">${t('res_title')} — ${labelNbEnquetes(nomEnquetes.length)}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">
-            ${t('res_allsurveys')} · ${t('res_updated')} ${new Date().toLocaleTimeString(localeApp(), {hour:'2-digit',minute:'2-digit'})}
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <button class="resume-scope-btn${resumeScope === 'all' ? ' actif' : ''}" onclick="setResumeScope('all')">🗂️ ${t('res_scope_all')} (${toutesEnq.length})</button>
+            <button class="resume-scope-btn${resumeScope === 'active' ? ' actif' : ''}" onclick="setResumeScope('active')"${!enqueteActive ? ' disabled' : ''}>📋 ${enqueteActive ? esc(enqueteActive) : t('res_scope_active')}</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">
+            ${t('res_updated')} ${new Date().toLocaleTimeString(localeApp(), {hour:'2-digit',minute:'2-digit'})}
           </div>
         </div>
         <div class="resume-export-bar">
@@ -5208,7 +5223,7 @@ function renduResume() {
     </div>
     <div>
       <div class="resume-section-title">${t('cumul_title')}</div>
-      ${renderCourbeAvancement(null)}
+      ${renderCourbeAvancement(scopeActive ? enqueteActive : null)}
     </div>
     <div>
       <div class="resume-section-title">${t('res_table')}</div>
