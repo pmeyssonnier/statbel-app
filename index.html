@@ -3574,6 +3574,10 @@ function changerLangue(v) {
   if (typeof renderFilters === 'function') renderFilters();
   if (typeof renderStatutsEditor === 'function') renderStatutsEditor();
   rendu();
+  // Rafraîchir aussi la vue active (Suivi / Résumé / Carte)
+  if (vueActive === 'rdv') renduRdv();
+  else if (vueActive === 'resume') renduResume();
+  else if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
 }
 
 // Locale BCP-47 dérivée de la langue de l'app (pour Intl / toLocaleDateString)
