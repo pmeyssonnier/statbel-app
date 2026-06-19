@@ -1804,17 +1804,20 @@ function changerStatut(i, val) {
   const old = c.statut || statutDefaut();
   const def = statutDef(val);
 
-  // Enregistrer l'historique si on quitte un statut "done" ou si on entre dans un nouveau statut "done"
-  if (def.done) {
+  // Historique = journal des visites : on enregistre chaque passage « terminé »
+  // (done) ET chaque « rendez-vous » (rdv), daté du jour de la visite.
+  if (def.done || def.rdv) {
     const today = todayStr();
     const heure = nowHHMM();
     if (!Array.isArray(c.historique)) c.historique = [];
-    // Éviter doublon : même statut + même date + même heure (à la minute près)
+    // Éviter doublon : même statut le même jour
     const derniere = c.historique[c.historique.length - 1];
-    if (!derniere || derniere.statut !== val || derniere.date !== today || derniere.heure !== heure) {
-      c.historique.push({ statut: val, date: today, heure });
+    if (!derniere || derniere.statut !== val || derniere.date !== today) {
+      const entry = { statut: val, date: today, heure };
+      if (def.rdv && c.rdv) entry.rdv = c.rdv;   // RDV pris ce jour-là
+      c.historique.push(entry);
     }
-    c.date = today;
+    c.date = def.done ? today : (c.date || '');
   } else {
     c.date = '';
   }
@@ -1865,7 +1868,15 @@ function lireRdvFields(i) {
 }
 
 function changerRdvDH(i) {
-  contacts()[i].rdv = lireRdvFields(i);
+  const c = contacts()[i];
+  c.rdv = lireRdvFields(i);
+  // Refléter le RDV sur la dernière entrée d'historique « En cours »
+  if (Array.isArray(c.historique) && c.historique.length) {
+    const last = c.historique[c.historique.length - 1];
+    if (last.statut === c.statut && statutDef(c.statut).rdv) {
+      if (c.rdv) last.rdv = c.rdv; else delete last.rdv;
+    }
+  }
   sauver();
 }
 
@@ -3111,9 +3122,11 @@ function buildHistoriqueHTML(c, i) {
   // Du plus récent au plus ancien (en conservant l'index réel pour la suppression)
   const lignes = c.historique.map((h, idx) => ({ h, idx })).reverse().map(({ h, idx }) => {
     const def = statutDef(h.statut);
+    let rdvHint = '';
+    if (h.rdv) { const p = (h.rdv + ' ').split(' '); rdvHint = ` <span style="color:${def.color};font-size:11px;">→ 📅 ${esc(dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : ''))}</span>`; }
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
-      <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(statutLabel(h.statut))}</span>
+      <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(statutLabel(h.statut))}</span>${rdvHint}
       <span>—</span>
       <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1"
         title="Cliquez sur 📅 pour modifier la date">
@@ -4507,26 +4520,24 @@ function collecterVisites(enqFilter) {
     arr.forEach(c => {
       const dCur = statutDef(c.statut || '');
 
-      // ── Historique des passages (statuts done) ────────────────────
+      // ── Historique des passages (done ET en cours), daté du jour de visite ──
       const visites = (c.historique || [])
         .filter(h => h && h.date && h.statut)
-        .map(h => ({ statut: h.statut, date: h.date, heure: h.heure || '' }));
+        .map(h => ({ statut: h.statut, date: h.date, heure: h.heure || '', rdv: h.rdv || '' }));
 
-      // État courant done : toujours inclus même si historique vide/absent
+      // État courant done : inclus si pas déjà dans l'historique (contacts importés)
       if (c.statut && c.date && dCur && dCur.done) {
         if (!visites.some(v => v.statut === c.statut && v.date === c.date)) {
           visites.push({ statut: c.statut, date: c.date, heure: c.heure || '' });
         }
       }
 
-      // ── Statut En cours (rdv) : inclure avec date+heure du RDV ───
-      if (c.statut && c.rdv && dCur && dCur.rdv) {
+      // En cours (rdv) sans visite dans l'historique (legacy/import) : repli sur la date du RDV
+      if (c.statut && c.rdv && dCur && dCur.rdv && !visites.some(v => v.statut === c.statut)) {
         const parts   = (c.rdv + ' ').split(' ');
         const dateRdv = dateISOToFr(parts[0] || '');
         const heure   = (parts[1] || '').trim();
-        if (dateRdv) {
-          visites.push({ statut: c.statut, date: dateRdv, heure });
-        }
+        if (dateRdv) visites.push({ statut: c.statut, date: dateRdv, heure, rdv: c.rdv });
       }
 
       visites.forEach(v => {
@@ -4536,6 +4547,7 @@ function collecterVisites(enqFilter) {
           iso:    v.heure ? iso + 'T' + v.heure : iso,
           date:   v.date,
           heure:  v.heure || '',
+          rdv:    v.rdv || '',
           statut: v.statut,
           prenom: c.prenom, nom: c.nom, ordre: c.ordre, enq,
         });
@@ -4628,10 +4640,13 @@ function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchFilter, 
       + '<div class="evt-briques-wrap">' + evInv.map((e, i) => {
       const d = statutDef(e.statut);
       const dateLabel = formatDateJour(e.date) + (e.heure ? ' ' + e.heure : '');
+      // Détail RDV pour « En cours » : → 📅 jj/mm/aaaa hh:mm
+      let rdvHint = '';
+      if (e.rdv) { const p = (e.rdv + ' ').split(' '); rdvHint = ` <span style="color:${d.color};font-size:10px;">→ 📅 ${esc(dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : ''))}</span>`; }
       return `<div class="evt-brique" onclick="ouvrirFicheEvtIdx(${i})">
         <span class="eb-date">${esc(dateLabel)}</span>
         <span class="eb-statut" style="color:${d.color}">${esc(d.icon)} ${esc(statutLabel(e.statut))}</span>
-        <span class="eb-nom">${esc(e.prenom)} ${esc(e.nom)}</span>
+        <span class="eb-nom">${esc(e.prenom)} ${esc(e.nom)}${rdvHint}</span>
       </div>`;
     }).join('') + '</div>';
   }
