@@ -1904,13 +1904,16 @@ const MARITAL_FR2EN = {
   "Célibataire":"Single", "Marié(e)":"Married", "Marié":"Married", "Mariée":"Married",
   "Divorcé(e)/Séparé(e)":"Divorced/Separated", "Divorcé/Séparé":"Divorced/Separated", "Divorcée/Séparée":"Divorced/Separated",
   "Divorcé(e), séparé(e) de fait":"Divorced, de facto separated",
-  "Veuf(ve)":"Widowed", "Veuf":"Widowed", "Veuve":"Widowed",
+  "Veuf(ve)":"Widowed", "Veuf":"Widowed", "Veuve":"Widowed", "Veuve/veuf":"Widowed", "Veuf/veuve":"Widowed",
   "Cohabitant légal":"Legal cohabitant", "Cohabitante légale":"Legal cohabitant",
 };
+// Index normalisé (minuscules, sans espaces superflus) pour tolérer la casse/variantes
+const MARITAL_FR2EN_NORM = {};
+Object.entries(MARITAL_FR2EN).forEach(([k, v]) => { MARITAL_FR2EN_NORM[k.toLowerCase().trim()] = v; });
 function maritalCanon(v) {
   if (!v) return v;
-  if (MARITAL_I18N[v]) return v;            // déjà canonique EN
-  return MARITAL_FR2EN[v] || v;             // ancienne valeur FR → EN, sinon brut
+  if (MARITAL_I18N[v]) return v;                         // déjà canonique EN
+  return MARITAL_FR2EN[v] || MARITAL_FR2EN_NORM[v.toLowerCase().trim()] || v;
 }
 function etatCivilGenre(status, sexe) {
   if (!status) return '';
