@@ -4936,11 +4936,18 @@ function dessinerCourbeProgression(enqFilter) {
     `<circle cx="${p.x.toFixed(1)}" cy="${yOf(p.pct).toFixed(1)}" r="9" fill="transparent" style="pointer-events:all"><title>${p.jour} — ${p.cum}/${total} ${t('prog_done')} (${Math.round(p.pct * 100)} %)</title></circle>`
   ).join('');
   const last = pts[pts.length - 1];
+  // Étiquettes = total cumulé de Fait, sur chaque point où ça augmente (hors dernier)
+  let prevCum = -1;
+  const nums = pts.map((p, i) => {
+    if (i === pts.length - 1 || p.cum === prevCum || p.cum === 0) { prevCum = p.cum; return ''; }
+    prevCum = p.cum;
+    return `<text x="${p.x.toFixed(1)}" y="${(yOf(p.pct) - 6).toFixed(1)}" text-anchor="middle" style="fill:${col};font-size:9px;font-weight:700">${p.cum}</text>`;
+  }).join('');
   // Courbe DANS le graphe (défile avec les barres)
   const svg = `<svg class="prog-overlay" width="${cw}" height="${ch}" style="position:absolute;left:0;top:0;pointer-events:none;z-index:2;overflow:visible">
     <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>
-    ${dots}${hits}
-    <text x="${(last.x - 5).toFixed(1)}" y="${(yOf(last.pct) - 6).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:11px;font-weight:700">${Math.round(last.pct * 100)}%</text>
+    ${dots}${hits}${nums}
+    <text x="${(last.x - 5).toFixed(1)}" y="${(yOf(last.pct) - 6).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:11px;font-weight:700">${last.cum} (${Math.round(last.pct * 100)} %)</text>
   </svg>`;
   chart.insertAdjacentHTML('beforeend', svg);
 
