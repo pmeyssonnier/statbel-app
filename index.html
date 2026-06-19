@@ -494,6 +494,9 @@
     flex-shrink: 0;
   }
   /* Graphe activité quotidienne (colonnes empilées) */
+  /* Courbe de Fait cumulés (avancement) */
+  .rdv-subtitle { font-weight: 600; color: var(--filter-text); font-size: 13px; margin: 16px 0 2px; }
+  .cumul-chart { width: 100%; height: auto; max-height: 175px; display: block; }
   /* Barre de progression globale (Fait / total) */
   .progress-global { margin: 2px 0 14px; }
   .pg-bar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: #eceff1; }
@@ -3140,7 +3143,8 @@ function renduRdv() {
   grapheEl.className = 'rdv-section-card';
   grapheEl.innerHTML = `<div class="rdv-section-title">📊 ${t('res_activity')}</div>`
     + renderProgressionGlobale(enqAct)
-    + renderActiviteQuotidienne(enqAct, filtreRdv).replace(`<div class="resume-section-title">${t('res_activity')}</div>`, '');
+    + renderActiviteQuotidienne(enqAct, filtreRdv).replace(`<div class="resume-section-title">${t('res_activity')}</div>`, '')
+    + renderCumulFait(enqAct);
   container.appendChild(grapheEl);
 
   // ── Journal des événements (briques, filtré par statut + recherche) ──
@@ -3537,6 +3541,7 @@ const I18N = {
   "prog_done":   { fr:"faits",     nl:"voltooid", en:"done",   de:"erledigt" },
   "prog_pending":{ fr:"à traiter", nl:"te doen",  en:"to do",  de:"zu erledigen" },
   "prog_closed": { fr:"clôturés",  nl:"afgesloten", en:"closed", de:"abgeschlossen" },
+  "cumul_title": { fr:"Avancement (Fait cumulés)", nl:"Voortgang (cumulatief voltooid)", en:"Progress (cumulative done)", de:"Fortschritt (kumuliert erledigt)" },
   "field_statut":       { fr:"Statut",        nl:"Status",      en:"Status",       de:"Status"       },
   "field_date":         { fr:"Date",          nl:"Datum",       en:"Date",         de:"Datum"         },
   "field_prenom":       { fr:"Prénom",        nl:"Voornaam",    en:"First name",   de:"Vorname"       },
@@ -4820,6 +4825,66 @@ function renderProgressionGlobale(enqFilter) {
     </div>
     <div class="pg-label">✓ <b>${fait}</b> / ${total} ${t('prog_done')} (${pc} %) · ⏳ ${rest} ${t('prog_pending')} · ⊘ ${clos} ${t('prog_closed')}</div>
   </div>`;
+}
+
+/** Second graphe : courbe d'avancement = nombre de « Fait » cumulés, jour après jour */
+function renderCumulFait(enqFilter) {
+  const title = `<div class="rdv-subtitle">📈 ${t('cumul_title')}</div>`;
+  const events = collecterVisites(enqFilter).filter(e => !e.isRdv && e.statut === 'Done');
+  const cs = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
+  const total = cs.length;
+  const parJour = {};
+  events.forEach(e => { const j = e.iso.slice(0, 10); parJour[j] = (parJour[j] || 0) + 1; });
+  const dates = Object.keys(parJour).sort();
+  if (!dates.length || !total) return title + `<div style="font-size:12px;color:var(--text3)">${t('res_activity_none')}</div>`;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const fin = today > dates[dates.length - 1] ? today : dates[dates.length - 1];
+  const jours = [];
+  for (let d = new Date(dates[0] + 'T00:00'); d.toISOString().slice(0, 10) <= fin; d.setDate(d.getDate() + 1)) {
+    jours.push(d.toISOString().slice(0, 10));
+  }
+  let cum = 0;
+  const pts = jours.map(j => { cum += parJour[j] || 0; return cum; });
+  const faitTot = cum;
+  const maxY = Math.max(total, 1);
+
+  // Géométrie SVG (viewBox fixe, largeur fluide via CSS)
+  const W = 600, H = 150, padL = 30, padR = 12, padT = 12, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = jours.length;
+  const X = i => padL + (n <= 1 ? plotW / 2 : i * (plotW / (n - 1)));
+  const Y = v => padT + plotH - (v / maxY) * plotH;
+  const col = statutDef('Done').color;
+
+  const yVals = total >= 4 ? [0, Math.round(total / 2), total] : [0, total];
+  const grid = [...new Set(yVals)].map(v =>
+    `<line x1="${padL}" y1="${Y(v).toFixed(1)}" x2="${W - padR}" y2="${Y(v).toFixed(1)}" stroke="#cfd8dc" stroke-dasharray="3 3" stroke-width="1"/>` +
+    `<text x="${padL - 5}" y="${(Y(v) + 3).toFixed(1)}" text-anchor="end" style="fill:var(--text3);font-size:9px">${v}</text>`
+  ).join('');
+
+  const stepX = Math.max(1, Math.ceil(n / 6));
+  const xlabels = jours.map((j, i) => {
+    if (i !== 0 && i !== n - 1 && i % stepX !== 0) return '';
+    const [, m, dd] = j.split('-');
+    return `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" style="fill:var(--text3);font-size:9px">${dd}/${m}</text>`;
+  }).join('');
+
+  const area = `M${X(0).toFixed(1)} ${Y(0).toFixed(1)} ` +
+    pts.map((v, i) => `L${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ') +
+    ` L${X(n - 1).toFixed(1)} ${Y(0).toFixed(1)} Z`;
+  const line = pts.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  const lastX = X(n - 1), lastY = Y(faitTot);
+
+  const svg = `<svg class="cumul-chart" viewBox="0 0 ${W} ${H}" role="img">
+    ${grid}
+    <path d="${area}" fill="${col}" fill-opacity="0.15"/>
+    <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3.5" fill="${col}"/>
+    <text x="${(lastX - 4).toFixed(1)}" y="${(lastY - 6).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:11px;font-weight:700">${faitTot}/${total}</text>
+    ${xlabels}
+  </svg>`;
+  return title + svg;
 }
 
 // Journal chronologique des événements.
