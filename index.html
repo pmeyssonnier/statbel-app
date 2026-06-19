@@ -1924,21 +1924,26 @@ const MARITAL_I18N = {
   "Widowed": { fr:["Veuf","Veuve"], nl:["Weduwnaar","Weduwe"], en:["Widower","Widow"], de:["Verwitwet","Verwitwet"] },
   "Legal cohabitant": { fr:["Cohabitant légal","Cohabitante légale"], nl:["Wettelijk samenwonend","Wettelijk samenwonend"], en:["Legal cohabitant","Legal cohabitant"], de:["Gesetzlich zusammenwohnend","Gesetzlich zusammenwohnend"] },
 };
-// Migration / import : ancien libellé canonique FR → clé canonique EN
-const MARITAL_FR2EN = {
-  "Célibataire":"Single", "Marié(e)":"Married", "Marié":"Married", "Mariée":"Married",
-  "Divorcé(e)/Séparé(e)":"Divorced/Separated", "Divorcé/Séparé":"Divorced/Separated", "Divorcée/Séparée":"Divorced/Separated",
-  "Divorcé(e), séparé(e) de fait":"Divorced, de facto separated",
-  "Veuf(ve)":"Widowed", "Veuf":"Widowed", "Veuve":"Widowed", "Veuve/veuf":"Widowed", "Veuf/veuve":"Widowed",
-  "Cohabitant légal":"Legal cohabitant", "Cohabitante légale":"Legal cohabitant",
+// Reverse auto-dérivé de MARITAL_I18N : toute forme (FR/NL/EN/DE, M/F) + la clé
+// → clé canonique EN. Évite de redupliquer les libellés déjà présents ci-dessus.
+const MARITAL_REV = {};
+Object.entries(MARITAL_I18N).forEach(([en, e]) => {
+  MARITAL_REV[en.toLowerCase()] = en;
+  Object.values(e).forEach(arr => arr.forEach(f => { if (f) MARITAL_REV[f.toLowerCase().trim()] = en; }));
+});
+// Alias spécifiques au convertisseur (formes non présentes dans l'affichage)
+const MARITAL_ALIAS = {
+  "marié(e)":"Married",
+  "divorcé(e)/séparé(e)":"Divorced/Separated",
+  "divorcé(e), séparé(e) de fait":"Divorced, de facto separated",
+  "veuf(ve)":"Widowed", "veuve/veuf":"Widowed", "veuf/veuve":"Widowed",
+  "cohabitant(e) légal(e)":"Legal cohabitant",
 };
-// Index normalisé (minuscules, sans espaces superflus) pour tolérer la casse/variantes
-const MARITAL_FR2EN_NORM = {};
-Object.entries(MARITAL_FR2EN).forEach(([k, v]) => { MARITAL_FR2EN_NORM[k.toLowerCase().trim()] = v; });
 function maritalCanon(v) {
   if (!v) return v;
-  if (MARITAL_I18N[v]) return v;                         // déjà canonique EN
-  return MARITAL_FR2EN[v] || MARITAL_FR2EN_NORM[v.toLowerCase().trim()] || v;
+  if (MARITAL_I18N[v]) return v;                  // déjà canonique EN
+  const k = v.toLowerCase().trim();
+  return MARITAL_REV[k] || MARITAL_ALIAS[k] || v; // forme connue (toutes langues) ou alias
 }
 function etatCivilGenre(status, sexe) {
   if (!status) return '';
