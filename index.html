@@ -4884,14 +4884,22 @@ function renderCourbeAvancement(enqFilter) {
     const [, m, dd] = p.iso.split('-');
     return `<circle cx="${X(i).toFixed(1)}" cy="${Y(p.pct).toFixed(1)}" r="8" fill="transparent" style="pointer-events:all"><title>${dd}/${m} — ${p.cum}/${total} ${t('prog_done')} (${Math.round(p.pct * 100)} %)</title></circle>`;
   }).join('');
-  const lastX = X(n - 1), lastY = Y(pts[pts.length - 1].pct);
+  // Étiquettes = total cumulé de Fait sur chaque point où ça augmente (hors dernier)
+  let prevCum = -1;
+  const nums = pts.map((p, i) => {
+    if (i === n - 1 || p.cum === prevCum || p.cum === 0) { prevCum = p.cum; return ''; }
+    prevCum = p.cum;
+    return `<text x="${X(i).toFixed(1)}" y="${(Y(p.pct) - 6).toFixed(1)}" text-anchor="middle" style="fill:${col};font-size:9px;font-weight:700">${p.cum}</text>`;
+  }).join('');
+  const lastPt = pts[pts.length - 1];
+  const lastX = X(n - 1), lastY = Y(lastPt.pct);
   return `<svg class="cumul-chart" viewBox="0 0 ${W} ${H}" role="img">
     ${grid}
     <path d="${area}" fill="${col}" fill-opacity="0.15"/>
     <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    ${hits}
+    ${hits}${nums}
     <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3" fill="${col}"/>
-    <text x="${(lastX - 5).toFixed(1)}" y="${(lastY - 6).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:11px;font-weight:700">${Math.round(pts[pts.length - 1].pct * 100)} %</text>
+    <text x="${(lastX - 5).toFixed(1)}" y="${(lastY - 6).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:11px;font-weight:700">${lastPt.cum} (${Math.round(lastPt.pct * 100)} %)</text>
     ${xlabels}
   </svg>`;
 }
