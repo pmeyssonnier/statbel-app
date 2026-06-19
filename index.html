@@ -4585,12 +4585,12 @@ function collecterVisites(enqFilter) {
         }
       }
 
-      // En cours (rdv) sans visite dans l'historique (legacy/import) : repli sur la date du RDV
-      if (c.statut && c.rdv && dCur && dCur.rdv && !visites.some(v => v.statut === c.statut)) {
+      // RDV planifié : événement distinct à la date du RDV (marqué isRdv)
+      if (c.statut && c.rdv && dCur && dCur.rdv) {
         const parts   = (c.rdv + ' ').split(' ');
         const dateRdv = dateISOToFr(parts[0] || '');
         const heure   = (parts[1] || '').trim();
-        if (dateRdv) visites.push({ statut: c.statut, date: dateRdv, heure, rdv: c.rdv });
+        if (dateRdv) visites.push({ statut: c.statut, date: dateRdv, heure, isRdv: true });
       }
 
       visites.forEach(v => {
@@ -4600,7 +4600,7 @@ function collecterVisites(enqFilter) {
           iso:    v.heure ? iso + 'T' + v.heure : iso,
           date:   v.date,
           heure:  v.heure || '',
-          rdv:    v.rdv || '',
+          isRdv:  !!v.isRdv,
           statut: v.statut,
           prenom: c.prenom, nom: c.nom, ordre: c.ordre, enq,
         });
@@ -4693,13 +4693,12 @@ function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchFilter, 
       + '<div class="evt-briques-wrap">' + evInv.map((e, i) => {
       const d = statutDef(e.statut);
       const dateLabel = formatDateJour(e.date) + (e.heure ? ' ' + e.heure : '');
-      // Détail RDV pour « En cours » : → 📅 jj/mm/aaaa hh:mm
-      let rdvHint = '';
-      if (e.rdv) { const p = (e.rdv + ' ').split(' '); rdvHint = ` <span style="color:${d.color};font-size:10px;">→ 📅 ${esc(dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : ''))}</span>`; }
+      // Événement RDV : libellé « 📅 RDV » ; sinon icône + statut
+      const statutCell = e.isRdv ? `📅 ${esc(t('rdv_label'))}` : `${esc(d.icon)} ${esc(statutLabel(e.statut))}`;
       return `<div class="evt-brique" onclick="ouvrirFicheEvtIdx(${i})">
         <span class="eb-date">${esc(dateLabel)}</span>
-        <span class="eb-statut" style="color:${d.color}">${esc(d.icon)} ${esc(statutLabel(e.statut))}</span>
-        <span class="eb-nom">${esc(e.prenom)} ${esc(e.nom)}${rdvHint}</span>
+        <span class="eb-statut" style="color:${d.color}">${statutCell}</span>
+        <span class="eb-nom">${esc(e.prenom)} ${esc(e.nom)}</span>
       </div>`;
     }).join('') + '</div>';
   }
