@@ -497,7 +497,9 @@
     height: 250px; overflow-x: auto; padding: 4px 2px 0;
     border-bottom: 1px solid var(--border);
   }
-  .activite-col { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
+  .activite-col { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; cursor: pointer; transition: opacity 0.15s; }
+  .activite-col-dim { opacity: 0.4; }
+  .activite-col-sel .activite-bars { outline: 2px solid var(--filter-text); outline-offset: 1px; border-radius: 4px; }
   .activite-bars {
     display: flex; flex-direction: column-reverse; justify-content: flex-start;
     width: 34px; height: 210px;
@@ -1664,6 +1666,7 @@ function changerEnquete(nom) {
   sauver();
   filtreActif = 'Tous';
   filtreRdv   = 'Tous';
+  _activiteJour = null;
   renderFilters();
   if      (vueActive === 'carte' && markersLayer) afficherMarqueurs();
   else if (vueActive === 'rdv')                   renduRdv();
@@ -2997,6 +3000,13 @@ function afficherMarqueurs() {
 // ════════════════════════════════════════════════════════════════════
 
 let filtreRdv = 'Tous';
+let _activiteJour = null;   // jour ISO sélectionné dans le graphe (filtre le journal)
+
+// Clic sur une barre du graphe : (dé)sélectionne le jour → filtre le journal
+function filtrerActiviteJour(iso) {
+  _activiteJour = (_activiteJour === iso) ? null : iso;
+  renduRdv();
+}
 
 /** Titre et icône contextuels selon le statut filtré */
 function rdvTitreStatut(label) {
@@ -3064,11 +3074,18 @@ function renduRdv() {
   const journalEl = document.createElement('div');
   journalEl.className = 'rdv-section-card';
   const evtFiltered = collecterVisites(enqAct).filter(e =>
+    (!_activiteJour || e.iso.slice(0, 10) === _activiteJour) &&
     (!filtreRdv || filtreRdv === 'Tous' || e.statut === filtreRdv) &&
     (!q || `${e.prenom} ${e.nom}`.toLowerCase().includes(q) || `${e.nom} ${e.prenom}`.toLowerCase().includes(q))
   );
-  journalEl.innerHTML = `<div class="rdv-section-title">🕐 ${t('res_events')} (${evtFiltered.length})</div>`
-    + renderEvenementsChrono(enqAct, true, filtreRdv, q);
+  // Badge du jour sélectionné (cliquable pour tout réafficher)
+  let jourBadge = '';
+  if (_activiteJour) {
+    const [jy, jm, jd] = _activiteJour.split('-');
+    jourBadge = ` <span style="cursor:pointer;color:var(--filter-text);font-weight:600;" onclick="filtrerActiviteJour('${_activiteJour}')">— ${jd}/${jm}/${jy} ✕</span>`;
+  }
+  journalEl.innerHTML = `<div class="rdv-section-title">🕐 ${t('res_events')} (${evtFiltered.length})${jourBadge}</div>`
+    + renderEvenementsChrono(enqAct, true, filtreRdv, q, _activiteJour);
   container.appendChild(journalEl);
 
   // Statuts éligibles (tout sauf "À faire")
@@ -4590,7 +4607,8 @@ function renderActiviteQuotidienne(enqFilter) {
       return `<div class="activite-seg" style="height:${hPct}%;background:${s.color}" title="${esc(statutLabel(s.label))} : ${cpt[s.label]}">${cpt[s.label]}</div>`;
     }).join('');
     const [y, m, dd] = iso.split('-');
-    return `<div class="activite-col" title="${dd}/${m}/${y} — ${tot} ${tPlural('res_visits', tot)}">
+    const sel = (_activiteJour === iso) ? ' activite-col-sel' : (_activiteJour ? ' activite-col-dim' : '');
+    return `<div class="activite-col${sel}" title="${dd}/${m}/${y} — ${tot} ${tPlural('res_visits', tot)}" onclick="filtrerActiviteJour('${iso}')">
       <div class="activite-bars">${segs}</div>
       <div class="activite-lbl">${dd}/${m}</div>
     </div>`;
@@ -4602,8 +4620,11 @@ function renderActiviteQuotidienne(enqFilter) {
 // enqFilter : filtre sur une enquête; modeRdv : style brique sans colonne enquête.
 // statutFilter : si fourni (≠ 'Tous'), ne montrer que les événements de ce statut.
 // searchFilter : filtre texte sur nom/prénom.
-function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchFilter) {
+function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchFilter, dateFilter) {
   let events = collecterVisites(enqFilter);
+  if (dateFilter) {
+    events = events.filter(e => e.iso.slice(0, 10) === dateFilter);
+  }
   if (statutFilter && statutFilter !== 'Tous') {
     events = events.filter(e => e.statut === statutFilter);
   }
