@@ -3170,6 +3170,51 @@ function rafraichirHistorique(i) {
   if (el) el.outerHTML = buildHistoriqueHTML(contacts()[i], i);
 }
 
+/** Trie l'historique par date (+heure) croissante → l'affichage (reverse) est décroissant */
+function trierHistorique(c) {
+  if (!Array.isArray(c.historique)) return;
+  c.historique.sort((a, b) => {
+    const ka = dateFrToISO(a.date) + (a.heure ? 'T' + a.heure : '');
+    const kb = dateFrToISO(b.date) + (b.heure ? 'T' + b.heure : '');
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  });
+}
+
+/** Aligne la date/RDV du statut COURANT sur la dernière entrée d'historique du même statut */
+function syncDateCourante(c) {
+  if (!Array.isArray(c.historique) || !c.statut) return;
+  const m = c.historique.filter(h => h.statut === c.statut);
+  if (!m.length) return;                          // statut courant absent de l'historique → inchangé
+  const last = m[m.length - 1];                   // historique déjà trié croissant → dernier = plus récent
+  const d = statutDef(c.statut);
+  if (d.done)      { c.date = last.date; c.rdv = ''; }
+  else if (d.rdv)  { c.date = ''; c.rdv = last.rdv || ''; }
+}
+
+/** Met à jour le badge de date du statut courant sur la carte (sans refermer l'édition) */
+function majCarteStatutDate(i) {
+  const c = contacts()[i];
+  const card = document.getElementById('edit-' + i) && document.getElementById('edit-' + i).closest('.card');
+  if (!card) return;
+  const def = statutDef(c.statut || statutDefaut());
+  const dateStatut = (c.rdv && def.rdv) ? '📅 ' + formatRdv(c.rdv) : (c.date ? formatDateJour(c.date) : '');
+  let el = card.querySelector('.card-statut-date');
+  if (dateStatut) {
+    if (el) el.textContent = dateStatut;
+    else { const s = document.createElement('span'); s.className = 'card-statut-date'; s.textContent = dateStatut; card.querySelector('.card-statut') && card.querySelector('.card-statut').appendChild(s); }
+  } else if (el) { el.remove(); }
+}
+
+/** Après une modif d'historique : tri + alignement date courante + rafraîchissements en place */
+function apresModifHistorique(i) {
+  const c = contacts()[i];
+  trierHistorique(c);
+  syncDateCourante(c);
+  sauver();
+  rafraichirHistorique(i);
+  majCarteStatutDate(i);
+}
+
 /** Ajoute une entrée d'historique (statut = état courant si pertinent, sinon 1er statut "terminé") */
 function ajouterHistorique(i) {
   const c = contacts()[i];
@@ -3178,8 +3223,7 @@ function ajouterHistorique(i) {
   const defaut = (dCur && (dCur.done || dCur.rdv)) ? c.statut
     : (settings.statuts.find(s => s.done || s.rdv) || settings.statuts[0]).label;
   c.historique.push({ statut: defaut, date: todayStr(), heure: nowHHMM() });
-  sauver();
-  rafraichirHistorique(i);
+  apresModifHistorique(i);
 }
 
 /** Change le statut d'une entrée d'historique */
@@ -3188,8 +3232,7 @@ function modifierStatutHistorique(i, idx, val) {
   if (!Array.isArray(c.historique) || !c.historique[idx]) return;
   c.historique[idx].statut = val;
   if (!statutDef(val).rdv) delete c.historique[idx].rdv;   // RDV sans objet si statut ≠ rendez-vous
-  sauver();
-  rafraichirHistorique(i);                                  // re-render (affiche/masque le champ RDV)
+  apresModifHistorique(i);
 }
 
 /** Renseigne / efface le RDV d'une entrée (format « jj/mm/aaaa [hh:mm] ») */
@@ -3197,12 +3240,11 @@ function modifierRdvHistorique(i, idx, val) {
   const c = contacts()[i];
   if (!Array.isArray(c.historique) || !c.historique[idx]) return;
   val = (val || '').trim();
-  if (!val) { delete c.historique[idx].rdv; sauver(); return; }
+  if (!val) { delete c.historique[idx].rdv; apresModifHistorique(i); return; }
   const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+([01]\d|2[0-3]):([0-5]\d))?$/);
   if (!m) { alert(t('al_date_invalid')); rafraichirHistorique(i); return; }
   c.historique[idx].rdv = `${m[3]}-${m[2]}-${m[1]}` + (m[4] ? ` ${m[4]}:${m[5]}` : '');
-  sauver();
-  rafraichirHistorique(i);
+  apresModifHistorique(i);
 }
 
 /** Insère les barres obliques pendant la saisie : 12062026 → 12/06/2026 */
@@ -3239,8 +3281,7 @@ function changerDateHistorique(i, idx, val) {
     return;
   }
   c.historique[idx].date = val;
-  sauver();
-  rafraichirHistorique(i);
+  apresModifHistorique(i);
 }
 
 /** Supprime une entrée erronée de l'historique d'un contact */
@@ -3250,8 +3291,7 @@ function supprimerHistorique(i, idx) {
   const e = c.historique[idx];
   if (!confirm(tf('cf_del_history', { s: statutLabel(e.statut), d: e.date }))) return;
   c.historique.splice(idx, 1);
-  sauver();
-  rafraichirHistorique(i);
+  apresModifHistorique(i);
 }
 
 function buildRdvCard(c, i, today, def) {
