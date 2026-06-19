@@ -494,6 +494,20 @@
     flex-shrink: 0;
   }
   /* Graphe activité quotidienne (colonnes empilées) */
+  /* Barre de progression globale (Fait / total) */
+  .progress-global { margin: 2px 0 14px; }
+  .pg-bar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: #eceff1; }
+  .pg-seg { height: 100%; transition: width 0.2s; }
+  .pg-label { font-size: 12px; color: var(--text2); margin-top: 6px; }
+  .pg-label b { color: var(--text); }
+  /* Grille de repères derrière le graphe d'activité */
+  .activite-wrap { position: relative; }
+  .activite-grid { position: absolute; left: 0; right: 0; bottom: 19px; height: 210px; pointer-events: none; z-index: 0; }
+  .activite-gline { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--border); }
+  .activite-gval { position: absolute; left: 0; top: -8px; font-size: 9px; color: var(--text3); background: var(--card-bg, var(--bg)); padding: 0 3px; }
+  .activite-chart { position: relative; z-index: 1; }
+  @media (max-width: 600px) { .activite-grid { bottom: 16px; height: 150px; } }
+  @media (min-width: 601px) and (max-width: 900px) { .activite-grid { height: 175px; } }
   .activite-chart {
     display: flex; align-items: flex-end; justify-content: safe center; gap: 6px;
     height: 250px; overflow-x: auto; padding: 4px 2px 0;
@@ -1481,10 +1495,13 @@ const STATUTS_DEFAULTS = [
   { label:'To do',       color:'#90a4ae', icon:'✕',  done:false, rdv:false },
   { label:'In progress', color:'#f9a825', icon:'⏳', done:false, rdv:true  },
   { label:'Done',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false },
-  { label:'Absent',      color:'#e65100', icon:'⊘',  done:true,  rdv:false },
-  { label:'Refusal',     color:'#b71c1c', icon:'✗',  done:true,  rdv:false },
-  { label:'Moved',       color:'#7b1fa2', icon:'📦', done:true,  rdv:false },
+  { label:'Absent',      color:'#00897b', icon:'⊘',  done:true,  rdv:false },
+  { label:'Refusal',     color:'#c62828', icon:'✗',  done:true,  rdv:false },
+  { label:'Moved',       color:'#6a1b9a', icon:'📦', done:true,  rdv:false },
 ];
+// Palette contrastée par défaut (clé = label EN) — appliquée aux statuts standards
+// lors de la migration statutsV→5 pour bien distinguer les segments du graphe.
+const STATUT_COULEURS = { 'To do':'#90a4ae', 'In progress':'#f9a825', 'Done':'#2e7d32', 'Absent':'#00897b', 'Refusal':'#c62828', 'Moved':'#6a1b9a', 'Impossible':'#d81b60' };
 const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
@@ -1497,7 +1514,7 @@ const SETTINGS_DEFAULTS = {
   mapStyle: 'gray',       // 'gray' | 'color'  (Bruxelles uniquement)
   navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
   statuts:  cloneStatuts(),
-  statutsV: 4,            // version de schéma des statuts (4 = pivot EN ; installs neuves sautent les migrations FR)
+  statutsV: 5,            // version de schéma des statuts (5 = pivot EN + palette contrastée ; installs neuves sautent les migrations)
   pinCode:    '',         // code PIN de verrouillage de l'app ('' = désactivé)
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
@@ -1527,6 +1544,15 @@ function chargerSettings() {
       settings.statuts.push({ label:'A déménager', color:'#7b1fa2', icon:'📦', done:true, rdv:false });
     }
     settings.statutsV = 3;
+    saveSettings();
+  }
+  // Migration v5 : palette contrastée (distinguer En cours/Absent/Refus/Impossible dans le graphe)
+  if (settings.statutsV < 5) {
+    settings.statuts.forEach(s => {
+      const en = (typeof statutCanon === 'function') ? statutCanon(s.label) : s.label;
+      if (STATUT_COULEURS[en]) s.color = STATUT_COULEURS[en];
+    });
+    settings.statutsV = 5;
     saveSettings();
   }
   // OSM/Nominatim retiré (géocodage en masse bloqué) → bascule vers UrbIS
@@ -3113,6 +3139,7 @@ function renduRdv() {
   const grapheEl = document.createElement('div');
   grapheEl.className = 'rdv-section-card';
   grapheEl.innerHTML = `<div class="rdv-section-title">📊 ${t('res_activity')}</div>`
+    + renderProgressionGlobale(enqAct)
     + renderActiviteQuotidienne(enqAct, filtreRdv).replace(`<div class="resume-section-title">${t('res_activity')}</div>`, '');
   container.appendChild(grapheEl);
 
@@ -3507,6 +3534,9 @@ const I18N = {
   "hist_title": { fr:"🕐 Historique", nl:"🕐 Geschiedenis", en:"🕐 History", de:"🕐 Verlauf" },
   "hist_add":   { fr:"➕ Ajouter une entrée", nl:"➕ Vermelding toevoegen", en:"➕ Add an entry", de:"➕ Eintrag hinzufügen" },
   "hist_rdv_ph":{ fr:"RDV jj/mm/aaaa hh:mm", nl:"Afspraak dd/mm/jjjj uu:mm", en:"Appt. dd/mm/yyyy hh:mm", de:"Termin tt/mm/jjjj hh:mm" },
+  "prog_done":   { fr:"faits",     nl:"voltooid", en:"done",   de:"erledigt" },
+  "prog_pending":{ fr:"à traiter", nl:"te doen",  en:"to do",  de:"zu erledigen" },
+  "prog_closed": { fr:"clôturés",  nl:"afgesloten", en:"closed", de:"abgeschlossen" },
   "field_statut":       { fr:"Statut",        nl:"Status",      en:"Status",       de:"Status"       },
   "field_date":         { fr:"Date",          nl:"Datum",       en:"Date",         de:"Datum"         },
   "field_prenom":       { fr:"Prénom",        nl:"Voornaam",    en:"First name",   de:"Vorname"       },
@@ -4742,7 +4772,15 @@ function renderActiviteQuotidienne(enqFilter, statutFilter) {
   const totalJour = iso => Object.values(parJour[iso] || {}).reduce((a, b) => a + b, 0);
   const maxTot = Math.max(1, ...jours.map(totalJour));
 
-  html += '<div class="activite-chart">' + jours.map(iso => {
+  // Repères horizontaux (axe) : ~4 graduations à des valeurs « rondes »
+  const step = maxTot <= 5 ? 1 : maxTot <= 10 ? 2 : maxTot <= 25 ? 5 : Math.ceil(maxTot / 5 / 5) * 5;
+  let grid = '<div class="activite-grid">';
+  for (let v = step; v <= maxTot; v += step) {
+    grid += `<div class="activite-gline" style="bottom:${(v / maxTot) * 100}%"><span class="activite-gval">${v}</span></div>`;
+  }
+  grid += '</div>';
+
+  html += '<div class="activite-wrap">' + grid + '<div class="activite-chart">' + jours.map(iso => {
     const cpt = parJour[iso] || {};
     const tot = totalJour(iso);
     const segs = statutsOrdre.filter(s => cpt[s.label]).map(s => {
@@ -4756,8 +4794,32 @@ function renderActiviteQuotidienne(enqFilter, statutFilter) {
       <div class="activite-bars">${segs}</div>
       <div class="activite-lbl">${dd}/${m}</div>
     </div>`;
-  }).join('') + '</div>';
+  }).join('') + '</div></div>';
   return html;
+}
+
+/** Barre de progression globale : Fait / total (+ à traiter / clôturés autrement) */
+function renderProgressionGlobale(enqFilter) {
+  const cs = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
+  const total = cs.length;
+  if (!total) return '';
+  let fait = 0, clos = 0, rest = 0;
+  cs.forEach(c => {
+    const st = c.statut || statutDefaut();
+    if (st === 'Done') fait++;
+    else if (statutDef(st).done) clos++;
+    else rest++;
+  });
+  const pc = Math.round(fait / total * 100);
+  const col = statutDef('Done').color;
+  return `<div class="progress-global">
+    <div class="pg-bar">
+      <div class="pg-seg" style="width:${fait / total * 100}%;background:${col}"></div>
+      <div class="pg-seg" style="width:${clos / total * 100}%;background:#b0bec5"></div>
+      <div class="pg-seg" style="width:${rest / total * 100}%;background:#eceff1"></div>
+    </div>
+    <div class="pg-label">✓ <b>${fait}</b> / ${total} ${t('prog_done')} (${pc} %) · ⏳ ${rest} ${t('prog_pending')} · ⊘ ${clos} ${t('prog_closed')}</div>
+  </div>`;
 }
 
 // Journal chronologique des événements.
