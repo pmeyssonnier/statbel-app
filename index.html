@@ -4858,19 +4858,24 @@ function dessinerCourbeProgression(enqFilter) {
   const pts = cols.map(col => {
     cum += doneJour[col.dataset.iso] || 0;
     const r = col.querySelector('.activite-bars').getBoundingClientRect();
-    return { x: r.left + r.width / 2 - wr.left, pct: cum / total };
+    const [y, m, d] = col.dataset.iso.split('-');
+    return { x: r.left + r.width / 2 - wr.left, pct: cum / total, cum, jour: `${d}/${m}` };
   });
 
   const W = wr.width, H = wr.height, col = '#283593';
   const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${yOf(p.pct).toFixed(1)}`).join(' ');
   const dots = pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${yOf(p.pct).toFixed(1)}" r="2.2" fill="${col}"/>`).join('');
+  // Zones de survol (transparentes) : infobulle % intermédiaire, sans bloquer le clic sur les barres
+  const hits = pts.map(p =>
+    `<circle cx="${p.x.toFixed(1)}" cy="${yOf(p.pct).toFixed(1)}" r="9" fill="transparent" style="pointer-events:all"><title>${p.jour} — ${p.cum}/${total} ${t('prog_done')} (${Math.round(p.pct * 100)} %)</title></circle>`
+  ).join('');
   const axis = [0, 0.5, 1].map(f =>
     `<text x="${(W - 2).toFixed(1)}" y="${(yOf(f) + 3).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:9px;font-weight:600">${Math.round(f * 100)}%</text>`
   ).join('');
   const last = pts[pts.length - 1];
   const svg = `<svg class="prog-overlay" width="${W}" height="${H}" style="position:absolute;left:0;top:0;pointer-events:none;z-index:2;overflow:visible">
     <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>
-    ${dots}${axis}
+    ${dots}${axis}${hits}
     <text x="${(last.x - 5).toFixed(1)}" y="${(yOf(last.pct) - 6).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:11px;font-weight:700">${Math.round(last.pct * 100)}%</text>
   </svg>`;
   wrap.insertAdjacentHTML('beforeend', svg);
