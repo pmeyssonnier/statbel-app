@@ -4834,6 +4834,62 @@ function renderProgressionGlobale(enqFilter) {
   </div>`;
 }
 
+/** Courbe autonome (Résumé) : % de Fait cumulés dans le temps (SVG, axe % + infobulles) */
+function renderCourbeAvancement(enqFilter) {
+  const events = collecterVisites(enqFilter).filter(e => !e.isRdv && e.statut === 'Done');
+  const cs = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
+  const total = cs.length;
+  const parJour = {};
+  events.forEach(e => { const j = e.iso.slice(0, 10); parJour[j] = (parJour[j] || 0) + 1; });
+  const dates = Object.keys(parJour).sort();
+  if (!dates.length || !total) return `<div style="font-size:12px;color:var(--text3)">${t('res_activity_none')}</div>`;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const fin = today > dates[dates.length - 1] ? today : dates[dates.length - 1];
+  const jours = [];
+  for (let d = new Date(dates[0] + 'T00:00'); d.toISOString().slice(0, 10) <= fin; d.setDate(d.getDate() + 1)) {
+    jours.push(d.toISOString().slice(0, 10));
+  }
+  let cum = 0;
+  const pts = jours.map(j => { cum += parJour[j] || 0; return { iso: j, pct: cum / total, cum }; });
+
+  const W = 600, H = 150, padL = 30, padR = 14, padT = 12, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = jours.length;
+  const X = i => padL + (n <= 1 ? plotW / 2 : i * (plotW / (n - 1)));
+  const Y = pct => padT + plotH - pct * plotH;
+  const col = statutDef('Done').color;
+
+  const grid = [0, 0.5, 1].map(f =>
+    `<line x1="${padL}" y1="${Y(f).toFixed(1)}" x2="${W - padR}" y2="${Y(f).toFixed(1)}" stroke="#cfd8dc" stroke-dasharray="3 3" stroke-width="1"/>` +
+    `<text x="${padL - 5}" y="${(Y(f) + 3).toFixed(1)}" text-anchor="end" style="fill:var(--text3);font-size:9px">${Math.round(f * 100)}%</text>`
+  ).join('');
+  const stepX = Math.max(1, Math.ceil(n / 6));
+  const xlabels = jours.map((j, i) => {
+    if (i !== 0 && i !== n - 1 && i % stepX !== 0) return '';
+    const [, m, dd] = j.split('-');
+    return `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" style="fill:var(--text3);font-size:9px">${dd}/${m}</text>`;
+  }).join('');
+  const area = `M${X(0).toFixed(1)} ${Y(0).toFixed(1)} ` +
+    pts.map((p, i) => `L${X(i).toFixed(1)} ${Y(p.pct).toFixed(1)}`).join(' ') +
+    ` L${X(n - 1).toFixed(1)} ${Y(0).toFixed(1)} Z`;
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(p.pct).toFixed(1)}`).join(' ');
+  const hits = pts.map((p, i) => {
+    const [, m, dd] = p.iso.split('-');
+    return `<circle cx="${X(i).toFixed(1)}" cy="${Y(p.pct).toFixed(1)}" r="8" fill="transparent" style="pointer-events:all"><title>${dd}/${m} — ${p.cum}/${total} ${t('prog_done')} (${Math.round(p.pct * 100)} %)</title></circle>`;
+  }).join('');
+  const lastX = X(n - 1), lastY = Y(pts[pts.length - 1].pct);
+  return `<svg class="cumul-chart" viewBox="0 0 ${W} ${H}" role="img">
+    ${grid}
+    <path d="${area}" fill="${col}" fill-opacity="0.15"/>
+    <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    ${hits}
+    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3" fill="${col}"/>
+    <text x="${(lastX - 5).toFixed(1)}" y="${(lastY - 6).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:11px;font-weight:700">${Math.round(pts[pts.length - 1].pct * 100)} %</text>
+    ${xlabels}
+  </svg>`;
+}
+
 /** Superpose au graphe d'activité la courbe de progression : % de Fait cumulés.
  *  La courbe est placée DANS le conteneur qui défile (.activite-chart) → elle suit
  *  les barres même en scroll horizontal (mobile). L'axe % reste fixe sur le wrap. */
@@ -5149,6 +5205,10 @@ function renduResume() {
       <div class="resume-section-title">${t('res_progress')}</div>
       ${barHtml}
       ${legendHtml}
+    </div>
+    <div>
+      <div class="resume-section-title">${t('cumul_title')}</div>
+      ${renderCourbeAvancement(null)}
     </div>
     <div>
       <div class="resume-section-title">${t('res_table')}</div>
