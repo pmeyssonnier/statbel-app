@@ -819,7 +819,16 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 1px 0;
+    padding: 2px 0;
+    flex-wrap: wrap;
+  }
+  .hist-statut {
+    font-size: 12px; padding: 2px 4px; border: 1px solid var(--input-border);
+    border-radius: 6px; background: var(--input-bg); color: var(--text); max-width: 140px;
+  }
+  .hist-rdv {
+    font-size: 11px; padding: 3px 6px; width: 150px; flex-shrink: 0;
+    border: 1px solid #90caf9; border-radius: 6px; background: var(--input-bg); color: var(--text);
   }
   .historique-dot {
     width: 7px; height: 7px;
@@ -3116,28 +3125,77 @@ function renduRdv() {
   container.appendChild(journalEl);
 }
 
-/** Construit le bloc HTML de l'historique des passages d'un contact */
+/** Bloc historique éditable d'un contact (statut + date + RDV + ajout/suppression).
+ *  Toujours rendu (avec bouton ➕) pour permettre de compléter un historique vide. */
 function buildHistoriqueHTML(c, i) {
-  if (!Array.isArray(c.historique) || c.historique.length === 0) return '';
-  // Du plus récent au plus ancien (en conservant l'index réel pour la suppression)
-  const lignes = c.historique.map((h, idx) => ({ h, idx })).reverse().map(({ h, idx }) => {
+  const hist = Array.isArray(c.historique) ? c.historique : [];
+  // Du plus récent au plus ancien (idx = position réelle conservée)
+  const lignes = hist.map((h, idx) => ({ h, idx })).reverse().map(({ h, idx }) => {
     const def = statutDef(h.statut);
-    let rdvHint = '';
-    if (h.rdv) { const p = (h.rdv + ' ').split(' '); rdvHint = ` <span style="color:${def.color};font-size:11px;">→ 📅 ${esc(dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : ''))}</span>`; }
+    const opts = settings.statuts.map(s =>
+      `<option value="${esc(s.label)}"${s.label === h.statut ? ' selected' : ''}>${esc(s.icon)} ${esc(statutLabel(s.label))}</option>`
+    ).join('');
+    let rdvField = '';
+    if (def.rdv) {
+      const p = (h.rdv ? h.rdv + ' ' : ' ').split(' ');
+      const rdvFr = h.rdv ? (dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : '')) : '';
+      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" onchange="modifierRdvHistorique(${i},${idx},this.value)" title="Date/heure du RDV">`;
+    }
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
-      <span style="color:${def.color};font-weight:600">${esc(def.icon)} ${esc(statutLabel(h.statut))}</span>${rdvHint}
-      <span>—</span>
-      <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1"
-        title="Cliquez sur 📅 pour modifier la date">
+      <select class="hist-statut" onchange="modifierStatutHistorique(${i},${idx},this.value)">${opts}</select>
+      <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1" title="Cliquez sur 📅 pour modifier la date">
       <button class="historique-cal" title="Modifier la date" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
+      ${rdvField}
       <button class="historique-del" title="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
     </div>`;
   }).join('');
-  return `<div class="historique-wrap">
-    <div class="historique-title">🕐 Historique (${c.historique.length})</div>
+  return `<div class="historique-wrap" id="hist-${i}">
+    <div class="historique-title">${t('hist_title')} (${hist.length})</div>
     ${lignes}
+    <button class="btn-secondary" style="align-self:flex-start;font-size:12px;padding:4px 10px;margin-top:4px;" onclick="ajouterHistorique(${i})">${t('hist_add')}</button>
   </div>`;
+}
+
+/** Rafraîchit le bloc historique en place (sans refermer la fiche en édition) */
+function rafraichirHistorique(i) {
+  const el = document.getElementById('hist-' + i);
+  if (el) el.outerHTML = buildHistoriqueHTML(contacts()[i], i);
+}
+
+/** Ajoute une entrée d'historique (statut = état courant si pertinent, sinon 1er statut "terminé") */
+function ajouterHistorique(i) {
+  const c = contacts()[i];
+  if (!Array.isArray(c.historique)) c.historique = [];
+  const dCur = statutDef(c.statut || '');
+  const defaut = (dCur && (dCur.done || dCur.rdv)) ? c.statut
+    : (settings.statuts.find(s => s.done || s.rdv) || settings.statuts[0]).label;
+  c.historique.push({ statut: defaut, date: todayStr(), heure: nowHHMM() });
+  sauver();
+  rafraichirHistorique(i);
+}
+
+/** Change le statut d'une entrée d'historique */
+function modifierStatutHistorique(i, idx, val) {
+  const c = contacts()[i];
+  if (!Array.isArray(c.historique) || !c.historique[idx]) return;
+  c.historique[idx].statut = val;
+  if (!statutDef(val).rdv) delete c.historique[idx].rdv;   // RDV sans objet si statut ≠ rendez-vous
+  sauver();
+  rafraichirHistorique(i);                                  // re-render (affiche/masque le champ RDV)
+}
+
+/** Renseigne / efface le RDV d'une entrée (format « jj/mm/aaaa [hh:mm] ») */
+function modifierRdvHistorique(i, idx, val) {
+  const c = contacts()[i];
+  if (!Array.isArray(c.historique) || !c.historique[idx]) return;
+  val = (val || '').trim();
+  if (!val) { delete c.historique[idx].rdv; sauver(); return; }
+  const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+([01]\d|2[0-3]):([0-5]\d))?$/);
+  if (!m) { alert(t('al_date_invalid')); rafraichirHistorique(i); return; }
+  c.historique[idx].rdv = `${m[3]}-${m[2]}-${m[1]}` + (m[4] ? ` ${m[4]}:${m[5]}` : '');
+  sauver();
+  rafraichirHistorique(i);
 }
 
 /** Insère les barres obliques pendant la saisie : 12062026 → 12/06/2026 */
@@ -3170,17 +3228,12 @@ function changerDateHistorique(i, idx, val) {
   const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12) {
     alert(t('al_date_invalid'));
-    rendu();
+    rafraichirHistorique(i);
     return;
   }
-  const ancienne = c.historique[idx].date;
   c.historique[idx].date = val;
-  // Si cette entrée reflète l'état courant de la fiche, mettre aussi à jour c.date
-  if (c.historique[idx].statut === c.statut && c.date === ancienne) c.date = val;
   sauver();
-  rendu();
-  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
-  if (vueActive === 'rdv') renduRdv();
+  rafraichirHistorique(i);
 }
 
 /** Supprime une entrée erronée de l'historique d'un contact */
@@ -3188,13 +3241,10 @@ function supprimerHistorique(i, idx) {
   const c = contacts()[i];
   if (!Array.isArray(c.historique) || !c.historique[idx]) return;
   const e = c.historique[idx];
-  if (!confirm(tf('cf_del_history', { s: e.statut, d: e.date }))) return;
+  if (!confirm(tf('cf_del_history', { s: statutLabel(e.statut), d: e.date }))) return;
   c.historique.splice(idx, 1);
-  if (!c.historique.length) delete c.historique;
   sauver();
-  rendu();
-  if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
-  if (vueActive === 'rdv') renduRdv();
+  rafraichirHistorique(i);
 }
 
 function buildRdvCard(c, i, today, def) {
@@ -3356,6 +3406,9 @@ const I18N = {
   "col_date":   { fr:"Date",   nl:"Datum",  en:"Date",   de:"Datum"   },
   "col_status": { fr:"Statut", nl:"Status", en:"Status", de:"Status"  },
   "col_contact":{ fr:"Contact",nl:"Contact",en:"Contact",de:"Kontakt" },
+  "hist_title": { fr:"🕐 Historique", nl:"🕐 Geschiedenis", en:"🕐 History", de:"🕐 Verlauf" },
+  "hist_add":   { fr:"➕ Ajouter une entrée", nl:"➕ Vermelding toevoegen", en:"➕ Add an entry", de:"➕ Eintrag hinzufügen" },
+  "hist_rdv_ph":{ fr:"RDV jj/mm/aaaa hh:mm", nl:"Afspraak dd/mm/jjjj uu:mm", en:"Appt. dd/mm/yyyy hh:mm", de:"Termin tt/mm/jjjj hh:mm" },
   "field_statut":       { fr:"Statut",        nl:"Status",      en:"Status",       de:"Status"       },
   "field_date":         { fr:"Date",          nl:"Datum",       en:"Date",         de:"Datum"         },
   "field_prenom":       { fr:"Prénom",        nl:"Voornaam",    en:"First name",   de:"Vorname"       },
