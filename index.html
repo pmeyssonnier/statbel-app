@@ -1271,6 +1271,9 @@
 <!-- Sélecteur de date partagé pour le calendrier de l'historique -->
 <input type="date" id="histDatePicker"
   style="position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0;">
+<!-- Sélecteur date+heure partagé pour le RDV d'une entrée d'historique -->
+<input type="datetime-local" id="histRdvPicker"
+  style="position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0;">
 
 <!-- Modal détail sauvegarde / restauration -->
 <div class="modal-overlay" id="modalBackupDetail">
@@ -3146,7 +3149,7 @@ function buildHistoriqueHTML(c, i) {
     if (def.rdv) {
       const p = (h.rdv ? h.rdv + ' ' : ' ').split(' ');
       const rdvFr = h.rdv ? (dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : '')) : '';
-      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" onchange="modifierRdvHistorique(${i},${idx},this.value)" title="Date/heure du RDV">`;
+      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" onchange="modifierRdvHistorique(${i},${idx},this.value)" title="Date/heure du RDV"><button class="historique-cal" title="Calendrier RDV" onclick="ouvrirCalendrierRdvHist(${i},${idx},'${esc(h.rdv || '')}')">📅</button>`;
     }
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
@@ -3292,6 +3295,24 @@ function ouvrirCalendrierHist(i, idx, fr) {
   p.value = dateFrToISO(fr) || '';
   p.onchange = function () {
     if (p.value) changerDateHistorique(i, idx, dateISOToFr(p.value));
+    p.onchange = null;
+  };
+  if (typeof p.showPicker === 'function') { try { p.showPicker(); return; } catch (e) {} }
+  p.focus(); p.click();
+}
+
+/** Ouvre le calendrier date+heure pour le RDV d'une entrée d'historique (rdvIso = « YYYY-MM-DD HH:MM ») */
+function ouvrirCalendrierRdvHist(i, idx, rdvIso) {
+  const p = document.getElementById('histRdvPicker');
+  if (!p) return;
+  p.value = rdvIso ? rdvIso.replace(' ', 'T').slice(0, 16) : '';
+  p.onchange = function () {
+    const c = contacts()[i];
+    if (Array.isArray(c.historique) && c.historique[idx]) {
+      if (p.value) c.historique[idx].rdv = p.value.slice(0, 16).replace('T', ' ');
+      else delete c.historique[idx].rdv;
+      apresModifHistorique(i);
+    }
     p.onchange = null;
   };
   if (typeof p.showPicker === 'function') { try { p.showPicker(); return; } catch (e) {} }
