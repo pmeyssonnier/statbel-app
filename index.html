@@ -4363,7 +4363,6 @@ function renderActiviteQuotidienne(enqFilter) {
     }).join('');
     const [y, m, dd] = iso.split('-');
     return `<div class="activite-col" title="${dd}/${m}/${y} — ${tot} ${tPlural('res_visits', tot)}">
-      <div class="activite-tot">${tot > 0 ? tot : ''}</div>
       <div class="activite-bars">${segs}</div>
       <div class="activite-lbl">${dd}/${m}</div>
     </div>`;
