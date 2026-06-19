@@ -4574,7 +4574,8 @@ function renderActiviteQuotidienne(enqFilter) {
   const parJour = {};                 // { isoDate: { statutLabel: count } }
   const presents = new Set();
   events.forEach(e => {
-    (parJour[e.iso] = parJour[e.iso] || {})[e.statut] = (parJour[e.iso][e.statut] || 0) + 1;
+    const jour = e.iso.slice(0, 10);   // regrouper par date seule (les RDV ont une heure dans iso)
+    (parJour[jour] = parJour[jour] || {})[e.statut] = (parJour[jour][e.statut] || 0) + 1;
     presents.add(e.statut);
   });
   const dates = Object.keys(parJour).sort();
