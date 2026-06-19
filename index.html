@@ -1434,13 +1434,15 @@ const GEO_PROVIDERS = {
 // ── Statuts par défaut ───────────────────────────────────────────────
 // done : marque l'entretien terminé → remplit automatiquement la date
 // rdv  : statut « rendez-vous » → active la date/heure et la vue 📅
+// Libellés = identifiants canoniques EN (langue pivot). L'affichage est traduit
+// via statutLabel(). Migration des anciennes données FR → EN au chargement.
 const STATUTS_DEFAULTS = [
-  { label:'À faire',     color:'#90a4ae', icon:'✕',  done:false, rdv:false },
-  { label:'En cours',    color:'#f9a825', icon:'⏳', done:false, rdv:true  },
-  { label:'Fait',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false },
+  { label:'To do',       color:'#90a4ae', icon:'✕',  done:false, rdv:false },
+  { label:'In progress', color:'#f9a825', icon:'⏳', done:false, rdv:true  },
+  { label:'Done',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false },
   { label:'Absent',      color:'#e65100', icon:'⊘',  done:true,  rdv:false },
-  { label:'Refus',       color:'#b71c1c', icon:'✗',  done:true,  rdv:false },
-  { label:'A déménager', color:'#7b1fa2', icon:'📦', done:true,  rdv:false },
+  { label:'Refusal',     color:'#b71c1c', icon:'✗',  done:true,  rdv:false },
+  { label:'Moved',       color:'#7b1fa2', icon:'📦', done:true,  rdv:false },
 ];
 const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
@@ -1454,7 +1456,7 @@ const SETTINGS_DEFAULTS = {
   mapStyle: 'gray',       // 'gray' | 'color'  (Bruxelles uniquement)
   navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
   statuts:  cloneStatuts(),
-  statutsV: 2,            // version de schéma des statuts (pour migrations)
+  statutsV: 4,            // version de schéma des statuts (4 = pivot EN ; installs neuves sautent les migrations FR)
   pinCode:    '',         // code PIN de verrouillage de l'app ('' = désactivé)
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
@@ -1497,7 +1499,7 @@ function saveSettings() { localStorage.setItem('statbel_settings', JSON.stringif
 
 // ── Accès aux statuts (pilotés par les paramètres) ───────────────────
 function statutDefs()       { return settings.statuts; }
-function statutDefaut()     { return (settings.statuts[0] || {label:'À faire'}).label; }
+function statutDefaut()     { return (settings.statuts[0] || {label:'To do'}).label; }
 function statutDef(label)   {
   return settings.statuts.find(s => s.label === label)
       || settings.statuts[0]
@@ -1618,7 +1620,7 @@ function contacts() { return enquetes[enqueteActive] || []; }
 function contactsFiltres() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
   return contacts().filter(c => {
-    if (filtreActif !== 'Tous' && (c.statut || 'À faire') !== filtreActif) return false;
+    if (filtreActif !== 'Tous' && (c.statut || statutDefaut()) !== filtreActif) return false;
     if (!correspondRecherche(c, q)) return false;
     return true;
   });
@@ -1887,21 +1889,34 @@ function calcAge(birthDate) {
   return age >= 0 && age < 130 ? age : null;
 }
 
-// État civil : traduit + accordé au genre (clés = valeurs canoniques FR de
-// l'import). Tableau [masculin, féminin] par langue ; repli sur la valeur brute.
+// État civil : clés = valeurs canoniques EN (langue pivot). Tableau
+// [masculin, féminin] par langue ; affichage accordé au genre.
 const MARITAL_I18N = {
-  "Célibataire": { fr:["Célibataire","Célibataire"], nl:["Ongehuwd","Ongehuwd"], en:["Single","Single"], de:["Ledig","Ledig"] },
-  "Marié(e)": { fr:["Marié","Mariée"], nl:["Gehuwd","Gehuwd"], en:["Married","Married"], de:["Verheiratet","Verheiratet"] },
-  "Divorcé(e)/Séparé(e)": { fr:["Divorcé/Séparé","Divorcée/Séparée"], nl:["Gescheiden","Gescheiden"], en:["Divorced/Separated","Divorced/Separated"], de:["Geschieden/Getrennt","Geschieden/Getrennt"] },
-  "Divorcé(e), séparé(e) de fait": { fr:["Divorcé, séparé de fait","Divorcée, séparée de fait"], nl:["Gescheiden, feitelijk gescheiden","Gescheiden, feitelijk gescheiden"], en:["Divorced, de facto separated","Divorced, de facto separated"], de:["Geschieden, faktisch getrennt","Geschieden, faktisch getrennt"] },
-  "Veuf(ve)": { fr:["Veuf","Veuve"], nl:["Weduwnaar","Weduwe"], en:["Widower","Widow"], de:["Verwitwet","Verwitwet"] },
-  "Cohabitant légal": { fr:["Cohabitant légal","Cohabitante légale"], nl:["Wettelijk samenwonend","Wettelijk samenwonend"], en:["Legal cohabitant","Legal cohabitant"], de:["Gesetzlich zusammenwohnend","Gesetzlich zusammenwohnend"] },
+  "Single": { fr:["Célibataire","Célibataire"], nl:["Ongehuwd","Ongehuwd"], en:["Single","Single"], de:["Ledig","Ledig"] },
+  "Married": { fr:["Marié","Mariée"], nl:["Gehuwd","Gehuwd"], en:["Married","Married"], de:["Verheiratet","Verheiratet"] },
+  "Divorced/Separated": { fr:["Divorcé/Séparé","Divorcée/Séparée"], nl:["Gescheiden","Gescheiden"], en:["Divorced/Separated","Divorced/Separated"], de:["Geschieden/Getrennt","Geschieden/Getrennt"] },
+  "Divorced, de facto separated": { fr:["Divorcé, séparé de fait","Divorcée, séparée de fait"], nl:["Gescheiden, feitelijk gescheiden","Gescheiden, feitelijk gescheiden"], en:["Divorced, de facto separated","Divorced, de facto separated"], de:["Geschieden, faktisch getrennt","Geschieden, faktisch getrennt"] },
+  "Widowed": { fr:["Veuf","Veuve"], nl:["Weduwnaar","Weduwe"], en:["Widower","Widow"], de:["Verwitwet","Verwitwet"] },
+  "Legal cohabitant": { fr:["Cohabitant légal","Cohabitante légale"], nl:["Wettelijk samenwonend","Wettelijk samenwonend"], en:["Legal cohabitant","Legal cohabitant"], de:["Gesetzlich zusammenwohnend","Gesetzlich zusammenwohnend"] },
 };
+// Migration / import : ancien libellé canonique FR → clé canonique EN
+const MARITAL_FR2EN = {
+  "Célibataire":"Single", "Marié(e)":"Married", "Marié":"Married", "Mariée":"Married",
+  "Divorcé(e)/Séparé(e)":"Divorced/Separated", "Divorcé/Séparé":"Divorced/Separated", "Divorcée/Séparée":"Divorced/Separated",
+  "Divorcé(e), séparé(e) de fait":"Divorced, de facto separated",
+  "Veuf(ve)":"Widowed", "Veuf":"Widowed", "Veuve":"Widowed",
+  "Cohabitant légal":"Legal cohabitant", "Cohabitante légale":"Legal cohabitant",
+};
+function maritalCanon(v) {
+  if (!v) return v;
+  if (MARITAL_I18N[v]) return v;            // déjà canonique EN
+  return MARITAL_FR2EN[v] || v;             // ancienne valeur FR → EN, sinon brut
+}
 function etatCivilGenre(status, sexe) {
   if (!status) return '';
-  const e = MARITAL_I18N[status];
+  const e = MARITAL_I18N[maritalCanon(status)];
   if (!e) return status;
-  const arr = e[settings.lang] || e.fr;
+  const arr = e[settings.lang] || e.en;
   return sexe === 'F' ? arr[1] : arr[0];
 }
 
@@ -1980,22 +1995,29 @@ function renderNonTraduits(contacts) {
   return `<div style="font-size:11px;color:#e65100;margin-top:6px;">${t('i18n_missing')} ${det.join(' · ')}</div>`;
 }
 
-// Libellé de statut traduit pour l'affichage (les 6 statuts par défaut).
-// La valeur stockée reste le libellé FR (= identifiant) ; on ne traduit que
-// l'affichage. Statuts personnalisés : affichés tels quels.
+// Libellé de statut : clés = identifiants canoniques EN (langue pivot).
+// Affichage traduit ; statuts personnalisés affichés tels quels.
 const STATUT_I18N = {
-  "À faire": { nl:"Te doen", en:"To do", de:"Zu erledigen" },
-  "En cours": { nl:"Bezig", en:"In progress", de:"In Bearbeitung" },
-  "Fait": { nl:"Klaar", en:"Done", de:"Erledigt" },
-  "Absent": { nl:"Afwezig", en:"Absent", de:"Abwesend" },
-  "Refus": { nl:"Weigering", en:"Refusal", de:"Abgelehnt" },
-  "A déménager": { nl:"Verhuisd", en:"Moved", de:"Umgezogen" },
-  "Impossible": { nl:"Onmogelijk", en:"Impossible", de:"Unmöglich" },
+  "To do":       { fr:"À faire",     nl:"Te doen",   de:"Zu erledigen" },
+  "In progress": { fr:"En cours",    nl:"Bezig",     de:"In Bearbeitung" },
+  "Done":        { fr:"Fait",        nl:"Klaar",     de:"Erledigt" },
+  "Absent":      { fr:"Absent",      nl:"Afwezig",   de:"Abwesend" },
+  "Refusal":     { fr:"Refus",       nl:"Weigering", de:"Abgelehnt" },
+  "Moved":       { fr:"A déménager", nl:"Verhuisd",  de:"Umgezogen" },
+  "Impossible":  { fr:"Impossible",  nl:"Onmogelijk", de:"Unmöglich" },
 };
+// Migration / import : ancien libellé canonique FR → clé canonique EN
+const STATUT_FR2EN = {};
+Object.entries(STATUT_I18N).forEach(([en, e]) => { if (e.fr) STATUT_FR2EN[e.fr] = en; });
+function statutCanon(label) {
+  if (!label) return label;
+  if (STATUT_I18N[label]) return label;     // déjà canonique EN
+  return STATUT_FR2EN[label] || label;      // ancien FR → EN, sinon brut (perso)
+}
 function statutLabel(label) {
-  if (settings.lang === 'fr') return label;
   const e = STATUT_I18N[label];
-  return (e && e[settings.lang]) || label;
+  if (!e) return label;                     // statut personnalisé
+  return e[settings.lang] || label;         // EN = la clé elle-même
 }
 
 // Construit « 45 ans · Mariée · Belgique » à partir des données disponibles
@@ -2155,7 +2177,7 @@ const CHAMPS_IMPORT = [
   ['nom',            'Nom',             ['nom','lastname','last_name','name']],
   ['adresse',        'Adresse',         ['adresse','address','adr']],
   ['statut',         'Statut',          ['statut','status','etat']],
-  ['date',           'Date interview',  ['date_interview','date','date_fait']],
+  ['date',           'Date interview',  ['date_interview','interview_date','date','date_fait']],
   ['notes',          'Notes',           ['notes','note','remarques']],
   ['rdv',            'Rendez-vous',     ['rdv','date_rdv','rendez_vous','appointment']],
   ['sexe',           'Sexe',            ['sexe','sex','genre','gender']],
@@ -2235,7 +2257,7 @@ function parseCSV(text) {
     rows.push({
       ordre:          ordreVal || String(rows.length+1).padStart(2,'0'),
       prenom, nom, adresse,
-      statut:         g(cols,map.statut) || 'À faire',
+      statut:         statutCanon(g(cols,map.statut)) || 'To do',
       date:           g(cols,map.date),
       notes:          g(cols,map.notes),
       rdv:            g(cols,map.rdv),
@@ -2244,7 +2266,7 @@ function parseCSV(text) {
       age:            map.age>=0 ? parseInt(cols[map.age])||null : null,
       birth_country:  g(cols,map.birth_country) || null,
       nationality:    g(cols,map.nationality)  || null,
-      marital_status: g(cols,map.marital_status)|| null,
+      marital_status: maritalCanon(g(cols,map.marital_status)) || null,
       taille_menage:  map.taille_menage>=0 ? (parseInt(cols[map.taille_menage])||null) : null,
       gsm:            g(cols,map.gsm),
       email:          g(cols,map.email),
@@ -2400,12 +2422,12 @@ function csvCell(v) {
 }
 
 function genererCSV() {
-  const rows = [['ordre','prenom','nom','adresse','statut','date_interview','rdv','sexe','birth_date','age','birth_country','nationality','marital_status','taille_menage','gsm','email','notes','lat','lng']];
+  const rows = [['order','first_name','last_name','address','status','interview_date','appointment','sex','birth_date','age','birth_country','nationality','marital_status','household_size','phone','email','notes','lat','lng']];
   contacts().forEach(c => {
     const cc = coordsCache(c.adresse);
     rows.push([
       csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
-      csvCell(c.statut||'À faire'), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
+      csvCell(c.statut||statutDefaut()), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
       csvCell(c.birth_date||''), csvCell(c.age||''), csvCell(c.birth_country||''), csvCell(c.nationality||''),
       csvCell(c.marital_status||''), csvCell(c.taille_menage||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||''),
       csvCell(cc?cc.lat:''), csvCell(cc?cc.lng:'')
@@ -3595,7 +3617,7 @@ function buildBackupDetailHTML(src, meta) {
     const arr = src[nom] || [];
     const cpt = {};
     arr.forEach(c => {
-      const st = c.statut || 'À faire';
+      const st = c.statut || statutDefaut();
       cpt[st] = (cpt[st] || 0) + 1;
     });
     const tot = arr.length;
@@ -3785,6 +3807,13 @@ function fermerBackupDetail() {
   document.getElementById('modalBackupDetail').classList.remove('open');
 }
 
+// Clés de champs : modèle interne (FR) ↔ pivot anglais (export/backup/CSV).
+const KEYMAP_OUT = { prenom:'first_name', nom:'last_name', adresse:'address' };
+const KEYMAP_IN  = { first_name:'prenom', last_name:'nom', address:'adresse' };
+function renommerCles(c, map) { const o = {}; for (const k in c) o[map[k] || k] = c[k]; return o; }
+function enquetesVersEN(enq) { const r = {}; Object.entries(enq).forEach(([n, arr]) => r[n] = arr.map(c => renommerCles(c, KEYMAP_OUT))); return r; }
+function enquetesVersInterne(enq) { const r = {}; Object.entries(enq).forEach(([n, arr]) => r[n] = arr.map(c => renommerCles(c, KEYMAP_IN))); return r; }
+
 function exporterBackup() {
   const date   = new Date();
   const isoNow = date.toISOString();
@@ -3797,7 +3826,7 @@ function exporterBackup() {
   // Exclure le verrouillage PIN du backup : c'est un réglage propre à
   // l'appareil (et son hash n'a pas à voyager dans un fichier exporté).
   const { pinCode, pinTimeout, ...settingsExport } = settings;
-  const data   = JSON.stringify({ version: 2, date: isoNow, settings: settingsExport, enquetes, coords }, null, 2);
+  const data   = JSON.stringify({ version: 2, date: isoNow, settings: settingsExport, enquetes: enquetesVersEN(enquetes), coords }, null, 2);
   const blob   = new Blob([data], { type: 'application/json' });
   const url    = URL.createObjectURL(blob);
   const fname  = 'statbel_sauvegarde_' + isoNow.slice(0, 10) + '.json';
@@ -3855,7 +3884,8 @@ function importerBackup(event) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      const src  = data.enquetes || data;
+      // Repli vers les clés internes (accepte backups EN « first_name… » et anciens FR « prenom… »)
+      const src  = enquetesVersInterne(data.enquetes || data);
       const noms = Object.keys(src);
       if (!noms.length) { alert(t('al_no_survey_file')); return; }
 
@@ -3904,6 +3934,7 @@ function importerBackup(event) {
           if (leafletMap) rafraichirFond();
         }
         _pendingRestore = null; _pendingSettings = null; _pendingCoords = null;
+        migrerVersAnglais();   // backup éventuellement en FR → pivot EN
         sauver();
         refreshSelect();
         rendu();
@@ -4383,7 +4414,7 @@ function renduResume() {
   // Tous les statuts présents dans les données (+ ceux de la config)
   const statutsPresents = new Set(statutsCfg.map(s => s.label));
   Object.values(enquetes).forEach(arr =>
-    arr.forEach(c => statutsPresents.add(c.statut || 'À faire'))
+    arr.forEach(c => statutsPresents.add(c.statut || statutDefaut()))
   );
   const statutsListe = [...statutsPresents];
 
@@ -4397,7 +4428,7 @@ function renduResume() {
     matrice[nom] = {};
     statutsListe.forEach(s => matrice[nom][s] = 0);
     (enquetes[nom] || []).forEach(c => {
-      const st = c.statut || 'À faire';
+      const st = c.statut || statutDefaut();
       if (!matrice[nom][st]) matrice[nom][st] = 0;
       matrice[nom][st]++;
       totauxParStatut[st] = (totauxParStatut[st] || 0) + 1;
@@ -4417,7 +4448,7 @@ function renduResume() {
   const rdvStatuts   = statutsCfg.filter(s => s.rdv).map(s => s.label);
 
   const nbFait   = doneStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
-  const nbAfaire = (totauxParStatut['À faire'] || 0);
+  const nbAfaire = (totauxParStatut[statutDefaut()] || 0);
   const nbRdv    = rdvStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
   const pctFait  = grandTotal ? Math.round(nbFait / grandTotal * 100) : 0;
 
@@ -4797,6 +4828,22 @@ function pinSurveillerInactivite() {
 }
 
 
+// Migration vers le pivot anglais : convertit statuts et états civils FR → EN
+// dans les paramètres et toutes les enquêtes. Idempotent (sans effet si déjà EN).
+function migrerVersAnglais() {
+  let chg = false;
+  (settings.statuts || []).forEach(s => { const en = statutCanon(s.label); if (en !== s.label) { s.label = en; chg = true; } });
+  Object.values(enquetes).forEach(arr => arr.forEach(c => {
+    if (c.statut) { const en = statutCanon(c.statut); if (en !== c.statut) { c.statut = en; chg = true; } }
+    if (c.marital_status) { const m = maritalCanon(c.marital_status); if (m !== c.marital_status) { c.marital_status = m; chg = true; } }
+    if (Array.isArray(c.historique)) c.historique.forEach(h => {
+      if (h && h.statut) { const en = statutCanon(h.statut); if (en !== h.statut) { h.statut = en; chg = true; } }
+    });
+  }));
+  if (filtreActif && filtreActif !== 'Tous') filtreActif = statutCanon(filtreActif);
+  if (chg) { saveSettings(); sauver(); }
+}
+
 async function init() {
   chargerSettings();
   appliquerTheme();
@@ -4808,6 +4855,7 @@ async function init() {
   pinVerifierAuDemarrage();
 
   await charger();
+  migrerVersAnglais();   // pivot EN : convertit les anciennes données FR
 
   // Purger les coordonnées invalides ou hors Belgique du localStorage
   Object.keys(localStorage).forEach(k => {
