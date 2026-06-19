@@ -4612,7 +4612,9 @@ function collecterVisites(enqFilter) {
 }
 
 function renderActiviteQuotidienne(enqFilter, statutFilter) {
-  let events = collecterVisites(enqFilter);
+  // Le graphe ne compte que les VISITES — pas les RDV à venir (évite le double
+  // comptage avec le « Fait » du jour de l'interview).
+  let events = collecterVisites(enqFilter).filter(e => !e.isRdv);
   if (statutFilter && statutFilter !== 'Tous') events = events.filter(e => e.statut === statutFilter);
   const parJour = {};                 // { isoDate: { statutLabel: count } }
   const presents = new Set();
@@ -4695,9 +4697,10 @@ function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchFilter, 
       const dateLabel = formatDateJour(e.date) + (e.heure ? ' ' + e.heure : '');
       // Événement RDV : libellé « 📅 RDV » ; sinon icône + statut
       const statutCell = e.isRdv ? `📅 ${esc(t('rdv_label'))}` : `${esc(d.icon)} ${esc(statutLabel(e.statut))}`;
+      const col = e.isRdv ? '#1565c0' : d.color;
       return `<div class="evt-brique" onclick="ouvrirFicheEvtIdx(${i})">
         <span class="eb-date">${esc(dateLabel)}</span>
-        <span class="eb-statut" style="color:${d.color}">${statutCell}</span>
+        <span class="eb-statut" style="color:${col}">${statutCell}</span>
         <span class="eb-nom">${esc(e.prenom)} ${esc(e.nom)}</span>
       </div>`;
     }).join('') + '</div>';
