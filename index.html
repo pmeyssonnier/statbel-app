@@ -3808,11 +3808,21 @@ function fermerBackupDetail() {
 }
 
 // Clés de champs : modèle interne (FR) ↔ pivot anglais (export/backup/CSV).
-const KEYMAP_OUT = { prenom:'first_name', nom:'last_name', adresse:'address' };
-const KEYMAP_IN  = { first_name:'prenom', last_name:'nom', address:'adresse' };
+const KEYMAP_OUT = { prenom:'first_name', nom:'last_name', adresse:'address', ordre:'order', sexe:'sex', statut:'status', historique:'history', taille_menage:'household_size' };
+const KEYMAP_IN  = { first_name:'prenom', last_name:'nom', address:'adresse', order:'ordre', sex:'sexe', status:'statut', history:'historique', household_size:'taille_menage' };
 function renommerCles(c, map) { const o = {}; for (const k in c) o[map[k] || k] = c[k]; return o; }
-function enquetesVersEN(enq) { const r = {}; Object.entries(enq).forEach(([n, arr]) => r[n] = arr.map(c => renommerCles(c, KEYMAP_OUT))); return r; }
-function enquetesVersInterne(enq) { const r = {}; Object.entries(enq).forEach(([n, arr]) => r[n] = arr.map(c => renommerCles(c, KEYMAP_IN))); return r; }
+function contactVersEN(c) {
+  const o = renommerCles(c, KEYMAP_OUT);
+  if (Array.isArray(o.history)) o.history = o.history.map(h => renommerCles(h, { statut:'status' }));
+  return o;
+}
+function contactVersInterne(c) {
+  const o = renommerCles(c, KEYMAP_IN);
+  if (Array.isArray(o.historique)) o.historique = o.historique.map(h => renommerCles(h, { status:'statut' }));
+  return o;
+}
+function enquetesVersEN(enq) { const r = {}; Object.entries(enq).forEach(([n, arr]) => r[n] = arr.map(contactVersEN)); return r; }
+function enquetesVersInterne(enq) { const r = {}; Object.entries(enq).forEach(([n, arr]) => r[n] = arr.map(contactVersInterne)); return r; }
 
 function exporterBackup() {
   const date   = new Date();
