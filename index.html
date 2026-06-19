@@ -3146,7 +3146,7 @@ function renduRdv() {
     + renderActiviteQuotidienne(enqAct, filtreRdv).replace(`<div class="resume-section-title">${t('res_activity')}</div>`, '');
   container.appendChild(grapheEl);
   // Courbe de progression (% Fait cumulés) superposée au graphe, en vue non filtrée
-  if (!filtreRdv || filtreRdv === 'Tous') requestAnimationFrame(() => dessinerCourbeProgression(enqAct));
+  if (!filtreRdv || filtreRdv === 'Tous' || filtreRdv === 'Done') requestAnimationFrame(() => dessinerCourbeProgression(enqAct));
 
   // ── Journal des événements (briques, filtré par statut + recherche) ──
   const journalEl = document.createElement('div');
@@ -4764,7 +4764,7 @@ function renderActiviteQuotidienne(enqFilter, statutFilter) {
   // Statuts présents, dans l'ordre configuré
   const statutsOrdre = statutDefs().filter(s => presents.has(s.label));
   // Légende (+ courbe % faits, uniquement en vue non filtrée)
-  const montreProg = !statutFilter || statutFilter === 'Tous';
+  const montreProg = !statutFilter || statutFilter === 'Tous' || statutFilter === 'Done';
   html += '<div class="progress-legend" style="margin-bottom:6px;">' + statutsOrdre.map(s =>
     `<div class="prog-leg-item"><div class="prog-leg-dot" style="background:${s.color}"></div>${esc(s.icon)} ${esc(statutLabel(s.label))}</div>`
   ).join('') + (montreProg
