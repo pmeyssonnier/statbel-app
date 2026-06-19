@@ -509,6 +509,9 @@
   .activite-gline { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--border); }
   .activite-gval { position: absolute; left: 0; top: -8px; font-size: 9px; color: var(--text3); background: var(--card-bg, var(--bg)); padding: 0 3px; }
   .activite-chart { position: relative; z-index: 1; }
+  /* Axe % fixe de la courbe de progression (ne défile pas) */
+  .prog-axis { position: absolute; right: 2px; top: 0; bottom: 0; pointer-events: none; z-index: 3; }
+  .prog-axis-lbl { position: absolute; right: 0; font-size: 9px; font-weight: 600; background: var(--bg); padding: 0 2px; }
   @media (max-width: 600px) { .activite-grid { bottom: 16px; height: 150px; } }
   @media (min-width: 601px) and (max-width: 900px) { .activite-grid { height: 175px; } }
   .activite-chart {
@@ -4831,15 +4834,16 @@ function renderProgressionGlobale(enqFilter) {
   </div>`;
 }
 
-/** Superpose au graphe d'activité la courbe de progression : % de Fait cumulés
- *  (axe % à droite). Mesure les colonnes réelles → alignement fiable. */
+/** Superpose au graphe d'activité la courbe de progression : % de Fait cumulés.
+ *  La courbe est placée DANS le conteneur qui défile (.activite-chart) → elle suit
+ *  les barres même en scroll horizontal (mobile). L'axe % reste fixe sur le wrap. */
 function dessinerCourbeProgression(enqFilter) {
   const wrap = document.querySelector('#rdvListe .activite-wrap');
   if (!wrap) return;
-  const old = wrap.querySelector('.prog-overlay');
-  if (old) old.remove();
-  const cols = [...wrap.querySelectorAll('.activite-col')];
-  if (!cols.length) return;
+  const chart = wrap.querySelector('.activite-chart');
+  wrap.querySelectorAll('.prog-overlay, .prog-axis').forEach(el => el.remove());
+  const cols = chart ? [...chart.querySelectorAll('.activite-col')] : [];
+  if (!chart || !cols.length) return;
 
   // Fait cumulés par jour
   const doneJour = {};
@@ -4848,37 +4852,43 @@ function dessinerCourbeProgression(enqFilter) {
   const cs = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
   const total = Math.max(cs.length, 1);
 
-  const wr = wrap.getBoundingClientRect();
+  const cr = chart.getBoundingClientRect();
   const b0 = cols[0].querySelector('.activite-bars').getBoundingClientRect();
-  const baseY = b0.bottom - wr.top;   // y du 0 %
-  const topY  = b0.top - wr.top;      // y du 100 %
+  const baseY = b0.bottom - cr.top;   // y du 0 % (relatif au graphe)
+  const topY  = b0.top - cr.top;      // y du 100 %
   const yOf = pct => baseY - pct * (baseY - topY);
 
   let cum = 0;
-  const pts = cols.map(col => {
-    cum += doneJour[col.dataset.iso] || 0;
-    const r = col.querySelector('.activite-bars').getBoundingClientRect();
-    const [y, m, d] = col.dataset.iso.split('-');
-    return { x: r.left + r.width / 2 - wr.left, pct: cum / total, cum, jour: `${d}/${m}` };
+  const pts = cols.map(c => {
+    cum += doneJour[c.dataset.iso] || 0;
+    const r = c.querySelector('.activite-bars').getBoundingClientRect();
+    const [, m, d] = c.dataset.iso.split('-');
+    // x dans le repère scrollable du graphe (suit le défilement)
+    return { x: r.left + r.width / 2 - cr.left + chart.scrollLeft, pct: cum / total, cum, jour: `${d}/${m}` };
   });
 
-  const W = wr.width, H = wr.height, col = '#283593';
+  const cw = chart.scrollWidth, ch = chart.clientHeight, col = '#283593';
   const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${yOf(p.pct).toFixed(1)}`).join(' ');
   const dots = pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${yOf(p.pct).toFixed(1)}" r="2.2" fill="${col}"/>`).join('');
-  // Zones de survol (transparentes) : infobulle % intermédiaire, sans bloquer le clic sur les barres
   const hits = pts.map(p =>
     `<circle cx="${p.x.toFixed(1)}" cy="${yOf(p.pct).toFixed(1)}" r="9" fill="transparent" style="pointer-events:all"><title>${p.jour} — ${p.cum}/${total} ${t('prog_done')} (${Math.round(p.pct * 100)} %)</title></circle>`
   ).join('');
-  const axis = [0, 0.5, 1].map(f =>
-    `<text x="${(W - 2).toFixed(1)}" y="${(yOf(f) + 3).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:9px;font-weight:600">${Math.round(f * 100)}%</text>`
-  ).join('');
   const last = pts[pts.length - 1];
-  const svg = `<svg class="prog-overlay" width="${W}" height="${H}" style="position:absolute;left:0;top:0;pointer-events:none;z-index:2;overflow:visible">
+  // Courbe DANS le graphe (défile avec les barres)
+  const svg = `<svg class="prog-overlay" width="${cw}" height="${ch}" style="position:absolute;left:0;top:0;pointer-events:none;z-index:2;overflow:visible">
     <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>
-    ${dots}${axis}${hits}
+    ${dots}${hits}
     <text x="${(last.x - 5).toFixed(1)}" y="${(yOf(last.pct) - 6).toFixed(1)}" text-anchor="end" style="fill:${col};font-size:11px;font-weight:700">${Math.round(last.pct * 100)}%</text>
   </svg>`;
-  wrap.insertAdjacentHTML('beforeend', svg);
+  chart.insertAdjacentHTML('beforeend', svg);
+
+  // Axe % FIXE à droite (posé sur le wrap, ne défile pas)
+  const wr = wrap.getBoundingClientRect();
+  const yW = pct => (b0.bottom - wr.top) - pct * ((b0.bottom - wr.top) - (b0.top - wr.top));
+  const axis = [0, 0.5, 1].map(f =>
+    `<div class="prog-axis-lbl" style="top:${(yW(f) - 6).toFixed(1)}px">${Math.round(f * 100)}%</div>`
+  ).join('');
+  wrap.insertAdjacentHTML('beforeend', `<div class="prog-axis" style="color:${col}">${axis}</div>`);
 }
 
 // Journal chronologique des événements.
