@@ -2209,6 +2209,7 @@ const CHAMPS_IMPORT = [
   ['taille_menage',  'Taille ménage',   ['taille_menage','taille_ménage','household_size','taille','menage','ménage']],
   ['gsm',            'Téléphone',       ['gsm','tel','telephone','phone','gsm_tel','mobile_number']],
   ['email',          'Email',           ['email','mail','e_mail']],
+  ['history',        'Historique',      ['history','historique']],
 ];
 
 // Libellés de champs traduits (aperçu d'import — colonnes reconnues)
@@ -2230,6 +2231,7 @@ const CHAMP_LABEL_I18N = {
   "taille_menage": { fr:"Taille du ménage", nl:"Gezinsgrootte", en:"Household size", de:"Haushaltsgröße" },
   "gsm": { fr:"Téléphone", nl:"Telefoon", en:"Mobile phone", de:"Telefon" },
   "email": { fr:"Email", nl:"E-mail", en:"Email", de:"E-Mail" },
+  "history": { fr:"Historique", nl:"Geschiedenis", en:"History", de:"Verlauf" },
 };
 function champLabel(key) {
   const e = CHAMP_LABEL_I18N[key];
@@ -2274,6 +2276,11 @@ function parseCSV(text) {
     if (!adresse)        { motifs.adresseVide++;  rejet('motif_no_address'); return; }
     if (ordreVal && ordresVus.has(ordreVal)) { motifs.doublonOrdre++; rejet('motif_dup_order'); return; }
     if (ordreVal) ordresVus.add(ordreVal);
+    // Historique « status@date | status@date » → tableau {statut,date} (statut canonique)
+    const histArr = g(cols, map.history).split('|').map(p => p.trim()).filter(Boolean).map(p => {
+      const i = p.lastIndexOf('@');
+      return { statut: statutCanon((i >= 0 ? p.slice(0, i) : p).trim()), date: (i >= 0 ? p.slice(i + 1) : '').trim() };
+    });
     rows.push({
       ordre:          ordreVal || String(rows.length+1).padStart(2,'0'),
       prenom, nom, adresse,
@@ -2290,6 +2297,7 @@ function parseCSV(text) {
       taille_menage:  map.taille_menage>=0 ? (parseInt(cols[map.taille_menage])||null) : null,
       gsm:            g(cols,map.gsm),
       email:          g(cols,map.email),
+      ...(histArr.length ? { historique: histArr } : {}),
     });
   });
   const rejetees = motifs.sansIdentite + motifs.adresseVide + motifs.doublonOrdre;
@@ -2442,15 +2450,17 @@ function csvCell(v) {
 }
 
 function genererCSV() {
-  const rows = [['order','first_name','last_name','address','status','interview_date','appointment','sex','birth_date','age','birth_country','nationality','marital_status','household_size','phone','email','notes','lat','lng']];
+  const rows = [['order','first_name','last_name','address','status','interview_date','appointment','sex','birth_date','age','birth_country','nationality','marital_status','household_size','phone','email','notes','history','lat','lng']];
   contacts().forEach(c => {
     const cc = coordsCache(c.adresse);
+    // Historique sérialisé : « status@date | status@date » (statut canonique EN)
+    const hist = (c.historique || []).map(h => `${h.statut}@${h.date}`).join(' | ');
     rows.push([
       csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
       csvCell(c.statut||statutDefaut()), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
       csvCell(c.birth_date||''), csvCell(c.age||''), csvCell(c.birth_country||''), csvCell(c.nationality||''),
       csvCell(c.marital_status||''), csvCell(c.taille_menage||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||''),
-      csvCell(cc?cc.lat:''), csvCell(cc?cc.lng:'')
+      csvCell(hist), csvCell(cc?cc.lat:''), csvCell(cc?cc.lng:'')
     ]);
   });
   return '\ufeff' + rows.map(r => r.join(',')).join('\n');
