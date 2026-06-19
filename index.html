@@ -506,6 +506,19 @@
   .activite-seg:first-child { border-radius: 4px 4px 0 0; }
   .activite-tot { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 3px; min-height: 14px; text-align: center; }
   .activite-lbl { font-size: 10px; color: var(--text3); margin-top: 4px; white-space: nowrap; }
+  /* Téléphone / petite tablette : graphe et popup réduits */
+  @media (max-width: 600px) {
+    .activite-chart { height: 180px; gap: 3px; }
+    .activite-bars { width: 22px; height: 150px; }
+    .activite-seg { font-size: 9px; }
+    .activite-lbl { font-size: 8px; }
+    .leaflet-popup-content { min-width: 0; font-size: 12px; line-height: 1.45; }
+    .leaflet-popup-content .popup-titre { font-size: 13px; }
+  }
+  @media (min-width: 601px) and (max-width: 900px) {
+    .activite-chart { height: 215px; }
+    .activite-bars { width: 28px; height: 175px; }
+  }
   /* Journal chronologique des événements */
   .evt-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
   .evt-row { display: flex; gap: 10px; align-items: baseline; padding: 5px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
@@ -2741,7 +2754,11 @@ function afficherMarqueurs() {
         ${dateStatut ? `<span style="font-size:12px;color:#666">${esc(dateStatut)}</span>` : ''}
       </div>
       <div style="margin-top:8px"><button onclick="ouvrirFicheDepuisCarte(${idx})" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ Éditer la fiche</button></div>`;
-    L.marker([lat,lng],{icon}).addTo(markersLayer).bindPopup(popup,{maxWidth:340,minWidth:300});
+    // Largeur du popup adaptée à l'écran (téléphone/tablette)
+    const vw = window.innerWidth || 360;
+    const popMax = Math.min(340, vw - 40);
+    const popMin = Math.min(280, popMax);
+    L.marker([lat,lng],{icon}).addTo(markersLayer).bindPopup(popup,{maxWidth:popMax,minWidth:popMin});
   }
 
   function zoomSurMarqueurs() {
