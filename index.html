@@ -1812,13 +1812,20 @@ function changerStatut(i, val) {
   const c   = contacts()[i];
   const old = c.statut || statutDefaut();
   const def = statutDef(val);
+  if (!Array.isArray(c.historique)) c.historique = [];
+
+  // Préserver l'état courant « terminé » non encore historisé (ex. statut importé)
+  // avant de le remplacer, pour ne pas perdre la visite précédente.
+  const oldDef = statutDef(old);
+  if (old && oldDef.done && c.date && !c.historique.some(h => h.statut === old && h.date === c.date)) {
+    c.historique.push({ statut: old, date: c.date });
+  }
 
   // Historique = journal des visites : on enregistre chaque passage « terminé »
   // (done) ET chaque « rendez-vous » (rdv), daté du jour de la visite.
   if (def.done || def.rdv) {
     const today = todayStr();
     const heure = nowHHMM();
-    if (!Array.isArray(c.historique)) c.historique = [];
     // Éviter doublon : même statut le même jour
     const derniere = c.historique[c.historique.length - 1];
     if (!derniere || derniere.statut !== val || derniere.date !== today) {
