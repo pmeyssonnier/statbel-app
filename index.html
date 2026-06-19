@@ -3180,39 +3180,64 @@ function trierHistorique(c) {
   });
 }
 
-/** Aligne la date/RDV du statut COURANT sur la dernière entrée d'historique du même statut */
-function syncDateCourante(c) {
-  if (!Array.isArray(c.historique) || !c.statut) return;
-  const m = c.historique.filter(h => h.statut === c.statut);
-  if (!m.length) return;                          // statut courant absent de l'historique → inchangé
-  const last = m[m.length - 1];                   // historique déjà trié croissant → dernier = plus récent
-  const d = statutDef(c.statut);
+/** Statut/date courants = dernière entrée (date la plus récente) de l'historique.
+ *  On préserve d'abord le statut courant « terminé » non historisé pour ne rien perdre. */
+function syncStatutCourant(c) {
+  if (!Array.isArray(c.historique)) return;
+  const cd = statutDef(c.statut || '');
+  if (c.statut && cd.done && c.date && !c.historique.some(h => h.statut === c.statut)) {
+    c.historique.push({ statut: c.statut, date: c.date });   // statut importé jamais historisé → on le garde
+    trierHistorique(c);
+  }
+  if (!c.historique.length) return;
+  const last = c.historique[c.historique.length - 1];   // trié croissant → dernier = plus récent
+  c.statut = last.statut;
+  const d = statutDef(last.statut);
   if (d.done)      { c.date = last.date; c.rdv = ''; }
   else if (d.rdv)  { c.date = ''; c.rdv = last.rdv || ''; }
+  else             { c.date = ''; c.rdv = ''; }
 }
 
-/** Met à jour le badge de date du statut courant sur la carte (sans refermer l'édition) */
-function majCarteStatutDate(i) {
-  const c = contacts()[i];
-  const card = document.getElementById('edit-' + i) && document.getElementById('edit-' + i).closest('.card');
+/** Met à jour la carte (bordure, badge statut, date) + les boutons de statut du
+ *  formulaire d'édition, en place (sans refermer la fiche) */
+function majCarteStatut(i) {
+  const editEl = document.getElementById('edit-' + i);
+  const card = editEl && editEl.closest('.card');
   if (!card) return;
+  const c = contacts()[i];
   const def = statutDef(c.statut || statutDefaut());
+  card.style.borderLeftColor = def.color;
+  // Badge de statut sur la carte
+  const badge = card.querySelector('.card-statut .s-btn');
+  if (badge) {
+    badge.textContent = def.icon + ' ' + statutLabel(c.statut);
+    badge.style.color = def.color; badge.style.borderColor = def.color; badge.style.background = def.color + '22';
+  }
+  // Date / RDV associée au statut
   const dateStatut = (c.rdv && def.rdv) ? '📅 ' + formatRdv(c.rdv) : (c.date ? formatDateJour(c.date) : '');
   let el = card.querySelector('.card-statut-date');
   if (dateStatut) {
     if (el) el.textContent = dateStatut;
     else { const s = document.createElement('span'); s.className = 'card-statut-date'; s.textContent = dateStatut; card.querySelector('.card-statut') && card.querySelector('.card-statut').appendChild(s); }
   } else if (el) { el.remove(); }
+  // Boutons de statut du formulaire (état actif)
+  const bar = card.querySelector('.statut-bar');
+  if (bar) {
+    bar.innerHTML = statutDefs().map((s, si) => {
+      const on = s.label === c.statut;
+      return `<button class="s-btn${on ? ' actif' : ''}" style="color:${s.color};${on ? `border-color:${s.color};background:${s.color}22;` : ''}" onclick="changerStatut(${i},statutDefs()[${si}].label)">${s.icon} ${esc(statutLabel(s.label))}</button>`;
+    }).join('');
+  }
 }
 
-/** Après une modif d'historique : tri + alignement date courante + rafraîchissements en place */
+/** Après une modif d'historique : tri + statut/date courants = dernière entrée + rafraîchissements en place */
 function apresModifHistorique(i) {
   const c = contacts()[i];
   trierHistorique(c);
-  syncDateCourante(c);
+  syncStatutCourant(c);
   sauver();
   rafraichirHistorique(i);
-  majCarteStatutDate(i);
+  majCarteStatut(i);
 }
 
 /** Ajoute une entrée d'historique (statut = état courant si pertinent, sinon 1er statut "terminé") */
@@ -3220,6 +3245,11 @@ function ajouterHistorique(i) {
   const c = contacts()[i];
   if (!Array.isArray(c.historique)) c.historique = [];
   const dCur = statutDef(c.statut || '');
+  // Archiver d'abord le statut courant « terminé » jamais historisé (ex. importé),
+  // sinon il serait perdu quand le statut courant prendra la nouvelle entrée.
+  if (c.statut && dCur.done && c.date && !c.historique.some(h => h.statut === c.statut)) {
+    c.historique.push({ statut: c.statut, date: c.date });
+  }
   const defaut = (dCur && (dCur.done || dCur.rdv)) ? c.statut
     : (settings.statuts.find(s => s.done || s.rdv) || settings.statuts[0]).label;
   c.historique.push({ statut: defaut, date: todayStr(), heure: nowHHMM() });
