@@ -575,6 +575,18 @@
   }
   .resume-table tr.resume-total td:first-child { border-radius: 0 0 0 10px; }
   .resume-table tr.resume-total td:last-child  { border-radius: 0 0 10px 0; }
+  /* Résumé compact sur téléphone (placé après les styles de base pour primer) */
+  @media (max-width: 600px) {
+    .resume-title { font-size: 15px; }
+    .kpi-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 7px; }
+    .kpi-card { padding: 8px; }
+    .kpi-card .kpi-val { font-size: 22px; }
+    .kpi-card .kpi-lbl { font-size: 10px; letter-spacing: 0.2px; }
+    .resume-table { font-size: 11px; }
+    .resume-table th { padding: 5px 7px; font-size: 11px; }
+    .resume-table td { padding: 5px 7px; }
+    .resume-table td:first-child { max-width: 120px; }
+  }
   .cell-badge {
     display: inline-block;
     min-width: 26px;
@@ -3152,7 +3164,7 @@ const I18N = {
   "col_date":   { fr:"Date",   nl:"Datum",  en:"Date",   de:"Datum"   },
   "col_status": { fr:"Statut", nl:"Status", en:"Status", de:"Status"  },
   "col_contact":{ fr:"Contact",nl:"Contact",en:"Contact",de:"Kontakt" },
-  "field_statut":       { fr:"Statut",       nl:"Status",      en:"Status",       de:"Status"       },
+  "field_statut":       { fr:"Statut",        nl:"Status",      en:"Status",       de:"Status"       },
   "field_date":         { fr:"Date",          nl:"Datum",       en:"Date",         de:"Datum"         },
   "field_prenom":       { fr:"Prénom",        nl:"Voornaam",    en:"First name",   de:"Vorname"       },
   "field_nom":          { fr:"Nom",           nl:"Naam",        en:"Last name",    de:"Nachname"      },
