@@ -3826,7 +3826,7 @@ function exporterBackup() {
   // Exclure le verrouillage PIN du backup : c'est un réglage propre à
   // l'appareil (et son hash n'a pas à voyager dans un fichier exporté).
   const { pinCode, pinTimeout, ...settingsExport } = settings;
-  const data   = JSON.stringify({ version: 2, date: isoNow, settings: settingsExport, enquetes: enquetesVersEN(enquetes), coords }, null, 2);
+  const data   = JSON.stringify({ version: 2, date: isoNow, settings: settingsExport, surveys: enquetesVersEN(enquetes), coords }, null, 2);
   const blob   = new Blob([data], { type: 'application/json' });
   const url    = URL.createObjectURL(blob);
   const fname  = 'statbel_sauvegarde_' + isoNow.slice(0, 10) + '.json';
@@ -3885,7 +3885,7 @@ function importerBackup(event) {
     try {
       const data = JSON.parse(e.target.result);
       // Repli vers les clés internes (accepte backups EN « first_name… » et anciens FR « prenom… »)
-      const src  = enquetesVersInterne(data.enquetes || data);
+      const src  = enquetesVersInterne(data.surveys || data.enquetes || data);
       const noms = Object.keys(src);
       if (!noms.length) { alert(t('al_no_survey_file')); return; }
 
