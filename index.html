@@ -319,6 +319,34 @@
   }
   .rdv-search input:focus { border-color: var(--filter-border); }
   .rdv-card { background: var(--card-bg); border-radius:10px; padding:12px 14px; box-shadow: var(--card-shadow); border-left: 5px solid #1a73e8; }
+  /* ── Briques graphe et journal dans l'onglet Suivi ── */
+  .rdv-section-card {
+    background: var(--card-bg); border-radius:10px; padding:12px 14px;
+    box-shadow: var(--card-shadow); border-left: 5px solid var(--filter-border);
+  }
+  .rdv-section-title {
+    font-size:13px; font-weight:bold; color:var(--filter-text);
+    margin-bottom:10px;
+  }
+  .evt-brique {
+    display:flex; align-items:center; gap:8px;
+    padding:6px 0; border-bottom:1px solid var(--border); font-size:12px;
+  }
+  .evt-brique:last-child { border-bottom:none; }
+  .evt-brique .eb-date   { flex:0 0 110px; color:var(--text3); white-space:nowrap; font-size:11px; }
+  .evt-brique .eb-statut { flex:0 0 90px; font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .evt-brique .eb-nom    { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text2); }
+  .evt-briques-wrap { max-height:220px; overflow-y:auto; }
+  /* En-tête colonnes journal */
+  .evt-briques-header {
+    display:flex; gap:8px; padding:4px 0 6px;
+    font-size:10px; font-weight:bold; color:var(--text3);
+    text-transform:uppercase; letter-spacing:0.4px;
+    border-bottom:2px solid var(--border); margin-bottom:2px;
+  }
+  .evt-briques-header .ebh-date   { flex:0 0 110px; }
+  .evt-briques-header .ebh-statut { flex:0 0 90px; }
+  .evt-briques-header .ebh-nom    { flex:1; }
   .rdv-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
   .rdv-datetime { font-size:15px; font-weight:bold; color:#1565c0; background:#e3f2fd; padding:4px 12px; border-radius:20px; }
   .rdv-empty { text-align:center; padding:40px 20px; color:#999; font-size:15px; }
@@ -476,7 +504,7 @@
   }
   .activite-seg { width: 100%; }
   .activite-seg:first-child { border-radius: 3px 3px 0 0; }
-  .activite-tot { font-size: 9px; color: var(--text3); margin-bottom: 2px; min-height: 11px; }
+  .activite-tot { font-size: 10px; font-weight: 600; color: var(--text2); margin-bottom: 2px; min-height: 13px; text-align: center; }
   .activite-lbl { font-size: 8px; color: var(--text3); margin-top: 3px; white-space: nowrap; transform: rotate(-90deg); transform-origin: center; height: 34px; }
   /* Journal chronologique des événements */
   .evt-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
@@ -1711,6 +1739,10 @@ function todayStr() {
   const now = new Date();
   return ('0'+now.getDate()).slice(-2)+'/'+('0'+(now.getMonth()+1)).slice(-2)+'/'+now.getFullYear();
 }
+function nowHHMM() {
+  const now = new Date();
+  return ('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+}
 
 /** Convertit DD/MM/YYYY en YYYY-MM-DD pour comparaison de tri */
 function dateFrToISO(d) {
@@ -1743,14 +1775,14 @@ function changerStatut(i, val) {
   // Enregistrer l'historique si on quitte un statut "done" ou si on entre dans un nouveau statut "done"
   if (def.done) {
     const today = todayStr();
-    // Ajouter une entrée dans l'historique
+    const heure = nowHHMM();
     if (!Array.isArray(c.historique)) c.historique = [];
-    // Éviter doublon : même statut + même date
+    // Éviter doublon : même statut + même date + même heure (à la minute près)
     const derniere = c.historique[c.historique.length - 1];
-    if (!derniere || derniere.statut !== val || derniere.date !== today) {
-      c.historique.push({ statut: val, date: today });
+    if (!derniere || derniere.statut !== val || derniere.date !== today || derniere.heure !== heure) {
+      c.historique.push({ statut: val, date: today, heure });
     }
-    c.date = today;   // Toujours mettre à jour la date (nouveau passage = nouvelle date)
+    c.date = today;
   } else {
     c.date = '';
   }
@@ -2750,88 +2782,67 @@ function renduRdv() {
   const container = document.getElementById('rdvListe');
   container.innerHTML = '';
 
-  const q = (document.getElementById('rdvSearch')?.value||'').toLowerCase().trim();
+  const enqAct = enqueteActive;
+  const q      = (document.getElementById('rdvSearch')?.value||'').toLowerCase().trim();
   const defaut = statutDefaut();
+  const today  = new Date().toISOString().slice(0, 10);
+
+  // ── Graphe d'activité en premier ─────────────────────────────────
+  const grapheEl = document.createElement('div');
+  grapheEl.className = 'rdv-section-card';
+  grapheEl.innerHTML = `<div class="rdv-section-title">📊 ${t('res_activity')}</div>`
+    + renderActiviteQuotidienne(enqAct).replace(`<div class="resume-section-title">${t('res_activity')}</div>`, '');
+  container.appendChild(grapheEl);
+
+  // ── Journal des événements (briques, filtré par statut + recherche) ──
+  const journalEl = document.createElement('div');
+  journalEl.className = 'rdv-section-card';
+  const evtFiltered = collecterVisites(enqAct).filter(e =>
+    (!filtreRdv || filtreRdv === 'Tous' || e.statut === filtreRdv) &&
+    (!q || `${e.prenom} ${e.nom}`.toLowerCase().includes(q) || `${e.nom} ${e.prenom}`.toLowerCase().includes(q))
+  );
+  journalEl.innerHTML = `<div class="rdv-section-title">🕐 ${t('res_events')} (${evtFiltered.length})</div>`
+    + renderEvenementsChrono(enqAct, true, filtreRdv, q);
+  container.appendChild(journalEl);
 
   // Statuts éligibles (tout sauf "À faire")
   const eligible = new Set(statutDefs().filter(s => s.label !== defaut).map(s => s.label));
 
-  // Filtrer les contacts
+  // Filtrer les contacts (recherche + filtre statut si actif)
   let liste = contacts().map((c, i) => ({ c, i })).filter(({ c }) => {
     const st = c.statut || defaut;
-    if (!eligible.has(st)) return false;                                          // exclure À faire
-    if (filtreRdv !== 'Tous' && st !== filtreRdv) return false;                   // filtre statut
-    if (!correspondRecherche(c, q)) return false; // recherche (nom, adresse, téléphone)
+    if (!eligible.has(st)) return false;
+    if (filtreRdv !== 'Tous' && st !== filtreRdv) return false;
+    if (!correspondRecherche(c, q)) return false;
     return true;
   });
 
   if (!liste.length) {
-    container.innerHTML = q || filtreRdv !== 'Tous'
+    const empty = document.createElement('div');
+    empty.innerHTML = q || filtreRdv !== 'Tous'
       ? '<div class="rdv-empty">🔍 Aucun contact ne correspond à ce filtre.</div>'
       : '<div class="rdv-empty">📋 Aucun contact avec un statut actif.<br><small>Les contacts "À faire" ne s\'affichent pas ici.</small></div>';
+    container.appendChild(empty);
     return;
   }
 
-  // Tri :
-  // - Statuts RDV (En cours) : chronologique (prochain RDV en premier)
-  // - Statuts done (Fait/Absent/Refus…) : antichronologique (dernier passage en premier)
-  // - Sans date : par numéro d'ordre
+  // ── Tri chronologique décroissant unique ─────────────────────────
   liste.sort((a, b) => {
-    const da = statutDef(a.c.statut || defaut);
-    const db = statutDef(b.c.statut || defaut);
-    const ra = a.c.rdv || '', rb = b.c.rdv || '';
-    const dateA = da.rdv ? ra : (a.c.date ? dateFrToISO(a.c.date) : '');
-    const dateB = db.rdv ? rb : (b.c.date ? dateFrToISO(b.c.date) : '');
-    // RDV datés : croissant (prochain en premier)
-    if (da.rdv && db.rdv) {
-      if (dateA && dateB) return dateA < dateB ? -1 : 1;
-      if (dateA) return -1;
-      if (dateB) return  1;
-    }
-    // Done datés : décroissant (plus récent en premier)
-    if (da.done && db.done) {
-      if (dateA && dateB) return dateA > dateB ? -1 : 1;
-      if (dateA) return -1;
-      if (dateB) return  1;
-    }
-    // Mixte : RDV avant done
-    if (da.rdv && !db.rdv) return -1;
-    if (!da.rdv && db.rdv) return  1;
+    const da   = statutDef(a.c.statut || defaut);
+    const db   = statutDef(b.c.statut || defaut);
+    const keyA = da.rdv ? (a.c.rdv || '') : (a.c.date ? dateFrToISO(a.c.date) : '');
+    const keyB = db.rdv ? (b.c.rdv || '') : (b.c.date ? dateFrToISO(b.c.date) : '');
+    if (keyA && keyB) return keyA > keyB ? -1 : keyA < keyB ? 1 : 0;
+    if (keyA) return -1;
+    if (keyB) return  1;
     return (a.c.ordre || '').localeCompare(b.c.ordre || '');
   });
 
-  const today = new Date().toISOString().slice(0, 10);
-
-  // Grouper par statut si "Tous"
-  if (filtreRdv === 'Tous') {
-    // Ordre des groupes = ordre des statuts configurés (sauf À faire)
-    const groupes = {};
-    statutDefs().filter(s => s.label !== defaut).forEach(s => { groupes[s.label] = []; });
-    liste.forEach(item => {
-      const st = item.c.statut || defaut;
-      if (!groupes[st]) groupes[st] = [];
-      groupes[st].push(item);
-    });
-
-    Object.entries(groupes).forEach(([label, items]) => {
-      if (!items.length) return;
-      const def = statutDef(label);
-      // En-tête de groupe
-      const h = document.createElement('div');
-      h.style.cssText = `display:flex;align-items:center;gap:8px;margin:6px 0 4px;`;
-      h.innerHTML = `
-        <div style="flex:1;height:2px;background:${def.color};opacity:.4;border-radius:1px;"></div>
-        <span style="font-size:12px;font-weight:bold;color:${def.color};white-space:nowrap;">${def.icon} ${esc(statutLabel(label))} (${items.length})</span>
-        <div style="flex:1;height:2px;background:${def.color};opacity:.4;border-radius:1px;"></div>`;
-      container.appendChild(h);
-      items.forEach(item => container.appendChild(buildRdvCard(item.c, item.i, today, def)));
-    });
-  } else {
-    liste.forEach(item => {
-      const def = statutDef(item.c.statut || defaut);
-      container.appendChild(buildRdvCard(item.c, item.i, today, def));
-    });
-  }
+  // ── Cartes contacts ───────────────────────────────────────────────
+  liste.forEach(item => {
+    const def = statutDef(item.c.statut || defaut);
+    container.appendChild(buildRdvCard(item.c, item.i, today, def));
+  });
 }
 
 /** Construit le bloc HTML de l'historique des passages d'un contact */
@@ -2941,9 +2952,12 @@ function buildRdvCard(c, i, today, def) {
       ${label ? `<span style="font-size:11px;color:${isToday?'#2e7d32':'#999'};font-weight:bold;">${esc(label)}</span>` : ''}
     </div>`;
   } else if (c.date) {
-    // Statut « done » : « <Statut> le <jour DD/MM/YYYY> » (date de clôture)
+    // Statut « done » : « <Statut> le <jour DD/MM/YYYY[ HH:mm]> »
+    // Si un RDV existait avec une heure, on l'affiche à côté de la date
+    const heure = (c.rdv || '').split(' ')[1] || '';
+    const dateLabel = formatDateJour(c.date) + (heure ? ' ' + heure : '');
     headerHtml = `<div class="rdv-header">
-      <span class="rdv-datetime" style="background:${def.color}22;color:${def.color}">${def.icon} ${esc(statutLabel(c.statut || statutDefaut()))} ${t('done_on')} ${esc(formatDateJour(c.date))}</span>
+      <span class="rdv-datetime" style="background:${def.color}22;color:${def.color}">${def.icon} ${esc(statutLabel(c.statut || statutDefaut()))} ${t('done_on')} ${esc(dateLabel)}</span>
     </div>`;
   }
 
@@ -3066,6 +3080,25 @@ const I18N = {
   "res_activity_none": { fr:"Aucune visite enregistrée pour l'instant.", nl:"Nog geen bezoeken geregistreerd.", en:"No visits recorded yet.", de:"Noch keine Besuche erfasst." },
   "res_visits": { fr:["visite","visites"], nl:["bezoek","bezoeken"], en:["visit","visits"], de:["Besuch","Besuche"] },
   "res_events": { fr:"🗓️ Journal des événements", nl:"🗓️ Logboek van gebeurtenissen", en:"🗓️ Event log", de:"🗓️ Ereignisprotokoll" },
+  "col_date":   { fr:"Date",   nl:"Datum",  en:"Date",   de:"Datum"   },
+  "col_status": { fr:"Statut", nl:"Status", en:"Status", de:"Status"  },
+  "col_contact":{ fr:"Contact",nl:"Contact",en:"Contact",de:"Kontakt" },
+  "field_statut":       { fr:"Statut",       nl:"Status",      en:"Status",       de:"Status"       },
+  "field_date":         { fr:"Date",          nl:"Datum",       en:"Date",         de:"Datum"         },
+  "field_prenom":       { fr:"Prénom",        nl:"Voornaam",    en:"First name",   de:"Vorname"       },
+  "field_nom":          { fr:"Nom",           nl:"Naam",        en:"Last name",    de:"Nachname"      },
+  "field_adresse":      { fr:"Adresse",       nl:"Adres",       en:"Address",      de:"Adresse"       },
+  "field_gsm":          { fr:"GSM",           nl:"GSM",         en:"Phone",        de:"Handy"         },
+  "field_email":        { fr:"Email",         nl:"E-mail",      en:"Email",        de:"E-Mail"        },
+  "field_notes":        { fr:"Notes",         nl:"Notities",    en:"Notes",        de:"Notizen"       },
+  "field_rdv":          { fr:"RDV",           nl:"Afspraak",    en:"Appointment",  de:"Termin"        },
+  "field_sexe":         { fr:"Sexe",          nl:"Geslacht",    en:"Gender",       de:"Geschlecht"    },
+  "field_birth_date":   { fr:"Date naiss.",   nl:"Geboortedatum",en:"Birth date",  de:"Geburtsdatum"  },
+  "field_age":          { fr:"Âge",           nl:"Leeftijd",    en:"Age",          de:"Alter"         },
+  "field_nationality":  { fr:"Nationalité",   nl:"Nationaliteit",en:"Nationality", de:"Nationalität"  },
+  "field_birth_country":{ fr:"Pays naiss.",   nl:"Geboorteland",en:"Birth country",de:"Geburtsland"   },
+  "field_marital_status":{ fr:"Statut marital",nl:"Burgerlijke staat",en:"Marital status",de:"Familienstand" },
+  "field_taille_menage":{ fr:"Taille ménage", nl:"Gezinsgrootte",en:"Household size",de:"Haushaltsgröße" },
   "ed_status": { fr:"Statut", nl:"Status", en:"Status", de:"Status" },
   "ed_firstname": { fr:"Prénom", nl:"Voornaam", en:"First name", de:"Vorname" },
   "ed_lastname": { fr:"Nom", nl:"Naam", en:"Last name", de:"Name" },
@@ -3696,7 +3729,13 @@ function buildCompareHTML(src, meta) {
       </div>`;
     });
     rowsMod.forEach(({ c, diffs }) => {
-      const detail = diffs.slice(0, 3).map(d => esc(d.champ)).join(', ') + (diffs.length > 3 ? '…' : '');
+      const detail = diffs.slice(0, 3).map(d => {
+        // Traduire le nom du champ
+        const champLabel = t('field_' + d.champ) || d.champ;
+        // Traduire la valeur si c'est le champ statut
+        const apres = d.champ === 'statut' ? statutLabel(d.apres) : d.apres;
+        return esc(champLabel) + (apres ? ' → ' + esc(apres) : '');
+      }).join(', ') + (diffs.length > 3 ? '…' : '');
       rowsHtml += `<div class="compare-row changed">
         <span class="cr-nom">✏️ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
         <span class="cr-detail">${detail}</span>
@@ -4177,26 +4216,55 @@ function exporterResumePDF() {
 // Collecte tous les « événements » (visites datées) de toutes les enquêtes,
 // triés chronologiquement. Base commune du graphe et du journal.
 // Source : historique daté + état courant « terminé » non encore dans l'historique.
-function collecterVisites() {
+// enqFilter : si fourni, ne collecte que les visites de cette enquête.
+function collecterVisites(enqFilter) {
   const ev = [];
-  Object.entries(enquetes).forEach(([enq, arr]) => arr.forEach(c => {
-    const visites = (c.historique || []).filter(h => h && h.date && h.statut).map(h => ({ statut: h.statut, date: h.date }));
-    const dCur = statutDef(c.statut || '');
-    if (c.statut && c.date && dCur && dCur.done &&
-        !visites.some(v => v.statut === c.statut && v.date === c.date)) {
-      visites.push({ statut: c.statut, date: c.date });
-    }
-    visites.forEach(v => {
-      const iso = dateFrToISO(v.date);
-      if (iso) ev.push({ iso, date: v.date, statut: v.statut, prenom: c.prenom, nom: c.nom, ordre: c.ordre, enq });
+  Object.entries(enquetes).forEach(([enq, arr]) => {
+    if (enqFilter && enq !== enqFilter) return;
+    arr.forEach(c => {
+      const dCur = statutDef(c.statut || '');
+
+      // ── Historique des passages (statuts done) ────────────────────
+      const visites = (c.historique || [])
+        .filter(h => h && h.date && h.statut)
+        .map(h => ({ statut: h.statut, date: h.date, heure: h.heure || '' }));
+
+      // État courant done : toujours inclus même si historique vide/absent
+      if (c.statut && c.date && dCur && dCur.done) {
+        if (!visites.some(v => v.statut === c.statut && v.date === c.date)) {
+          visites.push({ statut: c.statut, date: c.date, heure: c.heure || '' });
+        }
+      }
+
+      // ── Statut En cours (rdv) : inclure avec date+heure du RDV ───
+      if (c.statut && c.rdv && dCur && dCur.rdv) {
+        const parts   = (c.rdv + ' ').split(' ');
+        const dateRdv = dateISOToFr(parts[0] || '');
+        const heure   = (parts[1] || '').trim();
+        if (dateRdv) {
+          visites.push({ statut: c.statut, date: dateRdv, heure });
+        }
+      }
+
+      visites.forEach(v => {
+        const iso = dateFrToISO(v.date);
+        if (!iso) return;
+        ev.push({
+          iso:    v.heure ? iso + 'T' + v.heure : iso,
+          date:   v.date,
+          heure:  v.heure || '',
+          statut: v.statut,
+          prenom: c.prenom, nom: c.nom, ordre: c.ordre, enq,
+        });
+      });
     });
-  }));
-  ev.sort((a, b) => a.iso < b.iso ? -1 : (a.iso > b.iso ? 1 : 0));
+  });
+  ev.sort((a, b) => a.iso < b.iso ? -1 : a.iso > b.iso ? 1 : 0);
   return ev;
 }
 
-function renderActiviteQuotidienne() {
-  const events = collecterVisites();
+function renderActiviteQuotidienne(enqFilter) {
+  const events = collecterVisites(enqFilter);
   const parJour = {};                 // { isoDate: { statutLabel: count } }
   const presents = new Set();
   events.forEach(e => {
@@ -4234,7 +4302,7 @@ function renderActiviteQuotidienne() {
     }).join('');
     const [y, m, dd] = iso.split('-');
     return `<div class="activite-col" title="${dd}/${m}/${y} — ${tot} ${tPlural('res_visits', tot)}">
-      <div class="activite-tot">${tot || ''}</div>
+      <div class="activite-tot">${tot > 0 ? tot : ''}</div>
       <div class="activite-bars">${segs}</div>
       <div class="activite-lbl">${dd}/${m}</div>
     </div>`;
@@ -4242,9 +4310,42 @@ function renderActiviteQuotidienne() {
   return html;
 }
 
-// Journal chronologique des événements (base du graphe), du plus ancien au plus récent.
-function renderEvenementsChrono() {
-  const events = collecterVisites();
+// Journal chronologique des événements.
+// enqFilter : filtre sur une enquête; modeRdv : style brique sans colonne enquête.
+// statutFilter : si fourni (≠ 'Tous'), ne montrer que les événements de ce statut.
+// searchFilter : filtre texte sur nom/prénom.
+function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchFilter) {
+  let events = collecterVisites(enqFilter);
+  if (statutFilter && statutFilter !== 'Tous') {
+    events = events.filter(e => e.statut === statutFilter);
+  }
+  if (searchFilter) {
+    const q = searchFilter.toLowerCase();
+    events = events.filter(e =>
+      `${e.prenom} ${e.nom}`.toLowerCase().includes(q) ||
+      `${e.nom} ${e.prenom}`.toLowerCase().includes(q)
+    );
+  }
+  if (modeRdv) {
+    // Style brique, du plus récent au plus ancien, sans colonne enquête
+    const evInv = [...events].reverse();
+    if (!evInv.length) return `<div style="font-size:12px;color:var(--text3);padding:8px 0">${t('res_activity_none')}</div>`;
+    return '<div class="evt-briques-header">'
+      + `<span class="ebh-date">${t('col_date')}</span>`
+      + `<span class="ebh-statut">${t('col_status')}</span>`
+      + `<span class="ebh-nom">${t('col_contact')}</span>`
+      + '</div>'
+      + '<div class="evt-briques-wrap">' + evInv.map(e => {
+      const d = statutDef(e.statut);
+      const dateLabel = formatDateJour(e.date) + (e.heure ? ' ' + e.heure : '');
+      return `<div class="evt-brique">
+        <span class="eb-date">${esc(dateLabel)}</span>
+        <span class="eb-statut" style="color:${d.color}">${esc(d.icon)} ${esc(statutLabel(e.statut))}</span>
+        <span class="eb-nom">${esc(e.prenom)} ${esc(e.nom)}</span>
+      </div>`;
+    }).join('') + '</div>';
+  }
+  // Style tableau (vue Résumé, toutes enquêtes)
   let html = `<div class="resume-section-title">${t('res_events')}</div>`;
   if (!events.length) return html + `<div style="font-size:12px;color:var(--text3);">${t('res_activity_none')}</div>`;
   html += '<div class="evt-list">' + events.map(e => {
@@ -4463,9 +4564,7 @@ function renduResume() {
     <div>
       <div class="resume-section-title">${t('res_table')}</div>
       ${tableHtml}
-    </div>
-    <div>${renderActiviteQuotidienne()}</div>
-    <div>${renderEvenementsChrono()}</div>`;
+    </div>`;
 }
 
 
