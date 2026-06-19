@@ -330,8 +330,10 @@
   }
   .evt-brique {
     display:flex; align-items:center; gap:8px;
-    padding:6px 0; border-bottom:1px solid var(--border); font-size:12px;
+    padding:6px 8px; border-bottom:1px solid var(--border); font-size:12px;
+    cursor:pointer; border-radius:6px;
   }
+  .evt-brique:hover { background:var(--badge-bg); }
   .evt-brique:last-child { border-bottom:none; }
   .evt-brique .eb-date   { flex:0 0 110px; color:var(--text3); white-space:nowrap; font-size:11px; }
   .evt-brique .eb-statut { flex:0 0 90px; font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -3001,11 +3003,25 @@ function afficherMarqueurs() {
 
 let filtreRdv = 'Tous';
 let _activiteJour = null;   // jour ISO sélectionné dans le graphe (filtre le journal)
+let _journalEvents = [];    // événements affichés dans le journal (pour le clic → fiche)
 
 // Clic sur une barre du graphe : (dé)sélectionne le jour → filtre le journal
 function filtrerActiviteJour(iso) {
   _activiteJour = (_activiteJour === iso) ? null : iso;
   renduRdv();
+}
+
+// Clic sur une ligne du journal → ouvre la fiche du contact correspondant
+function ouvrirFicheEvtIdx(i) {
+  const e = _journalEvents[i];
+  if (!e) return;
+  const arr = enquetes[e.enq] || [];
+  const idx = arr.findIndex(c => String(c.ordre) === String(e.ordre) && (c.nom || '') === e.nom && (c.prenom || '') === e.prenom);
+  if (idx < 0) return;
+  if (enqueteActive !== e.enq) { enqueteActive = e.enq; sauver(); refreshSelect(); }
+  filtreActif = 'Tous';
+  setView('liste');
+  setTimeout(() => { const el = ouvrirEdit(idx); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
 }
 
 /** Titre et icône contextuels selon le statut filtré */
@@ -3087,54 +3103,6 @@ function renduRdv() {
   journalEl.innerHTML = `<div class="rdv-section-title">🕐 ${t('res_events')} (${evtFiltered.length})${jourBadge}</div>`
     + renderEvenementsChrono(enqAct, true, filtreRdv, q, _activiteJour);
   container.appendChild(journalEl);
-
-  // Statuts éligibles (tout sauf "À faire")
-  const eligible = new Set(statutDefs().filter(s => s.label !== defaut).map(s => s.label));
-
-  // Jour sélectionné dans le graphe → set des contacts ayant un événement ce jour
-  let contactsDuJour = null;
-  if (_activiteJour) {
-    contactsDuJour = new Set(collecterVisites(enqAct)
-      .filter(e => e.iso.slice(0, 10) === _activiteJour)
-      .map(e => `${e.ordre}|${e.nom}|${e.prenom}`));
-  }
-
-  // Filtrer les contacts (jour + recherche + filtre statut si actif)
-  let liste = contacts().map((c, i) => ({ c, i })).filter(({ c }) => {
-    const st = c.statut || defaut;
-    if (!eligible.has(st)) return false;
-    if (filtreRdv !== 'Tous' && st !== filtreRdv) return false;
-    if (contactsDuJour && !contactsDuJour.has(`${c.ordre}|${c.nom}|${c.prenom}`)) return false;
-    if (!correspondRecherche(c, q)) return false;
-    return true;
-  });
-
-  if (!liste.length) {
-    const empty = document.createElement('div');
-    empty.innerHTML = q || filtreRdv !== 'Tous'
-      ? '<div class="rdv-empty">🔍 Aucun contact ne correspond à ce filtre.</div>'
-      : '<div class="rdv-empty">📋 Aucun contact avec un statut actif.<br><small>Les contacts "À faire" ne s\'affichent pas ici.</small></div>';
-    container.appendChild(empty);
-    return;
-  }
-
-  // ── Tri chronologique décroissant unique ─────────────────────────
-  liste.sort((a, b) => {
-    const da   = statutDef(a.c.statut || defaut);
-    const db   = statutDef(b.c.statut || defaut);
-    const keyA = da.rdv ? (a.c.rdv || '') : (a.c.date ? dateFrToISO(a.c.date) : '');
-    const keyB = db.rdv ? (b.c.rdv || '') : (b.c.date ? dateFrToISO(b.c.date) : '');
-    if (keyA && keyB) return keyA > keyB ? -1 : keyA < keyB ? 1 : 0;
-    if (keyA) return -1;
-    if (keyB) return  1;
-    return (a.c.ordre || '').localeCompare(b.c.ordre || '');
-  });
-
-  // ── Cartes contacts ───────────────────────────────────────────────
-  liste.forEach(item => {
-    const def = statutDef(item.c.statut || defaut);
-    container.appendChild(buildRdvCard(item.c, item.i, today, def));
-  });
 }
 
 /** Construit le bloc HTML de l'historique des passages d'un contact */
@@ -4647,18 +4615,20 @@ function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchFilter, 
     );
   }
   if (modeRdv) {
-    // Style brique, du plus récent au plus ancien, sans colonne enquête
+    // Style brique, du plus récent au plus ancien, sans colonne enquête.
+    // Lignes cliquables → ouvrent la fiche (référence par index dans _journalEvents).
     const evInv = [...events].reverse();
+    _journalEvents = evInv;
     if (!evInv.length) return `<div style="font-size:12px;color:var(--text3);padding:8px 0">${t('res_activity_none')}</div>`;
     return '<div class="evt-briques-header">'
       + `<span class="ebh-date">${t('col_date')}</span>`
       + `<span class="ebh-statut">${t('col_status')}</span>`
       + `<span class="ebh-nom">${t('col_contact')}</span>`
       + '</div>'
-      + '<div class="evt-briques-wrap">' + evInv.map(e => {
+      + '<div class="evt-briques-wrap">' + evInv.map((e, i) => {
       const d = statutDef(e.statut);
       const dateLabel = formatDateJour(e.date) + (e.heure ? ' ' + e.heure : '');
-      return `<div class="evt-brique">
+      return `<div class="evt-brique" onclick="ouvrirFicheEvtIdx(${i})">
         <span class="eb-date">${esc(dateLabel)}</span>
         <span class="eb-statut" style="color:${d.color}">${esc(d.icon)} ${esc(statutLabel(e.statut))}</span>
         <span class="eb-nom">${esc(e.prenom)} ${esc(e.nom)}</span>
