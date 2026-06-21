@@ -2278,8 +2278,11 @@ function detecterNonTraduits(contacts) {
   const arr = contacts || Object.values(enquetes).reduce((a, b) => a.concat(b), []);
   const pays = new Set(), marital = new Set();
   arr.forEach(c => {
-    const n = (c.nationality || '').trim();
-    if (n && !PAYS_I18N[n.toUpperCase()]) pays.add(n);
+    // Pays : nationalité ET pays de naissance (codes inconnus de PAYS_I18N)
+    [c.nationality, c.birth_country].forEach(v => {
+      const x = (v || '').trim();
+      if (x && !PAYS_I18N[x.toUpperCase()]) pays.add(x);
+    });
     const m = (c.marital_status || '').trim();
     if (m && !MARITAL_I18N[m]) marital.add(m);
   });
@@ -2291,9 +2294,34 @@ function renderNonTraduits(contacts) {
   const { pays, marital } = detecterNonTraduits(contacts);
   if (!pays.length && !marital.length) return '';
   const det = [];
-  if (pays.length)    det.push(`${champLabel('nationality')} : ${pays.map(esc).join(', ')}`);
+  if (pays.length)    det.push(`${t('cohr_country')} : ${pays.map(esc).join(', ')}`);
   if (marital.length) det.push(`${champLabel('marital_status')} : ${marital.map(esc).join(', ')}`);
   return `<div style="font-size:11px;color:#e65100;margin-top:6px;">${t('i18n_missing')} ${det.join(' · ')}</div>`;
+}
+
+// Contrôles de cohérence structurelle des lignes importées (format date, sexe, statut)
+function detecterIncoherences(rows) {
+  const statutsOK = new Set(statutDefs().map(s => s.label));
+  const r = { dates: [], sexes: new Set(), statuts: new Set() };
+  (rows || []).forEach(c => {
+    const d = (c.birth_date || '').trim();
+    if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) r.dates.push({ ordre: c.ordre || '—', val: d });
+    const s = (c.sexe || '').trim();
+    if (s && s !== 'M' && s !== 'F') r.sexes.add(s);
+    const st = (c.statut || '').trim();
+    if (st && !statutsOK.has(st)) r.statuts.add(st);
+  });
+  return r;
+}
+
+function renderCoherence(rows) {
+  const i = detecterIncoherences(rows);
+  const parts = [];
+  if (i.dates.length)  parts.push(`${t('cohr_date')} (${i.dates.length}) : ${i.dates.slice(0, 5).map(x => 'N° ' + esc(String(x.ordre)) + '=' + esc(x.val)).join(', ')}${i.dates.length > 5 ? '…' : ''}`);
+  if (i.sexes.size)    parts.push(`${t('cohr_sex')} : ${[...i.sexes].map(esc).join(', ')}`);
+  if (i.statuts.size)  parts.push(`${t('cohr_status')} : ${[...i.statuts].map(esc).join(', ')}`);
+  if (!parts.length) return '';
+  return `<div style="font-size:11px;color:#e65100;margin-top:6px;">⚠️ ${t('cohr_title')} ${parts.join(' · ')}</div>`;
 }
 
 // Libellé de statut : clés = identifiants canoniques EN (langue pivot).
@@ -2719,7 +2747,8 @@ function renderImportApercu(s) {
     <div style="margin-bottom:8px;">${recon}</div>
     <div style="font-size:12px;margin-bottom:4px;"><strong>${t('ip_cols_ko')}</strong></div>
     <div>${nonRecon}</div>
-    ${renderNonTraduits(csvEnAttente)}`;
+    ${renderNonTraduits(csvEnAttente)}
+    ${renderCoherence(csvEnAttente)}`;
 }
 
 function confirmerImport() {
@@ -3587,6 +3616,11 @@ const I18N = {
   "field_notes":        { fr:"Notes",         nl:"Notities",    en:"Notes",        de:"Notizen"       },
   "field_rdv":          { fr:"RDV",           nl:"Afspraak",    en:"Appointment",  de:"Termin"        },
   "field_historique":   { fr:"Historique (entrées)", nl:"Historiek (items)", en:"History (entries)", de:"Verlauf (Einträge)" },
+  "cohr_title":   { fr:"Cohérence :", nl:"Coherentie:", en:"Coherence:", de:"Kohärenz:" },
+  "cohr_country": { fr:"Code pays inconnu", nl:"Onbekende landcode", en:"Unknown country code", de:"Unbekannter Ländercode" },
+  "cohr_date":    { fr:"Date de naissance invalide (≠ AAAA-MM-JJ)", nl:"Ongeldige geboortedatum (≠ JJJJ-MM-DD)", en:"Invalid birth date (≠ YYYY-MM-DD)", de:"Ungültiges Geburtsdatum (≠ JJJJ-MM-TT)" },
+  "cohr_sex":     { fr:"Sexe inattendu (≠ M/F)", nl:"Onverwacht geslacht (≠ M/F)", en:"Unexpected sex (≠ M/F)", de:"Unerwartetes Geschlecht (≠ M/F)" },
+  "cohr_status":  { fr:"Statut inconnu", nl:"Onbekende status", en:"Unknown status", de:"Unbekannter Status" },
   "field_sexe":         { fr:"Sexe",          nl:"Geslacht",    en:"Gender",       de:"Geschlecht"    },
   "field_birth_date":   { fr:"Date naiss.",   nl:"Geboortedatum",en:"Birth date",  de:"Geburtsdatum"  },
   "field_age":          { fr:"Âge",           nl:"Leeftijd",    en:"Age",          de:"Alter"         },
