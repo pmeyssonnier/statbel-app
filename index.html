@@ -802,6 +802,10 @@
   .compare-row .cr-nom { font-weight:600; }
   .compare-row .cr-detail { font-size:11px; color:var(--text3); }
   .compare-row .cr-bad { color:#c62828; text-decoration:line-through; font-weight:600; }
+  .compare-row .cr-hist { display:flex; flex-direction:column; gap:1px; font-size:11px; color:var(--text3); margin-top:2px; }
+  .compare-row .cr-hist-l { display:block; padding-left:10px; }
+  .compare-row .cr-hist-add { color:#2e7d32; }
+  .compare-row .cr-hist-rem { color:#c62828; text-decoration:line-through; }
   .compare-summary {
     display:flex; gap:6px; flex-wrap:wrap; padding: 0 12px 10px;
   }
@@ -4203,6 +4207,30 @@ function valeurIncoherente(champ, val) {
   return false;
 }
 
+// Détail des changements d'historique : appariement par statut (ordre des dates),
+// retourne { mod:[{statut,avant,apres}], add:[{statut,date}], rem:[{statut,date}] }.
+function diffHistorique(oldH, newH) {
+  const groupe = arr => {
+    const g = {};
+    (arr || []).forEach(e => { (g[e.statut] = g[e.statut] || []).push(e.date || ''); });
+    return g;
+  };
+  const go = groupe(oldH), gn = groupe(newH);
+  const statuts = [...new Set([...Object.keys(go), ...Object.keys(gn)])];
+  const res = { mod: [], add: [], rem: [] };
+  statuts.forEach(st => {
+    const od = (go[st] || []), nd = (gn[st] || []);
+    const n = Math.max(od.length, nd.length);
+    for (let i = 0; i < n; i++) {
+      const a = od[i], b = nd[i];
+      if (a !== undefined && b !== undefined) { if (a !== b) res.mod.push({ statut: st, avant: a, apres: b }); }
+      else if (a !== undefined) res.rem.push({ statut: st, date: a });
+      else res.add.push({ statut: st, date: b });
+    }
+  });
+  return res;
+}
+
 function _diffContacts(a, b) {
   const diffs = [];
   _CHAMPS_COMPARES.forEach(champ => {
@@ -4261,7 +4289,7 @@ function buildCompareHTML(src, meta) {
       const old = mapOld[k];
       if (!old) { rowsAdd.push(c); return; }
       const diffs = _diffContacts(old, c);
-      if (diffs.length) rowsMod.push({ c, diffs });
+      if (diffs.length) rowsMod.push({ c, old, diffs });
       else unch++;
     });
     if (arrOld) {
@@ -4289,8 +4317,10 @@ function buildCompareHTML(src, meta) {
         <span class="cr-detail">${t('cmp_new_word')}</span>
       </div>`;
     });
-    rowsMod.forEach(({ c, diffs }) => {
-      const detail = diffs.slice(0, 4).map(d => {
+    rowsMod.forEach(({ c, old, diffs }) => {
+      const champDiffs = diffs.filter(d => d.champ !== 'historique');
+      const histDiff   = diffs.find(d => d.champ === 'historique');
+      const detail = champDiffs.slice(0, 4).map(d => {
         const champLabel = t('field_' + d.champ) || d.champ;
         const tr = v => d.champ === 'statut' ? statutLabel(v) : v;
         const av = tr(d.avant), ap = tr(d.apres);
@@ -4298,10 +4328,21 @@ function buildCompareHTML(src, meta) {
         const apTxt = esc(ap || '∅');
         const apHtml = valeurIncoherente(d.champ, d.apres) ? `<span class="cr-bad">${apTxt}</span>` : apTxt;
         return esc(champLabel) + ' : ' + esc(av || '∅') + ' → ' + apHtml;
-      }).join(' · ') + (diffs.length > 4 ? '…' : '');
+      }).join(' · ') + (champDiffs.length > 4 ? '…' : '');
+      // Sous-bloc détaillé de l'historique (date modifiée, ligne ajoutée/supprimée)
+      let histHtml = '';
+      if (histDiff) {
+        const dh = diffHistorique(old.historique, c.historique);
+        const lignes = [];
+        dh.mod.forEach(m => lignes.push(`<span>${esc(statutLabel(m.statut))} : ${esc(m.avant)} → ${esc(m.apres)}</span>`));
+        dh.add.forEach(a => lignes.push(`<span class="cr-hist-add">➕ ${esc(statutLabel(a.statut))} : ${esc(a.date)}</span>`));
+        dh.rem.forEach(r => lignes.push(`<span class="cr-hist-rem">➖ ${esc(statutLabel(r.statut))} : ${esc(r.date)}</span>`));
+        if (lignes.length) histHtml = `<div class="cr-hist">${t('field_historique')} : ${histDiff.avant} → ${histDiff.apres}${lignes.map(l => '<span class="cr-hist-l">' + l + '</span>').join('')}</div>`;
+      }
       rowsHtml += `<div class="compare-row changed">
         <span class="cr-nom">✏️ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
-        <span class="cr-detail">${detail}</span>
+        ${detail ? `<span class="cr-detail">${detail}</span>` : ''}
+        ${histHtml}
       </div>`;
     });
     rowsRem.forEach(c => {
