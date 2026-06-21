@@ -2282,6 +2282,21 @@ function paysNom(code) {
   return e ? (e[settings.lang] || e.fr) : code;
 }
 
+// Index inverse ISO-2 → ISO-3 (construit une fois depuis PAYS_I18N)
+const ISO2_TO_ISO3 = {};
+for (const [iso3, e] of Object.entries(PAYS_I18N)) { if (e.iso2) ISO2_TO_ISO3[e.iso2.toUpperCase()] = iso3; }
+
+// Normalise un code pays en ISO-3 : ISO-3 connu → tel quel ; ISO-2 connu → ISO-3 ;
+// inconnu → laissé tel quel (sera signalé par les contrôles de cohérence).
+function normaliserPays(code) {
+  const v = (code == null ? '' : code).toString().trim();
+  if (!v) return code;
+  const u = v.toUpperCase();
+  if (PAYS_I18N[u]) return u;          // déjà ISO-3
+  if (ISO2_TO_ISO3[u]) return ISO2_TO_ISO3[u];  // ISO-2 → ISO-3
+  return code;                         // inconnu : on ne touche pas
+}
+
 // « Belgium (BE) » — nom localisé + code ISO-2 entre parenthèses.
 // (Pas d'emoji drapeau : Windows/Chrome ne les affichent pas — ils sortent en « BE ».)
 function paysAffiche(code) {
@@ -2625,8 +2640,8 @@ function parseCSV(text) {
       sexe:           g(cols,map.sexe)   || null,
       birth_date:     g(cols,map.birth_date) || null,
       age:            map.age>=0 ? parseInt(cols[map.age])||null : null,
-      birth_country:  g(cols,map.birth_country) || null,
-      nationality:    g(cols,map.nationality)  || null,
+      birth_country:  normaliserPays(g(cols,map.birth_country)) || null,
+      nationality:    normaliserPays(g(cols,map.nationality))  || null,
       marital_status: maritalCanon(g(cols,map.marital_status)) || null,
       taille_menage:  map.taille_menage>=0 ? (parseInt(cols[map.taille_menage])||null) : null,
       gsm:            g(cols,map.gsm),
@@ -4549,6 +4564,11 @@ function importerBackup(event) {
       const data = JSON.parse(e.target.result);
       // Repli vers les clés internes (accepte backups EN « first_name… » et anciens FR « prenom… »)
       const src  = enquetesVersInterne(data.surveys || data.enquetes || data);
+      // Correction auto ISO-2 → ISO-3 des codes pays (naissance + nationalité)
+      Object.values(src).forEach(arr => arr.forEach(c => {
+        if (c.birth_country) c.birth_country = normaliserPays(c.birth_country);
+        if (c.nationality)   c.nationality   = normaliserPays(c.nationality);
+      }));
       const noms = Object.keys(src);
       if (!noms.length) { alert(t('al_no_survey_file')); return; }
 
