@@ -801,6 +801,7 @@
   .compare-row.changed{ background:#fff3e0; }
   .compare-row .cr-nom { font-weight:600; }
   .compare-row .cr-detail { font-size:11px; color:var(--text3); }
+  .compare-row .cr-bad { color:#c62828; text-decoration:line-through; font-weight:600; }
   .compare-summary {
     display:flex; gap:6px; flex-wrap:wrap; padding: 0 12px 10px;
   }
@@ -4188,6 +4189,21 @@ const _CHAMPS_COMPARES = [
   'taille_menage','rdv'
 ];
 
+// Vrai si la valeur d'un champ est incohérente (pour barrer en rouge dans la comparaison)
+function valeurIncoherente(champ, val) {
+  const v = (val == null ? '' : val).toString().trim();
+  if (!v) return false;
+  if (champ === 'birth_country' || champ === 'nationality') return !PAYS_I18N[v.toUpperCase()];
+  if (champ === 'sexe')   return v !== 'M' && v !== 'F';
+  if (champ === 'statut') return !statutDefs().some(s => s.label === v);
+  if (champ === 'birth_date') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return true;
+    const [, m, d] = v.split('-').map(Number);
+    return m < 1 || m > 12 || d < 1 || d > 31;
+  }
+  return false;
+}
+
 function _diffContacts(a, b) {
   const diffs = [];
   _CHAMPS_COMPARES.forEach(champ => {
@@ -4279,7 +4295,10 @@ function buildCompareHTML(src, meta) {
         const champLabel = t('field_' + d.champ) || d.champ;
         const tr = v => d.champ === 'statut' ? statutLabel(v) : v;
         const av = tr(d.avant), ap = tr(d.apres);
-        return esc(champLabel) + ' : ' + esc(av || '∅') + ' → ' + esc(ap || '∅');
+        // Nouvelle valeur incohérente → rouge barré
+        const apTxt = esc(ap || '∅');
+        const apHtml = valeurIncoherente(d.champ, d.apres) ? `<span class="cr-bad">${apTxt}</span>` : apTxt;
+        return esc(champLabel) + ' : ' + esc(av || '∅') + ' → ' + apHtml;
       }).join(' · ') + (diffs.length > 4 ? '…' : '');
       rowsHtml += `<div class="compare-row changed">
         <span class="cr-nom">✏️ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
