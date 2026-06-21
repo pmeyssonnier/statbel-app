@@ -2302,15 +2302,14 @@ function renderNonTraduits(contacts) {
 
 // Contrôles de cohérence structurelle des lignes importées (format date, sexe, statut)
 function detecterIncoherences(rows) {
-  const statutsOK = new Set(statutDefs().map(s => s.label));
   const r = { dates: [], sexes: new Set(), statuts: new Set() };
   (rows || []).forEach(c => {
     const d = (c.birth_date || '').trim();
-    if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) r.dates.push({ ordre: c.ordre || '—', val: d });
+    if (valeurIncoherente('birth_date', d)) r.dates.push({ ordre: c.ordre || '—', val: d });
     const s = (c.sexe || '').trim();
-    if (s && s !== 'M' && s !== 'F') r.sexes.add(s);
+    if (valeurIncoherente('sexe', s)) r.sexes.add(s);
     const st = (c.statut || '').trim();
-    if (st && !statutsOK.has(st)) r.statuts.add(st);
+    if (valeurIncoherente('statut', st)) r.statuts.add(st);
   });
   return r;
 }
