@@ -901,6 +901,8 @@
 
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; }
   .modal-overlay.open { display:flex; }
+  /* Modal de configuration du PIN : ouvert DEPUIS les Paramètres → doit passer au-dessus */
+  #modalPin { z-index: 300; }
 
   /* ── Écran de verrouillage PIN ─────────────────────────────────────── */
   #lockScreen {
