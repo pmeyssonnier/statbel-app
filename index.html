@@ -804,6 +804,8 @@
   .compare-row .cr-bad { color:#c62828; text-decoration:line-through; font-weight:600; }
   .compare-row .cr-hist { display:flex; flex-direction:column; gap:1px; font-size:11px; color:var(--text3); margin-top:2px; }
   .compare-row .cr-hist-l { display:block; padding-left:10px; }
+  .compare-row .cr-hist-unch { color:var(--text3); }
+  .compare-row .cr-hist-mod { color:#e65100; }
   .compare-row .cr-hist-add { color:#2e7d32; }
   .compare-row .cr-hist-rem { color:#c62828; text-decoration:line-through; }
   .compare-summary {
@@ -4217,13 +4219,16 @@ function diffHistorique(oldH, newH) {
   };
   const go = groupe(oldH), gn = groupe(newH);
   const statuts = [...new Set([...Object.keys(go), ...Object.keys(gn)])];
-  const res = { mod: [], add: [], rem: [] };
+  const res = { unch: [], mod: [], add: [], rem: [] };
   statuts.forEach(st => {
     const od = (go[st] || []), nd = (gn[st] || []);
     const n = Math.max(od.length, nd.length);
     for (let i = 0; i < n; i++) {
       const a = od[i], b = nd[i];
-      if (a !== undefined && b !== undefined) { if (a !== b) res.mod.push({ statut: st, avant: a, apres: b }); }
+      if (a !== undefined && b !== undefined) {
+        if (a !== b) res.mod.push({ statut: st, avant: a, apres: b });
+        else res.unch.push({ statut: st, date: a });
+      }
       else if (a !== undefined) res.rem.push({ statut: st, date: a });
       else res.add.push({ statut: st, date: b });
     }
@@ -4334,7 +4339,8 @@ function buildCompareHTML(src, meta) {
       if (histDiff) {
         const dh = diffHistorique(old.historique, c.historique);
         const lignes = [];
-        dh.mod.forEach(m => lignes.push(`<span>${esc(statutLabel(m.statut))} : ${esc(m.avant)} → ${esc(m.apres)}</span>`));
+        dh.unch.forEach(u => lignes.push(`<span class="cr-hist-unch">✅ ${esc(statutLabel(u.statut))} : ${esc(u.date)}</span>`));
+        dh.mod.forEach(m => lignes.push(`<span class="cr-hist-mod">✏️ ${esc(statutLabel(m.statut))} : ${esc(m.avant)} → ${esc(statutLabel(m.statut))} : ${esc(m.apres)}</span>`));
         dh.add.forEach(a => lignes.push(`<span class="cr-hist-add">➕ ${esc(statutLabel(a.statut))} : ${esc(a.date)}</span>`));
         dh.rem.forEach(r => lignes.push(`<span class="cr-hist-rem">➖ ${esc(statutLabel(r.statut))} : ${esc(r.date)}</span>`));
         if (lignes.length) histHtml = `<div class="cr-hist">${t('field_historique')} : ${histDiff.avant} → ${histDiff.apres}${lignes.map(l => '<span class="cr-hist-l">' + l + '</span>').join('')}</div>`;
