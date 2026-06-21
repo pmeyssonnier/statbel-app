@@ -2311,14 +2311,24 @@ function paysNom(code) {
 const ISO2_TO_ISO3 = {};
 for (const [iso3, e] of Object.entries(PAYS_I18N)) { if (e.iso2) ISO2_TO_ISO3[e.iso2.toUpperCase()] = iso3; }
 
+// Alias des codes ISO-3 erronés les plus fréquents → ISO-3 officiel
+const PAYS_ALIAS = {
+  GER: 'DEU',   // Allemagne
+  ENG: 'GBR',   // Angleterre → Royaume-Uni
+  SPA: 'ESP',   // Espagne
+  POR: 'PRT',   // Portugal
+  BUL: 'BGR',   // Bulgarie
+};
+
 // Normalise un code pays en ISO-3 : ISO-3 connu → tel quel ; ISO-2 connu → ISO-3 ;
-// inconnu → laissé tel quel (sera signalé par les contrôles de cohérence).
+// alias fréquent → ISO-3 ; inconnu → laissé tel quel (signalé par les contrôles de cohérence).
 function normaliserPays(code) {
   const v = (code == null ? '' : code).toString().trim();
   if (!v) return code;
   const u = v.toUpperCase();
   if (PAYS_I18N[u]) return u;          // déjà ISO-3
   if (ISO2_TO_ISO3[u]) return ISO2_TO_ISO3[u];  // ISO-2 → ISO-3
+  if (PAYS_ALIAS[u]) return PAYS_ALIAS[u];       // alias fréquent → ISO-3
   return code;                         // inconnu : on ne touche pas
 }
 
