@@ -1267,6 +1267,14 @@
           </span>
           <button class="btn-secondary" data-i18n="btn_nongeo" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
         </div>
+        <div class="set-row" style="margin-top:10px;">
+          <label data-i18n="lbl_csvsep">↔️ Séparateur d'export CSV</label>
+          <select id="setCsvSep" onchange="settings.csvSep=this.value;saveSettings()">
+            <option value="auto" data-i18n="opt_csvsep_auto">Auto (réglages régionaux)</option>
+            <option value="," data-i18n="opt_csvsep_comma">Virgule ( , )</option>
+            <option value=";" data-i18n="opt_csvsep_semi">Point-virgule ( ; ) — Excel FR/NL</option>
+          </select>
+        </div>
         <small id="dataStats"></small>
         <div id="i18nMissing"></div>
         <div id="nonGeoList"></div>
@@ -1541,6 +1549,7 @@ const SETTINGS_DEFAULTS = {
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
   fontSize:   'normal',   // 'small' | 'normal' (défaut/système) | 'large' | 'xlarge'
+  csvSep:     'auto',     // séparateur d'export CSV : 'auto' (régional) | ',' | ';'
   // Langue : détectée depuis le navigateur au 1er lancement (fr/nl/en), défaut fr
   lang: (() => { const l = (navigator.language || 'fr').slice(0,2).toLowerCase(); return ['fr','nl','en','de'].includes(l) ? l : 'fr'; })(),
 };
@@ -2797,7 +2806,18 @@ function fermerModal() {
 function csvCell(v) {
   const str = (v||'').toString().trim();
   const escaped = str.replace(/"/g,'""');
-  return /[,"\r\n]/.test(str) || escaped !== str ? '"'+escaped+'"' : escaped;
+  // Guillemets si la cellule contient un séparateur possible (, ou ;), un guillemet ou un saut de ligne
+  return /[,;"\r\n]/.test(str) || escaped !== str ? '"'+escaped+'"' : escaped;
+}
+
+// Séparateur décimal de l'appareil → ',' (Europe) signifie qu'Excel attend ';' en CSV
+function sepRegionalAuto() {
+  try { return (1.1).toLocaleString().includes(',') ? ';' : ','; } catch (e) { return ','; }
+}
+// Séparateur d'export effectif selon le réglage (auto = régional)
+function sepCSVexport() {
+  const s = settings.csvSep || 'auto';
+  return s === ';' ? ';' : s === ',' ? ',' : sepRegionalAuto();
 }
 
 function genererCSV() {
@@ -2820,7 +2840,8 @@ function genererCSV() {
       csvCell(hist), csvCell(cc?cc.lat:''), csvCell(cc?cc.lng:'')
     ]);
   });
-  return '\ufeff' + rows.map(r => r.join(',')).join('\n');
+  const sep = sepCSVexport();
+  return '\ufeff' + rows.map(r => r.join(sep)).join('\n');
 }
 
 function exporterCSV() {
@@ -3800,6 +3821,10 @@ const I18N = {
   "lbl_lang": { fr:"🌐 Langue", nl:"🌐 Taal", en:"🌐 Language", de:"🌐 Sprache" },
   "lbl_font": { fr:"🔤 Police de caractères", nl:"🔤 Lettertype", en:"🔤 Font", de:"🔤 Schriftart" },
   "lbl_size": { fr:"🔍 Taille du texte", nl:"🔍 Tekstgrootte", en:"🔍 Text size", de:"🔍 Textgröße" },
+  "lbl_csvsep": { fr:"↔️ Séparateur d'export CSV", nl:"↔️ CSV-exportscheidingsteken", en:"↔️ CSV export separator", de:"↔️ CSV-Export-Trennzeichen" },
+  "opt_csvsep_auto": { fr:"Auto (réglages régionaux)", nl:"Auto (regionale instellingen)", en:"Auto (regional settings)", de:"Auto (Regionaleinstellungen)" },
+  "opt_csvsep_comma": { fr:"Virgule ( , )", nl:"Komma ( , )", en:"Comma ( , )", de:"Komma ( , )" },
+  "opt_csvsep_semi": { fr:"Point-virgule ( ; ) — Excel FR/NL", nl:"Puntkomma ( ; ) — Excel FR/NL", en:"Semicolon ( ; ) — Excel FR/NL", de:"Semikolon ( ; ) — Excel FR/NL" },
   "lbl_provider": { fr:"🌍 Région / fournisseur géo", nl:"🌍 Regio / geo-aanbieder", en:"🌍 Region / geo provider", de:"🌍 Region / Geo-Anbieter" },
   "lbl_basemap": { fr:"🗺️ Fond de carte", nl:"🗺️ Achtergrondkaart", en:"🗺️ Base map", de:"🗺️ Kartenhintergrund" },
   "lbl_nav": { fr:"🧭 Liens de navigation", nl:"🧭 Navigatielinks", en:"🧭 Navigation links", de:"🧭 Navigationslinks" },
@@ -3907,6 +3932,7 @@ function ouvrirSettings() {
   document.getElementById('setTheme').value      = settings.theme;
   document.getElementById('setFontFamily').value = settings.fontFamily;
   document.getElementById('setFontSize').value   = settings.fontSize;
+  { const e = document.getElementById('setCsvSep'); if (e) e.value = settings.csvSep || 'auto'; }
   document.getElementById('setProvider').value = settings.provider;
   document.getElementById('setMapStyle').value = settings.mapStyle;
   document.getElementById('setNav').value      = settings.navMode;
