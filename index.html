@@ -1311,6 +1311,9 @@
   <div class="modal">
     <h2 id="modalBackupTitle">💾 Détail de la sauvegarde</h2>
     <div class="backup-body" id="modalBackupBody"></div>
+    <label id="backupPreserveRow" class="hidden" style="display:flex;align-items:center;gap:7px;font-size:13px;margin:8px 0 0;cursor:pointer;">
+      <input type="checkbox" id="chkPreserveHist" checked> <span data-i18n="bk_preserve_hist">Préserver l'historique et les RDV existants</span>
+    </label>
     <div class="modal-btns" id="modalBackupBtns">
       <button class="btn-secondary" onclick="fermerBackupDetail()">Annuler</button>
       <button class="btn-primary"   id="btnBackupConfirm">Confirmer</button>
@@ -3726,6 +3729,7 @@ const I18N = {
   "cmp_global": { fr:"📊 Comparaison globale", nl:"📊 Globale vergelijking", en:"📊 Overall comparison", de:"📊 Globaler Vergleich" },
   "cmp_change": { fr:["changement","changements"], nl:["wijziging","wijzigingen"], en:["change","changes"], de:["Änderung","Änderungen"] },
   "bk_restore_title": { fr:"⬆️ Comparaison avant restauration", nl:"⬆️ Vergelijking vóór herstel", en:"⬆️ Comparison before restore", de:"⬆️ Vergleich vor der Wiederherstellung" },
+  "bk_preserve_hist": { fr:"Préserver l'historique et les RDV existants (ne pas écraser)", nl:"Bestaande historiek en afspraken behouden (niet overschrijven)", en:"Keep existing history and appointments (don't overwrite)", de:"Vorhandenen Verlauf und Termine beibehalten (nicht überschreiben)" },
   "bk_saved_on": { fr:"📅 Sauvegarde du :", nl:"📅 Back-up van:", en:"📅 Backup from:", de:"📅 Backup vom:" },
   "bk_file": { fr:"📂 Fichier :", nl:"📂 Bestand:", en:"📂 File:", de:"📂 Datei:" },
   "bk_conflict": { fr:"⚠️ <strong style=\"color:#e65100\">{n} enquête(s) sera(ont) comparée(s) aux données existantes</strong>", nl:"⚠️ <strong style=\"color:#e65100\">{n} onderzoek(en) word(t)(en) vergeleken met bestaande gegevens</strong>", en:"⚠️ <strong style=\"color:#e65100\">{n} survey(s) will be compared with existing data</strong>", de:"⚠️ <strong style=\"color:#e65100\">{n} Umfrage(n) wird/werden mit vorhandenen Daten verglichen</strong>" },
@@ -4436,6 +4440,7 @@ function exporterBackup() {
 
   document.getElementById('modalBackupTitle').textContent = t('bk_save_title');
   document.getElementById('modalBackupBody').innerHTML    = detailHtml;
+  document.getElementById('backupPreserveRow').classList.add('hidden');  // option réservée au restore
 
   const btnConfirm = document.getElementById('btnBackupConfirm');
   btnConfirm.textContent = t('bk_download');
@@ -4509,10 +4514,34 @@ function importerBackup(event) {
       _pendingRestore = src;
       _pendingSettings = data.settings || null;
       _pendingCoords = data.coords || null;
+      // Option « préserver l'historique/RDV existants » (visible uniquement au restore)
+      document.getElementById('backupPreserveRow').classList.remove('hidden');
+      document.getElementById('chkPreserveHist').checked = true;
       btnConfirm.onclick = () => {
         if (!_pendingRestore) return;
+        const preserver = document.getElementById('chkPreserveHist').checked;
         const noms2 = Object.keys(_pendingRestore);
-        noms2.forEach(n => enquetes[n] = _pendingRestore[n]);
+        noms2.forEach(n => {
+          let arr = _pendingRestore[n];
+          if (preserver && enquetes[n]) {
+            // Conserver historique + RDV (et statut/date) des contacts appariés déjà suivis
+            const mapOld = {};
+            enquetes[n].forEach(c => { mapOld[_contactKey(c)] = c; });
+            arr = arr.map(neu => {
+              const o = mapOld[_contactKey(neu)];
+              if (!o) return neu;
+              const travaille = (Array.isArray(o.historique) && o.historique.length)
+                || (o.statut && o.statut !== statutDefaut()) || o.rdv;
+              if (!travaille) return neu;
+              const m = Object.assign({}, neu);
+              m.statut = o.statut; m.date = o.date;
+              if (o.rdv) m.rdv = o.rdv; else delete m.rdv;
+              if (Array.isArray(o.historique) && o.historique.length) m.historique = o.historique;
+              return m;
+            });
+          }
+          enquetes[n] = arr;
+        });
         enqueteActive = enqueteActive || noms2[0];
         // Restaurer le cache de géocodage s'il était présent dans la sauvegarde
         if (_pendingCoords) Object.entries(_pendingCoords).forEach(([adr, v]) => {
