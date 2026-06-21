@@ -2791,12 +2791,13 @@ function majComparaisonImport() {
   const nom = document.getElementById('inputNomEnquete').value.trim();
   const { result, exclus } = preparerImport(csvEnAttente, nom);
   renderExclus(exclus);   // compteur + détail (raisons) — affiché quel que soit le cas
+  const suffixExcl = exclus.length ? ' · ' + tf('ip_btn_excl', { n: exclus.length }) : '';
 
   const existante = nom ? enquetes[nom] : null;
   if (!existante) {
     wrap.classList.add('hidden');
     wrap.innerHTML = '';
-    btn.textContent = t('ip_btn_import');
+    btn.textContent = t('ip_btn_import') + suffixExcl;
     return;
   }
 
@@ -2807,9 +2808,9 @@ function majComparaisonImport() {
   wrap.classList.remove('hidden');
 
   const totChanges = stats.add + stats.rem + stats.mod;
-  btn.textContent = totChanges
+  btn.textContent = (totChanges
     ? tf('ip_btn_replace', { n: totChanges, word: tPlural('cmp_change', totChanges) })
-    : t('ip_btn_replace0');
+    : t('ip_btn_replace0')) + suffixExcl;
 }
 
 function renderImportApercu(s) {
@@ -3850,6 +3851,7 @@ const I18N = {
   "ip_excl_skipped": { fr:"non importé", nl:"niet geïmporteerd", en:"not imported", de:"nicht importiert" },
   "ip_btn_replace": { fr:"Importer (remplacer — {n} {word})", nl:"Importeren (vervangen — {n} {word})", en:"Import (replace — {n} {word})", de:"Importieren (ersetzen — {n} {word})" },
   "ip_btn_replace0": { fr:"Importer (remplacer — aucun changement)", nl:"Importeren (vervangen — geen wijzigingen)", en:"Import (replace — no changes)", de:"Importieren (ersetzen — keine Änderungen)" },
+  "ip_btn_excl": { fr:"{n} exclu(s)", nl:"{n} uitgesloten", en:"{n} excluded", de:"{n} ausgeschlossen" },
   "cmp_exists": { fr:"⚠️ Une enquête <strong>« {name} »</strong> existe déjà — comparaison avec son contenu actuel :", nl:"⚠️ Er bestaat al een enquête <strong>« {name} »</strong> — vergelijking met de huidige inhoud:", en:"⚠️ A survey <strong>“{name}”</strong> already exists — comparison with its current content:", de:"⚠️ Eine Umfrage <strong>„{name}“</strong> existiert bereits — Vergleich mit dem aktuellen Inhalt:" },
   "cmp_new_survey": { fr:"✨ Nouvelle enquête", nl:"✨ Nieuwe enquête", en:"✨ New survey", de:"✨ Neue Umfrage" },
   "cmp_modified": { fr:"✏️ Modifiée", nl:"✏️ Gewijzigd", en:"✏️ Modified", de:"✏️ Geändert" },
@@ -4678,9 +4680,10 @@ function majComparaisonRestore() {
   document.getElementById('modalBackupBody').innerHTML = html;
   const btn = document.getElementById('btnBackupConfirm');
   const totChanges = stats.add + stats.rem + stats.mod;
-  btn.textContent = totChanges
+  const suffixExcl = exclus.length ? ' · ' + tf('ip_btn_excl', { n: exclus.length }) : '';
+  btn.textContent = (totChanges
     ? tf('bk_confirm_n', { n: totChanges, word: tPlural('cmp_change', totChanges) })
-    : t('bk_confirm');
+    : t('bk_confirm')) + suffixExcl;
 }
 
 function importerBackup(event) {
