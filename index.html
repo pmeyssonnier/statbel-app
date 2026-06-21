@@ -2034,13 +2034,23 @@ Object.entries(MARITAL_I18N).forEach(([en, e]) => {
   MARITAL_REV[en.toLowerCase()] = en;
   Object.values(e).forEach(arr => arr.forEach(f => { if (f) MARITAL_REV[f.toLowerCase().trim()] = en; }));
 });
-// Alias spécifiques au convertisseur (formes non présentes dans l'affichage)
+// Alias des formes rencontrées dans les sources (clés en minuscules ; variantes
+// genrées « (e) », barres obliques, et versions sans accents pour robustesse).
 const MARITAL_ALIAS = {
-  "marié(e)":"Married",
-  "divorcé(e)/séparé(e)":"Divorced/Separated",
-  "divorcé(e), séparé(e) de fait":"Divorced, de facto separated",
-  "veuf(ve)":"Widowed", "veuve/veuf":"Widowed", "veuf/veuve":"Widowed",
-  "cohabitant(e) légal(e)":"Legal cohabitant",
+  // Célibataire
+  "célibataire":"Single", "celibataire":"Single",
+  // Marié(e)
+  "marié(e)":"Married", "marie(e)":"Married", "marié":"Married", "marie":"Married", "mariée":"Married", "mariee":"Married",
+  // Divorcé(e) / séparé(e)
+  "divorcé(e)":"Divorced/Separated", "divorce(e)":"Divorced/Separated", "divorcé":"Divorced/Separated", "divorce":"Divorced/Separated", "divorcée":"Divorced/Separated", "divorcee":"Divorced/Separated",
+  "séparé(e)":"Divorced/Separated", "separe(e)":"Divorced/Separated", "séparé":"Divorced/Separated", "separe":"Divorced/Separated", "séparée":"Divorced/Separated", "separee":"Divorced/Separated",
+  "divorcé(e)/séparé(e)":"Divorced/Separated", "divorcé/séparé":"Divorced/Separated", "divorcée/séparée":"Divorced/Separated", "divorce/separe":"Divorced/Separated",
+  // Divorcé, séparé de fait
+  "divorcé(e), séparé(e) de fait":"Divorced, de facto separated", "divorcé, séparé de fait":"Divorced, de facto separated", "divorcée, séparée de fait":"Divorced, de facto separated", "divorce, separe de fait":"Divorced, de facto separated",
+  // Veuf / veuve
+  "veuf":"Widowed", "veuve":"Widowed", "veuf(ve)":"Widowed", "veuve(f)":"Widowed", "veuve/veuf":"Widowed", "veuf/veuve":"Widowed", "veuf(ve)/veuve":"Widowed",
+  // Cohabitant(e) légal(e)
+  "cohabitant(e) légal(e)":"Legal cohabitant", "cohabitant légal":"Legal cohabitant", "cohabitante légale":"Legal cohabitant", "cohabitant legal":"Legal cohabitant", "cohabitant(e) legal(e)":"Legal cohabitant",
 };
 function maritalCanon(v) {
   if (!v) return v;
