@@ -4214,6 +4214,11 @@ function buildCompareHTML(src, meta) {
   let html = '';
   if (meta) html += `<div class="backup-meta">${meta}</div>`;
 
+  // Avertissements de cohérence sur les données entrantes (codes pays inconnus,
+  // dates/sexe/statut invalides) — visibles aussi bien à l'import qu'à la restauration.
+  const allNew = noms.reduce((a, n) => a.concat(src[n] || []), []);
+  html += renderNonTraduits(allNew) + renderCoherence(allNew);
+
   // Légende : signification des 4 états
   html += `<div class="compare-legend">
     <span class="cs-add">➕ ${tPlural('cmp_w_add',1)}</span>
