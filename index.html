@@ -244,6 +244,8 @@
   .card-ordre { font-size: 12px; color: var(--ordre-color); background: var(--ordre-bg); padding: 2px 8px; border-radius: 10px; white-space: nowrap; flex-shrink:0; }
   .card-demo { font-size: 12px; color: var(--text3); margin: 4px 0 2px; }
   .demo-bad { color: #c62828; font-weight: 600; }
+  .excl-row { font-size: 11px; color: #b71c1c; background:#ffebee; border-radius:6px; padding:4px 8px; margin-top:4px; }
+  .excl-row .excl-state { color: var(--text3); }
   .card-statut { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 14px; }
   .card-statut-date { color: var(--text3); font-size: 13px; }
   .card-adresse-row { display:block; margin: 6px 0 8px 0; }
@@ -1151,6 +1153,7 @@
       <span data-i18n="lbl_only_valid">N'importer que les enregistrements corrects</span>
       <span id="importExcluded" style="font-size:11px;color:#b71c1c;"></span>
     </label>
+    <div id="importExclusDetail"></div>
     <label style="display:block;margin-top:12px;font-size:13px;font-weight:600;" data-i18n="lbl_survey_name">Nom de l'enquête</label>
     <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" oninput="majComparaisonImport()">
     <div class="modal-btns">
@@ -1335,6 +1338,7 @@
       <span data-i18n="lbl_restore_only_valid">Ne restaurer que les enregistrements corrects</span>
       <span id="restoreExcluded" style="font-size:11px;color:#b71c1c;"></span>
     </label>
+    <div id="restoreExclusDetail"></div>
     <div class="modal-btns" id="modalBackupBtns">
       <button class="btn-secondary" onclick="fermerBackupDetail()">Annuler</button>
       <button class="btn-primary"   id="btnBackupConfirm">Confirmer</button>
@@ -2728,41 +2732,52 @@ function ouvrirModalImport(parsed, defaultName) {
   setTimeout(() => document.getElementById('inputNomEnquete').select(), 100);
 }
 
-// Fusionne les lignes importées avec l'enquête existante de même nom :
-// pour un contact apparié (même N° d'ordre/identité), on PRÉSERVE le travail de
-// suivi déjà fait dans l'app (statut, date, RDV, historique) et on ne met à jour
-// que les champs descriptifs (identité, adresse, démographie) fournis par le fichier.
-// Les contacts « travaillés » sont reconnus par : historique non vide, OU statut ≠ défaut, OU RDV.
-function fusionnerImport(rawRows, nom) {
+// Prépare le résultat d'import pour l'enquête `nom` :
+//  - fusionne les lignes correctes (préserve le suivi des contacts appariés) ;
+//  - si « n'importer que les corrects » est coché, un enregistrement en erreur est
+//    EXCLU de la mise à jour : s'il existe déjà dans l'app il est CONSERVÉ tel quel
+//    (jamais supprimé), s'il est nouveau il est simplement ignoré.
+// Retourne { result:[...], exclus:[{c,raisons,garde}] }.
+function preparerImport(rawRows, nom) {
   const old = enquetes[nom];
-  if (!old) return rawRows;                 // nouvelle enquête → tel quel
   const mapOld = {};
-  old.forEach(c => { mapOld[_contactKey(c)] = c; });
-  return rawRows.map(neu => {
-    const o = mapOld[_contactKey(neu)];
-    if (!o) return neu;                     // nouveau contact
-    const travaille = (Array.isArray(o.historique) && o.historique.length)
-      || (o.statut && o.statut !== statutDefaut()) || o.rdv;
-    if (!travaille) return neu;             // contact non suivi → valeurs du fichier
-    const m = Object.assign({}, neu);       // champs descriptifs du fichier
-    m.statut = o.statut; m.date = o.date;   // suivi préservé
-    if (o.rdv) m.rdv = o.rdv; else delete m.rdv;
-    if (Array.isArray(o.historique) && o.historique.length) m.historique = o.historique;
-    return m;
-  });
-}
-
-// Lignes effectivement importées selon la case « n'importer que les corrects »
-function lignesAImporter() {
-  if (!csvEnAttente) return [];
+  if (old) old.forEach(c => { mapOld[_contactKey(c)] = c; });
   const chk = document.getElementById('chkOnlyValid');
   const onlyValid = chk ? chk.checked : false;
-  if (!onlyValid) { if (chk) document.getElementById('importExcluded').textContent = ''; return csvEnAttente; }
-  const ok = csvEnAttente.filter(c => !recordEnErreur(c));
-  const excl = csvEnAttente.length - ok.length;
-  const el = document.getElementById('importExcluded');
-  if (el) el.textContent = excl ? tf('ip_excluded', { n: excl }) : '';
-  return ok;
+  const result = [], exclus = [];
+  (rawRows || []).forEach(neu => {
+    const o = mapOld[_contactKey(neu)];
+    if (onlyValid && recordEnErreur(neu)) {
+      const raisons = raisonsErreur(neu);
+      if (o) { result.push(o); exclus.push({ c: neu, raisons, garde: true }); }   // existant → conservé
+      else   { exclus.push({ c: neu, raisons, garde: false }); }                   // nouveau → ignoré
+      return;
+    }
+    if (!o) { result.push(neu); return; }                  // nouveau contact correct
+    const travaille = (Array.isArray(o.historique) && o.historique.length)
+      || (o.statut && o.statut !== statutDefaut()) || o.rdv;
+    if (!travaille) { result.push(neu); return; }
+    const m = Object.assign({}, neu);                      // préserve le suivi
+    m.statut = o.statut; m.date = o.date;
+    if (o.rdv) m.rdv = o.rdv; else delete m.rdv;
+    if (Array.isArray(o.historique) && o.historique.length) m.historique = o.historique;
+    result.push(m);
+  });
+  return { result, exclus };
+}
+
+// Affiche le compteur + le détail des enregistrements exclus pour erreur (avec raison)
+function renderExclus(exclus) {
+  const count = document.getElementById('importExcluded');
+  const el    = document.getElementById('importExclusDetail');
+  if (count) count.textContent = exclus.length ? tf('ip_excluded', { n: exclus.length }) : '';
+  if (!el) return;
+  el.innerHTML = exclus.length ? exclus.map(x => {
+    const nom = esc(((x.c.prenom || '') + ' ' + (x.c.nom || '')).trim()) || ('N° ' + esc(String(x.c.ordre || '—')));
+    const why = x.raisons.map(esc).join(', ');
+    const etat = x.garde ? t('ip_excl_kept') : t('ip_excl_skipped');
+    return `<div class="excl-row">⚠️ <b>${nom}</b> — ${why} <span class="excl-state">(${etat})</span></div>`;
+  }).join('') : '';
 }
 
 // Met à jour la comparaison "csvEnAttente" vs l'enquête existante portant
@@ -2772,11 +2787,12 @@ function majComparaisonImport() {
   const wrap = document.getElementById('importCompareWrap');
   const btn  = document.getElementById('btnConfirmerImport');
   if (!csvEnAttente) { wrap.classList.add('hidden'); wrap.innerHTML = ''; return; }
-  const aImporter = lignesAImporter();
 
   const nom = document.getElementById('inputNomEnquete').value.trim();
-  const existante = nom ? enquetes[nom] : null;
+  const { result, exclus } = preparerImport(csvEnAttente, nom);
+  renderExclus(exclus);   // compteur + détail (raisons) — affiché quel que soit le cas
 
+  const existante = nom ? enquetes[nom] : null;
   if (!existante) {
     wrap.classList.add('hidden');
     wrap.innerHTML = '';
@@ -2784,7 +2800,7 @@ function majComparaisonImport() {
     return;
   }
 
-  const src = { [nom]: fusionnerImport(aImporter, nom) };
+  const src = { [nom]: result };
   // buildCompareHTML compare contre enquetes[nom] global (déjà correct).
   const { html, stats } = buildCompareHTML(src, tf('cmp_exists', { name: esc(nom) }));
   wrap.innerHTML = html;
@@ -2838,9 +2854,9 @@ function confirmerImport() {
   if (!nom) { alert(t('al_enter_name')); return; }
   // Pas de confirm() natif ici : la comparaison détaillée (majComparaisonImport)
   // est déjà visible dans la modale avant que l'utilisateur ne clique sur ce bouton.
-  // Fusion : préserve le suivi (statut/date/RDV/historique) des contacts appariés.
-  // (Lignes filtrées si « n'importer que les corrects » est coché.)
-  enquetes[nom] = fusionnerImport(lignesAImporter(), nom);
+  // Fusion : préserve le suivi des contacts appariés ; exclut les erronés
+  // (un erroné déjà présent est conservé tel quel, jamais supprimé).
+  enquetes[nom] = preparerImport(csvEnAttente, nom).result;
   enqueteActive = nom;
   csvEnAttente  = null;
   fermerModal();
@@ -3830,6 +3846,8 @@ const I18N = {
   "lbl_only_valid": { fr:"N'importer que les enregistrements corrects", nl:"Alleen correcte records importeren", en:"Import only valid records", de:"Nur fehlerfreie Datensätze importieren" },
   "lbl_restore_only_valid": { fr:"Ne restaurer que les enregistrements corrects", nl:"Alleen correcte records herstellen", en:"Restore only valid records", de:"Nur fehlerfreie Datensätze wiederherstellen" },
   "ip_excluded": { fr:"({n} exclus pour erreur)", nl:"({n} uitgesloten wegens fout)", en:"({n} excluded for errors)", de:"({n} wegen Fehlern ausgeschlossen)" },
+  "ip_excl_kept": { fr:"conservé — déjà présent, non supprimé", nl:"behouden — reeds aanwezig, niet verwijderd", en:"kept — already present, not removed", de:"beibehalten — bereits vorhanden, nicht entfernt" },
+  "ip_excl_skipped": { fr:"non importé", nl:"niet geïmporteerd", en:"not imported", de:"nicht importiert" },
   "ip_btn_replace": { fr:"Importer (remplacer — {n} {word})", nl:"Importeren (vervangen — {n} {word})", en:"Import (replace — {n} {word})", de:"Importieren (ersetzen — {n} {word})" },
   "ip_btn_replace0": { fr:"Importer (remplacer — aucun changement)", nl:"Importeren (vervangen — geen wijzigingen)", en:"Import (replace — no changes)", de:"Importieren (ersetzen — keine Änderungen)" },
   "cmp_exists": { fr:"⚠️ Une enquête <strong>« {name} »</strong> existe déjà — comparaison avec son contenu actuel :", nl:"⚠️ Er bestaat al een enquête <strong>« {name} »</strong> — vergelijking met de huidige inhoud:", en:"⚠️ A survey <strong>“{name}”</strong> already exists — comparison with its current content:", de:"⚠️ Eine Umfrage <strong>„{name}“</strong> existiert bereits — Vergleich mit dem aktuellen Inhalt:" },
@@ -4371,6 +4389,18 @@ function recordEnErreur(c) {
     || valeurIncoherente('statut', c.statut);
 }
 
+// Liste lisible des raisons d'incohérence d'un enregistrement (avec la valeur fautive)
+function raisonsErreur(c) {
+  const r = [];
+  const add = (champ, val, label) => { if (valeurIncoherente(champ, val)) r.push(t(label) + ' « ' + val + ' »'); };
+  add('birth_country', c.birth_country, 'cohr_country');
+  add('nationality',   c.nationality,   'cohr_country');
+  add('birth_date',    c.birth_date,    'cohr_date');
+  add('sexe',          c.sexe,          'cohr_sex');
+  add('statut',        c.statut,        'cohr_status');
+  return r;
+}
+
 function _diffContacts(a, b) {
   const diffs = [];
   _CHAMPS_COMPARES.forEach(champ => {
@@ -4573,6 +4603,8 @@ function exporterBackup() {
   document.getElementById('modalBackupBody').innerHTML    = detailHtml;
   document.getElementById('backupPreserveRow').classList.add('hidden');     // options réservées au restore
   document.getElementById('backupOnlyValidRow').classList.add('hidden');
+  document.getElementById('restoreExclusDetail').innerHTML = '';
+  document.getElementById('restoreExcluded').textContent = '';
 
   const btnConfirm = document.getElementById('btnBackupConfirm');
   btnConfirm.textContent = t('bk_download');
@@ -4618,15 +4650,30 @@ let _restoreMeta = '';
 function majComparaisonRestore() {
   if (!_restoreRaw) return;
   const onlyValid = (document.getElementById('chkRestoreOnlyValid') || {}).checked;
-  let excl = 0;
   const filtered = {};
+  const exclus = [];   // {c, raisons, garde}
   Object.entries(_restoreRaw).forEach(([n, arr]) => {
-    if (onlyValid) { const ok = arr.filter(c => !recordEnErreur(c)); excl += arr.length - ok.length; filtered[n] = ok; }
-    else filtered[n] = arr;
+    if (!onlyValid) { filtered[n] = arr; return; }
+    const cur = enquetes[n]; const mapCur = {};
+    if (cur) cur.forEach(c => { mapCur[_contactKey(c)] = c; });
+    const out = [];
+    arr.forEach(rec => {
+      if (recordEnErreur(rec)) {
+        const o = mapCur[_contactKey(rec)];
+        if (o) { out.push(o); exclus.push({ c: rec, raisons: raisonsErreur(rec), garde: true }); }  // existant conservé
+        else exclus.push({ c: rec, raisons: raisonsErreur(rec), garde: false });                    // non restauré
+      } else out.push(rec);
+    });
+    filtered[n] = out;
   });
   _pendingRestore = filtered;
   const elX = document.getElementById('restoreExcluded');
-  if (elX) elX.textContent = excl ? tf('ip_excluded', { n: excl }) : '';
+  if (elX) elX.textContent = exclus.length ? tf('ip_excluded', { n: exclus.length }) : '';
+  const elD = document.getElementById('restoreExclusDetail');
+  if (elD) elD.innerHTML = exclus.length ? exclus.map(x => {
+    const nom = esc(((x.c.prenom || '') + ' ' + (x.c.nom || '')).trim()) || ('N° ' + esc(String(x.c.ordre || '—')));
+    return `<div class="excl-row">⚠️ <b>${nom}</b> — ${x.raisons.map(esc).join(', ')} <span class="excl-state">(${x.garde ? t('ip_excl_kept') : t('ip_excl_skipped')})</span></div>`;
+  }).join('') : '';
   const { html, stats } = buildCompareHTML(filtered, _restoreMeta);
   document.getElementById('modalBackupBody').innerHTML = html;
   const btn = document.getElementById('btnBackupConfirm');
