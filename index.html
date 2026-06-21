@@ -243,6 +243,7 @@
   .card-name { font-size: 15px; font-weight: bold; color: var(--filter-text); flex: 1; }
   .card-ordre { font-size: 12px; color: var(--ordre-color); background: var(--ordre-bg); padding: 2px 8px; border-radius: 10px; white-space: nowrap; flex-shrink:0; }
   .card-demo { font-size: 12px; color: var(--text3); margin: 4px 0 2px; }
+  .demo-bad { color: #c62828; font-weight: 600; }
   .card-statut { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 14px; }
   .card-statut-date { color: var(--text3); font-size: 13px; }
   .card-adresse-row { display:block; margin: 6px 0 8px 0; }
@@ -2400,8 +2401,15 @@ function ligneDemographie(c) {
   const age = c.age || calcAge(c.birth_date);
   if (age) parts.push(age + ' ' + t('age_unit'));
   const ec = etatCivilGenre(c.marital_status, c.sexe);
-  if (ec) parts.push(esc(ec));
-  if (c.nationality) parts.push(esc(paysAffiche(c.nationality)));
+  if (ec) {
+    const badM = c.marital_status && !MARITAL_I18N[maritalCanon(c.marital_status)];
+    parts.push(badM ? `<span class="demo-bad" title="${t('cohr_status_marital')}">${esc(ec)}</span>` : esc(ec));
+  }
+  if (c.nationality) {
+    const badP = !PAYS_I18N[String(c.nationality).trim().toUpperCase()];
+    const aff = esc(paysAffiche(c.nationality));
+    parts.push(badP ? `<span class="demo-bad" title="${t('cohr_country')}">${aff}</span>` : aff);
+  }
   if (c.taille_menage) parts.push('👥 ' + esc(c.taille_menage) + ' ' + tPlural('persons', c.taille_menage));
   return parts.join(' · ');
 }
@@ -3725,6 +3733,7 @@ const I18N = {
   "cohr_date":    { fr:"Date de naissance invalide (≠ AAAA-MM-JJ)", nl:"Ongeldige geboortedatum (≠ JJJJ-MM-DD)", en:"Invalid birth date (≠ YYYY-MM-DD)", de:"Ungültiges Geburtsdatum (≠ JJJJ-MM-TT)" },
   "cohr_sex":     { fr:"Sexe inattendu (≠ M/F)", nl:"Onverwacht geslacht (≠ M/F)", en:"Unexpected sex (≠ M/F)", de:"Unerwartetes Geschlecht (≠ M/F)" },
   "cohr_status":  { fr:"Statut inconnu", nl:"Onbekende status", en:"Unknown status", de:"Unbekannter Status" },
+  "cohr_status_marital": { fr:"État civil inconnu", nl:"Onbekende burgerlijke staat", en:"Unknown marital status", de:"Unbekannter Zivilstand" },
   "field_sexe":         { fr:"Sexe",          nl:"Geslacht",    en:"Gender",       de:"Geschlecht"    },
   "field_birth_date":   { fr:"Date naiss.",   nl:"Geboortedatum",en:"Birth date",  de:"Geburtsdatum"  },
   "field_age":          { fr:"Âge",           nl:"Leeftijd",    en:"Age",          de:"Alter"         },
