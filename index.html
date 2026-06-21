@@ -3587,6 +3587,8 @@ function appliquerPolice() {
   // police racine pour les navigateurs sans zoom.
   document.body.style.zoom = scale;
   document.documentElement.style.fontSize = (14 * scale) + 'px';
+  // La taille du texte reflow les barres → réancrer la courbe de progression
+  if (typeof redessinerCourbeApresLayout === 'function') redessinerCourbeApresLayout();
 }
 
 // ── Internationalisation (FR / NL / EN) ─────────────────────────────
