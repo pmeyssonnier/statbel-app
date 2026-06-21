@@ -3045,13 +3045,32 @@ function initCarte() {
 // d'adresse mobile qui apparaît/disparaît) — évite les tuiles grises.
 let _resizeTimer;
 window.addEventListener('resize', () => {
-  if (vueActive !== 'carte' || !leafletMap) return;
   clearTimeout(_resizeTimer);
-  _resizeTimer = setTimeout(() => leafletMap.invalidateSize(), 200);
+  _resizeTimer = setTimeout(() => {
+    if (vueActive === 'carte' && leafletMap) { leafletMap.invalidateSize(); return; }
+    // Réancrer la courbe de progression après reflow (rotation / redimensionnement)
+    redessinerCourbeApresLayout();
+  }, 200);
 });
 window.addEventListener('orientationchange', () => {
-  if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 300);
+  // Délai plus long : la rotation termine son reflow après l'événement
+  setTimeout(() => {
+    if (leafletMap) leafletMap.invalidateSize();
+    redessinerCourbeApresLayout();
+  }, 350);
 });
+
+/* Recalcule et réancre la courbe % faits cumulés sur le graphe d'activité,
+   uniquement si elle est présente dans la vue courante (RDV / Suivi). */
+function redessinerCourbeApresLayout() {
+  if (vueActive !== 'rdv' && vueActive !== 'resume') return;
+  if (!document.querySelector('#rdvListe .activite-wrap')) return;
+  if (filtreRdv && filtreRdv !== 'Tous' && filtreRdv !== 'Done') return;
+  // Double rAF : on attend que le navigateur ait recalculé tailles/positions des barres
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    try { dessinerCourbeProgression(enqueteActive); } catch (e) {}
+  }));
+}
 
 function afficherMarqueurs() {
   // Mode auto : le fond peut changer si l'enquête active relève d'une autre région
