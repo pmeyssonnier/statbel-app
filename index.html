@@ -789,17 +789,17 @@
   .compare-rows { padding: 6px 12px 10px; display:flex; flex-direction:column; gap:4px; }
   .compare-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     font-size: 12px;
-    padding: 4px 8px;
+    padding: 5px 8px;
     border-radius: 6px;
-    gap: 8px;
+    gap: 2px;
   }
   .compare-row.add    { background:#e8f5e9; }
   .compare-row.removed{ background:#ffebee; }
   .compare-row.changed{ background:#fff3e0; }
-  .compare-row .cr-nom { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .compare-row .cr-nom { font-weight:600; }
   .compare-row .cr-detail { font-size:11px; color:var(--text3); }
   .compare-summary {
     display:flex; gap:6px; flex-wrap:wrap; padding: 0 12px 10px;
