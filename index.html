@@ -2632,6 +2632,30 @@ function ouvrirModalImport(parsed, defaultName) {
   setTimeout(() => document.getElementById('inputNomEnquete').select(), 100);
 }
 
+// Fusionne les lignes importées avec l'enquête existante de même nom :
+// pour un contact apparié (même N° d'ordre/identité), on PRÉSERVE le travail de
+// suivi déjà fait dans l'app (statut, date, RDV, historique) et on ne met à jour
+// que les champs descriptifs (identité, adresse, démographie) fournis par le fichier.
+// Les contacts « travaillés » sont reconnus par : historique non vide, OU statut ≠ défaut, OU RDV.
+function fusionnerImport(rawRows, nom) {
+  const old = enquetes[nom];
+  if (!old) return rawRows;                 // nouvelle enquête → tel quel
+  const mapOld = {};
+  old.forEach(c => { mapOld[_contactKey(c)] = c; });
+  return rawRows.map(neu => {
+    const o = mapOld[_contactKey(neu)];
+    if (!o) return neu;                     // nouveau contact
+    const travaille = (Array.isArray(o.historique) && o.historique.length)
+      || (o.statut && o.statut !== statutDefaut()) || o.rdv;
+    if (!travaille) return neu;             // contact non suivi → valeurs du fichier
+    const m = Object.assign({}, neu);       // champs descriptifs du fichier
+    m.statut = o.statut; m.date = o.date;   // suivi préservé
+    if (o.rdv) m.rdv = o.rdv; else delete m.rdv;
+    if (Array.isArray(o.historique) && o.historique.length) m.historique = o.historique;
+    return m;
+  });
+}
+
 // Met à jour la comparaison "csvEnAttente" vs l'enquête existante portant
 // le même nom que celui actuellement saisi dans le champ. N'affiche rien
 // si aucune enquête de ce nom n'existe (cas d'une création).
@@ -2650,7 +2674,7 @@ function majComparaisonImport() {
     return;
   }
 
-  const src = { [nom]: csvEnAttente };
+  const src = { [nom]: fusionnerImport(csvEnAttente, nom) };
   // buildCompareHTML compare contre enquetes[nom] global (déjà correct).
   const { html, stats } = buildCompareHTML(src, tf('cmp_exists', { name: esc(nom) }));
   wrap.innerHTML = html;
@@ -2703,7 +2727,8 @@ function confirmerImport() {
   if (!nom) { alert(t('al_enter_name')); return; }
   // Pas de confirm() natif ici : la comparaison détaillée (majComparaisonImport)
   // est déjà visible dans la modale avant que l'utilisateur ne clique sur ce bouton.
-  enquetes[nom] = csvEnAttente;
+  // Fusion : préserve le suivi (statut/date/RDV/historique) des contacts appariés.
+  enquetes[nom] = fusionnerImport(csvEnAttente, nom);
   enqueteActive = nom;
   csvEnAttente  = null;
   fermerModal();
@@ -3561,6 +3586,7 @@ const I18N = {
   "field_email":        { fr:"Email",         nl:"E-mail",      en:"Email",        de:"E-Mail"        },
   "field_notes":        { fr:"Notes",         nl:"Notities",    en:"Notes",        de:"Notizen"       },
   "field_rdv":          { fr:"RDV",           nl:"Afspraak",    en:"Appointment",  de:"Termin"        },
+  "field_historique":   { fr:"Historique (entrées)", nl:"Historiek (items)", en:"History (entries)", de:"Verlauf (Einträge)" },
   "field_sexe":         { fr:"Sexe",          nl:"Geslacht",    en:"Gender",       de:"Geschlecht"    },
   "field_birth_date":   { fr:"Date naiss.",   nl:"Geboortedatum",en:"Birth date",  de:"Geburtsdatum"  },
   "field_age":          { fr:"Âge",           nl:"Leeftijd",    en:"Age",          de:"Alter"         },
@@ -4135,6 +4161,14 @@ function _diffContacts(a, b) {
     const vb = (b[champ] ?? '').toString();
     if (va !== vb) diffs.push({ champ, avant: va, apres: vb });
   });
+  // Historique : signaler tout changement (perte/modification d'entrées)
+  const sig = h => (Array.isArray(h) ? h : []).map(e => `${e.statut}@${e.date}${e.rdv ? '/' + e.rdv : ''}`).join('|');
+  const sa = sig(a.historique), sb = sig(b.historique);
+  if (sa !== sb) diffs.push({
+    champ: 'historique',
+    avant: `${(a.historique || []).length}`,
+    apres: `${(b.historique || []).length}`,
+  });
   return diffs;
 }
 
@@ -4202,13 +4236,12 @@ function buildCompareHTML(src, meta) {
       </div>`;
     });
     rowsMod.forEach(({ c, diffs }) => {
-      const detail = diffs.slice(0, 3).map(d => {
-        // Traduire le nom du champ
+      const detail = diffs.slice(0, 4).map(d => {
         const champLabel = t('field_' + d.champ) || d.champ;
-        // Traduire la valeur si c'est le champ statut
-        const apres = d.champ === 'statut' ? statutLabel(d.apres) : d.apres;
-        return esc(champLabel) + (apres ? ' → ' + esc(apres) : '');
-      }).join(', ') + (diffs.length > 3 ? '…' : '');
+        const tr = v => d.champ === 'statut' ? statutLabel(v) : v;
+        const av = tr(d.avant), ap = tr(d.apres);
+        return esc(champLabel) + ' : ' + esc(av || '∅') + ' → ' + esc(ap || '∅');
+      }).join(' · ') + (diffs.length > 4 ? '…' : '');
       rowsHtml += `<div class="compare-row changed">
         <span class="cr-nom">✏️ ${esc((c.prenom||'')+' '+(c.nom||''))}</span>
         <span class="cr-detail">${detail}</span>
