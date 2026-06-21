@@ -2596,10 +2596,15 @@ function parseCSV(text) {
     if (!adresse)        { motifs.adresseVide++;  rejet('motif_no_address'); return; }
     if (ordreVal && ordresVus.has(ordreVal)) { motifs.doublonOrdre++; rejet('motif_dup_order'); return; }
     if (ordreVal) ordresVus.add(ordreVal);
-    // Historique « status@date | status@date » → tableau {statut,date} (statut canonique)
+    // Historique « statut@date@heure@rdv » → {statut,date,heure?,rdv?} (rétro-compatible « statut@date »)
     const histArr = g(cols, map.history).split('|').map(p => p.trim()).filter(Boolean).map(p => {
-      const i = p.lastIndexOf('@');
-      return { statut: statutCanon((i >= 0 ? p.slice(0, i) : p).trim()), date: (i >= 0 ? p.slice(i + 1) : '').trim() };
+      const seg = p.split('@');
+      const e = { statut: statutCanon((seg[0] || '').trim()), date: (seg[1] || '').trim() };
+      const heure = (seg[2] || '').trim();
+      const rdv   = (seg[3] || '').trim();
+      if (heure) e.heure = heure;
+      if (rdv)   e.rdv = rdv;
+      return e;
     });
     rows.push({
       ordre:          ordreVal || String(rows.length+1).padStart(2,'0'),
@@ -2800,7 +2805,13 @@ function genererCSV() {
   contacts().forEach(c => {
     const cc = coordsCache(c.adresse);
     // Historique sérialisé : « status@date | status@date » (statut canonique EN)
-    const hist = (c.historique || []).map(h => `${h.statut}@${h.date}`).join(' | ');
+    // Historique sérialisé « statut@date@heure@rdv » (champs vides finaux omis)
+    const hist = (c.historique || []).map(h => {
+      const parts = [h.statut, h.date || ''];
+      if (h.heure || h.rdv) parts.push(h.heure || '');
+      if (h.rdv) parts.push(h.rdv);
+      return parts.join('@');
+    }).join(' | ');
     rows.push([
       csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
       csvCell(c.statut||statutDefaut()), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
