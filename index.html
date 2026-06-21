@@ -1145,6 +1145,11 @@
     <h2 data-i18n="modal_import_title">Aperçu de l'import</h2>
     <div id="importApercu" style="overflow-y:auto;"></div>
     <div id="importCompareWrap" class="hidden" style="overflow-y:auto;margin-top:6px;"></div>
+    <label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-size:13px;cursor:pointer;">
+      <input type="checkbox" id="chkOnlyValid" checked onchange="majComparaisonImport()">
+      <span data-i18n="lbl_only_valid">N'importer que les enregistrements corrects</span>
+      <span id="importExcluded" style="font-size:11px;color:#b71c1c;"></span>
+    </label>
     <label style="display:block;margin-top:12px;font-size:13px;font-weight:600;" data-i18n="lbl_survey_name">Nom de l'enquête</label>
     <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" oninput="majComparaisonImport()">
     <div class="modal-btns">
@@ -1323,6 +1328,11 @@
     <div class="backup-body" id="modalBackupBody"></div>
     <label id="backupPreserveRow" class="hidden" style="display:flex;align-items:center;gap:7px;font-size:13px;margin:8px 0 0;cursor:pointer;">
       <input type="checkbox" id="chkPreserveHist" checked> <span data-i18n="bk_preserve_hist">Préserver l'historique et les RDV existants</span>
+    </label>
+    <label id="backupOnlyValidRow" class="hidden" style="display:flex;align-items:center;gap:7px;font-size:13px;margin:4px 0 0;cursor:pointer;">
+      <input type="checkbox" id="chkRestoreOnlyValid" checked onchange="majComparaisonRestore()">
+      <span data-i18n="lbl_restore_only_valid">Ne restaurer que les enregistrements corrects</span>
+      <span id="restoreExcluded" style="font-size:11px;color:#b71c1c;"></span>
     </label>
     <div class="modal-btns" id="modalBackupBtns">
       <button class="btn-secondary" onclick="fermerBackupDetail()">Annuler</button>
@@ -2724,6 +2734,19 @@ function fusionnerImport(rawRows, nom) {
   });
 }
 
+// Lignes effectivement importées selon la case « n'importer que les corrects »
+function lignesAImporter() {
+  if (!csvEnAttente) return [];
+  const chk = document.getElementById('chkOnlyValid');
+  const onlyValid = chk ? chk.checked : false;
+  if (!onlyValid) { if (chk) document.getElementById('importExcluded').textContent = ''; return csvEnAttente; }
+  const ok = csvEnAttente.filter(c => !recordEnErreur(c));
+  const excl = csvEnAttente.length - ok.length;
+  const el = document.getElementById('importExcluded');
+  if (el) el.textContent = excl ? tf('ip_excluded', { n: excl }) : '';
+  return ok;
+}
+
 // Met à jour la comparaison "csvEnAttente" vs l'enquête existante portant
 // le même nom que celui actuellement saisi dans le champ. N'affiche rien
 // si aucune enquête de ce nom n'existe (cas d'une création).
@@ -2731,6 +2754,7 @@ function majComparaisonImport() {
   const wrap = document.getElementById('importCompareWrap');
   const btn  = document.getElementById('btnConfirmerImport');
   if (!csvEnAttente) { wrap.classList.add('hidden'); wrap.innerHTML = ''; return; }
+  const aImporter = lignesAImporter();
 
   const nom = document.getElementById('inputNomEnquete').value.trim();
   const existante = nom ? enquetes[nom] : null;
@@ -2742,7 +2766,7 @@ function majComparaisonImport() {
     return;
   }
 
-  const src = { [nom]: fusionnerImport(csvEnAttente, nom) };
+  const src = { [nom]: fusionnerImport(aImporter, nom) };
   // buildCompareHTML compare contre enquetes[nom] global (déjà correct).
   const { html, stats } = buildCompareHTML(src, tf('cmp_exists', { name: esc(nom) }));
   wrap.innerHTML = html;
@@ -2797,7 +2821,8 @@ function confirmerImport() {
   // Pas de confirm() natif ici : la comparaison détaillée (majComparaisonImport)
   // est déjà visible dans la modale avant que l'utilisateur ne clique sur ce bouton.
   // Fusion : préserve le suivi (statut/date/RDV/historique) des contacts appariés.
-  enquetes[nom] = fusionnerImport(csvEnAttente, nom);
+  // (Lignes filtrées si « n'importer que les corrects » est coché.)
+  enquetes[nom] = fusionnerImport(lignesAImporter(), nom);
   enqueteActive = nom;
   csvEnAttente  = null;
   fermerModal();
@@ -3783,6 +3808,9 @@ const I18N = {
   "modal_import_title": { fr:"Aperçu de l'import", nl:"Voorbeeld van de import", en:"Import preview", de:"Importvorschau" },
   "lbl_survey_name": { fr:"Nom de l'enquête", nl:"Naam van het onderzoek", en:"Survey name", de:"Name der Umfrage" },
   "ip_btn_import": { fr:"Importer", nl:"Importeren", en:"Import", de:"Importieren" },
+  "lbl_only_valid": { fr:"N'importer que les enregistrements corrects", nl:"Alleen correcte records importeren", en:"Import only valid records", de:"Nur fehlerfreie Datensätze importieren" },
+  "lbl_restore_only_valid": { fr:"Ne restaurer que les enregistrements corrects", nl:"Alleen correcte records herstellen", en:"Restore only valid records", de:"Nur fehlerfreie Datensätze wiederherstellen" },
+  "ip_excluded": { fr:"({n} exclus pour erreur)", nl:"({n} uitgesloten wegens fout)", en:"({n} excluded for errors)", de:"({n} wegen Fehlern ausgeschlossen)" },
   "ip_btn_replace": { fr:"Importer (remplacer — {n} {word})", nl:"Importeren (vervangen — {n} {word})", en:"Import (replace — {n} {word})", de:"Importieren (ersetzen — {n} {word})" },
   "ip_btn_replace0": { fr:"Importer (remplacer — aucun changement)", nl:"Importeren (vervangen — geen wijzigingen)", en:"Import (replace — no changes)", de:"Importieren (ersetzen — keine Änderungen)" },
   "cmp_exists": { fr:"⚠️ Une enquête <strong>« {name} »</strong> existe déjà — comparaison avec son contenu actuel :", nl:"⚠️ Er bestaat al een enquête <strong>« {name} »</strong> — vergelijking met de huidige inhoud:", en:"⚠️ A survey <strong>“{name}”</strong> already exists — comparison with its current content:", de:"⚠️ Eine Umfrage <strong>„{name}“</strong> existiert bereits — Vergleich mit dem aktuellen Inhalt:" },
@@ -4315,6 +4343,15 @@ function diffHistorique(oldH, newH) {
   return res;
 }
 
+// Vrai si l'enregistrement contient au moins une valeur incohérente (pays/date/sexe/statut)
+function recordEnErreur(c) {
+  return valeurIncoherente('birth_country', c.birth_country)
+    || valeurIncoherente('nationality', c.nationality)
+    || valeurIncoherente('birth_date', c.birth_date)
+    || valeurIncoherente('sexe', c.sexe)
+    || valeurIncoherente('statut', c.statut);
+}
+
 function _diffContacts(a, b) {
   const diffs = [];
   _CHAMPS_COMPARES.forEach(champ => {
@@ -4515,7 +4552,8 @@ function exporterBackup() {
 
   document.getElementById('modalBackupTitle').textContent = t('bk_save_title');
   document.getElementById('modalBackupBody').innerHTML    = detailHtml;
-  document.getElementById('backupPreserveRow').classList.add('hidden');  // option réservée au restore
+  document.getElementById('backupPreserveRow').classList.add('hidden');     // options réservées au restore
+  document.getElementById('backupOnlyValidRow').classList.add('hidden');
 
   const btnConfirm = document.getElementById('btnBackupConfirm');
   btnConfirm.textContent = t('bk_download');
@@ -4554,6 +4592,30 @@ function majLastBackupInfo() {
 let _pendingRestore = null;
 let _pendingSettings = null;
 let _pendingCoords = null;
+let _restoreRaw = null;    // données du backup (normalisées, avant filtrage erreurs)
+let _restoreMeta = '';
+
+// (Re)construit la comparaison de restauration selon la case « ne restaurer que les corrects »
+function majComparaisonRestore() {
+  if (!_restoreRaw) return;
+  const onlyValid = (document.getElementById('chkRestoreOnlyValid') || {}).checked;
+  let excl = 0;
+  const filtered = {};
+  Object.entries(_restoreRaw).forEach(([n, arr]) => {
+    if (onlyValid) { const ok = arr.filter(c => !recordEnErreur(c)); excl += arr.length - ok.length; filtered[n] = ok; }
+    else filtered[n] = arr;
+  });
+  _pendingRestore = filtered;
+  const elX = document.getElementById('restoreExcluded');
+  if (elX) elX.textContent = excl ? tf('ip_excluded', { n: excl }) : '';
+  const { html, stats } = buildCompareHTML(filtered, _restoreMeta);
+  document.getElementById('modalBackupBody').innerHTML = html;
+  const btn = document.getElementById('btnBackupConfirm');
+  const totChanges = stats.add + stats.rem + stats.mod;
+  btn.textContent = totChanges
+    ? tf('bk_confirm_n', { n: totChanges, word: tPlural('cmp_change', totChanges) })
+    : t('bk_confirm');
+}
 
 function importerBackup(event) {
   const file = event.target.files[0];
@@ -4581,22 +4643,19 @@ function importerBackup(event) {
       const metaHtml = `${t('bk_saved_on')} ${dateBackup}
 &nbsp;&nbsp;${t('bk_file')} <code>${esc(file.name)}</code>${conflits.length ? `<br>${tf('bk_conflict', { n: conflits.length })}` : ''}`;
 
-      const { html: detailHtml, stats } = buildCompareHTML(src, metaHtml);
-
       document.getElementById('modalBackupTitle').textContent = t('bk_restore_title');
-      document.getElementById('modalBackupBody').innerHTML    = detailHtml;
-
-      const btnConfirm = document.getElementById('btnBackupConfirm');
-      const totChanges = stats.add + stats.rem + stats.mod;
-      btnConfirm.textContent = totChanges
-        ? tf('bk_confirm_n', { n: totChanges, word: tPlural('cmp_change', totChanges) })
-        : t('bk_confirm');
-      _pendingRestore = src;
+      _restoreRaw = src;            // données normalisées (avant filtrage)
+      _restoreMeta = metaHtml;
       _pendingSettings = data.settings || null;
       _pendingCoords = data.coords || null;
-      // Option « préserver l'historique/RDV existants » (visible uniquement au restore)
+      // Options visibles uniquement au restore
       document.getElementById('backupPreserveRow').classList.remove('hidden');
+      document.getElementById('backupOnlyValidRow').classList.remove('hidden');
       document.getElementById('chkPreserveHist').checked = true;
+      document.getElementById('chkRestoreOnlyValid').checked = true;
+      majComparaisonRestore();      // construit la comparaison + _pendingRestore filtré
+
+      const btnConfirm = document.getElementById('btnBackupConfirm');
       btnConfirm.onclick = () => {
         if (!_pendingRestore) return;
         const preserver = document.getElementById('chkPreserveHist').checked;
