@@ -441,8 +441,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
 
 
-    <!-- Résumé -->
-    <div class="card">
+    <!-- Résumé (affiché sur Overview uniquement ; masqué sur Statistiques car redondant) -->
+    <div class="card" id="resumeCard">
       <!-- Colonnes administratives -->
       <div class="admin-cols" id="adminCols"></div>
       <!-- Titre groupe + localisation (sur une seule ligne) -->
@@ -4555,6 +4555,9 @@ function basculerTab(nom) {
   ['apercu', 'stats', 'planning'].forEach(n => {
     document.getElementById('ong-' + n).classList.toggle('actif', n === nom);
   });
+  // Le résumé (admin + KPI + planning) ne sert que dans Overview ; on l'enlève
+  // des Statistiques où il faisait doublon.
+  document.getElementById('resumeCard').style.display = (nom === 'stats') ? 'none' : '';
   const planActif = (nom === 'planning');
   document.body.classList.toggle('large', planActif);   // écran large (PC) pour le Planning
   document.getElementById('pan-planning').style.display = planActif ? 'block' : 'none';
