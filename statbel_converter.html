@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statbel — Convertisseur d'enquête</title>
+<script>
+  // PWA : enregistre le même service worker que l'app enquête, pour que
+  // l'entrée par cette page déclenche aussi la mise à jour du cache.
+  if (location.protocol === 'https:' || location.protocol === 'http:') {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  }
+</script>
 <!-- Leaflet (CDN) — utilisé uniquement par l'onglet « Planning » (carte des quartiers).
      Le reste du convertisseur fonctionne hors-ligne. -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">

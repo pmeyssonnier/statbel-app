@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v139';
+const CACHE = 'statbel-v140';
 
 const APP_SHELL = [
   './',
@@ -50,8 +50,12 @@ self.addEventListener('fetch', e => {
   if (estGeo) return; // laisse le réseau gérer (pas d'interception)
 
   if (req.mode === 'navigate') {
+    // Navigation : on récupère toujours la page fraîche depuis le réseau en
+    // contournant le cache HTTP du navigateur (sinon une ancienne page peut
+    // être servie). Repli hors-ligne sur la page demandée puis sur index.html.
     e.respondWith(
-      fetch(req).catch(() => caches.match('./index.html'))
+      fetch(new Request(req.url, { cache: 'reload' }))
+        .catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
     );
     return;
   }
