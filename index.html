@@ -99,12 +99,12 @@
   }
   .header-col1 { display: flex; align-items: center; gap: 6px; min-width: 0; }
   .header-col3 { display: flex; align-items: center; gap: 4px; }
-  .header-mid { display: flex; justify-content: center; min-width: 0; }
+  .header-mid { display: flex; justify-content: flex-start; min-width: 0; }
 
   header h1 { font-size: 15px; white-space: nowrap; }
 
   #surveySelect {
-    width: 480px; max-width: 560px;
+    width: 100%; max-width: 560px; min-width: 0;
     padding: 5px 8px;
     border-radius: 8px; border: none;
     font-size: 12px;
@@ -1084,9 +1084,9 @@
   <div class="header-row">
     <div class="header-col1">
       <h1>📋</h1>
-      <select id="surveySelect" onchange="changerEnquete(this.value)"></select>
     </div>
     <div class="header-mid">
+      <select id="surveySelect" onchange="changerEnquete(this.value)"></select>
     </div>
     <div class="header-col3">
       <div class="view-toggle">
