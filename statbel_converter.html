@@ -64,26 +64,56 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: var(--gris); color: var(--text); min-height: 100vh; }
 
-  /* ── Header ── */
+  /* ── Header (style identique à l'app enquête) ── */
   header {
     background: var(--bleu); color: white;
-    padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
-  header .logo { font-size: 22px; }
-  header h1   { font-size: 16px; font-weight: bold; }
-  header p    { font-size: 11px; opacity: 0.75; }
-  .hdr-left  { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .hdr-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-  .hdr-right .menu-wrap { margin-left: 0; }
-  /* Onglets dans le header (fond foncé) */
-  header .onglets { margin-bottom: 0; gap: 6px; }
-  header .onglet {
-    border: 1px solid rgba(255,255,255,0.35); border-bottom: 1px solid rgba(255,255,255,0.35);
-    border-radius: 8px; background: rgba(255,255,255,0.15); color: #fff; padding: 7px 14px;
+  .header-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center; gap: 8px; min-height: 38px;
   }
-  header .onglet.actif { background: #fff; color: #1a237e; border-color: #fff; }
-  header .onglet:not(.actif):hover { background: rgba(255,255,255,0.28); }
+  .header-col1 { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .header-col3 { display: flex; align-items: center; gap: 4px; }
+  .header-mid  { display: flex; justify-content: flex-start; min-width: 0; }
+  header .logo { font-size: 22px; line-height: 1; }
+
+  .view-toggle { display: flex; gap: 3px; }
+  .btn-view, .btn-ico {
+    background: rgba(255,255,255,0.15); color: white;
+    border: 1px solid rgba(255,255,255,0.35);
+    width: 36px; height: 36px;
+    border-radius: 7px; font-size: 15px;
+    cursor: pointer; white-space: nowrap; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0; position: relative;
+  }
+  .btn-view.actif { background: #fff; color: var(--bleu); font-weight: bold; }
+  .btn-ico:hover, .btn-view:not(.actif):hover { background: rgba(255,255,255,0.25); }
+
+  /* Tooltip des boutons d'en-tête (icône seule, libellé au survol) */
+  .btn-view[data-tip]::after, .btn-ico[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute; top: calc(100% + 18px); left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30,30,30,0.92); color: #fff;
+    padding: 3px 9px; border-radius: 6px;
+    font-size: 11px; font-weight: normal; white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 400;
+  }
+  .btn-view[data-tip]::before, .btn-ico[data-tip]::before {
+    content: ""; position: absolute; top: calc(100% + 12px); left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent; border-bottom-color: rgba(30,30,30,0.92);
+    opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 400;
+  }
+  .btn-view[data-tip]:hover::after, .btn-view[data-tip]:hover::before,
+  .btn-ico[data-tip]:hover::after,  .btn-ico[data-tip]:hover::before { opacity: 1; }
+
+  /* Comptages masqués : on ne garde que l'icône + tooltip dans les boutons */
+  #nbCibles, #nbPlannings { display: none; }
 
   /* ── Contenu ── */
   .container { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
@@ -284,22 +314,13 @@
   .pyr-cnt   { min-width: 16px; color: var(--text2); }
 
   /* ── Bouton paramètres ── */
-  .btn-params {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.35); color: #fff;
-    padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap;
-  }
-  .btn-params:hover { background: rgba(255,255,255,0.28); }
   #sourceSelect {
-    width: 100%; min-width: 288px; max-width: 544px; padding: 7px 12px;   /* longueur réduite de 20 % */
-    border-radius: 8px; border: none; font-size: 14px;
+    width: 100%; max-width: 560px; min-width: 0;
+    padding: 5px 8px;
+    border-radius: 8px; border: none; font-size: 12px;
     background: rgba(255,255,255,0.15); color: #fff; cursor: pointer;
   }
   #sourceSelect option { background: var(--bleu); color: #fff; }
-  /* GSM en portrait : le sélecteur s'adapte et laisse la place aux icônes de droite */
-  @media (max-width: 640px) {
-    #sourceSelect { min-width: 0; max-width: calc(100vw - 160px); }
-  }
   .menu-wrap { position: relative; margin-left: auto; }
   .menu {
     display: none; position: absolute; right: 0; top: calc(100% + 6px);
@@ -365,25 +386,22 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 <body>
 
 <header>
-  <span class="logo">📋</span>
-  <div class="hdr-left">
-    <h1>Statbel — Survey Converter</h1>
-    <p>GRP_2026xxxxx.csv → CSV files for enquetes_statbel.html</p>
-    <select id="sourceSelect" style="display:none" onchange="changerSource(this.value)" title="Active source file"></select>
-  </div>
-  <div class="hdr-right">
-    <div class="onglets" id="hdrTabs">
-      <div class="onglet actif" id="ong-apercu" onclick="basculerTab('apercu')">
-        📋 Overview <span id="nbCibles" style="font-weight:normal;opacity:0.7"></span>
-      </div>
-      <div class="onglet" id="ong-stats" onclick="basculerTab('stats')">📊 Statistics</div>
-      <div class="onglet" id="ong-planning" onclick="basculerTab('planning')">
-        📅 Planning <span id="nbPlannings" style="font-weight:normal;opacity:0.7"></span>
-      </div>
+  <div class="header-row">
+    <div class="header-col1">
+      <span class="logo">📋</span>
     </div>
-    <div class="menu-wrap">
-      <button class="btn-params" title="Settings" onclick="toggleMenu()">⚙️ Settings</button>
-      <div class="menu" id="menu">
+    <div class="header-mid">
+      <select id="sourceSelect" style="display:none" onchange="changerSource(this.value)" title="Active source file"></select>
+    </div>
+    <div class="header-col3">
+      <div class="view-toggle" id="hdrTabs">
+        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span></button>
+        <button class="btn-view" id="ong-stats" data-tip="Statistics" onclick="basculerTab('stats')">📊</button>
+        <button class="btn-view" id="ong-planning" data-tip="Planning" onclick="basculerTab('planning')">📅<span id="nbPlannings"></span></button>
+      </div>
+      <div class="menu-wrap">
+        <button class="btn-ico" title="Settings" onclick="toggleMenu()">⚙️</button>
+        <div class="menu" id="menu">
         <button class="menu-item" onclick="document.getElementById('fileInput').click();toggleMenu()">📁 Import a source file</button>
         <button class="menu-item" onclick="ouvrirExport();toggleMenu()">⬇️ Export converted data</button>
         <button class="menu-item" onclick="supprimerSource();toggleMenu()">🗑️ Remove this source file</button>
@@ -393,6 +411,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <hr>
         <button class="menu-item" onclick="location.href='index.html'">📋 Interviews app</button>
       </div>
+    </div>
     </div>
   </div>
 </header>
