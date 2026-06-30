@@ -249,7 +249,11 @@
 
     <div class="canvas-wrap" id="canvas-wrap">
       <canvas id="cv"></canvas>
-      <p class="canvas-tip">🔬 Sélectionne d'abord une mesure ci-dessous (bouton 💧 <i>Pipette</i>), puis clique sur la pastille correspondante de la photo.</p>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn sm" id="wb-btn" type="button">🎯 Calibrer le blanc</button>
+        <span class="canvas-tip" id="wb-status" style="margin:0">Astuce : clique « Calibrer le blanc » puis tape une zone <b>blanche</b> de la bandelette → la lumière est corrigée pour des lectures plus justes.</span>
+      </div>
+      <p class="canvas-tip">🔬 Ensuite, sélectionne une mesure ci-dessous (bouton 💧 <i>Pipette</i>), puis clique sur la pastille correspondante de la photo.</p>
     </div>
   </section>
 
@@ -363,9 +367,9 @@ const PARAMS = {
                   [10,'#b15a90'],[20,'#86407e'] ] },
   tac:  { name:'Alcalinité (TAC)', unit:'ppm', min:0, max:240, step:10, default:80,
           desc:'tampon du pH',
-          // barème AquaChek (jaune-vert → vert → bleu-vert)
-          scale:[ [0,'#d8d36a'],[40,'#c2cf6a'],[80,'#9ec873'],[120,'#6fbf8a'],
-                  [180,'#3f9f96'],[240,'#2f7d92'] ] },
+          // barème AquaChek (orange → vert olive → bleu-vert)
+          scale:[ [0,'#dfa233'],[40,'#b6b552'],[80,'#8f9a55'],[120,'#6f8f72'],
+                  [180,'#487f7a'],[240,'#3f7488'] ] },
   th:   { name:'Dureté (TH)', unit:'ppm', min:0, max:500, step:25, default:200,
           desc:'calcaire dissous',
           scale:[ [0,'#e58aa0'],[100,'#d77fae'],[200,'#b878b6'],[300,'#8f74bd'],
@@ -468,18 +472,48 @@ function rgbToLab(r,g,b){
 }
 function deltaE(l1,l2){ return Math.hypot(l1[0]-l2[0],l1[1]-l2[1],l1[2]-l2[2]); }
 
-function matchScale(key, rgb){
+/* Calibrage du blanc : gains par canal pour neutraliser la dominante de la photo.
+   whiteRef = couleur échantillonnée sur une zone blanche (support de la bandelette). */
+let whiteRef = null;
+function applyWB(rgb){
+  if(!whiteRef) return rgb;
+  const gray=(whiteRef[0]+whiteRef[1]+whiteRef[2])/3;
+  return rgb.map((c,i)=>Math.max(0,Math.min(255, Math.round(c*gray/Math.max(1,whiteRef[i])))));
+}
+
+/* Arrondit une valeur interpolée au pas du paramètre, sans dépasser les bornes. */
+function snap(p,v){
+  const r=Math.round(v/p.step)*p.step;
+  return Math.max(p.min, Math.min(p.max, Math.round(r*100)/100));
+}
+
+/* Apparie une couleur au barème : projette le point (Lab) sur le segment reliant
+   les deux cases voisines les plus proches → valeur CONTINUE (interpolée). */
+function matchScale(key, rgbIn){
   const p = PARAMS[key]; if(!p.scale) return null;
+  const rgb = applyWB(rgbIn);
   const lab = rgbToLab(rgb[0],rgb[1],rgb[2]);
-  let best=null, bestD=1e9, second=1e9;
-  for(const [val,hex] of p.scale){
-    const d = deltaE(lab, rgbToLab(...hexToRgb(hex)));
-    if(d<bestD){ second=bestD; bestD=d; best={val,hex,d}; }
-    else if(d<second){ second=d; }
+  const labs = p.scale.map(s=>rgbToLab(...hexToRgb(s[1])));
+  // case la plus proche
+  let bi=0, bd=1e9, second=1e9;
+  for(let i=0;i<labs.length;i++){ const d=deltaE(lab,labs[i]);
+    if(d<bd){second=bd;bd=d;bi=i;} else if(d<second)second=d; }
+  // meilleur segment adjacent : projection orthogonale dans l'espace Lab
+  let value=p.scale[bi][0], resid=bd;
+  for(const j of [bi-1, bi+1]){
+    if(j<0||j>=labs.length) continue;
+    const A=labs[bi], B=labs[j];
+    const AB=[B[0]-A[0],B[1]-A[1],B[2]-A[2]];
+    const len2=AB[0]*AB[0]+AB[1]*AB[1]+AB[2]*AB[2]; if(!len2) continue;
+    let t=((lab[0]-A[0])*AB[0]+(lab[1]-A[1])*AB[1]+(lab[2]-A[2])*AB[2])/len2;
+    t=Math.max(0,Math.min(1,t));
+    const proj=[A[0]+AB[0]*t, A[1]+AB[1]*t, A[2]+AB[2]*t];
+    const d=deltaE(lab,proj);
+    if(d<resid){ resid=d; value=p.scale[bi][0]+t*(p.scale[j][0]-p.scale[bi][0]); }
   }
-  // confiance : nette si le 2e plus proche est sensiblement plus loin
-  const conf = bestD<14 ? (second-bestD>6 ? 'bonne' : 'moyenne') : 'faible';
-  return { value: best.val, conf, hex: best.hex };
+  value=snap(p,value);
+  const conf = resid<10 ? 'bonne' : (resid<18 ? 'moyenne' : 'faible');
+  return { value, conf, hex: colorForValue(key,value) };
 }
 
 /* ----------------------------------------------------------------------------
@@ -609,6 +643,14 @@ fileIn.addEventListener('change',e=>{ const f=e.target.files[0]; if(f) loadImage
 ['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();}));
 drop.addEventListener('drop',e=>{e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) loadImage(f);});
 
+const wbBtn=document.getElementById('wb-btn');
+wbBtn.addEventListener('click',()=>{
+  if(!imgLoaded){ alert('Charge d\'abord une photo de la bandelette.'); return; }
+  pipetteKey = pipetteKey==='__wb__' ? null : '__wb__';
+  document.querySelectorAll('.param .btn.sm').forEach(b=>b.style.outline='');
+  wbBtn.style.outline = pipetteKey==='__wb__' ? '2px solid var(--accent)' : '';
+});
+
 function loadImage(file){
   const img=new Image();
   img.onload=()=>{
@@ -618,6 +660,9 @@ function loadImage(file){
     cv.height=Math.round(img.naturalHeight*scale);
     ctx.drawImage(img,0,0,cv.width,cv.height);
     imgLoaded=true; wrap.style.display='block';
+    whiteRef=null; // nouvelle photo → calibrage du blanc à refaire
+    const st=document.getElementById('wb-status');
+    if(st) st.innerHTML='Astuce : clique « Calibrer le blanc » puis tape une zone <b>blanche</b> de la bandelette → la lumière est corrigée pour des lectures plus justes.';
     drop.querySelector('b').textContent='✅ Photo chargée — toucher pour en changer';
   };
   img.onerror=()=>alert('Image illisible.');
@@ -641,6 +686,19 @@ function handlePick(e){
   const cx=Math.round((e.clientX-rect.left)*(cv.width/rect.width));
   const cy=Math.round((e.clientY-rect.top)*(cv.height/rect.height));
   const rgb=sampleAt(cx,cy); if(!rgb) return;
+
+  // Calibrage du blanc : on mémorise la dominante puis on sort.
+  if(pipetteKey==='__wb__'){
+    whiteRef = rgb;
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2;
+    ctx.strokeRect(cx-9,cy-9,18,18);
+    const st=document.getElementById('wb-status');
+    if(st) st.textContent='✅ Blanc calibré — les lectures pipette sont maintenant corrigées de la lumière.';
+    pipetteKey=null;
+    document.getElementById('wb-btn').style.outline='';
+    return;
+  }
+
   const m=matchScale(pipetteKey,rgb);
   if(m){
     values[pipetteKey]=m.value;
