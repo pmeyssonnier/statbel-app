@@ -870,7 +870,7 @@ const I18N = {
   col_nuts0: { fr:"NUTS0", nl:"NUTS0", en:"NUTS0", de:"NUTS0" },
   col_country: { fr:"Pays", nl:"Land", en:"Country", de:"Land" },
   col_continent: { fr:"Continent", nl:"Continent", en:"Continent", de:"Kontinent" },
-  col_eu: { fr:"UE", nl:"EU", en:"EU", de:"EU" },
+  col_eu: { fr:"EU", nl:"EU", en:"EU", de:"EU" },
   col_refnis: { fr:"REFNIS", nl:"REFNIS", en:"REFNIS", de:"REFNIS" },
   col_muni_fr: { fr:"Commune (FR)", nl:"Gemeente (FR)", en:"Municipality (FR)", de:"Gemeinde (FR)" },
   col_muni_nl: { fr:"Commune (NL)", nl:"Gemeente (NL)", en:"Municipality (NL)", de:"Gemeinde (NL)" },
@@ -888,6 +888,15 @@ const I18N = {
   opt_eu_and_noneu: { fr:"UE et hors UE", nl:"EU en niet-EU", en:"EU & non-EU", de:"EU und Nicht-EU" },
   opt_eu_only: { fr:"UE uniquement", nl:"Alleen EU", en:"EU only", de:"Nur EU" },
   opt_noneu: { fr:"Hors UE", nl:"Niet-EU", en:"Non-EU", de:"Nicht-EU" },
+  lbl_unknown: { fr:"Inconnu", nl:"Onbekend", en:"Unknown", de:"Unbekannt" },
+  lbl_eu_short: { fr:"UE", nl:"EU", en:"EU", de:"EU" },
+  lbl_noneu_short: { fr:"Hors UE", nl:"Niet-EU", en:"Non-EU", de:"Nicht-EU" },
+  continent_europe: { fr:"Europe", nl:"Europa", en:"Europe", de:"Europa" },
+  continent_asia: { fr:"Asie", nl:"Azië", en:"Asia", de:"Asien" },
+  continent_africa: { fr:"Afrique", nl:"Afrika", en:"Africa", de:"Afrika" },
+  continent_america_north: { fr:"Amérique (Nord/Centrale)", nl:"Amerika (Noord/Centraal)", en:"America (North/Central)", de:"Amerika (Nord/Mittel)" },
+  continent_america_south: { fr:"Amérique (Sud)", nl:"Amerika (Zuid)", en:"America (South)", de:"Amerika (Süd)" },
+  continent_oceania: { fr:"Océanie", nl:"Oceanië", en:"Oceania", de:"Ozeanien" },
   ph_search_country: { fr:"Rechercher par NIS, ISO ou nom…", nl:"Zoeken op NIS, ISO of naam…", en:"Search NIS, ISO or name…", de:"Suche nach NIS, ISO oder Name…" },
   ph_search_commune: { fr:"Rechercher par REFNIS ou nom…", nl:"Zoeken op REFNIS of naam…", en:"Search REFNIS or name…", de:"Suche nach REFNIS oder Name…" },
   btn_clear: { fr:"Effacer", nl:"Wissen", en:"Clear", de:"Löschen" },
@@ -935,6 +944,9 @@ const I18N = {
   pyr_men_tpl: { fr:"♂ Hommes ({n})", nl:"♂ Mannen ({n})", en:"♂ Men ({n})", de:"♂ Männer ({n})" },
   pyr_women_tpl: { fr:"Femmes ({n}) ♀", nl:"Vrouwen ({n}) ♀", en:"Women ({n}) ♀", de:"Frauen ({n}) ♀" },
   age_years: { fr:"ans", nl:"jaar", en:"yrs", de:"Jahre" },
+  title_zoom_bracket: { fr:"Cliquer : répartition par nationalité de cette tranche", nl:"Klikken: verdeling naar nationaliteit van deze leeftijdsgroep", en:"Click: breakdown by nationality of this bracket", de:"Klicken: Aufschlüsselung nach Nationalität dieser Altersgruppe" },
+  word_men_unit: { fr:["homme","hommes"], nl:["man","mannen"], en:["man","men"], de:["Mann","Männer"] },
+  word_women_unit: { fr:["femme","femmes"], nl:["vrouw","vrouwen"], en:["woman","women"], de:["Frau","Frauen"] },
 
   // ── Planning ──────────────────────────────────────────────────────
   plan_title: { fr:"📅 Planning enquêtes terrain", nl:"📅 Planning veldwerk", en:"📅 Field survey planning", de:"📅 Planung der Felderhebung" },
@@ -986,6 +998,7 @@ const I18N = {
   geo_prec_fail: { fr:"échec", nl:"mislukt", en:"failed", de:"fehlgeschlagen" },
   geo_prec_pending: { fr:"…", nl:"…", en:"…", de:"…" },
   src_centre: { fr:"centre commune", nl:"gemeentecentrum", en:"municipality centre", de:"Gemeindezentrum" },
+  txt_precision_word: { fr:"localisation", nl:"locatie", en:"location", de:"Standort" },
   txt_map_not_ready: { fr:"Carte non prête.", nl:"Kaart niet klaar.", en:"Map not ready.", de:"Karte nicht bereit." },
   txt_searching: { fr:"Recherche…", nl:"Zoeken…", en:"Searching…", de:"Suche läuft…" },
   txt_address_not_found: { fr:"❌ adresse introuvable", nl:"❌ adres niet gevonden", en:"❌ address not found", de:"❌ Adresse nicht gefunden" },
@@ -994,6 +1007,7 @@ const I18N = {
   txt_geocoding_progress: { fr:"Géocodage… {i}/{n}", nl:"Geocoderen… {i}/{n}", en:"Geocoding… {i}/{n}", de:"Geokodierung… {i}/{n}" },
   txt_geocoding_done: { fr:"{n} quartier(s) — localisation terminée.", nl:"{n} wijk(en) — lokalisatie voltooid.", en:"{n} quartier(s) — locating complete.", de:"{n} Viertel — Lokalisierung abgeschlossen." },
   txt_debug_analyzing: { fr:"🐞 {code} — analyse en cours…", nl:"🐞 {code} — analyse bezig…", en:"🐞 {code} — analyzing…", de:"🐞 {code} — Analyse läuft…" },
+  txt_debug_trials: { fr:"{n} essai(s) (détail dans la console F12)", nl:"{n} poging(en) (detail in de F12-console)", en:"{n} attempt(s) (details in the F12 console)", de:"{n} Versuch(e) (Details in der F12-Konsole)" },
 
   // ── Alertes / confirmations ───────────────────────────────────────
   al_no_file_loaded: { fr:"Aucun fichier chargé.", nl:"Geen bestand geladen.", en:"No file loaded.", de:"Keine Datei geladen." },
@@ -1089,7 +1103,13 @@ function rafraichirVuesLangue() {
 // ════════════════════════════════════════════════════════════════════════
 
 const SEX_MAP  = { '1':'M', '2':'F' };
-const SEXE_LBL = { 'M':'Male', 'F':'Female' };   // code → libellé (affichage). Valeur stockée = M/F
+const SEXE_LBL = { 'M':'Male', 'F':'Female' };   // code → libellé (affichage EN, pivot). Valeur stockée = M/F
+// Libellé affiché (langue courante de l'UI) pour un code sexe M/F
+const SEXE_I18N = {
+  M: { fr:"Homme", nl:"Man", en:"Male", de:"Mann" },
+  F: { fr:"Femme", nl:"Vrouw", en:"Female", de:"Frau" },
+};
+function sexeLabel(code) { const e = SEXE_I18N[code]; return e ? (e[uiLang] || e.en) : (code || ''); }
 
 const MRTL_FR  = {
   '1':'Single', '2':'Married', '3':'Divorced / Separated',
@@ -1100,6 +1120,16 @@ const MRTL_FR  = {
 const MRTL_CODE = Object.fromEntries(
   Object.entries(MRTL_FR).filter(([, l]) => l).map(([c, l]) => [l, c])
 );
+// Libellé affiché (langue courante de l'UI) pour une valeur MRTL_FR (pivot EN, ex. « Single »)
+const MRTL_I18N = {
+  'Single':                        { fr:"Célibataire",                     nl:"Ongehuwd",                        en:"Single",                        de:"Ledig" },
+  'Married':                       { fr:"Marié(e)",                        nl:"Gehuwd",                          en:"Married",                       de:"Verheiratet" },
+  'Divorced / Separated':          { fr:"Divorcé(e) / Séparé(e)",          nl:"Gescheiden / Feitelijk gescheiden", en:"Divorced / Separated",         de:"Geschieden / Getrennt" },
+  'Widowed':                       { fr:"Veuf / Veuve",                    nl:"Weduwe / Weduwnaar",              en:"Widowed",                       de:"Verwitwet" },
+  'Divorced, de facto separated':  { fr:"Divorcé(e), séparé(e) de fait",   nl:"Gescheiden, feitelijk gescheiden", en:"Divorced, de facto separated", de:"Geschieden, faktisch getrennt" },
+  'Married or Legal cohabitant':   { fr:"Marié(e) ou cohabitant(e) légal(e)", nl:"Gehuwd of wettelijk samenwonend", en:"Married or Legal cohabitant", de:"Verheiratet oder gesetzlich zusammenlebend" },
+};
+function mrtlLabel(v) { const e = MRTL_I18N[v]; return e ? (e[uiLang] || e.en) : (v || ''); }
 
 const PAYS_I18N = {
   "AFG": { nis:"251", iso2:"AF", fr:"Afghanistan", nl:"Afghanistan", en:"Afghanistan", de:"Afghanistan" },
@@ -5169,11 +5199,11 @@ document.addEventListener('click', e => {
 function ouvrirParametres() {
   tableTriable('refSexe',
     [{ label: t('col_code'), num: true }, { label: t('col_abbr') }, { label: t('col_label') }],
-    Object.entries(SEX_MAP).map(([c, a]) => [c, a, SEXE_LBL[a] || '']));
+    Object.entries(SEX_MAP).map(([c, a]) => [c, a, sexeLabel(a) || '']));
 
   tableTriable('refMrtl',
     [{ label: t('col_code'), num: true }, { label: t('col_label') }],
-    Object.entries(MRTL_FR).map(([c, l]) => [c, l || '—']));
+    Object.entries(MRTL_FR).map(([c, l]) => [c, l ? mrtlLabel(l) : '—']));
 
   initPays();
 
@@ -5195,6 +5225,13 @@ function continentNIS(nis) {
     default:  return '';
   }
 }
+// Libellé affiché (langue courante) pour un continent — la clé interne (continentNIS) reste en anglais
+const CONTINENT_LBL_KEY = {
+  'Europe': 'continent_europe', 'Asia': 'continent_asia', 'Africa': 'continent_africa',
+  'America (North/Central)': 'continent_america_north', 'America (South)': 'continent_america_south',
+  'Oceania': 'continent_oceania', 'Unknown': 'lbl_unknown',
+};
+function continentLabel(c) { return CONTINENT_LBL_KEY[c] ? t(CONTINENT_LBL_KEY[c]) : c; }
 // 27 États membres de l'UE (ISO3) — liste statique (non déductible du code)
 const EU_MEMBERS = new Set(['AUT','BEL','BGR','HRV','CYP','CZE','DNK','EST','FIN','FRA','DEU','GRC','HUN','IRL','ITA','LVA','LTU','LUX','MLT','NLD','POL','PRT','ROU','SVK','SVN','ESP','SWE']);
 // Zone NUTS Eurostat hors UE : AELE + pays candidats (NUTS0 = code 2 lettres)
@@ -5214,7 +5251,7 @@ let _paysAll = [];
 function initPays() {
   _paysAll = Object.entries(NLTY_ISO).map(([code, iso]) => {
     const iso2 = (PAYS_I18N[iso] || {}).iso2 || '';
-    return [code, iso, iso2, nuts0Code(iso, iso2), paysNom(iso), continentNIS(code), EU_MEMBERS.has(iso) ? 'EU' : ''];
+    return [code, iso, iso2, nuts0Code(iso, iso2), paysNom(iso), continentLabel(continentNIS(code)), EU_MEMBERS.has(iso) ? 'EU' : ''];
   });
   const conts = [...new Set(_paysAll.map(r => r[5]).filter(Boolean))].sort();
   document.getElementById('filtrePaysCont').innerHTML =
@@ -5679,7 +5716,7 @@ function majCommunesPlan() {
   const sel = document.getElementById('planCommune');
   const cur = sel.value;
   const communes = [...new Set(_planRows.filter(r => !prov || r.prov === prov).map(r => r.commune))].sort();
-  sel.innerHTML = '<option value="">All communes</option>' +
+  sel.innerHTML = `<option value="">${escHtml(t('opt_all_communes'))}</option>` +
     communes.map(c => `<option${c === cur ? ' selected' : ''}>${escHtml(c)}</option>`).join('');
   majQuartiersPlan();
 }
@@ -5694,7 +5731,7 @@ function majQuartiersPlan() {
   const quartiers = [...new Set(_planRows
     .filter(r => (!prov || r.prov === prov) && (!comm || r.commune === comm) && r.quartier)
     .map(r => r.quartier))].sort();
-  sel.innerHTML = '<option value="">All quartiers</option>' +
+  sel.innerHTML = `<option value="">${escHtml(t('opt_all_quartiers'))}</option>` +
     quartiers.map(qq => `<option${qq === cur ? ' selected' : ''}>${escHtml(qq)}</option>`).join('');
 }
 
@@ -5723,7 +5760,7 @@ function planRowsFiltres() {
 function filtrerPlanning() {
   const rows = planRowsFiltres().sort((a, b) => (a.d && b.d) ? a.d - b.d : 0);
   const grp = new Set(rows.map(r => r.code));
-  document.getElementById('planCount').textContent = `${grp.size} groupe(s) · ${rows.length} interro.`;
+  document.getElementById('planCount').textContent = tf('txt_planning_count', { n: grp.size, m: rows.length });
   renderPlanningTable(rows);
   majMarqueursPlan(rows);
 }
@@ -5753,17 +5790,17 @@ function triPlanning(col) {
 // Précision du géocodage d'un groupe (depuis le cache) → { sc, txt, col }
 function precisionGroupe(g) {
   const c = _geoCache[(g.communeFR || '') + '|' + g.quartier];
-  if (!c) return { sc: -1, txt: '…', col: 'var(--text2)' };          // pas encore géocodé
-  if (c.lat == null) return { sc: 0, txt: 'échec', col: '#c62828' };
+  if (!c) return { sc: -1, txt: t('geo_prec_pending'), col: 'var(--text2)' };          // pas encore géocodé
+  if (c.lat == null) return { sc: 0, txt: t('geo_prec_fail'), col: '#c62828' };
   const sc = c.score || 0;
   const ecart = (c.ecart != null) ? ' · Δ' + c.ecart + ' m' : '';
   const src = c.source ? ' · ' + SRC_LBL(c.source) : '';
-  const txt = (sc >= 80 ? 'élevée' : sc >= 60 ? 'moyenne' : 'commune') + ' (' + sc + ')' + src + ecart;
+  const txt = (sc >= 80 ? t('geo_prec_high') : sc >= 60 ? t('geo_prec_medium') : t('geo_prec_low')) + ' (' + sc + ')' + src + ecart;
   return { sc, txt, col: sc >= 80 ? '#2e7d32' : sc >= 60 ? '#f9a825' : '#c62828' };
 }
 // Libellé lisible de la source de géocodage
 function SRC_LBL(s) {
-  return { urbis: 'UrbIS', spw: 'SPW', geopunt: 'Geopunt', osm: 'OSM', centre: 'centre commune' }[s] || s;
+  return { urbis: 'UrbIS', spw: 'SPW', geopunt: 'Geopunt', osm: 'OSM', centre: t('src_centre') }[s] || s;
 }
 
 function rendrePlanGroupes() {
@@ -5779,8 +5816,8 @@ function rendrePlanGroupes() {
   });
   const ind = c => _planTri.col === c ? (_planTri.dir > 0 ? ' ▲' : ' ▼') : '';
   const th = (c, lbl) => `<th style="cursor:pointer" onclick="triPlanning('${c}')">${lbl}${ind(c)}</th>`;
-  let h = '<thead><tr><th style="width:22px"></th>' + th('group', 'Group') + th('commune', 'Commune')
-    + th('quartier', 'Quartier') + th('precision', 'Précision') + th('prochaine', 'Prochaine') + '</tr></thead><tbody>';
+  let h = '<thead><tr><th style="width:22px"></th>' + th('group', t('th_group')) + th('commune', t('th_commune'))
+    + th('quartier', t('th_quartier')) + th('precision', t('th_precision')) + th('prochaine', t('th_next')) + '</tr></thead><tbody>';
   arr.forEach(g => {
     const id = 'pd-' + String(g.code).replace(/[^a-z0-9]/gi, '_');
     const prochaine = g.nx ? `I${g.nx.wave} · ${escHtml(g.nx.start)}` : '';
@@ -5832,19 +5869,19 @@ function majMarqueursPlan(rows) {
   liste.forEach(g => { const c = _geoCache[cleGeo(g)]; if (c && c.lat) { ajoutMarqueur(g, c); bounds.push([c.lat, c.lng]); } });
   recadrer();
 
-  if (!aGeocoder.length) { stat.textContent = liste.length ? `${liste.length} quartier(s) localisé(s).` : ''; return; }
+  if (!aGeocoder.length) { stat.textContent = liste.length ? tf('txt_geocoded_n', { n: liste.length }) : ''; return; }
   let i = 0;
-  stat.textContent = `Géocodage… 0/${aGeocoder.length}`;
+  stat.textContent = tf('txt_geocoding_progress', { i: 0, n: aGeocoder.length });
   (function suivant() {
     if (i >= aGeocoder.length) {
       try { localStorage.setItem('planGeoCacheV27', JSON.stringify(_geoCache)); } catch (e) {}
-      stat.textContent = `${liste.length} quartier(s) — localisation terminée.`;
+      stat.textContent = tf('txt_geocoding_done', { n: liste.length });
       recadrer();
       rendrePlanGroupes();   // met à jour la colonne « Précision » une fois le géocodage fini
       return;
     }
     const g = aGeocoder[i];
-    stat.textContent = `Géocodage… ${i + 1}/${aGeocoder.length}`;
+    stat.textContent = tf('txt_geocoding_progress', { i: i + 1, n: aGeocoder.length });
     geocodeQuartier(g).then(pt => {
       _geoCache[cleGeo(g)] = pt || { lat: null };   // mémorise même l'échec (évite de re-tenter)
       if (pt) { ajoutMarqueur(g, pt); bounds.push([pt.lat, pt.lng]); }
@@ -5858,12 +5895,12 @@ function ajoutMarqueur(g, pt) {
   const interros = _planRows.filter(r => r.code === g.code)
     .map(r => `I${r.wave} · wk ${escHtml(r.sem)} · ${escHtml(r.start)}→${escHtml(r.stop)}`).join('<br>');
   const sc = pt.score || 0;
-  const conf = sc >= 80 ? 'élevée' : sc >= 60 ? 'moyenne' : 'commune (approx.)';
+  const conf = sc >= 80 ? t('geo_prec_high') : sc >= 60 ? t('geo_prec_medium') : t('geo_prec_low_approx');
   const col = sc >= 80 ? '#2e7d32' : sc >= 60 ? '#f9a825' : '#c62828';
   const src = pt.source ? ' · via ' + SRC_LBL(pt.source) : '';
   _planMarkers[g.code] = L.marker([pt.lat, pt.lng]).addTo(_planLayer)
     .bindPopup(`<b>${escHtml(g.code)}</b> — ${escHtml(g.commune)}<br><i>${escHtml(g.quartier)}</i><br>${interros}`
-      + `<br><span style="color:${col}">● localisation ${conf}${sc ? ' (' + sc + ')' : ''}${src}</span>`);
+      + `<br><span style="color:${col}">● ${escHtml(t('txt_precision_word'))} ${conf}${sc ? ' (' + sc + ')' : ''}${src}</span>`);
 }
 
 // Centre la carte sur le marqueur d'un groupe (clic depuis le tableau)
@@ -5881,7 +5918,7 @@ function debugGroupe(code) {
   const row = _planRows.find(x => x.code === code);
   const region = row ? row.region : 'bruxelles';
   const stat = document.getElementById('planGeoStatus');
-  stat.textContent = '🐞 ' + code + ' — analyse en cours…';
+  stat.textContent = tf('txt_debug_analyzing', { code });
   geocodeQuartier({ region, commune: g.commune, communeFR: g.communeFR, quartier: g.quartier, debug: true }).then(r => {
     console.group('🐞 ' + code + ' — « ' + g.quartier + ' » (' + g.communeFR + ')');
     console.log('Retenu :', r.retenu, '| score :', r.score, '| source :', r.source, '| écart :', r.ecart != null ? r.ecart + ' m' : '—');
@@ -5889,7 +5926,7 @@ function debugGroupe(code) {
     console.groupEnd();
     stat.innerHTML = '🐞 <b>' + escHtml(code) + '</b> → ' + escHtml(r.retenu || '—')
       + ' (score ' + (r.score || 0) + (r.source ? ', ' + escHtml(SRC_LBL(r.source)) : '') + ') — '
-      + (r.essais ? r.essais.length : 0) + ' essais (détail dans la console F12)';
+      + tf('txt_debug_trials', { n: r.essais ? r.essais.length : 0 });
   });
 }
 
@@ -6305,21 +6342,21 @@ function renderPyramide(elId, data) {
     const wh = (d.h / max * 100).toFixed(1);
     const wf = (d.f / max * 100).toFixed(1);
     const lblJS = String(d.lbl).replace(/['\\]/g, '');
-    return `<div class="pyr-row" style="cursor:pointer" title="Cliquer : répartition par nationalité de cette tranche" onclick="zoomTranche(${d.min},${d.max},'${lblJS}')">
+    return `<div class="pyr-row" style="cursor:pointer" title="${escHtml(t('title_zoom_bracket'))}" onclick="zoomTranche(${d.min},${d.max},'${lblJS}')">
       <div class="pyr-left">
         <span class="pyr-cnt" style="text-align:right">${d.h || ''}</span>
-        <div class="pyr-bar pyr-bar-h" style="width:${wh}%" title="${d.h} homme(s)"></div>
+        <div class="pyr-bar pyr-bar-h" style="width:${wh}%" title="${d.h} ${escHtml(tPlural('word_men_unit', d.h))}"></div>
       </div>
       <div class="pyr-lbl">${escHtml(d.lbl)}</div>
       <div class="pyr-right">
-        <div class="pyr-bar pyr-bar-f" style="width:${wf}%" title="${d.f} femme(s)"></div>
+        <div class="pyr-bar pyr-bar-f" style="width:${wf}%" title="${d.f} ${escHtml(tPlural('word_women_unit', d.f))}"></div>
         <span class="pyr-cnt">${d.f || ''}</span>
       </div>
     </div>`;
   }).join('');
   document.getElementById(elId).innerHTML =
     `<div class="pyramide">
-       <div class="pyr-head"><span class="h">♂ Hommes (${totH})</span><span class="f">Femmes (${totF}) ♀</span></div>
+       <div class="pyr-head"><span class="h">${escHtml(tf('pyr_men_tpl', { n: totH }))}</span><span class="f">${escHtml(tf('pyr_women_tpl', { n: totF }))}</span></div>
        ${rows}
      </div>`;
 }
@@ -6348,7 +6385,7 @@ function zoomTranche(min, max, lbl) {
   sub.forEach(r => { const n = paysNom(r.nationality) || r.nationality || '—'; cnt[n] = (cnt[n] || 0) + 1; });
   const items = Object.entries(cnt).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   det.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
-      <b style="color:var(--text)">Tranche ${escHtml(lbl)}</b> — ${sub.length} personne(s), par nationalité
+      <b style="color:var(--text)">${escHtml(tf('txt_bracket', { lbl }))}</b> — ${sub.length} ${escHtml(tPlural('word_person', sub.length))}${escHtml(t('txt_by_nationality'))}
       <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('statsAgeDetail').innerHTML=''">✕</button>
     </div><div id="statsAgeTM"></div>`;
   renderTreemapNlty('statsAgeTM', items);
@@ -6358,14 +6395,14 @@ function zoomTranche(min, max, lbl) {
 let _genderPop = [];
 function zoomGender(sx) {
   const det = document.getElementById('statsSexeDetail'); if (!det) return;
-  const lbl = sx === 'M' ? 'Hommes' : sx === 'F' ? 'Femmes' : 'Autre';
+  const lbl = sx === 'M' ? t('gender_men') : sx === 'F' ? t('gender_women') : t('gender_other');
   const sub = _genderPop.filter(r => (r.sexe || 'X') === sx || (sx === 'X' && r.sexe !== 'M' && r.sexe !== 'F'));
   if (!sub.length) { det.innerHTML = ''; return; }
   const cnt = {};
   sub.forEach(r => { const n = paysNom(r.nationality) || r.nationality || '—'; cnt[n] = (cnt[n] || 0) + 1; });
   const items = Object.entries(cnt).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   det.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
-      <b style="color:var(--text)">${escHtml(lbl)}</b> — ${sub.length}, par nationalité
+      <b style="color:var(--text)">${escHtml(lbl)}</b> — ${sub.length}${escHtml(t('txt_by_nationality'))}
       <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('statsSexeDetail').innerHTML=''">✕</button>
     </div><div id="statsSexeTM"></div>`;
   renderTreemapNlty('statsSexeTM', items);
@@ -6381,7 +6418,7 @@ function zoomMarital(lib) {
   sub.forEach(r => { const n = paysNom(r.nationality) || r.nationality || '—'; cnt[n] = (cnt[n] || 0) + 1; });
   const items = Object.entries(cnt).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   det.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
-      <b style="color:var(--text)">${escHtml(lib || '—')}</b> — ${sub.length}, par nationalité
+      <b style="color:var(--text)">${escHtml(lib ? mrtlLabel(lib) : '—')}</b> — ${sub.length}${escHtml(t('txt_by_nationality'))}
       <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('statsMrtlDetail').innerHTML=''">✕</button>
     </div><div id="statsMrtlTM"></div>`;
   renderTreemapNlty('statsMrtlTM', items);
@@ -6503,15 +6540,16 @@ function majStats(res) {
     if (s) { nlty[r.nationality][s]++; mrtl[r.marital_status][s]++; cont[ck][s]++; eu[ek][s]++; }
   });
   renderBarresStack('statsCont', Object.entries(cont).sort((a, b) => (b[1].h + b[1].f) - (a[1].h + a[1].f))
-    .map(([c, v]) => ({ label: c, h: v.h, f: v.f })));
+    .map(([c, v]) => ({ label: continentLabel(c), h: v.h, f: v.f })));
   const euOrdre = { 'EU': 0, 'Non-EU': 1, 'Unknown': 2 };
   const euCoul = { 'EU': '#1a237e', 'Non-EU': '#f9a825', 'Unknown': '#9e9e9e' };
+  const euLbl = { 'EU': t('lbl_eu_short'), 'Non-EU': t('lbl_noneu_short'), 'Unknown': t('lbl_unknown') };
   renderDonut('statsEU', Object.entries(eu).sort((a, b) => (euOrdre[a[0]] ?? 9) - (euOrdre[b[0]] ?? 9))
-    .map(([k, v]) => ({ label: k, value: v.h + v.f, color: euCoul[k] })));
+    .map(([k, v]) => ({ label: euLbl[k] || k, value: v.h + v.f, color: euCoul[k] })));
   _maritalPop = pop;
   document.getElementById('statsMrtlDetail').innerHTML = '';   // reset détail
   renderBarres100('statsMrtl', Object.entries(mrtl).sort((a, b) => (b[1].h + b[1].f) - (a[1].h + a[1].f))
-    .map(([lib, v]) => ({ key: lib, label: lib || '—', value: v.h + v.f })), 'zoomMarital');
+    .map(([lib, v]) => ({ key: lib, label: lib ? mrtlLabel(lib) : '—', value: v.h + v.f })), 'zoomMarital');
   // Lieu de naissance en Belgique (toute nationalité) — drill-down Région → Province → Arr. → Commune.
   // On exige une région déduite d'un vrai REFNIS : exclut les « BEL » issus seulement de la
   // nationalité (REFNIS de naissance vide → pas de localisation).
@@ -6524,8 +6562,8 @@ function majStats(res) {
   const nbF = pop.filter(m => m.sexe === 'F').length;
   const nbX = pop.length - nbM - nbF;
   const sexeItems = [
-    { key: 'M', label: 'Masculin', count: nbM, color: 'var(--bar-h)' },
-    { key: 'F', label: 'Féminin',  count: nbF, color: 'var(--bar-f)' },
+    { key: 'M', label: t('gender_men'), count: nbM, color: 'var(--bar-h)' },
+    { key: 'F', label: t('gender_women'),  count: nbF, color: 'var(--bar-f)' },
   ];
   if (nbX) sexeItems.push({ key: 'X', label: '—', count: nbX, color: '#9e9e9e' });
   _genderPop = pop;
