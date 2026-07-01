@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Statbel – Interviews</title>
 <link rel="icon" href="data:,">
 <meta name="theme-color" content="#1a237e">
@@ -85,6 +85,10 @@
     background: var(--header-bg);
     color: white;
     padding: 8px 12px;
+    /* PWA installée (status bar translucide iOS) : ne pas passer sous l'encoche */
+    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-left: calc(12px + env(safe-area-inset-left));
+    padding-right: calc(12px + env(safe-area-inset-right));
     position: sticky;
     top: 0;
     z-index: 100;
@@ -973,10 +977,11 @@
   .lock-key {
     width: 64px; height: 64px; border-radius: 50%;
     background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
-    color: white; font-size: 22px; font-weight: 500;
+    color: white; font-size: 22px; font-weight: 500; font-family: inherit; padding: 0;
     display:flex; align-items:center; justify-content:center;
     cursor: pointer; user-select: none;
   }
+  .lock-key:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .lock-key:active { background: rgba(255,255,255,0.3); }
   .lock-key.empty { visibility: hidden; cursor: default; }
   .lock-error-msg {
@@ -1049,6 +1054,11 @@
     .edit-area [style*="display:flex;gap:10px"] .edit-row { flex: 1 1 100% !important; width: 100% !important; }
     .edit-area [style*="display:flex;gap:10px"] .edit-row input { max-width: 100% !important; width: 100% !important; }
     .email-wrap input { width: 100% !important; }
+    /* iOS Safari zoome à la prise de focus si la police < 16px : on force 16px
+       sur les champs de saisie en mobile (évite le zoom parasite en pleine saisie). */
+    input, select, textarea,
+    .edit-row input, .demo-item input, .demo-item select,
+    .search-bar input, .rdv-search input, .extra-area textarea { font-size: 16px !important; }
   }
 
   /* ── Tablette ≥ 600px ─────────────────────────────────────────────── */
@@ -1129,16 +1139,16 @@
       <select id="surveySelect" onchange="changerEnquete(this.value)"></select>
     </div>
     <div class="header-col3">
-      <span class="net-indicator" title=""></span>
-      <div class="view-toggle">
-        <button class="btn-view active" id="btnListe" data-tip="Liste" data-i18n-tip="tip_list" onclick="setView('liste')">☰</button>
-        <button class="btn-view" id="btnCarte" data-tip="Carte" data-i18n-tip="tip_map" onclick="setView('carte')">🗺️</button>
-        <button class="btn-view" id="btnRdv" data-tip="Suivi" data-i18n-tip="tip_track" onclick="setView('rdv')">📅</button>
-        <button class="btn-view" id="btnResume" data-tip="Résumé" data-i18n-tip="tip_summary" onclick="setView('resume')">📊</button>
+      <span class="net-indicator" role="status" title=""></span>
+      <div class="view-toggle" role="group">
+        <button class="btn-view active" id="btnListe" data-tip="Liste" data-i18n-tip="tip_list" data-i18n-aria="tip_list" onclick="setView('liste')">☰</button>
+        <button class="btn-view" id="btnCarte" data-tip="Carte" data-i18n-tip="tip_map" data-i18n-aria="tip_map" onclick="setView('carte')">🗺️</button>
+        <button class="btn-view" id="btnRdv" data-tip="Suivi" data-i18n-tip="tip_track" data-i18n-aria="tip_track" onclick="setView('rdv')">📅</button>
+        <button class="btn-view" id="btnResume" data-tip="Résumé" data-i18n-tip="tip_summary" data-i18n-aria="tip_summary" onclick="setView('resume')">📊</button>
       </div>
-      <button class="btn-ico" id="btnGeo" onclick="toggleMaPosition()" title="Ma position" data-i18n-title="title_mypos">🎯</button>
+      <button class="btn-ico" id="btnGeo" onclick="toggleMaPosition()" title="Ma position" data-i18n-title="title_mypos" data-i18n-aria="title_mypos">🎯</button>
       <div class="kebab-wrap">
-        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" data-i18n-title="title_more">⋮</button>
+        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" data-i18n-title="title_more" data-i18n-aria="title_more">⋮</button>
         <div class="kebab-menu" id="kebabMenu">
           <button class="kebab-item" data-i18n="menu_settings" onclick="ouvrirSettings();toggleKebab()">⚙️ Paramètres</button>
           <button class="kebab-item" data-i18n="menu_help" onclick="ouvrirAide();toggleKebab()">❓ Aide</button>
@@ -1773,7 +1783,9 @@ function majIndicateurReseau() {
   const off = !navigator.onLine;
   document.querySelectorAll('.net-indicator').forEach(el => {
     el.classList.toggle('offline', off);
-    el.title = off ? t('net_offline') : t('net_online');
+    const label = off ? t('net_offline') : t('net_online');
+    el.title = label;
+    el.setAttribute('aria-label', label);
   });
   const mapMsg = document.getElementById('mapOfflineMsg');
   if (mapMsg) {
@@ -1786,6 +1798,23 @@ function restaurerIndicateur() {
   window.addEventListener('online',  majIndicateurReseau);
   window.addEventListener('offline', majIndicateurReseau);
   majIndicateurReseau();
+}
+
+// ── Accessibilité : rôle dialog sur les modales + fermeture par Échap ─
+function setupA11y() {
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.setAttribute('role', 'dialog');
+    m.setAttribute('aria-modal', 'true');
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const ouverts = [...document.querySelectorAll('.modal-overlay.open')];
+    if (!ouverts.length) return;
+    const top = ouverts[ouverts.length - 1];
+    // Fermeture propre de l'import (réinitialise csvEnAttente) sinon fermeture générique
+    if (top.id === 'modalNom' && typeof fermerModal === 'function') fermerModal();
+    else top.classList.remove('open');
+  });
 }
 
 // ── Bandeau de rappel de sauvegarde (non-modal, dans la liste) ───────
@@ -2021,8 +2050,20 @@ function changerStatut(i, val) {
   if (vueActive === 'rdv') renduRdv();
 }
 
-function changerNotes(i, val)  { contacts()[i].notes = val;  sauver(); }
-function changerEmail(i, val)  { contacts()[i].email = val;  sauver(); }
+// Persistance différée : la frappe (notes/email) met à jour la fiche en mémoire
+// immédiatement, mais ne réécrit IndexedDB qu'après une pause (évite de réécrire
+// toute la base à chaque caractère). Flush garanti avant fermeture/masquage.
+let _saveTimer = null;
+function sauverBientot() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => { _saveTimer = null; sauver(); }, 400);
+}
+function flushSauver() { if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; sauver(); } }
+window.addEventListener('pagehide', flushSauver);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushSauver(); });
+
+function changerNotes(i, val)  { contacts()[i].notes = val;  sauverBientot(); }
+function changerEmail(i, val)  { contacts()[i].email = val;  sauverBientot(); }
 
 function changerGsm(i, input) {
   const f = formaterGsm(input.value);
@@ -3162,7 +3203,7 @@ function rendu() {
       <div class="card-top">
         <span class="card-ordre">N° ${esc(c.ordre)}</span>
         <div class="card-name">${esc(c.prenom)} ${esc(c.nom)}</div>
-        <button class="btn-edit" onclick="toggleEdit(${i})" title="Modifier">🖊️</button>
+        <button class="btn-edit" onclick="toggleEdit(${i})" title="${esc(t('aria_edit'))}" aria-label="${esc(t('aria_edit'))}">🖊️</button>
       </div>
       ${(() => { const d = ligneDemographie(c); return d ? `<div class="card-demo">👤 ${d}</div>` : ''; })()}
       <div class="card-adresse-row">
@@ -4116,6 +4157,9 @@ const I18N = {
   "bkbanner_save": { fr:"Sauvegarder", nl:"Back-up", en:"Back up", de:"Sichern" },
   "menu_converter": { fr:"🔄 Convertisseur d'enquête", nl:"🔄 Enquête-omzetter", en:"🔄 Survey converter", de:"🔄 Umfrage-Konverter" },
   "title_recenter": { fr:"Recentrer sur les contacts", nl:"Centreren op de contacten", en:"Recenter on contacts", de:"Auf Kontakte zentrieren" },
+  "aria_edit": { fr:"Modifier la fiche", nl:"Fiche bewerken", en:"Edit record", de:"Eintrag bearbeiten" },
+  "pin_backspace": { fr:"Effacer", nl:"Wissen", en:"Backspace", de:"Löschen" },
+  "aria_close": { fr:"Fermer", nl:"Sluiten", en:"Close", de:"Schließen" },
 };
 
 function t(key) {
@@ -4143,6 +4187,7 @@ function appliquerLangue() {
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
   document.querySelectorAll('[data-i18n-tip]').forEach(el => { el.setAttribute('data-tip', t(el.getAttribute('data-i18n-tip'))); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
 }
 
 function changerLangue(v) {
@@ -5823,14 +5868,20 @@ function renderLockKeypad() {
   const wrap = document.getElementById('lockKeypad');
   wrap.innerHTML = '';
   const touches = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
-  touches.forEach(t => {
-    const btn = document.createElement('div');
-    if (t === '') { btn.className = 'lock-key empty'; }
-    else {
-      btn.className = 'lock-key';
-      btn.textContent = t;
-      btn.onclick = () => pinToucheAppuyee(t);
+  touches.forEach(k => {
+    if (k === '') {
+      const filler = document.createElement('div');
+      filler.className = 'lock-key empty';
+      filler.setAttribute('aria-hidden', 'true');
+      wrap.appendChild(filler);
+      return;
     }
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lock-key';
+    btn.textContent = k;
+    btn.setAttribute('aria-label', k === '⌫' ? t('pin_backspace') : k);
+    btn.onclick = () => pinToucheAppuyee(k);
     wrap.appendChild(btn);
   });
 }
@@ -6069,6 +6120,7 @@ async function init() {
   refreshSelect();
   rendu();
   restaurerIndicateur();
+  setupA11y();
   document.querySelectorAll('.app-version').forEach(el => el.textContent = APP_VERSION);
 
   pinSurveillerInactivite();
