@@ -935,6 +935,9 @@ const I18N = {
   pyr_men_tpl: { fr:"♂ Hommes ({n})", nl:"♂ Mannen ({n})", en:"♂ Men ({n})", de:"♂ Männer ({n})" },
   pyr_women_tpl: { fr:"Femmes ({n}) ♀", nl:"Vrouwen ({n}) ♀", en:"Women ({n}) ♀", de:"Frauen ({n}) ♀" },
   age_years: { fr:"ans", nl:"jaar", en:"yrs", de:"Jahre" },
+  title_zoom_bracket: { fr:"Cliquer : répartition par nationalité de cette tranche", nl:"Klikken: verdeling naar nationaliteit van deze leeftijdsgroep", en:"Click: breakdown by nationality of this bracket", de:"Klicken: Aufschlüsselung nach Nationalität dieser Altersgruppe" },
+  word_men_unit: { fr:["homme","hommes"], nl:["man","mannen"], en:["man","men"], de:["Mann","Männer"] },
+  word_women_unit: { fr:["femme","femmes"], nl:["vrouw","vrouwen"], en:["woman","women"], de:["Frau","Frauen"] },
 
   // ── Planning ──────────────────────────────────────────────────────
   plan_title: { fr:"📅 Planning enquêtes terrain", nl:"📅 Planning veldwerk", en:"📅 Field survey planning", de:"📅 Planung der Felderhebung" },
@@ -1091,7 +1094,13 @@ function rafraichirVuesLangue() {
 // ════════════════════════════════════════════════════════════════════════
 
 const SEX_MAP  = { '1':'M', '2':'F' };
-const SEXE_LBL = { 'M':'Male', 'F':'Female' };   // code → libellé (affichage). Valeur stockée = M/F
+const SEXE_LBL = { 'M':'Male', 'F':'Female' };   // code → libellé (affichage EN, pivot). Valeur stockée = M/F
+// Libellé affiché (langue courante de l'UI) pour un code sexe M/F
+const SEXE_I18N = {
+  M: { fr:"Homme", nl:"Man", en:"Male", de:"Mann" },
+  F: { fr:"Femme", nl:"Vrouw", en:"Female", de:"Frau" },
+};
+function sexeLabel(code) { const e = SEXE_I18N[code]; return e ? (e[uiLang] || e.en) : (code || ''); }
 
 const MRTL_FR  = {
   '1':'Single', '2':'Married', '3':'Divorced / Separated',
@@ -1102,6 +1111,16 @@ const MRTL_FR  = {
 const MRTL_CODE = Object.fromEntries(
   Object.entries(MRTL_FR).filter(([, l]) => l).map(([c, l]) => [l, c])
 );
+// Libellé affiché (langue courante de l'UI) pour une valeur MRTL_FR (pivot EN, ex. « Single »)
+const MRTL_I18N = {
+  'Single':                        { fr:"Célibataire",                     nl:"Ongehuwd",                        en:"Single",                        de:"Ledig" },
+  'Married':                       { fr:"Marié(e)",                        nl:"Gehuwd",                          en:"Married",                       de:"Verheiratet" },
+  'Divorced / Separated':          { fr:"Divorcé(e) / Séparé(e)",          nl:"Gescheiden / Feitelijk gescheiden", en:"Divorced / Separated",         de:"Geschieden / Getrennt" },
+  'Widowed':                       { fr:"Veuf / Veuve",                    nl:"Weduwe / Weduwnaar",              en:"Widowed",                       de:"Verwitwet" },
+  'Divorced, de facto separated':  { fr:"Divorcé(e), séparé(e) de fait",   nl:"Gescheiden, feitelijk gescheiden", en:"Divorced, de facto separated", de:"Geschieden, faktisch getrennt" },
+  'Married or Legal cohabitant':   { fr:"Marié(e) ou cohabitant(e) légal(e)", nl:"Gehuwd of wettelijk samenwonend", en:"Married or Legal cohabitant", de:"Verheiratet oder gesetzlich zusammenlebend" },
+};
+function mrtlLabel(v) { const e = MRTL_I18N[v]; return e ? (e[uiLang] || e.en) : (v || ''); }
 
 const PAYS_I18N = {
   "AFG": { nis:"251", iso2:"AF", fr:"Afghanistan", nl:"Afghanistan", en:"Afghanistan", de:"Afghanistan" },
@@ -5171,11 +5190,11 @@ document.addEventListener('click', e => {
 function ouvrirParametres() {
   tableTriable('refSexe',
     [{ label: t('col_code'), num: true }, { label: t('col_abbr') }, { label: t('col_label') }],
-    Object.entries(SEX_MAP).map(([c, a]) => [c, a, SEXE_LBL[a] || '']));
+    Object.entries(SEX_MAP).map(([c, a]) => [c, a, sexeLabel(a) || '']));
 
   tableTriable('refMrtl',
     [{ label: t('col_code'), num: true }, { label: t('col_label') }],
-    Object.entries(MRTL_FR).map(([c, l]) => [c, l || '—']));
+    Object.entries(MRTL_FR).map(([c, l]) => [c, l ? mrtlLabel(l) : '—']));
 
   initPays();
 
@@ -6350,7 +6369,7 @@ function zoomTranche(min, max, lbl) {
   sub.forEach(r => { const n = paysNom(r.nationality) || r.nationality || '—'; cnt[n] = (cnt[n] || 0) + 1; });
   const items = Object.entries(cnt).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   det.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
-      <b style="color:var(--text)">Tranche ${escHtml(lbl)}</b> — ${sub.length} personne(s), par nationalité
+      <b style="color:var(--text)">${escHtml(tf('txt_bracket', { lbl }))}</b> — ${sub.length} ${escHtml(tPlural('word_person', sub.length))}${escHtml(t('txt_by_nationality'))}
       <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('statsAgeDetail').innerHTML=''">✕</button>
     </div><div id="statsAgeTM"></div>`;
   renderTreemapNlty('statsAgeTM', items);
@@ -6360,14 +6379,14 @@ function zoomTranche(min, max, lbl) {
 let _genderPop = [];
 function zoomGender(sx) {
   const det = document.getElementById('statsSexeDetail'); if (!det) return;
-  const lbl = sx === 'M' ? 'Hommes' : sx === 'F' ? 'Femmes' : 'Autre';
+  const lbl = sx === 'M' ? t('gender_men') : sx === 'F' ? t('gender_women') : t('gender_other');
   const sub = _genderPop.filter(r => (r.sexe || 'X') === sx || (sx === 'X' && r.sexe !== 'M' && r.sexe !== 'F'));
   if (!sub.length) { det.innerHTML = ''; return; }
   const cnt = {};
   sub.forEach(r => { const n = paysNom(r.nationality) || r.nationality || '—'; cnt[n] = (cnt[n] || 0) + 1; });
   const items = Object.entries(cnt).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   det.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
-      <b style="color:var(--text)">${escHtml(lbl)}</b> — ${sub.length}, par nationalité
+      <b style="color:var(--text)">${escHtml(lbl)}</b> — ${sub.length}${escHtml(t('txt_by_nationality'))}
       <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('statsSexeDetail').innerHTML=''">✕</button>
     </div><div id="statsSexeTM"></div>`;
   renderTreemapNlty('statsSexeTM', items);
@@ -6383,7 +6402,7 @@ function zoomMarital(lib) {
   sub.forEach(r => { const n = paysNom(r.nationality) || r.nationality || '—'; cnt[n] = (cnt[n] || 0) + 1; });
   const items = Object.entries(cnt).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   det.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
-      <b style="color:var(--text)">${escHtml(lib || '—')}</b> — ${sub.length}, par nationalité
+      <b style="color:var(--text)">${escHtml(lib ? mrtlLabel(lib) : '—')}</b> — ${sub.length}${escHtml(t('txt_by_nationality'))}
       <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('statsMrtlDetail').innerHTML=''">✕</button>
     </div><div id="statsMrtlTM"></div>`;
   renderTreemapNlty('statsMrtlTM', items);
