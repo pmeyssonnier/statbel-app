@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b7285">
+<title>AquaConseil — Analyse de l'eau de piscine & spa</title>
+<style>
+  :root{
+    --bg:#06222b; --bg2:#0a2f3a; --card:#0f3a47; --card2:#114655;
+    --line:#1d5868; --txt:#eaf6f9; --muted:#9fc4cf; --accent:#22c3d6;
+    --accent2:#16a0b3; --ok:#27c093; --warn:#f4b740; --bad:#ef5d60;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #0e4a5a 0%, transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, #0c3d4a 0%, transparent 55%),
+      var(--bg);
+    min-height:100vh;
+    line-height:1.5;
+    -webkit-text-size-adjust:100%;
+  }
+  header{
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:saturate(140%) blur(8px);
+    background:linear-gradient(180deg, rgba(6,34,43,.92), rgba(6,34,43,.7));
+    border-bottom:1px solid var(--line);
+  }
+  .bar{max-width:980px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+  .logo{font-size:26px;filter:drop-shadow(0 2px 6px rgba(34,195,214,.5))}
+  .bar h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px}
+  .bar small{display:block;color:var(--muted);font-weight:500;font-size:12px}
+  main{max-width:980px;margin:0 auto;padding:18px 16px 120px}
+  .card{
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px;margin:0 0 16px;
+  }
+  .card h2{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:8px}
+  .card .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .step{display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border-radius:50%;background:var(--accent);
+    color:#04222a;font-weight:800;font-size:13px;flex:0 0 auto}
+  .grid{display:grid;gap:12px}
+  @media(min-width:620px){.grid.cols2{grid-template-columns:1fr 1fr}.grid.cols3{grid-template-columns:1fr 1fr 1fr}}
+  label.field{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
+  label.field b{color:var(--txt);font-weight:600;font-size:13px}
+  input,select{
+    width:100%;background:#08303b;color:var(--txt);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;font-size:15px;outline:none;
+  }
+  input:focus,select:focus{border-color:var(--accent)}
+  .seg{display:flex;flex-wrap:wrap;gap:8px}
+  .seg button{
+    flex:1 1 auto;min-width:84px;background:#08303b;border:1px solid var(--line);
+    color:var(--txt);padding:10px 8px;border-radius:10px;font-size:13.5px;cursor:pointer;
+    transition:.15s;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.2
+  }
+  .seg button .ic{font-size:18px}
+  .seg button[aria-pressed="true"]{
+    background:linear-gradient(180deg,var(--accent),var(--accent2));
+    color:#03252e;border-color:transparent;font-weight:700;box-shadow:0 4px 14px rgba(34,195,214,.35)
+  }
+  .hint{color:var(--muted);font-size:12px;margin-top:6px}
+  .row-help{display:flex;gap:8px;align-items:flex-end}
+  .btn{
+    appearance:none;border:1px solid var(--line);background:#0c3947;color:var(--txt);
+    padding:10px 14px;border-radius:10px;font-size:14px;cursor:pointer;font-weight:600
+  }
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));color:#03252e;border:none}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:7px 10px;font-size:13px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Photo zone */
+  .drop{
+    border:2px dashed var(--line);border-radius:14px;padding:22px;text-align:center;
+    color:var(--muted);cursor:pointer;transition:.15s;background:#08303b
+  }
+  .drop:hover{border-color:var(--accent);color:var(--txt)}
+  .canvas-wrap{position:relative;margin-top:12px;display:none}
+  canvas{max-width:100%;border-radius:12px;border:1px solid var(--line);display:block;cursor:crosshair;touch-action:none}
+  .canvas-tip{font-size:12px;color:var(--muted);margin-top:8px}
+
+  /* parameter rows */
+  .param{
+    display:grid;grid-template-columns:1fr;gap:10px;border:1px solid var(--line);
+    border-radius:12px;padding:12px;background:#0b3643;margin-bottom:10px
+  }
+  @media(min-width:620px){.param{grid-template-columns:150px 1fr 130px;align-items:center}}
+  .param .pname{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .param .pname small{display:block;color:var(--muted);font-weight:500;font-size:11px}
+  .ctrl{display:flex;gap:8px;align-items:center}
+  .ctrl input[type=range]{flex:1}
+  .swatch{width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.25);flex:0 0 auto;background:#08303b}
+  .valbox{display:flex;align-items:center;gap:6px}
+  .valbox input{width:80px;text-align:center;font-weight:700}
+  .unit{color:var(--muted);font-size:12px}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700;white-space:nowrap}
+  .pill.ok{background:rgba(39,192,147,.16);color:var(--ok)}
+  .pill.lo{background:rgba(244,183,64,.16);color:var(--warn)}
+  .pill.hi{background:rgba(239,93,96,.16);color:var(--bad)}
+  .pill.na{background:rgba(159,196,207,.16);color:var(--muted)}
+
+  .toggle-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .chip{
+    border:1px solid var(--line);background:#08303b;color:var(--muted);
+    padding:7px 11px;border-radius:999px;font-size:13px;cursor:pointer;user-select:none
+  }
+  .chip[aria-pressed="true"]{background:rgba(34,195,214,.18);color:var(--txt);border-color:var(--accent)}
+
+  /* results */
+  #results{display:none}
+  .verdict{display:flex;gap:12px;align-items:center;padding:14px;border-radius:12px;margin-bottom:14px;border:1px solid var(--line)}
+  .verdict .big{font-size:30px}
+  .verdict.good{background:rgba(39,192,147,.12);border-color:rgba(39,192,147,.4)}
+  .verdict.mid{background:rgba(244,183,64,.12);border-color:rgba(244,183,64,.4)}
+  .verdict.poor{background:rgba(239,93,96,.12);border-color:rgba(239,93,96,.4)}
+  .action{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#0b3643}
+  .action h3{margin:0 0 4px;font-size:14.5px;display:flex;align-items:center;gap:8px}
+  .action .tag{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700;background:#0c3947;color:var(--muted)}
+  .action.prio .tag{background:rgba(239,93,96,.18);color:var(--bad)}
+  .action p{margin:4px 0;font-size:13.5px;color:#dbeef3}
+  .dose{font-weight:700;color:var(--accent)}
+  .muted{color:var(--muted)}
+  ul.tight{margin:6px 0 0;padding-left:18px}
+  ul.tight li{margin:3px 0;font-size:13.5px}
+  .disclaimer{font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:12px;margin-top:8px}
+  .footer{max-width:980px;margin:0 auto;padding:8px 16px 40px;color:var(--muted);font-size:12px;text-align:center}
+  .sticky-cta{
+    position:fixed;left:0;right:0;bottom:0;z-index:25;
+    background:linear-gradient(180deg,transparent,rgba(6,34,43,.95) 30%);
+    padding:14px 16px;display:flex;justify-content:center
+  }
+  .sticky-cta .btn{box-shadow:var(--shadow)}
+  details summary{cursor:pointer;color:var(--muted);font-size:13px}
+  .twocol{display:grid;gap:6px}
+  @media(min-width:620px){.twocol{grid-template-columns:1fr 1fr}}
+  .kv{font-size:13px;color:var(--muted)}
+  .kv b{color:var(--txt)}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <span class="logo">💧</span>
+    <div>
+      <h1>AquaConseil</h1>
+      <small>Analyse de l'eau & conseils d'entretien — piscine / spa</small>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ÉTAPE 1 — Caractéristiques -->
+  <section class="card">
+    <h2><span class="step">1</span> Mon bassin & mon équipement</h2>
+    <p class="sub">Ces informations adaptent les valeurs cibles, l'ordre des actions et le calcul des doses.</p>
+
+    <div class="grid cols2">
+      <div>
+        <label class="field"><b>Type de bassin</b></label>
+        <div class="seg" id="seg-type">
+          <button data-v="piscine" aria-pressed="true"><span class="ic">🏊</span>Piscine</button>
+          <button data-v="spa"><span class="ic">🛁</span>Spa / Jacuzzi</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="field"><b>Désinfectant principal</b></label>
+        <div class="seg" id="seg-sanitizer">
+          <button data-v="chlore" aria-pressed="true"><span class="ic">🧪</span>Chlore</button>
+          <button data-v="brome"><span class="ic">🟤</span>Brome</button>
+          <button data-v="sel"><span class="ic">🧂</span>Sel (électrolyse)</button>
+          <button data-v="oxygene"><span class="ic">⚪</span>Oxygène actif</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid cols2" style="margin-top:14px">
+      <div>
+        <label class="field"><b>Filtration</b></label>
+        <div class="seg" id="seg-filter">
+          <button data-v="sable" aria-pressed="true"><span class="ic">⏳</span>Sable</button>
+          <button data-v="cartouche"><span class="ic">🧻</span>Cartouche</button>
+          <button data-v="diatomee"><span class="ic">🪨</span>Diatomée</button>
+        </div>
+      </div>
+      <div>
+        <label class="field"><b>Emplacement</b></label>
+        <div class="seg" id="seg-location">
+          <button data-v="exterieur" aria-pressed="true"><span class="ic">☀️</span>Extérieur</button>
+          <button data-v="couvert"><span class="ic">🏠</span>Couvert / intérieur</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid cols2" style="margin-top:14px">
+      <div>
+        <label class="field" for="vol"><b>Volume d'eau</b> (m³)</label>
+        <div class="valbox">
+          <input id="vol" type="number" min="0.5" step="0.5" value="50" inputmode="decimal">
+          <span class="unit">m³ = <span id="vol-l">50 000</span> L</span>
+        </div>
+        <details style="margin-top:8px">
+          <summary>Je ne connais pas mon volume — le calculer</summary>
+          <div class="grid cols3" style="margin-top:8px">
+            <label class="field">Longueur (m)<input id="d-l" type="number" step="0.1" inputmode="decimal" placeholder="ex. 8"></label>
+            <label class="field">Largeur / Ø (m)<input id="d-w" type="number" step="0.1" inputmode="decimal" placeholder="ex. 4"></label>
+            <label class="field">Prof. moy. (m)<input id="d-h" type="number" step="0.1" inputmode="decimal" placeholder="ex. 1.5"></label>
+          </div>
+          <div class="row-help" style="margin-top:8px">
+            <div class="seg" id="seg-shape" style="flex:1">
+              <button data-v="rect" aria-pressed="true"><span class="ic">▭</span>Rectangle</button>
+              <button data-v="rond"><span class="ic">⬤</span>Rond / ovale</button>
+            </div>
+            <button class="btn sm" id="calc-vol" type="button">Calculer</button>
+          </div>
+        </details>
+      </div>
+      <div>
+        <label class="field" for="temp"><b>Température de l'eau</b> (°C)</label>
+        <div class="valbox">
+          <input id="temp" type="number" min="0" max="42" step="1" value="26" inputmode="decimal">
+          <span class="unit">°C</span>
+        </div>
+        <p class="hint">Sert au temps de filtration conseillé et à la consommation de désinfectant.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÉTAPE 2 — Photo -->
+  <section class="card">
+    <h2><span class="step">2</span> Photo de la bandelette</h2>
+    <p class="sub">Prends la bandelette en photo (lumière du jour, fond neutre). Puis clique sur chaque pastille pour échantillonner sa couleur — l'app proposera la valeur la plus proche, que tu peux corriger.</p>
+
+    <input id="file" type="file" accept="image/*" capture="environment" hidden>
+    <div class="drop" id="drop">
+      📷 <b>Toucher pour prendre / choisir une photo</b><br>
+      <span style="font-size:13px">(facultatif — tu peux aussi saisir les valeurs à la main ci-dessous)</span>
+    </div>
+
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="cv"></canvas>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn sm" id="wb-btn" type="button">🎯 Calibrer le blanc</button>
+        <span class="canvas-tip" id="wb-status" style="margin:0">Astuce : clique « Calibrer le blanc » puis tape une zone <b>blanche</b> de la bandelette → la lumière est corrigée pour des lectures plus justes.</span>
+      </div>
+      <p class="canvas-tip">🔬 Ensuite, sélectionne une mesure ci-dessous (bouton 💧 <i>Pipette</i>), puis clique sur la pastille correspondante de la photo.</p>
+    </div>
+  </section>
+
+  <!-- ÉTAPE 3 — Mesures -->
+  <section class="card">
+    <h2><span class="step">3</span> Mesures de la bandelette</h2>
+    <p class="sub">Choisis ta bandelette (préréglage) ou coche les paramètres à la main, puis renseigne chaque valeur (pipette depuis la photo ou réglage manuel).</p>
+
+    <label class="field"><b>Type de bandelette</b> (préréglage rapide)</label>
+    <div class="toggle-list" id="strip-presets">
+      <div class="chip" data-preset="aquachek4">🟡 AquaChek 4-en-1</div>
+      <div class="chip" data-preset="full6">🧪 6-en-1 complète</div>
+      <div class="chip" data-preset="brome">🟤 Spa au brome</div>
+    </div>
+
+    <div class="toggle-list" id="param-toggles"></div>
+    <div id="param-rows"></div>
+  </section>
+
+  <!-- RÉSULTATS -->
+  <section class="card" id="results">
+    <h2>🧭 Diagnostic & plan d'action</h2>
+    <div id="verdict"></div>
+    <div id="actions"></div>
+    <div id="maintenance"></div>
+    <p class="disclaimer" id="disclaimer"></p>
+  </section>
+</main>
+
+<div class="sticky-cta">
+  <button class="btn primary" id="analyze" type="button">🔎 Analyser l'eau & obtenir des conseils</button>
+</div>
+
+<div class="footer">
+  AquaConseil — outil d'aide. Les dosages sont des <b>estimations</b> ; suivez toujours la notice de vos produits et re-testez l'eau après traitement.
+</div>
+
+<script>
+"use strict";
+
+/* ----------------------------------------------------------------------------
+   AquaConseil — application autonome (aucune dépendance, hors-ligne)
+   - État du bassin (type, désinfectant, filtration, volume, température…)
+   - Photo de bandelette : échantillonnage couleur par "pipette" + barème
+   - Saisie manuelle de secours pour chaque paramètre
+   - Moteur de diagnostic + dosages estimés selon le volume
+---------------------------------------------------------------------------- */
+
+const state = {
+  type:'piscine', sanitizer:'chlore', filter:'sable', location:'exterieur',
+  shape:'rect', volume:50, temp:26,
+};
+
+/* --- Sélecteurs segmentés génériques --- */
+function bindSeg(id, key, cb){
+  const root = document.getElementById(id);
+  root.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    [...root.children].forEach(x=>x.setAttribute('aria-pressed', x===b ? 'true':'false'));
+    state[key] = b.dataset.v;
+    if(cb) cb(b.dataset.v);
+  });
+}
+bindSeg('seg-type','type', ()=>{ renderParamRows(); });
+bindSeg('seg-sanitizer','sanitizer', ()=>{ syncSanitizerParams(); renderParamRows(); });
+bindSeg('seg-filter','filter');
+bindSeg('seg-location','location', ()=>{ renderParamRows(); });
+bindSeg('seg-shape','shape');
+
+const volIn = document.getElementById('vol');
+const volL  = document.getElementById('vol-l');
+function refreshVolLabel(){
+  const v = parseFloat(volIn.value)||0;
+  state.volume = v;
+  volL.textContent = Math.round(v*1000).toLocaleString('fr-BE');
+}
+volIn.addEventListener('input', refreshVolLabel);
+document.getElementById('temp').addEventListener('input', e=>{ state.temp = parseFloat(e.target.value)||0; });
+refreshVolLabel();
+
+document.getElementById('calc-vol').addEventListener('click', ()=>{
+  const L = parseFloat(document.getElementById('d-l').value)||0;
+  const W = parseFloat(document.getElementById('d-w').value)||0;
+  const H = parseFloat(document.getElementById('d-h').value)||0;
+  if(!L || !H || (state.shape==='rect' && !W)){ alert('Renseigne les dimensions.'); return; }
+  let m3;
+  if(state.shape==='rond'){ const r=L/2; m3 = Math.PI*r*r*H; }
+  else { m3 = L*W*H; }
+  m3 = Math.round(m3*10)/10;
+  volIn.value = m3; refreshVolLabel();
+});
+
+/* ----------------------------------------------------------------------------
+   Définition des paramètres + barèmes colorimétriques (approximatifs, génériques)
+   Les couleurs servent à proposer une valeur depuis la photo ; toujours vérifiable.
+---------------------------------------------------------------------------- */
+const PARAMS = {
+  ph:   { name:'pH', unit:'', min:6.2, max:8.6, step:0.1, default:7.2,
+          desc:'acidité de l\'eau',
+          // barème calé sur le nuancier AquaChek (jaune → orange → rouge)
+          scale:[ [6.2,'#f0d88a'],[6.8,'#eeb866'],[7.2,'#e89a55'],
+                  [7.8,'#d8674e'],[8.4,'#c83f3f'] ] },
+  cl:   { name:'Chlore libre', unit:'ppm', min:0, max:10, step:0.5, default:1,
+          desc:'désinfectant actif',
+          // barème AquaChek (blanc → mauve → violet)
+          scale:[ [0,'#efe9d8'],[0.5,'#e6dcdf'],[1,'#d8c2d4'],[3,'#b48fc0'],
+                  [5,'#9a6ab0'],[10,'#6f4a96'] ] },
+  br:   { name:'Brome', unit:'ppm', min:0, max:20, step:0.5, default:2,
+          desc:'désinfectant actif',
+          scale:[ [0,'#f3eecf'],[1,'#e9d9c2'],[3,'#dca9ad'],[5,'#cf7f9d'],
+                  [10,'#b15a90'],[20,'#86407e'] ] },
+  tac:  { name:'Alcalinité (TAC)', unit:'ppm', min:0, max:240, step:10, default:80,
+          desc:'tampon du pH',
+          // barème AquaChek (orange → vert olive → bleu-vert)
+          scale:[ [0,'#dfa233'],[40,'#b6b552'],[80,'#8f9a55'],[120,'#6f8f72'],
+                  [180,'#487f7a'],[240,'#3f7488'] ] },
+  th:   { name:'Dureté (TH)', unit:'ppm', min:0, max:500, step:25, default:200,
+          desc:'calcaire dissous',
+          scale:[ [0,'#e58aa0'],[100,'#d77fae'],[200,'#b878b6'],[300,'#8f74bd'],
+                  [400,'#5f6fc0'],[500,'#3f63bd'] ] },
+  cya:  { name:'Stabilisant (acide cyanurique)', unit:'ppm', min:0, max:300, step:10, default:30,
+          desc:'protège le chlore du soleil',
+          // barème AquaChek « stabilizer » (beige → rose → magenta) — va jusqu'à 300
+          scale:[ [0,'#e8c9a0'],[40,'#e0a878'],[100,'#cf8f86'],[150,'#c25f86'],[300,'#a83f80'] ] },
+  sel:  { name:'Sel', unit:'g/L', min:0, max:8, step:0.5, default:4,
+          desc:'pour électrolyseur', noPhoto:true },
+};
+
+/* Cibles selon le contexte (bassin + désinfectant + emplacement) */
+function targets(){
+  const spa = state.type==='spa';
+  const t = {
+    ph:  { lo:7.0, hi:7.6, ideal:[7.2,7.4] },
+    tac: { lo:80,  hi:120, ideal:[80,120] },
+    th:  { lo:150, hi:300, ideal:[200,250] },
+  };
+  if(state.sanitizer==='brome'){
+    t.br = spa ? { lo:4, hi:6, ideal:[4,6] } : { lo:2, hi:4, ideal:[2,4] };
+  } else if(state.sanitizer==='oxygene'){
+    // pas de cible chlore/brome ; on garde pH/TAC/TH
+  } else { // chlore ou sel
+    t.cl = spa ? { lo:3, hi:5, ideal:[3,5] } : { lo:1, hi:3, ideal:[1,3] };
+  }
+  // Stabilisant : pertinent surtout piscine extérieure au chlore (pas spa, pas couvert)
+  if(state.sanitizer!=='brome' && state.sanitizer!=='oxygene' && state.location==='exterieur' && !spa){
+    t.cya = { lo:30, hi:50, ideal:[30,50] };
+  }
+  if(state.sanitizer==='sel'){
+    t.sel = { lo:3, hi:5, ideal:[3,5] }; // dépend de l'électrolyseur — ordre de grandeur
+  }
+  return t;
+}
+
+/* Quels paramètres proposer par défaut (cases cochées) */
+function defaultActive(){
+  const a = new Set(['ph','tac']);
+  if(state.sanitizer==='brome') a.add('br');
+  else if(state.sanitizer!=='oxygene') a.add('cl');
+  if(state.sanitizer==='sel') a.add('sel');
+  const t = targets();
+  if(t.cya) a.add('cya');
+  a.add('th');
+  return a;
+}
+
+let active = defaultActive();
+const values = {}; // key -> number
+
+function syncSanitizerParams(){
+  // recoche les bons désinfectants quand on change de traitement
+  active.delete('cl'); active.delete('br'); active.delete('sel');
+  if(state.sanitizer==='brome') active.add('br');
+  else if(state.sanitizer!=='oxygene') active.add('cl');
+  if(state.sanitizer==='sel') active.add('sel');
+  const t = targets();
+  if(t.cya) active.add('cya'); else active.delete('cya');
+}
+
+/* --- Préréglages de bandelettes (sélection des bons paramètres en 1 clic) --- */
+function setSeg(id, val){
+  const root=document.getElementById(id);
+  [...root.children].forEach(x=>x.setAttribute('aria-pressed', x.dataset.v===val ? 'true':'false'));
+}
+const STRIP_PRESETS = {
+  // AquaChek 4-en-1 : chlore libre, pH, alcalinité totale, stabilisant (pas de dureté/brome)
+  aquachek4:{ sanitizer:'chlore', params:['cl','ph','tac','cya'] },
+  full6:    { sanitizer:'chlore', params:['cl','ph','tac','th','cya'] },
+  brome:    { sanitizer:'brome', type:'spa', params:['br','ph','tac'] },
+};
+function applyPreset(name){
+  const pre=STRIP_PRESETS[name]; if(!pre) return;
+  if(pre.sanitizer){ state.sanitizer=pre.sanitizer; setSeg('seg-sanitizer',pre.sanitizer); }
+  if(pre.type){ state.type=pre.type; setSeg('seg-type',pre.type); }
+  active = new Set(pre.params);
+  document.querySelectorAll('#strip-presets .chip').forEach(c=>
+    c.setAttribute('aria-pressed', c.dataset.preset===name ? 'true':'false'));
+  renderParamRows();
+}
+document.getElementById('strip-presets').addEventListener('click', e=>{
+  const c=e.target.closest('.chip'); if(c) applyPreset(c.dataset.preset);
+});
+
+/* --- Barème : trouver la valeur la plus proche d'une couleur échantillonnée --- */
+function hexToRgb(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+function rgbToLab(r,g,b){
+  r/=255; g/=255; b/=255;
+  r = r>0.04045 ? Math.pow((r+0.055)/1.055,2.4) : r/12.92;
+  g = g>0.04045 ? Math.pow((g+0.055)/1.055,2.4) : g/12.92;
+  b = b>0.04045 ? Math.pow((b+0.055)/1.055,2.4) : b/12.92;
+  let x=(r*0.4124+g*0.3576+b*0.1805)/0.95047;
+  let y=(r*0.2126+g*0.7152+b*0.0722)/1.0;
+  let z=(r*0.0193+g*0.1192+b*0.9505)/1.08883;
+  const f=t=> t>0.008856 ? Math.cbrt(t) : (7.787*t+16/116);
+  x=f(x); y=f(y); z=f(z);
+  return [116*y-16, 500*(x-y), 200*(y-z)];
+}
+function deltaE(l1,l2){ return Math.hypot(l1[0]-l2[0],l1[1]-l2[1],l1[2]-l2[2]); }
+
+/* Calibrage du blanc : gains par canal pour neutraliser la dominante de la photo.
+   whiteRef = couleur échantillonnée sur une zone blanche (support de la bandelette). */
+let whiteRef = null;
+function applyWB(rgb){
+  if(!whiteRef) return rgb;
+  const gray=(whiteRef[0]+whiteRef[1]+whiteRef[2])/3;
+  return rgb.map((c,i)=>Math.max(0,Math.min(255, Math.round(c*gray/Math.max(1,whiteRef[i])))));
+}
+
+/* Arrondit une valeur interpolée au pas du paramètre, sans dépasser les bornes. */
+function snap(p,v){
+  const r=Math.round(v/p.step)*p.step;
+  return Math.max(p.min, Math.min(p.max, Math.round(r*100)/100));
+}
+
+/* Apparie une couleur au barème : projette le point (Lab) sur le segment reliant
+   les deux cases voisines les plus proches → valeur CONTINUE (interpolée). */
+function matchScale(key, rgbIn){
+  const p = PARAMS[key]; if(!p.scale) return null;
+  const rgb = applyWB(rgbIn);
+  const lab = rgbToLab(rgb[0],rgb[1],rgb[2]);
+  const labs = p.scale.map(s=>rgbToLab(...hexToRgb(s[1])));
+  // case la plus proche
+  let bi=0, bd=1e9, second=1e9;
+  for(let i=0;i<labs.length;i++){ const d=deltaE(lab,labs[i]);
+    if(d<bd){second=bd;bd=d;bi=i;} else if(d<second)second=d; }
+  // meilleur segment adjacent : projection orthogonale dans l'espace Lab
+  let value=p.scale[bi][0], resid=bd;
+  for(const j of [bi-1, bi+1]){
+    if(j<0||j>=labs.length) continue;
+    const A=labs[bi], B=labs[j];
+    const AB=[B[0]-A[0],B[1]-A[1],B[2]-A[2]];
+    const len2=AB[0]*AB[0]+AB[1]*AB[1]+AB[2]*AB[2]; if(!len2) continue;
+    let t=((lab[0]-A[0])*AB[0]+(lab[1]-A[1])*AB[1]+(lab[2]-A[2])*AB[2])/len2;
+    t=Math.max(0,Math.min(1,t));
+    const proj=[A[0]+AB[0]*t, A[1]+AB[1]*t, A[2]+AB[2]*t];
+    const d=deltaE(lab,proj);
+    if(d<resid){ resid=d; value=p.scale[bi][0]+t*(p.scale[j][0]-p.scale[bi][0]); }
+  }
+  value=snap(p,value);
+  const conf = resid<10 ? 'bonne' : (resid<18 ? 'moyenne' : 'faible');
+  return { value, conf, hex: colorForValue(key,value) };
+}
+
+/* ----------------------------------------------------------------------------
+   Rendu des lignes de paramètres
+---------------------------------------------------------------------------- */
+const togglesEl = document.getElementById('param-toggles');
+const rowsEl = document.getElementById('param-rows');
+let pipetteKey = null; // paramètre en attente d'un clic photo
+
+function renderToggles(){
+  togglesEl.innerHTML='';
+  const order = ['ph','cl','br','tac','th','cya','sel'];
+  for(const key of order){
+    if(key==='cl' && (state.sanitizer==='brome'||state.sanitizer==='oxygene')) continue;
+    if(key==='br' && state.sanitizer!=='brome') continue;
+    if(key==='sel' && state.sanitizer!=='sel') continue;
+    const chip=document.createElement('div');
+    chip.className='chip'; chip.textContent=PARAMS[key].name;
+    chip.setAttribute('aria-pressed', active.has(key)?'true':'false');
+    chip.onclick=()=>{ active.has(key)?active.delete(key):active.add(key); renderToggles(); renderParamRows(); };
+    togglesEl.appendChild(chip);
+  }
+}
+
+function statusFor(key, val){
+  const t = targets()[key];
+  if(!t || val==null || isNaN(val)) return {cls:'na', txt:'—'};
+  if(val < t.lo) return {cls:'lo', txt:'Trop bas'};
+  if(val > t.hi) return {cls:'hi', txt:'Trop haut'};
+  return {cls:'ok', txt:'Correct'};
+}
+
+function renderParamRows(){
+  renderToggles();
+  rowsEl.innerHTML='';
+  const order = ['ph','cl','br','tac','th','cya','sel'];
+  for(const key of order){
+    if(!active.has(key)) continue;
+    const p = PARAMS[key];
+    if(values[key]==null) values[key] = p.default;
+    const t = targets()[key];
+
+    const row=document.createElement('div'); row.className='param';
+
+    const name=document.createElement('div'); name.className='pname';
+    name.innerHTML = `<span>${p.name}</span>`;
+    const small=document.createElement('small');
+    small.textContent = t ? `cible ${t.ideal[0]}–${t.ideal[1]}${p.unit?(' '+p.unit):''}` : p.desc;
+    name.appendChild(small);
+
+    // contrôle : pipette + slider
+    const ctrl=document.createElement('div'); ctrl.className='ctrl';
+    const sw=document.createElement('div'); sw.className='swatch'; sw.id='sw-'+key;
+    const range=document.createElement('input');
+    range.type='range'; range.min=p.min; range.max=p.max; range.step=p.step; range.value=values[key];
+    if(!p.noPhoto){
+      const pip=document.createElement('button');
+      pip.className='btn sm'; pip.type='button'; pip.title='Échantillonner depuis la photo';
+      pip.textContent='💧';
+      pip.onclick=()=>{
+        if(!imgLoaded){ alert('Charge d\'abord une photo de la bandelette.'); return; }
+        pipetteKey = pipetteKey===key ? null : key;
+        document.querySelectorAll('.param .btn.sm').forEach(b=>b.style.outline='');
+        if(pipetteKey) pip.style.outline='2px solid var(--accent)';
+      };
+      ctrl.appendChild(pip);
+    }
+    ctrl.appendChild(sw);
+    ctrl.appendChild(range);
+
+    // valeur numérique + statut
+    const right=document.createElement('div');
+    const vb=document.createElement('div'); vb.className='valbox';
+    const num=document.createElement('input');
+    num.type='number'; num.min=p.min; num.max=p.max; num.step=p.step; num.value=values[key]; num.inputMode='decimal';
+    const unit=document.createElement('span'); unit.className='unit'; unit.textContent=p.unit||'';
+    vb.appendChild(num); if(p.unit) vb.appendChild(unit);
+    const pill=document.createElement('span'); pill.className='pill '; pill.id='pill-'+key;
+    right.appendChild(vb); right.appendChild(pill);
+
+    function sync(v){
+      v=parseFloat(v); if(isNaN(v)) return;
+      v=Math.min(p.max,Math.max(p.min,v));
+      values[key]=v; range.value=v; num.value=v;
+      const m = matchScale(key,[0,0,0]); // not used; swatch by value below
+      sw.style.background = colorForValue(key, v);
+      const s=statusFor(key,v);
+      pill.className='pill '+s.cls; pill.textContent=s.txt;
+    }
+    range.addEventListener('input',()=>sync(range.value));
+    num.addEventListener('input',()=>sync(num.value));
+
+    row.appendChild(name); row.appendChild(ctrl); row.appendChild(right);
+    rowsEl.appendChild(row);
+    sync(values[key]);
+  }
+}
+
+/* couleur indicative du barème pour une valeur (interpolation simple) */
+function colorForValue(key,v){
+  const sc=PARAMS[key].scale; if(!sc) return '#08303b';
+  if(v<=sc[0][0]) return sc[0][1];
+  if(v>=sc[sc.length-1][0]) return sc[sc.length-1][1];
+  for(let i=0;i<sc.length-1;i++){
+    const [a,ca]=sc[i],[b,cb]=sc[i+1];
+    if(v>=a && v<=b){
+      const r=(v-a)/(b-a), A=hexToRgb(ca),B=hexToRgb(cb);
+      const mix=A.map((x,j)=>Math.round(x+(B[j]-x)*r));
+      return `rgb(${mix[0]},${mix[1]},${mix[2]})`;
+    }
+  }
+  return sc[0][1];
+}
+
+/* ----------------------------------------------------------------------------
+   Photo : chargement + échantillonnage (pipette)
+---------------------------------------------------------------------------- */
+const drop=document.getElementById('drop');
+const fileIn=document.getElementById('file');
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d', {willReadFrequently:true});
+const wrap=document.getElementById('canvas-wrap');
+let imgLoaded=false, scale=1;
+
+drop.addEventListener('click',()=>fileIn.click());
+fileIn.addEventListener('change',e=>{ const f=e.target.files[0]; if(f) loadImage(f); });
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();}));
+drop.addEventListener('drop',e=>{e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) loadImage(f);});
+
+const wbBtn=document.getElementById('wb-btn');
+wbBtn.addEventListener('click',()=>{
+  if(!imgLoaded){ alert('Charge d\'abord une photo de la bandelette.'); return; }
+  pipetteKey = pipetteKey==='__wb__' ? null : '__wb__';
+  document.querySelectorAll('.param .btn.sm').forEach(b=>b.style.outline='');
+  wbBtn.style.outline = pipetteKey==='__wb__' ? '2px solid var(--accent)' : '';
+});
+
+function loadImage(file){
+  const img=new Image();
+  img.onload=()=>{
+    const maxW=Math.min(720, img.naturalWidth);
+    scale = maxW/img.naturalWidth;
+    cv.width=Math.round(img.naturalWidth*scale);
+    cv.height=Math.round(img.naturalHeight*scale);
+    ctx.drawImage(img,0,0,cv.width,cv.height);
+    imgLoaded=true; wrap.style.display='block';
+    whiteRef=null; // nouvelle photo → calibrage du blanc à refaire
+    const st=document.getElementById('wb-status');
+    if(st) st.innerHTML='Astuce : clique « Calibrer le blanc » puis tape une zone <b>blanche</b> de la bandelette → la lumière est corrigée pour des lectures plus justes.';
+    drop.querySelector('b').textContent='✅ Photo chargée — toucher pour en changer';
+  };
+  img.onerror=()=>alert('Image illisible.');
+  img.src=URL.createObjectURL(file);
+}
+
+function sampleAt(cx,cy){
+  const R=4; let r=0,g=0,b=0,n=0;
+  const x0=Math.max(0,cx-R), y0=Math.max(0,cy-R);
+  const w=Math.min(cv.width,cx+R)-x0, h=Math.min(cv.height,cy+R)-y0;
+  if(w<=0||h<=0) return null;
+  const d=ctx.getImageData(x0,y0,w,h).data;
+  for(let i=0;i<d.length;i+=4){ r+=d[i];g+=d[i+1];b+=d[i+2];n++; }
+  return [Math.round(r/n),Math.round(g/n),Math.round(b/n)];
+}
+
+cv.addEventListener('click',handlePick);
+function handlePick(e){
+  if(!pipetteKey){ return; }
+  const rect=cv.getBoundingClientRect();
+  const cx=Math.round((e.clientX-rect.left)*(cv.width/rect.width));
+  const cy=Math.round((e.clientY-rect.top)*(cv.height/rect.height));
+  const rgb=sampleAt(cx,cy); if(!rgb) return;
+
+  // Calibrage du blanc : on mémorise la dominante puis on sort.
+  if(pipetteKey==='__wb__'){
+    whiteRef = rgb;
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2;
+    ctx.strokeRect(cx-9,cy-9,18,18);
+    const st=document.getElementById('wb-status');
+    if(st) st.textContent='✅ Blanc calibré — les lectures pipette sont maintenant corrigées de la lumière.';
+    pipetteKey=null;
+    document.getElementById('wb-btn').style.outline='';
+    return;
+  }
+
+  const m=matchScale(pipetteKey,rgb);
+  if(m){
+    values[pipetteKey]=m.value;
+    // marqueur visuel
+    ctx.strokeStyle='#22c3d6'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(cx,cy,8,0,Math.PI*2); ctx.stroke();
+    renderParamRows();
+    const swatch=document.getElementById('sw-'+pipetteKey);
+    if(swatch) swatch.style.boxShadow=`0 0 0 2px var(--accent)`;
+  }
+  pipetteKey=null;
+  document.querySelectorAll('.param .btn.sm').forEach(b=>b.style.outline='');
+}
+
+/* ----------------------------------------------------------------------------
+   Moteur de diagnostic + dosages estimés
+   Doses = facteur (g ou mL par m³ et par unité d'écart) — ESTIMATIONS génériques.
+---------------------------------------------------------------------------- */
+function fmtDose(grams){
+  if(grams>=1000) return (grams/1000).toFixed(grams>=10000?0:1).replace('.',',')+' kg';
+  return Math.round(grams)+' g';
+}
+function fmtMl(ml){
+  if(ml>=1000) return (ml/1000).toFixed(1).replace('.',',')+' L';
+  return Math.round(ml)+' mL';
+}
+
+function analyze(){
+  const V=state.volume, t=targets();
+  const actions=[];
+  const v = k => active.has(k) ? values[k] : null;
+
+  // Compteur d'état global
+  let problems=0, measured=0;
+  for(const k of Object.keys(t)){ if(active.has(k)){ measured++; if(statusFor(k,values[k]).cls!=='ok') problems++; } }
+
+  /* 1) Alcalinité (TAC) — à régler avant le pH car elle le stabilise */
+  if(active.has('tac') && t.tac){
+    const val=values.tac;
+    if(val < t.tac.lo){
+      const d = (t.tac.ideal[0]-val) * 1.7 * V; // ~17 g/m³ pour +10 ppm
+      actions.push(pa(1,'Alcalinité (TAC) trop basse', `TAC mesuré ≈ <b>${val} ppm</b> (cible ${t.tac.ideal[0]}–${t.tac.ideal[1]}). Une TAC basse rend le pH instable (« effet yo-yo »).`,
+        `Ajouter ≈ <span class="dose">${fmtDose(d)}</span> de <b>rehausseur d'alcalinité</b> (bicarbonate de sodium / « TAC+ »). Verser devant les refoulements, filtration en marche, puis re-tester après 6 h.`,true));
+    } else if(val > t.tac.hi){
+      actions.push(pa(1,'Alcalinité (TAC) trop haute', `TAC mesuré ≈ <b>${val} ppm</b> (cible ${t.tac.ideal[0]}–${t.tac.ideal[1]}). Risque d'eau entartrante et de pH difficile à baisser.`,
+        `Baisser avec du <b>pH-/correcteur acide</b> par petites doses (méthode du point bas), ou diluer avec de l'eau neuve. Re-tester après chaque ajout.`,false));
+    }
+  }
+
+  /* 2) pH */
+  if(active.has('ph') && t.ph){
+    const val=values.ph;
+    if(val < t.ph.lo){
+      const d=(7.3-val)/0.1 * 8 * V; // ~8 g/m³ par +0.1 (carbonate de sodium)
+      actions.push(pa(2,'pH trop bas (eau acide)', `pH ≈ <b>${val}</b> (cible 7,2–7,4). Eau corrosive (métaux, joints, liner) et désinfectant agressif.`,
+        `Ajouter ≈ <span class="dose">${fmtDose(d)}</span> de <b>pH+</b> (carbonate de sodium). Diluer/verser en marche, re-tester après 4–6 h.`,true));
+    } else if(val > t.ph.hi){
+      const d=(val-7.3)/0.1 * 10 * V; // ~10 g/m³ par -0.1 (bisulfate de sodium)
+      actions.push(pa(2,'pH trop haut (eau basique)', `pH ≈ <b>${val}</b> (cible 7,2–7,4). Au-dessus de 7,6 le chlore perd beaucoup d'efficacité et le calcaire précipite.`,
+        `Ajouter ≈ <span class="dose">${fmtDose(d)}</span> de <b>pH-</b> (bisulfate de sodium) — ou l'équivalent liquide selon notice. Re-tester après 4–6 h.`,true));
+    }
+  }
+
+  /* 3) Désinfectant */
+  if(active.has('cl') && t.cl){
+    const val=values.cl;
+    if(val < t.cl.lo){
+      const d=(t.cl.ideal[1]-val) * 1.5 * V; // ~1,5 g/m³ par +1 ppm (hypochlorite Ca ~70%)
+      const overStab = active.has('cya') && values.cya>70;
+      actions.push(pa(3,'Chlore libre insuffisant', `Chlore libre ≈ <b>${val} ppm</b> (cible ${t.cl.ideal[0]}–${t.cl.ideal[1]}). En dessous, l'eau n'est plus protégée (risque d'algues, eau trouble).`,
+        `Chlorer ≈ <span class="dose">${fmtDose(d)}</span> de <b>chlore non stabilisé</b> (hypochlorite de calcium 70 %) ${state.location==='exterieur'?'de préférence en soirée':''}. ${overStab?'⚠️ Stabilisant élevé : le chlore est « bloqué », une vidange partielle peut être nécessaire.':''} Vérifie aussi le pH (chlore inefficace si pH>7,6).`,true));
+    } else if(val > t.cl.hi){
+      actions.push(pa(3,'Chlore trop élevé', `Chlore libre ≈ <b>${val} ppm</b> (cible ${t.cl.ideal[0]}–${t.cl.ideal[1]}). Baignade déconseillée tant que > ${t.cl.hi+1} ppm (irritations).`,
+        `Stopper toute chloration, laisser filtrer ; à l'extérieur le soleil fait baisser le taux en 1–2 jours. Pour accélérer : <b>neutralisant de chlore</b> (thiosulfate) selon notice, ou dilution.`,false));
+    }
+  }
+  if(active.has('br') && t.br){
+    const val=values.br;
+    if(val < t.br.lo){
+      const d=(t.br.ideal[1]-val) * 2.2 * V; // ~2,2 g/m³ par +1 ppm
+      actions.push(pa(3,'Brome insuffisant', `Brome ≈ <b>${val} ppm</b> (cible ${t.br.ideal[0]}–${t.br.ideal[1]}).`,
+        `Ajouter ≈ <span class="dose">${fmtDose(d)}</span> de <b>brome</b> (pastilles dans le brominateur, ou choc bromé), et vérifie que le brominateur débite assez.`,true));
+    } else if(val > t.br.hi){
+      actions.push(pa(3,'Brome trop élevé', `Brome ≈ <b>${val} ppm</b> (cible ${t.br.ideal[0]}–${t.br.ideal[1]}).`,
+        `Réduire le débit du brominateur et attendre, ou diluer. Éviter la baignade tant que le taux est haut.`,false));
+    }
+  }
+  if(state.sanitizer==='oxygene'){
+    actions.push(pa(3,'Désinfection à l\'oxygène actif', `Pas de mesure de chlore/brome avec ce traitement.`,
+      `Maintiens le dosage d'<b>oxygène actif</b> selon la notice (souvent hebdomadaire) et associe un anti-algues. L'oxygène actif est moins rémanent : surveille l'eau par temps chaud.`,false));
+  }
+  if(active.has('sel') && t.sel){
+    const val=values.sel;
+    if(val < t.sel.lo){
+      const d=(t.sel.ideal[0]-val) * V; // g/L * m³(=1000 L) → kg ; 1 g/L sur 1 m³ = 1000 g
+      actions.push(pa(3,'Sel insuffisant (électrolyse)', `Sel ≈ <b>${val} g/L</b> (cible usuelle ${t.sel.ideal[0]}–${t.sel.ideal[1]} g/L, voir notice de l'électrolyseur).`,
+        `Ajouter ≈ <span class="dose">${fmtDose(d*1000)}</span> de <b>sel spécial piscine</b>, pompe en marche, sans faire fonctionner la cellule pendant la dissolution (24 h).`,true));
+    } else if(val > t.sel.hi){
+      actions.push(pa(3,'Sel trop élevé', `Sel ≈ <b>${val} g/L</b>. Un excès peut endommager la cellule et corroder certaines pièces.`,
+        `Diluer avec de l'eau neuve jusqu'à revenir dans la plage de l'électrolyseur.`,false));
+    }
+  }
+
+  /* 4) Stabilisant */
+  if(active.has('cya') && t.cya){
+    const val=values.cya;
+    if(val < t.cya.lo && state.location==='exterieur'){
+      actions.push(pa(4,'Stabilisant trop bas', `Acide cyanurique ≈ <b>${val} ppm</b> (cible ${t.cya.ideal[0]}–${t.cya.ideal[1]}). Sans stabilisant, le chlore est détruit par les UV en quelques heures.`,
+        `Ajouter du <b>stabilisant (acide cyanurique)</b> — ou utiliser du chlore stabilisé (galets). ≈ ${fmtDose(Math.max(0,(t.cya.ideal[0]-val))*1*V)} pour viser ${t.cya.ideal[0]} ppm.`,false));
+    } else if(val > t.cya.hi){
+      actions.push(pa(4,'Stabilisant trop élevé', `Acide cyanurique ≈ <b>${val} ppm</b> (cible ${t.cya.ideal[0]}–${t.cya.ideal[1]}). Au-delà de ~70 ppm le chlore devient « paresseux ».`,
+        `Le stabilisant ne s'élimine pas chimiquement : <b>vidange partielle</b> et remplissage en eau neuve pour le diluer. Évite ensuite le chlore stabilisé.`,false));
+    }
+  }
+
+  /* 5) Dureté (TH) */
+  if(active.has('th') && t.th){
+    const val=values.th;
+    if(val < t.th.lo){
+      const d=(t.th.ideal[0]-val) * 1.25 * V; // ~12,5 g/m³ par +10 ppm
+      actions.push(pa(5,'Eau trop douce (TH bas)', `Dureté ≈ <b>${val} ppm</b> (cible ${t.th.ideal[0]}–${t.th.ideal[1]}). Une eau douce est agressive (corrosion, mousse).`,
+        `Ajouter ≈ <span class="dose">${fmtDose(d)}</span> de <b>chlorure de calcium</b> (« dureté+ »).`,false));
+    } else if(val > t.th.hi){
+      actions.push(pa(5,'Eau dure (TH élevé)', `Dureté ≈ <b>${val} ppm</b> (cible ${t.th.ideal[0]}–${t.th.ideal[1]}). Risque de dépôts calcaires, surtout si pH/TAC hauts.`,
+        `Utiliser un <b>séquestrant calcaire</b> et maintenir le pH bas dans la cible ; diluer avec de l'eau neuve si nécessaire.`,false));
+    }
+  }
+
+  render(actions, problems, measured);
+}
+
+function pa(prio,title,diag,fix,isPrio){
+  return {prio,title,diag,fix,isPrio:!!isPrio};
+}
+
+/* ----------------------------------------------------------------------------
+   Rendu des résultats
+---------------------------------------------------------------------------- */
+function filtrationTime(){
+  const tmp=state.temp;
+  let h=Math.round(tmp/2); // règle « temp / 2 »
+  h=Math.max(2,Math.min(24,h));
+  return h;
+}
+function filterAdvice(){
+  const map={
+    sable:`<b>Filtre à sable</b> : effectuer un <b>contre-lavage (backwash)</b> quand le manomètre monte de +0,3 à 0,5 bar au-dessus de la pression propre, puis rincer. Remplacer le sable tous les 5–7 ans.`,
+    cartouche:`<b>Filtre à cartouche</b> : rincer la cartouche au jet régulièrement, dégraissage chimique 1×/mois en saison, et remplacement ≈ 1×/an.`,
+    diatomee:`<b>Filtre à diatomée</b> : contre-lavage puis <b>recharge en poudre de diatomée</b> ; démontage/nettoyage complet 1–2×/saison.`
+  };
+  return map[state.filter]||'';
+}
+
+function render(actions, problems, measured){
+  const res=document.getElementById('results');
+  const verdict=document.getElementById('verdict');
+  const actsEl=document.getElementById('actions');
+  const maint=document.getElementById('maintenance');
+
+  // tri : priorité d'action puis criticité
+  actions.sort((a,b)=> (a.prio-b.prio) || (b.isPrio - a.isPrio));
+
+  let cls,emoji,txt;
+  if(measured===0){ cls='mid'; emoji='ℹ️'; txt='Renseigne au moins un paramètre pour obtenir un diagnostic.'; }
+  else if(problems===0){ cls='good'; emoji='✅'; txt='Eau équilibrée — tous les paramètres mesurés sont dans les cibles. Continue l\'entretien habituel.'; }
+  else if(problems<=1){ cls='mid'; emoji='🟡'; txt=`Eau presque bonne — ${problems} paramètre à corriger.`; }
+  else { cls='poor'; emoji='🟠'; txt=`${problems} paramètres hors cible — suis le plan d'action ci-dessous dans l'ordre.`; }
+
+  verdict.className='verdict '+cls;
+  verdict.innerHTML=`<div class="big">${emoji}</div><div><b>${txt}</b><div class="kv" style="margin-top:4px">
+    Bassin : <b>${state.type==='spa'?'Spa/Jacuzzi':'Piscine'}</b> · ${(state.volume||0).toLocaleString('fr-BE')} m³ ·
+    ${({chlore:'Chlore',brome:'Brome',sel:'Électrolyse au sel',oxygene:'Oxygène actif'})[state.sanitizer]} ·
+    ${state.temp}°C</div></div>`;
+
+  actsEl.innerHTML='';
+  if(actions.length===0 && measured>0){
+    actsEl.innerHTML=`<div class="action"><h3>👍 Rien à corriger</h3><p>Maintiens simplement la désinfection et la filtration habituelles.</p></div>`;
+  }
+  for(const a of actions){
+    const el=document.createElement('div');
+    el.className='action'+(a.isPrio?' prio':'');
+    el.innerHTML=`<h3>${a.title} <span class="tag">${a.isPrio?'Prioritaire':'À surveiller'}</span></h3>
+      <p>${a.diag}</p><p>➡️ ${a.fix}</p>`;
+    actsEl.appendChild(el);
+  }
+
+  // entretien / filtration
+  const fh=filtrationTime();
+  maint.innerHTML=`<div class="action">
+    <h3>🛠️ Entretien & filtration</h3>
+    <p>⏱️ Temps de filtration conseillé : ≈ <span class="dose">${fh} h/jour</span> (règle « température ÷ 2 », ici ${state.temp}°C).
+       Par forte chaleur ou fréquentation, augmente la durée.</p>
+    <p>${filterAdvice()}</p>
+    <ul class="tight">
+      <li>Régler le <b>TAC puis le pH</b> avant la désinfection — l'ordre compte.</li>
+      <li>${state.type==='spa'?'Spa : renouvelle entièrement l\'eau tous les 1–3 mois et nettoie le filtre chaque semaine.':'Brosser parois/ligne d\'eau et passer le robot régulièrement.'}</li>
+      <li>Re-tester l'eau <b>24–48 h après</b> tout traitement, et après une grosse pluie ou forte baignade.</li>
+      <li>Ne jamais mélanger les produits ; les ajouter à l'eau (et non l'inverse), filtration en marche.</li>
+    </ul>
+  </div>`;
+
+  document.getElementById('disclaimer').innerHTML=
+    `⚠️ <b>Estimations indicatives.</b> Les dosages dépendent de la concentration réelle de tes produits — suis toujours la notice du fabricant, ajoute par petites quantités et re-teste. La lecture de couleur par photo est approximative (éclairage, marque de bandelette) : vérifie visuellement et corrige si besoin. En cas de doute (eau verte, trouble persistante, problème de santé), demande conseil à un professionnel.`;
+
+  res.style.display='block';
+  res.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+document.getElementById('analyze').addEventListener('click',analyze);
+
+/* init */
+renderParamRows();
+</script>
+</body>
+</html>
