@@ -395,12 +395,12 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </div>
     <div class="header-col3">
       <div class="view-toggle" id="hdrTabs">
-        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" data-i18n-tip="tip_overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span></button>
-        <button class="btn-view" id="ong-stats" data-tip="Statistics" data-i18n-tip="tip_stats" onclick="basculerTab('stats')">📊</button>
-        <button class="btn-view" id="ong-planning" data-tip="Planning" data-i18n-tip="tip_planning" onclick="basculerTab('planning')">📅<span id="nbPlannings"></span></button>
+        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" data-i18n-tip="tip_overview" data-i18n-aria="tip_overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span></button>
+        <button class="btn-view" id="ong-stats" data-tip="Statistics" data-i18n-tip="tip_stats" data-i18n-aria="tip_stats" onclick="basculerTab('stats')">📊</button>
+        <button class="btn-view" id="ong-planning" data-tip="Planning" data-i18n-tip="tip_planning" data-i18n-aria="tip_planning" onclick="basculerTab('planning')">📅<span id="nbPlannings"></span></button>
       </div>
       <div class="menu-wrap">
-        <button class="btn-ico" title="Settings" data-i18n-title="title_settings" onclick="toggleMenu()">⚙️</button>
+        <button class="btn-ico" title="Settings" data-i18n-title="title_settings" data-i18n-aria="title_settings" onclick="toggleMenu()">⚙️</button>
         <div class="menu" id="menu">
         <button class="menu-item" data-i18n="menu_import" onclick="document.getElementById('fileInput').click();toggleMenu()">📁 Import a source file</button>
         <button class="menu-item" data-i18n="menu_export" onclick="ouvrirExport();toggleMenu()">⬇️ Export converted data</button>
@@ -1064,6 +1064,7 @@ function appliquerLangue() {
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
   document.querySelectorAll('[data-i18n-tip]').forEach(el => { el.setAttribute('data-tip', t(el.getAttribute('data-i18n-tip'))); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
   const sel = document.getElementById('setLangConv'); if (sel) sel.value = uiLang;
 }
 
@@ -7090,6 +7091,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 // ── Démarrage : restaurer les sources persistées ────────────────────────
 (async function init() {
   chargerApparence();
+  appliquerLangue();            // applique la langue courante au chargement (sinon UI figée en anglais)
   chargerRegistrePlannings();   // charge les plannings importés (enrichit l'annexe dès l'overview)
   majBadgePlanning();           // badge « (N) » sur l'onglet Planning dès le démarrage
   try {
