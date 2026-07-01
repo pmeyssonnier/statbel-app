@@ -391,25 +391,25 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <span class="logo">📋</span>
     </div>
     <div class="header-mid">
-      <select id="sourceSelect" style="display:none" onchange="changerSource(this.value)" title="Active source file"></select>
+      <select id="sourceSelect" style="display:none" onchange="changerSource(this.value)" title="Active source file" data-i18n-title="title_active_source"></select>
     </div>
     <div class="header-col3">
       <div class="view-toggle" id="hdrTabs">
-        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span></button>
-        <button class="btn-view" id="ong-stats" data-tip="Statistics" onclick="basculerTab('stats')">📊</button>
-        <button class="btn-view" id="ong-planning" data-tip="Planning" onclick="basculerTab('planning')">📅<span id="nbPlannings"></span></button>
+        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" data-i18n-tip="tip_overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span></button>
+        <button class="btn-view" id="ong-stats" data-tip="Statistics" data-i18n-tip="tip_stats" onclick="basculerTab('stats')">📊</button>
+        <button class="btn-view" id="ong-planning" data-tip="Planning" data-i18n-tip="tip_planning" onclick="basculerTab('planning')">📅<span id="nbPlannings"></span></button>
       </div>
       <div class="menu-wrap">
-        <button class="btn-ico" title="Settings" onclick="toggleMenu()">⚙️</button>
+        <button class="btn-ico" title="Settings" data-i18n-title="title_settings" onclick="toggleMenu()">⚙️</button>
         <div class="menu" id="menu">
-        <button class="menu-item" onclick="document.getElementById('fileInput').click();toggleMenu()">📁 Import a source file</button>
-        <button class="menu-item" onclick="ouvrirExport();toggleMenu()">⬇️ Export converted data</button>
-        <button class="menu-item" onclick="supprimerSource();toggleMenu()">🗑️ Remove this source file</button>
+        <button class="menu-item" data-i18n="menu_import" onclick="document.getElementById('fileInput').click();toggleMenu()">📁 Import a source file</button>
+        <button class="menu-item" data-i18n="menu_export" onclick="ouvrirExport();toggleMenu()">⬇️ Export converted data</button>
+        <button class="menu-item" data-i18n="menu_remove" onclick="supprimerSource();toggleMenu()">🗑️ Remove this source file</button>
         <hr>
-        <button class="menu-item" onclick="ouvrirApparence();toggleMenu()">🎨 Appearance</button>
-        <button class="menu-item" onclick="ouvrirParametres();toggleMenu()">⚙️ Lookup tables</button>
+        <button class="menu-item" data-i18n="menu_appearance" onclick="ouvrirApparence();toggleMenu()">🎨 Appearance</button>
+        <button class="menu-item" data-i18n="menu_lookup" onclick="ouvrirParametres();toggleMenu()">⚙️ Lookup tables</button>
         <hr>
-        <button class="menu-item" onclick="location.href='index.html'">📋 Interviews app</button>
+        <button class="menu-item" data-i18n="menu_interviews" onclick="location.href='index.html'">📋 Interviews app</button>
       </div>
     </div>
     </div>
@@ -421,8 +421,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <!-- Zone de dépôt -->
   <div id="dropzone">
     <div class="icon">📂</div>
-    <div class="titre">Drag the GRP file here</div>
-    <div class="sous">or click to select</div>
+    <div class="titre" data-i18n="dz_title">Drag the GRP file here</div>
+    <div class="sous" data-i18n="dz_sub">or click to select</div>
     <div class="note">CSV / TSV / XLSX / XLS — GRP_2026xxxxx_CORRIGE</div>
     <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls">
   </div>
@@ -430,7 +430,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <!-- Chargement -->
   <div id="loading" class="loading hidden">
     <span class="spin">⏳</span>
-    <span id="loadingNom">Converting…</span>
+    <span id="loadingNom" data-i18n="loading_generic">Converting…</span>
   </div>
 
   <!-- Erreur -->
@@ -448,16 +448,16 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <!-- Titre groupe + localisation (sur une seule ligne) -->
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px">
         <span class="card-titre" id="grpTitre" style="margin:0"></span>
-        <label style="font-size:11px;color:var(--text2);font-weight:bold">📍 Location:</label>
-        <input id="locInput" type="text" placeholder="e.g. SCHAERBEEK" oninput="majLocalisation(this.value)"
+        <label style="font-size:11px;color:var(--text2);font-weight:bold" data-i18n="lbl_location">📍 Location:</label>
+        <input id="locInput" type="text" placeholder="e.g. SCHAERBEEK" data-i18n-ph="ph_location" oninput="majLocalisation(this.value)"
           style="flex:1;min-width:160px;max-width:360px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
       </div>
       <!-- KPI -->
       <div class="compteurs">
-        <div class="compteur"><div class="val" id="cNbLignes">—</div><div class="label">Source rows</div></div>
-        <div class="compteur"><div class="val" id="cNbMenages">—</div><div class="label">Households</div></div>
-        <div class="compteur"><div class="val" id="cNbCibles">—</div><div class="label">Targets (FL=1)</div></div>
-        <div class="compteur"><div class="val" id="cNbMembres">—</div><div class="label">Total members</div></div>
+        <div class="compteur"><div class="val" id="cNbLignes">—</div><div class="label" data-i18n="lbl_source_rows">Source rows</div></div>
+        <div class="compteur"><div class="val" id="cNbMenages">—</div><div class="label" data-i18n="lbl_households">Households</div></div>
+        <div class="compteur"><div class="val" id="cNbCibles">—</div><div class="label" data-i18n="lbl_targets">Targets (FL=1)</div></div>
+        <div class="compteur"><div class="val" id="cNbMembres">—</div><div class="label" data-i18n="lbl_total_members">Total members</div></div>
 
       </div>
       <div id="planningInfo"></div>
@@ -470,18 +470,18 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <!-- Panneau Aperçu : cibles + accordéon ménage -->
     <div class="panneau actif" id="pan-apercu">
       <div class="card" style="border-radius:0 8px 8px 8px">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">▸ click a row to expand the household</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px" data-i18n="hint_click_row">▸ click a row to expand the household</div>
         <div class="table-wrap" style="border:1px solid var(--border);border-radius:8px">
           <table id="tableCibles">
             <thead>
               <tr>
                 <th style="width:22px"></th>
                 <th class="sortable" data-col="ordre"         data-table="cibles">#</th>
-                <th class="sortable" data-col="prenom"        data-table="cibles">Contact</th>
-                <th class="sortable" data-col="adresse"       data-table="cibles">Address</th>
-                <th>📞 Phone</th>
-                <th>✉️ Email</th>
-                <th class="sortable" data-col="taille_menage" data-table="cibles">Household</th>
+                <th class="sortable" data-col="prenom"        data-table="cibles" data-i18n="th_contact">Contact</th>
+                <th class="sortable" data-col="adresse"       data-table="cibles" data-i18n="th_address">Address</th>
+                <th data-i18n="th_phone">📞 Phone</th>
+                <th data-i18n="th_email">✉️ Email</th>
+                <th class="sortable" data-col="taille_menage" data-table="cibles" data-i18n="th_household">Household</th>
               </tr>
             </thead>
             <tbody id="bodyCibles"></tbody>
@@ -494,74 +494,74 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="panneau" id="pan-stats">
       <!-- Bascules : périmètre d'enquête + population des graphiques -->
       <div style="display:flex;align-items:center;gap:10px;margin:4px 0 14px;flex-wrap:wrap">
-        <span style="font-size:12px;color:var(--text2);font-weight:bold">Survey:</span>
+        <span style="font-size:12px;color:var(--text2);font-weight:bold" data-i18n="lbl_survey_colon">Survey:</span>
         <div class="scope-toggle" id="enqToggle">
-          <button data-enq="active" class="actif" onclick="setStatsEnq('active')">📋 This survey</button>
-          <button data-enq="all"                  onclick="setStatsEnq('all')">🗂️ All surveys</button>
+          <button data-enq="active" class="actif" data-i18n="btn_this_survey" onclick="setStatsEnq('active')">📋 This survey</button>
+          <button data-enq="all"                  data-i18n="btn_all_surveys" onclick="setStatsEnq('all')">🗂️ All surveys</button>
         </div>
-        <span style="font-size:12px;color:var(--text2);font-weight:bold;margin-left:6px">Population:</span>
+        <span style="font-size:12px;color:var(--text2);font-weight:bold;margin-left:6px" data-i18n="lbl_population_colon">Population:</span>
         <div class="scope-toggle" id="popToggle">
-          <button data-scope="cibles"  class="actif" onclick="setScope('cibles')">🎯 Targets only</button>
-          <button data-scope="membres"               onclick="setScope('membres')">👥 Full household</button>
+          <button data-scope="cibles"  class="actif" data-i18n="btn_targets_only" onclick="setScope('cibles')">🎯 Targets only</button>
+          <button data-scope="membres"               data-i18n="btn_full_household" onclick="setScope('membres')">👥 Full household</button>
         </div>
         <span style="margin-left:auto;font-size:11px;color:var(--text2)">
-          <span style="display:inline-block;width:11px;height:11px;background:var(--bar-h);border-radius:2px;vertical-align:middle"></span> Men
-          &nbsp;<span style="display:inline-block;width:11px;height:11px;background:var(--bar-f);border-radius:2px;vertical-align:middle"></span> Women
+          <span style="display:inline-block;width:11px;height:11px;background:var(--bar-h);border-radius:2px;vertical-align:middle"></span> <span data-i18n="legend_men">Men</span>
+          &nbsp;<span style="display:inline-block;width:11px;height:11px;background:var(--bar-f);border-radius:2px;vertical-align:middle"></span> <span data-i18n="legend_women">Women</span>
         </span>
       </div>
       <div class="compteurs" style="margin:0 0 14px">
-        <div class="compteur"><div class="val" id="kpiPop">—</div><div class="label">Population totale</div></div>
-        <div class="compteur"><div class="val" id="kpiMen">—</div><div class="label">Ménages</div></div>
-        <div class="compteur"><div class="val" id="kpiH" style="color:var(--bar-h)">—</div><div class="label">% Hommes</div></div>
-        <div class="compteur"><div class="val" id="kpiF" style="color:var(--bar-f)">—</div><div class="label">% Femmes</div></div>
-        <div class="compteur"><div class="val" id="kpiAge">—</div><div class="label">Âge moyen</div></div>
+        <div class="compteur"><div class="val" id="kpiPop">—</div><div class="label" data-i18n="kpi_pop_total">Population totale</div></div>
+        <div class="compteur"><div class="val" id="kpiMen">—</div><div class="label" data-i18n="kpi_households">Ménages</div></div>
+        <div class="compteur"><div class="val" id="kpiH" style="color:var(--bar-h)">—</div><div class="label" data-i18n="kpi_pct_men">% Hommes</div></div>
+        <div class="compteur"><div class="val" id="kpiF" style="color:var(--bar-f)">—</div><div class="label" data-i18n="kpi_pct_women">% Femmes</div></div>
+        <div class="compteur"><div class="val" id="kpiAge">—</div><div class="label" data-i18n="kpi_avg_age">Âge moyen</div></div>
       </div>
       <div class="card">
-        <div class="card-titre">🌍 Nationalities <span style="font-weight:normal;color:var(--text3);font-size:11px">(surface ∝ effectif)</span></div>
+        <div class="card-titre"><span data-i18n="card_nationalities">🌍 Nationalities</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_area_headcount">(surface ∝ effectif)</span></div>
         <div id="statsTreemap"></div>
       </div>
       <div class="stats-grid">
         <div class="card">
-          <div class="card-titre">🌐 By continent</div>
+          <div class="card-titre" data-i18n="card_by_continent">🌐 By continent</div>
           <div id="statsCont"></div>
         </div>
         <div class="card">
-          <div class="card-titre">🇪🇺 EU / non-EU</div>
+          <div class="card-titre" data-i18n="card_eu_noneu">🇪🇺 EU / non-EU</div>
           <div id="statsEU"></div>
         </div>
       </div>
       <div class="stats-grid">
         <div class="card">
-          <div class="card-titre">💍 Marital status</div>
+          <div class="card-titre" data-i18n="card_marital">💍 Marital status</div>
           <div id="statsMrtl"></div>
           <div id="statsMrtlDetail" style="margin-top:8px"></div>
         </div>
         <div class="card">
-          <div class="card-titre">⚧ Gender</div>
+          <div class="card-titre" data-i18n="card_gender">⚧ Gender</div>
           <div id="statsSexe"></div>
           <div id="statsSexeDetail" style="margin-top:8px"></div>
         </div>
         <div class="card">
-          <div class="card-titre">🏙️ Place of birth <span style="font-weight:normal;color:var(--text3);font-size:11px">(born in Belgium, any nationality)</span></div>
+          <div class="card-titre"><span data-i18n="card_birthplace">🏙️ Place of birth</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_born_be">(born in Belgium, any nationality)</span></div>
           <div id="statsCommune"></div>
         </div>
       </div>
       <div class="stats-grid">
         <div class="card">
-          <div class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">📊 Age pyramid
+          <div class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span data-i18n="card_age_pyramid">📊 Age pyramid</span>
             <select id="pyrNlty" onchange="majPyramide()" style="margin-left:auto;font-weight:normal;padding:3px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
           </div>
           <div id="statsAge"></div>
           <div id="statsAgeDetail" style="margin-top:8px"></div>
         </div>
         <div class="card">
-          <div class="card-titre">👥 Household size distribution</div>
+          <div class="card-titre" data-i18n="card_household_dist">👥 Household size distribution</div>
           <div id="statsTaille"></div>
           <div id="statsTailleDetail" style="margin-top:8px"></div>
         </div>
       </div>
       <div class="card">
-        <div class="card-titre">🔀 Flux Nationalité → Sexe → Âge</div>
+        <div class="card-titre" data-i18n="card_sankey">🔀 Flux Nationalité → Sexe → Âge</div>
         <div id="statsSankey"></div>
       </div>
     </div>
@@ -571,17 +571,17 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <!-- Panneau Planning (autonome, indépendant d'une source chargée) -->
   <div class="panneau" id="pan-planning" style="display:none">
     <div class="card">
-      <div class="card-titre">📅 Planning enquêtes terrain</div>
-      <p style="font-size:11px;color:var(--text2);margin:0 0 8px">
+      <div class="card-titre" data-i18n="plan_title">📅 Planning enquêtes terrain</div>
+      <p style="font-size:11px;color:var(--text2);margin:0 0 8px" data-i18n="plan_intro">
         Plannings d'enquêtes (LFS/EFT, EU-SILC, HBS, TIC, Voyages, Santé, recensements…). Importe un
         fichier de planning (Excel/CSV) puis associe ses colonnes. Sélectionne une province/commune
         pour voir les missions et localiser les quartiers/adresses sur la carte.
       </p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px;align-items:center">
-        <label style="font-size:12px;color:var(--text2);font-weight:bold">Planning :</label>
+        <label style="font-size:12px;color:var(--text2);font-weight:bold" data-i18n="lbl_planning_colon">Planning :</label>
         <select id="planSelect" onchange="chargerPlanningSelectionne()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-width:200px"></select>
-        <button class="btn-reset" style="margin:0" onclick="document.getElementById('planFileInput').click()">📥 Importer un planning</button>
-        <button class="btn-reset" id="planDelBtn" style="margin:0;display:none" onclick="supprimerPlanningImporte()">🗑️ Supprimer</button>
+        <button class="btn-reset" style="margin:0" data-i18n="btn_import_planning" onclick="document.getElementById('planFileInput').click()">📥 Importer un planning</button>
+        <button class="btn-reset" id="planDelBtn" style="margin:0;display:none" data-i18n="btn_delete" onclick="supprimerPlanningImporte()">🗑️ Supprimer</button>
         <input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display:none" onchange="importerPlanningFichier(this)">
       </div>
       <div id="planFiltres" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px;align-items:center">
@@ -589,20 +589,20 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <select id="planCommune" onchange="majQuartiersPlan();filtrerPlanning()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
         <select id="planQuartier" onchange="filtrerPlanning()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
         <label style="font-size:12px;display:flex;align-items:center;gap:4px">
-          <input type="checkbox" id="planAVenir" checked onchange="filtrerPlanning()"> À venir uniquement
+          <input type="checkbox" id="planAVenir" checked onchange="filtrerPlanning()"> <span data-i18n="chk_upcoming_only">À venir uniquement</span>
         </label>
         <span style="position:relative;flex:1;min-width:140px;display:flex">
-          <input id="planSearch" type="text" placeholder="Search group / quartier…" oninput="filtrerPlanning()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
-          <button id="planSearchClear" onclick="effacerRecherchePlan()" title="Clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
+          <input id="planSearch" type="text" placeholder="Search group / quartier…" data-i18n-ph="ph_search_group_quartier" oninput="filtrerPlanning()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
+          <button id="planSearchClear" onclick="effacerRecherchePlan()" title="Clear" data-i18n-title="btn_clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
         </span>
         <span id="planCount" style="align-self:center;font-size:11px;color:var(--text2)"></span>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
-        <label style="font-size:12px;color:var(--text2);font-weight:bold">📍 Vérifier une adresse :</label>
-        <input id="planAdrCheck" type="text" placeholder="ex. Grande Rue au Bois 12, Schaerbeek" onkeydown="if(event.key==='Enter')verifierAdresse()" style="flex:1;min-width:220px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px">
-        <button class="btn-reset" style="margin:0" onclick="verifierAdresse()">Localiser</button>
+        <label style="font-size:12px;color:var(--text2);font-weight:bold" data-i18n="lbl_check_address">📍 Vérifier une adresse :</label>
+        <input id="planAdrCheck" type="text" placeholder="ex. Grande Rue au Bois 12, Schaerbeek" data-i18n-ph="ph_check_address" onkeydown="if(event.key==='Enter')verifierAdresse()" style="flex:1;min-width:220px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+        <button class="btn-reset" style="margin:0" data-i18n="btn_locate" onclick="verifierAdresse()">Localiser</button>
         <button class="btn-reset" style="margin:0" onclick="effacerAdresseCheck()">✕</button>
-        <button class="btn-reset" style="margin:0" title="Vider le cache et recalculer la position des quartiers affichés" onclick="rafraichirGeocodage()">🔄 Recalculer</button>
+        <button class="btn-reset" style="margin:0" title="Vider le cache et recalculer la position des quartiers affichés" data-i18n-title="title_recalc" data-i18n="btn_recalc" onclick="rafraichirGeocodage()">🔄 Recalculer</button>
         <span id="planAdrStatus" style="align-self:center;font-size:11px;color:var(--text2)"></span>
       </div>
       <div id="planMap" style="height:340px;border-radius:8px;margin:0 0 10px;background:var(--card2);position:relative;z-index:0"></div>
@@ -616,33 +616,33 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 <!-- Modale : mapping des colonnes d'un planning importé -->
 <div class="modal-overlay" id="modalPlanMap" onclick="if(event.target===this)fermerMappingPlanning()">
   <div class="modal" style="max-width:560px">
-    <h2>📥 Importer un planning</h2>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">
+    <h2 data-i18n="btn_import_planning">📥 Importer un planning</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px" data-i18n="map_intro">
       Fichier : <strong id="mapFichier"></strong> — <span id="mapNbLignes"></span> ligne(s).
       Associe chaque information à une colonne du fichier (1 ligne = 1 mission/interrogation).
     </p>
     <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;font-size:13px">
-      <label>Nom du planning</label>
+      <label data-i18n="map_lbl_name">Nom du planning</label>
       <input id="mapNom" type="text" placeholder="ex. EU-SILC 2026 vague 1" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-      <label>Type d'enquête</label>
+      <label data-i18n="map_lbl_type">Type d'enquête</label>
       <select id="mapType" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
         <option>EFT / LFS</option><option>EU-SILC</option><option>HBS</option>
-        <option>TIC</option><option>Voyages &amp; Vacances</option><option>Santé</option>
-        <option>Recensement / spéciale</option><option>Autre</option>
+        <option>TIC</option><option data-i18n="map_opt_travel">Voyages &amp; Vacances</option><option data-i18n="map_opt_health">Santé</option>
+        <option data-i18n="map_opt_census">Recensement / spéciale</option><option data-i18n="map_opt_other">Autre</option>
       </select>
-      <label>Commune <span style="color:#c62828">*</span></label>      <select id="mapCommune"  class="map-col"></select>
-      <label>Quartier / adresse</label>                                     <select id="mapQuartier" class="map-col"></select>
-      <label>Province</label>                                               <select id="mapProvince" class="map-col"></select>
-      <label>Groupe / code</label>                                          <select id="mapGroup"    class="map-col"></select>
-      <label>Vague</label>                                                  <select id="mapWave"     class="map-col"></select>
-      <label>Semaine de réf.</label>                                        <select id="mapWeek"     class="map-col"></select>
-      <label>Date début</label>                                             <select id="mapStart"    class="map-col"></select>
-      <label>Date fin</label>                                               <select id="mapStop"     class="map-col"></select>
+      <label><span data-i18n="map_lbl_commune">Commune</span> <span style="color:#c62828">*</span></label>      <select id="mapCommune"  class="map-col"></select>
+      <label data-i18n="map_lbl_quartier">Quartier / adresse</label>                                     <select id="mapQuartier" class="map-col"></select>
+      <label data-i18n="map_lbl_province">Province</label>                                               <select id="mapProvince" class="map-col"></select>
+      <label data-i18n="map_lbl_group">Groupe / code</label>                                          <select id="mapGroup"    class="map-col"></select>
+      <label data-i18n="map_lbl_wave">Vague</label>                                                  <select id="mapWave"     class="map-col"></select>
+      <label data-i18n="map_lbl_refweek">Semaine de réf.</label>                                        <select id="mapWeek"     class="map-col"></select>
+      <label data-i18n="map_lbl_start">Date début</label>                                             <select id="mapStart"    class="map-col"></select>
+      <label data-i18n="map_lbl_stop">Date fin</label>                                               <select id="mapStop"     class="map-col"></select>
     </div>
     <p id="mapErreur" style="color:#c62828;font-size:12px;margin:10px 0 0;display:none"></p>
     <div style="text-align:right;margin-top:16px">
-      <button class="btn-reset" style="margin:0 6px 0 0" onclick="fermerMappingPlanning()">Annuler</button>
-      <button class="btn-reset" style="margin:0" onclick="confirmerMappingPlanning()">✅ Importer</button>
+      <button class="btn-reset" style="margin:0 6px 0 0" data-i18n="btn_cancel" onclick="fermerMappingPlanning()">Annuler</button>
+      <button class="btn-reset" style="margin:0" data-i18n="btn_import_confirm" onclick="confirmerMappingPlanning()">✅ Importer</button>
     </div>
   </div>
 </div>
@@ -650,28 +650,28 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 <!-- Modale : export des données converties -->
 <div class="modal-overlay" id="modalExport" onclick="if(event.target===this)fermerExport()">
   <div class="modal" style="max-width:520px">
-    <h2>⬇️ Export converted data</h2>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Source file: <strong id="expNom"></strong></p>
+    <h2 data-i18n="menu_export">⬇️ Export converted data</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px"><span data-i18n="lbl_source_file">Source file:</span> <strong id="expNom"></strong></p>
     <div class="btns" style="flex-direction:column">
       <button class="btn-dl btn-cibles" id="btnCibles">
-        <div class="btn-titre">⬇️ Targets CSV <span style="font-weight:normal;opacity:0.8">(for enquetes_statbel.html)</span></div>
+        <div class="btn-titre"><span data-i18n="btn_targets_csv">⬇️ Targets CSV</span> <span style="font-weight:normal;opacity:0.8">(for enquetes_statbel.html)</span></div>
         <div class="btn-sous" id="lblCibles"></div>
       </button>
       <button class="btn-dl btn-membres" id="btnMembres">
-        <div class="btn-titre">⬇️ Members CSV</div>
+        <div class="btn-titre" data-i18n="btn_members_csv">⬇️ Members CSV</div>
         <div class="btn-sous" id="lblMembres"></div>
       </button>
       <button class="btn-dl btn-enquete" id="btnEnquete">
-        <div class="btn-titre">⬇️ Survey CSV</div>
+        <div class="btn-titre" data-i18n="btn_survey_csv">⬇️ Survey CSV</div>
         <div class="btn-sous" id="lblEnquete"></div>
       </button>
       <button class="btn-dl btn-rapport" id="btnRapport">
-        <div class="btn-titre">⬇️ TXT Report</div>
+        <div class="btn-titre" data-i18n="btn_txt_report">⬇️ TXT Report</div>
         <div class="btn-sous" id="lblRapport"></div>
       </button>
     </div>
     <div style="text-align:right;margin-top:16px">
-      <button class="btn-reset" style="margin:0" onclick="fermerExport()">Close</button>
+      <button class="btn-reset" style="margin:0" data-i18n="btn_close" onclick="fermerExport()">Close</button>
     </div>
   </div>
 </div>
@@ -680,24 +680,31 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 <!-- Modale : apparence (thème + taille du texte) -->
 <div class="modal-overlay" id="modalApparence" onclick="if(event.target===this)fermerApparence()">
   <div class="modal" style="max-width:460px">
-    <h2>🎨 Appearance</h2>
-    <h3>Theme</h3>
+    <h2 data-i18n="menu_appearance">🎨 Appearance</h2>
+    <h3 data-i18n="lbl_language">🌐 Language</h3>
+    <select id="setLangConv" onchange="changerLangue(this.value)" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;width:100%;max-width:280px">
+      <option value="fr">🇫🇷 Français</option>
+      <option value="nl">🇳🇱 Nederlands</option>
+      <option value="en">🇬🇧 English</option>
+      <option value="de">🇩🇪 Deutsch</option>
+    </select>
+    <h3 data-i18n="h3_theme">Theme</h3>
     <div class="scope-toggle" id="themeToggle">
-      <button data-theme="light" onclick="setTheme('light')">☀️ Light</button>
-      <button data-theme="dark"  onclick="setTheme('dark')">🌙 Dark</button>
-      <button data-theme="auto"  onclick="setTheme('auto')">🖥️ Auto</button>
+      <button data-theme="light" data-i18n="opt_theme_light" onclick="setTheme('light')">☀️ Light</button>
+      <button data-theme="dark"  data-i18n="opt_theme_dark" onclick="setTheme('dark')">🌙 Dark</button>
+      <button data-theme="auto"  data-i18n="opt_theme_auto" onclick="setTheme('auto')">🖥️ Auto</button>
     </div>
-    <h3>Font</h3>
+    <h3 data-i18n="h3_font">Font</h3>
     <select id="fontSelect" onchange="setFont(this.value)" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;width:100%;max-width:280px">
-      <option value="system">System default</option>
+      <option value="system" data-i18n="opt_font_system">System default</option>
       <option value="arial">Arial / Helvetica</option>
       <option value="verdana">Verdana</option>
       <option value="tahoma">Segoe UI / Tahoma</option>
-      <option value="georgia">Georgia (serif)</option>
-      <option value="times">Times New Roman (serif)</option>
-      <option value="mono">Courier New (mono)</option>
+      <option value="georgia" data-i18n="opt_font_georgia">Georgia (serif)</option>
+      <option value="times" data-i18n="opt_font_times">Times New Roman (serif)</option>
+      <option value="mono" data-i18n="opt_font_mono">Courier New (mono)</option>
     </select>
-    <h3>Text size</h3>
+    <h3 data-i18n="h3_textsize">Text size</h3>
     <div class="scope-toggle" id="scaleToggle">
       <button data-scale="0.9"  onclick="setScale(0.9)">A−</button>
       <button data-scale="1"    onclick="setScale(1)">A</button>
@@ -705,21 +712,21 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <button data-scale="1.3"  onclick="setScale(1.3)">A++</button>
     </div>
     <div style="text-align:right;margin-top:16px">
-      <button class="btn-reset" style="margin:0" onclick="fermerApparence()">Close</button>
+      <button class="btn-reset" style="margin:0" data-i18n="btn_close" onclick="fermerApparence()">Close</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modalParams" onclick="if(event.target===this)fermerParametres()">
   <div class="modal">
-    <h2>⚙️ Lookup tables</h2>
-    <p style="font-size:12px;color:var(--text2)">STATBEL codes used during conversion.</p>
+    <h2 data-i18n="menu_lookup">⚙️ Lookup tables</h2>
+    <p style="font-size:12px;color:var(--text2)" data-i18n="lookup_intro">STATBEL codes used during conversion.</p>
 
     <div class="lk-tabs">
-      <button class="lk-tab actif" data-lk="sexe"    onclick="lookupTab('sexe')">⚧ Gender</button>
-      <button class="lk-tab"       data-lk="mrtl"    onclick="lookupTab('mrtl')">💍 Marital</button>
-      <button class="lk-tab"       data-lk="nlty"    onclick="lookupTab('nlty')">🌍 Countries</button>
-      <button class="lk-tab"       data-lk="commune" onclick="lookupTab('commune')">🏙️ Belgian municipalities</button>
+      <button class="lk-tab actif" data-lk="sexe"    data-i18n="lk_gender" onclick="lookupTab('sexe')">⚧ Gender</button>
+      <button class="lk-tab"       data-lk="mrtl"    data-i18n="lk_marital" onclick="lookupTab('mrtl')">💍 Marital</button>
+      <button class="lk-tab"       data-lk="nlty"    data-i18n="lk_countries" onclick="lookupTab('nlty')">🌍 Countries</button>
+      <button class="lk-tab"       data-lk="commune" data-i18n="lk_municipalities" onclick="lookupTab('commune')">🏙️ Belgian municipalities</button>
     </div>
 
     <div class="lk-pan actif" id="lkpan-sexe">
@@ -734,13 +741,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <div id="paysFiltres" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px">
         <select id="filtrePaysCont" onchange="filtrerPays()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
         <select id="filtrePaysUE" onchange="filtrerPays()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px">
-          <option value="">EU &amp; non-EU</option>
-          <option value="eu">EU only</option>
-          <option value="non">Non-EU</option>
+          <option value="" data-i18n="opt_eu_and_noneu">EU &amp; non-EU</option>
+          <option value="eu" data-i18n="opt_eu_only">EU only</option>
+          <option value="non" data-i18n="opt_noneu">Non-EU</option>
         </select>
         <span style="position:relative;flex:1;min-width:140px;display:flex">
-          <input id="filtrePays" type="text" placeholder="Search NIS, ISO or name…" oninput="filtrerPays()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
-          <button id="filtrePaysClear" onclick="effacerRecherchePays()" title="Clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
+          <input id="filtrePays" type="text" placeholder="Search NIS, ISO or name…" data-i18n-ph="ph_search_country" oninput="filtrerPays()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
+          <button id="filtrePaysClear" onclick="effacerRecherchePays()" title="Clear" data-i18n-title="btn_clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
         </span>
         <span id="paysCount" style="align-self:center;font-size:11px;color:var(--text2)"></span>
       </div>
@@ -753,8 +760,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <select id="filtreProvince" onchange="majDistricts();filtrerCommunes()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
         <select id="filtreDistrict" onchange="filtrerCommunes()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
         <span style="position:relative;flex:1;min-width:140px;display:flex">
-          <input id="filtreCommune" type="text" placeholder="Search REFNIS or name…" oninput="filtrerCommunes()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
-          <button id="filtreCommuneClear" onclick="effacerRechercheCommune()" title="Clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
+          <input id="filtreCommune" type="text" placeholder="Search REFNIS or name…" data-i18n-ph="ph_search_commune" oninput="filtrerCommunes()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
+          <button id="filtreCommuneClear" onclick="effacerRechercheCommune()" title="Clear" data-i18n-title="btn_clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
         </span>
         <span id="communeCount" style="align-self:center;font-size:11px;color:var(--text2)"></span>
       </div>
@@ -762,12 +769,321 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </div>
 
     <div style="text-align:right;margin-top:16px">
-      <button class="btn-reset" style="margin:0" onclick="fermerParametres()">Close</button>
+      <button class="btn-reset" style="margin:0" data-i18n="btn_close" onclick="fermerParametres()">Close</button>
     </div>
   </div>
 </div>
 
 <script>
+// ════════════════════════════════════════════════════════════════════════
+//  I18N — FR / NL / EN / DE (miroir du système de l'app enquête, index.html)
+// ════════════════════════════════════════════════════════════════════════
+const LANGS = ['fr', 'nl', 'en', 'de'];
+
+const I18N = {
+  // ── En-tête / menu ⚙️ ──────────────────────────────────────────────
+  tip_overview: { fr:"Aperçu", nl:"Overzicht", en:"Overview", de:"Übersicht" },
+  tip_stats:    { fr:"Statistiques", nl:"Statistieken", en:"Statistics", de:"Statistiken" },
+  tip_planning: { fr:"Planning", nl:"Planning", en:"Planning", de:"Planung" },
+  title_settings: { fr:"Paramètres", nl:"Instellingen", en:"Settings", de:"Einstellungen" },
+  title_active_source: { fr:"Fichier source actif", nl:"Actief bronbestand", en:"Active source file", de:"Aktive Quelldatei" },
+  menu_import: { fr:"📁 Importer un fichier source", nl:"📁 Bronbestand importeren", en:"📁 Import a source file", de:"📁 Quelldatei importieren" },
+  menu_export: { fr:"⬇️ Exporter les données converties", nl:"⬇️ Geconverteerde gegevens exporteren", en:"⬇️ Export converted data", de:"⬇️ Konvertierte Daten exportieren" },
+  menu_remove: { fr:"🗑️ Retirer ce fichier source", nl:"🗑️ Dit bronbestand verwijderen", en:"🗑️ Remove this source file", de:"🗑️ Diese Quelldatei entfernen" },
+  menu_appearance: { fr:"🎨 Apparence", nl:"🎨 Weergave", en:"🎨 Appearance", de:"🎨 Aussehen" },
+  menu_lookup: { fr:"⚙️ Tables de correspondance", nl:"⚙️ Opzoektabellen", en:"⚙️ Lookup tables", de:"⚙️ Nachschlagetabellen" },
+  menu_interviews: { fr:"📋 Application enquête", nl:"📋 Enquête-app", en:"📋 Interviews app", de:"📋 Interview-App" },
+
+  // ── Zone de dépôt / chargement ────────────────────────────────────
+  dz_title: { fr:"Glissez le fichier GRP ici", nl:"Sleep het GRP-bestand hierheen", en:"Drag the GRP file here", de:"GRP-Datei hierher ziehen" },
+  dz_sub:   { fr:"ou cliquez pour sélectionner", nl:"of klik om te selecteren", en:"or click to select", de:"oder klicken zum Auswählen" },
+  loading_generic: { fr:"Conversion…", nl:"Bezig met converteren…", en:"Converting…", de:"Konvertierung läuft…" },
+  loading_converting: { fr:"Conversion de {name}…", nl:"{name} wordt geconverteerd…", en:"Converting {name}…", de:"{name} wird konvertiert…" },
+
+  // ── Overview ───────────────────────────────────────────────────────
+  lbl_location: { fr:"📍 Localisation :", nl:"📍 Locatie:", en:"📍 Location:", de:"📍 Standort:" },
+  ph_location: { fr:"ex. SCHAERBEEK", nl:"bv. SCHAARBEEK", en:"e.g. SCHAERBEEK", de:"z. B. SCHAERBEEK" },
+  lbl_source_rows: { fr:"Lignes source", nl:"Bronregels", en:"Source rows", de:"Quellzeilen" },
+  lbl_households: { fr:"Ménages", nl:"Huishoudens", en:"Households", de:"Haushalte" },
+  lbl_targets: { fr:"Cibles (FL=1)", nl:"Doelpersonen (FL=1)", en:"Targets (FL=1)", de:"Zielpersonen (FL=1)" },
+  lbl_total_members: { fr:"Total des membres", nl:"Totaal aantal leden", en:"Total members", de:"Mitglieder gesamt" },
+  hint_click_row: { fr:"▸ cliquez sur une ligne pour déplier le ménage", nl:"▸ klik op een rij om het huishouden uit te vouwen", en:"▸ click a row to expand the household", de:"▸ Klicken Sie auf eine Zeile, um den Haushalt aufzuklappen" },
+  th_contact: { fr:"Contact", nl:"Contact", en:"Contact", de:"Kontakt" },
+  th_address: { fr:"Adresse", nl:"Adres", en:"Address", de:"Adresse" },
+  th_phone: { fr:"📞 Téléphone", nl:"📞 Telefoon", en:"📞 Phone", de:"📞 Telefon" },
+  th_email: { fr:"✉️ Email", nl:"✉️ E-mail", en:"✉️ Email", de:"✉️ E-Mail" },
+  th_household: { fr:"Ménage", nl:"Huishouden", en:"Household", de:"Haushalt" },
+  admin_year: { fr:"Année", nl:"Jaar", en:"Year", de:"Jahr" },
+  admin_wave: { fr:"Vague", nl:"Golf", en:"Wave", de:"Welle" },
+  admin_sequence: { fr:"Séquence", nl:"Volgnummer", en:"Sequence", de:"Sequenz" },
+  admin_refweek: { fr:"Sem. réf.", nl:"Refweek", en:"Ref. wk", de:"Ref.-Woche" },
+  admin_group: { fr:"Groupe", nl:"Groep", en:"Group", de:"Gruppe" },
+  lbl_rows: { fr:"lignes", nl:"rijen", en:"rows", de:"Zeilen" },
+
+  // ── Alertes / avertissements codes inconnus ─────────────────────────
+  warn_unknown_codes_title: { fr:"⚠️ Codes inconnus", nl:"⚠️ Onbekende codes", en:"⚠️ Unknown codes", de:"⚠️ Unbekannte Codes" },
+  warn_unknown_codes_suffix: { fr:"— le champ concerné restera vide :", nl:"— het betreffende veld blijft leeg:", en:"— affected field left empty:", de:"— betroffenes Feld bleibt leer:" },
+  field_nationality_code: { fr:"Nationalité (CD_MB_NLTY)", nl:"Nationaliteit (CD_MB_NLTY)", en:"Nationality (CD_MB_NLTY)", de:"Nationalität (CD_MB_NLTY)" },
+  field_birthcountry_code: { fr:"Pays de naissance (CD_MB_BTH_REFNIS)", nl:"Geboorteland (CD_MB_BTH_REFNIS)", en:"Birth country (CD_MB_BTH_REFNIS)", de:"Geburtsland (CD_MB_BTH_REFNIS)" },
+  field_municipality_code: { fr:"Commune belge (CD_MB_BTH_REFNIS, 5 chiffres)", nl:"Belgische gemeente (CD_MB_BTH_REFNIS, 5 cijfers)", en:"Belgian municipality (CD_MB_BTH_REFNIS, 5 digits)", de:"Belgische Gemeinde (CD_MB_BTH_REFNIS, 5 Ziffern)" },
+  field_marital_code: { fr:"Statut matrimonial (CD_MB_MRTL_STS)", nl:"Burgerlijke staat (CD_MB_MRTL_STS)", en:"Marital status (CD_MB_MRTL_STS)", de:"Familienstand (CD_MB_MRTL_STS)" },
+  txt_not_in: { fr:"→ absent de", nl:"→ niet in", en:"→ not in", de:"→ nicht in" },
+  hint_add_codes: { fr:"Ajoutez ces codes dans la table correspondante à la source (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR) pour les décoder.", nl:"Voeg deze codes toe aan de bijbehorende tabel in de broncode (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR) om ze te decoderen.", en:"Add these codes to the matching table in the source (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR) to decode them.", de:"Fügen Sie diese Codes der entsprechenden Tabelle im Quellcode hinzu (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR), um sie zu dekodieren." },
+  warn_missing_cols_title: { fr:"⚠️ Certaines colonnes attendues sont absentes", nl:"⚠️ Sommige verwachte kolommen ontbreken", en:"⚠️ Some expected columns are missing", de:"⚠️ Einige erwartete Spalten fehlen" },
+  warn_missing_cols_suffix: { fr:"— les données concernées seront vides :", nl:"— de betreffende gegevens blijven leeg:", en:"— related data will be empty:", de:"— betroffene Daten bleiben leer:" },
+  plan_not_found: { fr:"introuvable dans les plannings chargés", nl:"niet gevonden in de geladen plannings", en:"not found in the loaded plannings", de:"in den geladenen Planungen nicht gefunden" },
+
+  // ── Export ────────────────────────────────────────────────────────
+  lbl_source_file: { fr:"Fichier source :", nl:"Bronbestand:", en:"Source file:", de:"Quelldatei:" },
+  btn_targets_csv: { fr:"⬇️ CSV Cibles", nl:"⬇️ CSV Doelpersonen", en:"⬇️ Targets CSV", de:"⬇️ CSV Zielpersonen" },
+  btn_members_csv: { fr:"⬇️ CSV Membres", nl:"⬇️ CSV Leden", en:"⬇️ Members CSV", de:"⬇️ CSV Mitglieder" },
+  btn_survey_csv: { fr:"⬇️ CSV Enquête", nl:"⬇️ CSV Enquête", en:"⬇️ Survey CSV", de:"⬇️ CSV Umfrage" },
+  btn_txt_report: { fr:"⬇️ Rapport TXT", nl:"⬇️ TXT-rapport", en:"⬇️ TXT Report", de:"⬇️ TXT-Bericht" },
+  btn_close: { fr:"Fermer", nl:"Sluiten", en:"Close", de:"Schließen" },
+  btn_cancel: { fr:"Annuler", nl:"Annuleren", en:"Cancel", de:"Abbrechen" },
+
+  // ── Apparence ─────────────────────────────────────────────────────
+  lbl_language: { fr:"🌐 Langue", nl:"🌐 Taal", en:"🌐 Language", de:"🌐 Sprache" },
+  h3_theme: { fr:"Thème", nl:"Thema", en:"Theme", de:"Thema" },
+  h3_font: { fr:"Police", nl:"Lettertype", en:"Font", de:"Schriftart" },
+  h3_textsize: { fr:"Taille du texte", nl:"Tekstgrootte", en:"Text size", de:"Textgröße" },
+  opt_theme_light: { fr:"☀️ Clair", nl:"☀️ Licht", en:"☀️ Light", de:"☀️ Hell" },
+  opt_theme_dark:  { fr:"🌙 Sombre", nl:"🌙 Donker", en:"🌙 Dark", de:"🌙 Dunkel" },
+  opt_theme_auto:  { fr:"🖥️ Auto", nl:"🖥️ Auto", en:"🖥️ Auto", de:"🖥️ Auto" },
+  opt_font_system: { fr:"Police système (par défaut)", nl:"Systeemlettertype (standaard)", en:"System default", de:"Systemschriftart (Standard)" },
+  opt_font_georgia: { fr:"Georgia (serif)", nl:"Georgia (schreef)", en:"Georgia (serif)", de:"Georgia (Serif)" },
+  opt_font_times: { fr:"Times New Roman (serif)", nl:"Times New Roman (schreef)", en:"Times New Roman (serif)", de:"Times New Roman (Serif)" },
+  opt_font_mono: { fr:"Courier New (mono)", nl:"Courier New (mono)", en:"Courier New (mono)", de:"Courier New (Mono)" },
+
+  // ── Lookup tables (modale) ────────────────────────────────────────
+  lookup_intro: { fr:"Codes STATBEL utilisés lors de la conversion.", nl:"STATBEL-codes die tijdens de conversie worden gebruikt.", en:"STATBEL codes used during conversion.", de:"STATBEL-Codes, die bei der Konvertierung verwendet werden." },
+  lk_gender: { fr:"⚧ Sexe", nl:"⚧ Geslacht", en:"⚧ Gender", de:"⚧ Geschlecht" },
+  lk_marital: { fr:"💍 État civil", nl:"💍 Burgerlijke staat", en:"💍 Marital", de:"💍 Familienstand" },
+  lk_countries: { fr:"🌍 Pays", nl:"🌍 Landen", en:"🌍 Countries", de:"🌍 Länder" },
+  lk_municipalities: { fr:"🏙️ Communes belges", nl:"🏙️ Belgische gemeenten", en:"🏙️ Belgian municipalities", de:"🏙️ Belgische Gemeinden" },
+  col_code: { fr:"Code", nl:"Code", en:"Code", de:"Code" },
+  col_abbr: { fr:"Abrév.", nl:"Afk.", en:"Abbr.", de:"Abk." },
+  col_label: { fr:"Libellé", nl:"Label", en:"Label", de:"Bezeichnung" },
+  col_nis: { fr:"NIS", nl:"NIS", en:"NIS", de:"NIS" },
+  col_iso3: { fr:"ISO3", nl:"ISO3", en:"ISO3", de:"ISO3" },
+  col_iso2: { fr:"ISO2", nl:"ISO2", en:"ISO2", de:"ISO2" },
+  col_nuts0: { fr:"NUTS0", nl:"NUTS0", en:"NUTS0", de:"NUTS0" },
+  col_country: { fr:"Pays", nl:"Land", en:"Country", de:"Land" },
+  col_continent: { fr:"Continent", nl:"Continent", en:"Continent", de:"Kontinent" },
+  col_eu: { fr:"UE", nl:"EU", en:"EU", de:"EU" },
+  col_refnis: { fr:"REFNIS", nl:"REFNIS", en:"REFNIS", de:"REFNIS" },
+  col_muni_fr: { fr:"Commune (FR)", nl:"Gemeente (FR)", en:"Municipality (FR)", de:"Gemeinde (FR)" },
+  col_muni_nl: { fr:"Commune (NL)", nl:"Gemeente (NL)", en:"Municipality (NL)", de:"Gemeinde (NL)" },
+  col_district: { fr:"Arrondissement", nl:"District", en:"District", de:"Bezirk" },
+  col_province: { fr:"Province", nl:"Provincie", en:"Province", de:"Provinz" },
+  col_region: { fr:"Région", nl:"Gewest", en:"Region", de:"Region" },
+  col_nuts2: { fr:"NUTS2", nl:"NUTS2", en:"NUTS2", de:"NUTS2" },
+  col_nuts3: { fr:"NUTS3", nl:"NUTS3", en:"NUTS3", de:"NUTS3" },
+  opt_all_continents: { fr:"Tous les continents", nl:"Alle continenten", en:"All continents", de:"Alle Kontinente" },
+  opt_all_regions: { fr:"Toutes les régions", nl:"Alle gewesten", en:"All regions", de:"Alle Regionen" },
+  opt_all_provinces: { fr:"Toutes les provinces", nl:"Alle provincies", en:"All provinces", de:"Alle Provinzen" },
+  opt_all_districts: { fr:"Tous les arrondissements", nl:"Alle districten", en:"All districts", de:"Alle Bezirke" },
+  opt_all_communes: { fr:"Toutes les communes", nl:"Alle gemeenten", en:"All communes", de:"Alle Gemeinden" },
+  opt_all_quartiers: { fr:"Tous les quartiers", nl:"Alle wijken", en:"All quartiers", de:"Alle Viertel" },
+  opt_eu_and_noneu: { fr:"UE et hors UE", nl:"EU en niet-EU", en:"EU & non-EU", de:"EU und Nicht-EU" },
+  opt_eu_only: { fr:"UE uniquement", nl:"Alleen EU", en:"EU only", de:"Nur EU" },
+  opt_noneu: { fr:"Hors UE", nl:"Niet-EU", en:"Non-EU", de:"Nicht-EU" },
+  ph_search_country: { fr:"Rechercher par NIS, ISO ou nom…", nl:"Zoeken op NIS, ISO of naam…", en:"Search NIS, ISO or name…", de:"Suche nach NIS, ISO oder Name…" },
+  ph_search_commune: { fr:"Rechercher par REFNIS ou nom…", nl:"Zoeken op REFNIS of naam…", en:"Search REFNIS or name…", de:"Suche nach REFNIS oder Name…" },
+  btn_clear: { fr:"Effacer", nl:"Wissen", en:"Clear", de:"Löschen" },
+
+  // ── Statistics ────────────────────────────────────────────────────
+  lbl_survey_colon: { fr:"Enquête :", nl:"Enquête:", en:"Survey:", de:"Umfrage:" },
+  btn_this_survey: { fr:"📋 Cette enquête", nl:"📋 Deze enquête", en:"📋 This survey", de:"📋 Diese Umfrage" },
+  btn_all_surveys: { fr:"🗂️ Toutes les enquêtes", nl:"🗂️ Alle enquêtes", en:"🗂️ All surveys", de:"🗂️ Alle Umfragen" },
+  lbl_population_colon: { fr:"Population :", nl:"Populatie:", en:"Population:", de:"Bevölkerung:" },
+  btn_targets_only: { fr:"🎯 Cibles uniquement", nl:"🎯 Alleen doelpersonen", en:"🎯 Targets only", de:"🎯 Nur Zielpersonen" },
+  btn_full_household: { fr:"👥 Ménage complet", nl:"👥 Volledig huishouden", en:"👥 Full household", de:"👥 Ganzer Haushalt" },
+  legend_men: { fr:"Hommes", nl:"Mannen", en:"Men", de:"Männer" },
+  legend_women: { fr:"Femmes", nl:"Vrouwen", en:"Women", de:"Frauen" },
+  kpi_pop_total: { fr:"Population totale", nl:"Totale populatie", en:"Total population", de:"Gesamtbevölkerung" },
+  kpi_households: { fr:"Ménages", nl:"Huishoudens", en:"Households", de:"Haushalte" },
+  kpi_pct_men: { fr:"% Hommes", nl:"% Mannen", en:"% Men", de:"% Männer" },
+  kpi_pct_women: { fr:"% Femmes", nl:"% Vrouwen", en:"% Women", de:"% Frauen" },
+  kpi_avg_age: { fr:"Âge moyen", nl:"Gemiddelde leeftijd", en:"Average age", de:"Durchschnittsalter" },
+  card_nationalities: { fr:"🌍 Nationalités", nl:"🌍 Nationaliteiten", en:"🌍 Nationalities", de:"🌍 Nationalitäten" },
+  hint_area_headcount: { fr:"(surface ∝ effectif)", nl:"(oppervlakte ∝ aantal)", en:"(area ∝ headcount)", de:"(Fläche ∝ Anzahl)" },
+  card_by_continent: { fr:"🌐 Par continent", nl:"🌐 Per continent", en:"🌐 By continent", de:"🌐 Nach Kontinent" },
+  card_eu_noneu: { fr:"🇪🇺 UE / hors UE", nl:"🇪🇺 EU / niet-EU", en:"🇪🇺 EU / non-EU", de:"🇪🇺 EU / Nicht-EU" },
+  card_marital: { fr:"💍 État civil", nl:"💍 Burgerlijke staat", en:"💍 Marital status", de:"💍 Familienstand" },
+  card_gender: { fr:"⚧ Sexe", nl:"⚧ Geslacht", en:"⚧ Gender", de:"⚧ Geschlecht" },
+  card_birthplace: { fr:"🏙️ Lieu de naissance", nl:"🏙️ Geboorteplaats", en:"🏙️ Place of birth", de:"🏙️ Geburtsort" },
+  hint_born_be: { fr:"(nés en Belgique, toute nationalité)", nl:"(geboren in België, ongeacht nationaliteit)", en:"(born in Belgium, any nationality)", de:"(geboren in Belgien, unabhängig von der Nationalität)" },
+  card_age_pyramid: { fr:"📊 Pyramide des âges", nl:"📊 Leeftijdspiramide", en:"📊 Age pyramid", de:"📊 Alterspyramide" },
+  card_household_dist: { fr:"👥 Répartition par taille de ménage", nl:"👥 Verdeling naar gezinsgrootte", en:"👥 Household size distribution", de:"👥 Verteilung nach Haushaltsgröße" },
+  card_sankey: { fr:"🔀 Flux Nationalité → Sexe → Âge", nl:"🔀 Stroom Nationaliteit → Geslacht → Leeftijd", en:"🔀 Nationality → Gender → Age flow", de:"🔀 Fluss Nationalität → Geschlecht → Alter" },
+
+  // ── Statistics — libellés dynamiques (graphiques) ────────────────
+  gender_men: { fr:"Hommes", nl:"Mannen", en:"Men", de:"Männer" },
+  gender_women: { fr:"Femmes", nl:"Vrouwen", en:"Women", de:"Frauen" },
+  gender_other: { fr:"Autre", nl:"Ander", en:"Other", de:"Andere" },
+  nlty_others: { fr:"Autres", nl:"Overige", en:"Others", de:"Andere" },
+  crumb_belgium: { fr:"🇧🇪 Belgique", nl:"🇧🇪 België", en:"🇧🇪 Belgium", de:"🇧🇪 Belgien" },
+  txt_nobody_born_be: { fr:"Personne née en Belgique dans ce périmètre.", nl:"Niemand geboren in België binnen deze selectie.", en:"Nobody born in Belgium in this scope.", de:"Niemand in diesem Bereich in Belgien geboren." },
+  txt_all_nationalities: { fr:"Toutes nationalités ({n})", nl:"Alle nationaliteiten ({n})", en:"All nationalities ({n})", de:"Alle Nationalitäten ({n})" },
+  txt_bracket: { fr:"Tranche {lbl}", nl:"Leeftijdsgroep {lbl}", en:"Bracket {lbl}", de:"Altersgruppe {lbl}" },
+  txt_by_nationality: { fr:", par nationalité", nl:", per nationaliteit", en:", by nationality", de:", nach Nationalität" },
+  txt_by_nationality_hh: { fr:", par nationalité (réf. du ménage)", nl:", per nationaliteit (referentiepersoon huishouden)", en:", by nationality (household reference)", de:", nach Nationalität (Referenzperson des Haushalts)" },
+  word_person: { fr:["personne","personnes"], nl:["persoon","personen"], en:["person","people"], de:["Person","Personen"] },
+  word_member: { fr:["membre","membres"], nl:["lid","leden"], en:["member","members"], de:["Mitglied","Mitglieder"] },
+  txt_households_of_size: { fr:"Ménages de {n} membre(s)", nl:"Huishoudens van {n} lid/leden", en:"Households of {n} member(s)", de:"Haushalte mit {n} Mitglied(ern)" },
+  pyr_men_tpl: { fr:"♂ Hommes ({n})", nl:"♂ Mannen ({n})", en:"♂ Men ({n})", de:"♂ Männer ({n})" },
+  pyr_women_tpl: { fr:"Femmes ({n}) ♀", nl:"Vrouwen ({n}) ♀", en:"Women ({n}) ♀", de:"Frauen ({n}) ♀" },
+  age_years: { fr:"ans", nl:"jaar", en:"yrs", de:"Jahre" },
+
+  // ── Planning ──────────────────────────────────────────────────────
+  plan_title: { fr:"📅 Planning enquêtes terrain", nl:"📅 Planning veldwerk", en:"📅 Field survey planning", de:"📅 Planung der Felderhebung" },
+  plan_intro: { fr:"Plannings d'enquêtes (LFS/EFT, EU-SILC, HBS, TIC, Voyages, Santé, recensements…). Importe un fichier de planning (Excel/CSV) puis associe ses colonnes. Sélectionne une province/commune pour voir les missions et localiser les quartiers/adresses sur la carte.",
+    nl:"Enquêteplannings (LFS/EFT, EU-SILC, HBS, TIC, Reizen, Gezondheid, volkstellingen…). Importeer een planningbestand (Excel/CSV) en koppel de kolommen. Selecteer een provincie/gemeente om de opdrachten te zien en de wijken/adressen op de kaart te lokaliseren.",
+    en:"Survey plannings (LFS, EU-SILC, HBS, TIC, Travel, Health, censuses…). Import a planning file (Excel/CSV) then map its columns. Select a province/municipality to see the assignments and locate the quartiers/addresses on the map.",
+    de:"Erhebungsplanungen (LFS, EU-SILC, HBS, TIC, Reisen, Gesundheit, Volkszählungen…). Importieren Sie eine Planungsdatei (Excel/CSV) und ordnen Sie deren Spalten zu. Wählen Sie eine Provinz/Gemeinde, um die Einsätze zu sehen und die Viertel/Adressen auf der Karte zu lokalisieren." },
+  lbl_planning_colon: { fr:"Planning :", nl:"Planning:", en:"Planning:", de:"Planung:" },
+  btn_import_planning: { fr:"📥 Importer un planning", nl:"📥 Planning importeren", en:"📥 Import a planning", de:"📥 Planung importieren" },
+  btn_delete: { fr:"🗑️ Supprimer", nl:"🗑️ Verwijderen", en:"🗑️ Delete", de:"🗑️ Löschen" },
+  chk_upcoming_only: { fr:"À venir uniquement", nl:"Alleen komende", en:"Upcoming only", de:"Nur bevorstehende" },
+  ph_search_group_quartier: { fr:"Rechercher groupe / quartier…", nl:"Zoeken op groep / wijk…", en:"Search group / quartier…", de:"Suche nach Gruppe / Viertel…" },
+  lbl_check_address: { fr:"📍 Vérifier une adresse :", nl:"📍 Adres controleren:", en:"📍 Check an address:", de:"📍 Adresse prüfen:" },
+  ph_check_address: { fr:"ex. Grande Rue au Bois 12, Schaerbeek", nl:"bv. Grande Rue au Bois 12, Schaarbeek", en:"e.g. Grande Rue au Bois 12, Schaerbeek", de:"z. B. Grande Rue au Bois 12, Schaerbeek" },
+  btn_locate: { fr:"Localiser", nl:"Lokaliseren", en:"Locate", de:"Lokalisieren" },
+  title_recalc: { fr:"Vider le cache et recalculer la position des quartiers affichés", nl:"Cache wissen en de positie van de weergegeven wijken herberekenen", en:"Clear the cache and recompute the position of the displayed quartiers", de:"Cache leeren und die Position der angezeigten Viertel neu berechnen" },
+  btn_recalc: { fr:"🔄 Recalculer", nl:"🔄 Herberekenen", en:"🔄 Recompute", de:"🔄 Neu berechnen" },
+  map_intro: { fr:"Fichier : <strong id=\"mapFichier\"></strong> — <span id=\"mapNbLignes\"></span> ligne(s). Associe chaque information à une colonne du fichier (1 ligne = 1 mission/interrogation).",
+    nl:"Bestand: <strong id=\"mapFichier\"></strong> — <span id=\"mapNbLignes\"></span> regel(s). Koppel elk gegeven aan een kolom van het bestand (1 regel = 1 opdracht/interview).",
+    en:"File: <strong id=\"mapFichier\"></strong> — <span id=\"mapNbLignes\"></span> row(s). Map each piece of information to a column of the file (1 row = 1 assignment/interview).",
+    de:"Datei: <strong id=\"mapFichier\"></strong> — <span id=\"mapNbLignes\"></span> Zeile(n). Ordnen Sie jede Information einer Spalte der Datei zu (1 Zeile = 1 Einsatz/Interview)." },
+  map_lbl_name: { fr:"Nom du planning", nl:"Naam van de planning", en:"Planning name", de:"Name der Planung" },
+  map_lbl_type: { fr:"Type d'enquête", nl:"Type enquête", en:"Survey type", de:"Umfragetyp" },
+  map_opt_travel: { fr:"Voyages & Vacances", nl:"Reizen & Vakanties", en:"Travel & Holidays", de:"Reisen & Urlaub" },
+  map_opt_health: { fr:"Santé", nl:"Gezondheid", en:"Health", de:"Gesundheit" },
+  map_opt_census: { fr:"Recensement / spéciale", nl:"Volkstelling / speciaal", en:"Census / special", de:"Volkszählung / Sonder" },
+  map_opt_other: { fr:"Autre", nl:"Andere", en:"Other", de:"Andere" },
+  map_lbl_commune: { fr:"Commune", nl:"Gemeente", en:"Municipality", de:"Gemeinde" },
+  map_lbl_quartier: { fr:"Quartier / adresse", nl:"Wijk / adres", en:"Quartier / address", de:"Viertel / Adresse" },
+  map_lbl_province: { fr:"Province", nl:"Provincie", en:"Province", de:"Provinz" },
+  map_lbl_group: { fr:"Groupe / code", nl:"Groep / code", en:"Group / code", de:"Gruppe / Code" },
+  map_lbl_wave: { fr:"Vague", nl:"Golf", en:"Wave", de:"Welle" },
+  map_lbl_refweek: { fr:"Semaine de réf.", nl:"Refweek", en:"Ref. week", de:"Referenzwoche" },
+  map_lbl_start: { fr:"Date début", nl:"Startdatum", en:"Start date", de:"Startdatum" },
+  map_lbl_stop: { fr:"Date fin", nl:"Einddatum", en:"End date", de:"Enddatum" },
+  btn_import_confirm: { fr:"✅ Importer", nl:"✅ Importeren", en:"✅ Import", de:"✅ Importieren" },
+  planning_none_option: { fr:"(aucun planning — importez-en un)", nl:"(geen planning — importeer er een)", en:"(no planning — import one)", de:"(keine Planung — importieren Sie eine)" },
+  opt_none: { fr:"aucune", nl:"geen", en:"none", de:"keine" },
+  txt_planning_count: { fr:"{n} groupe(s) · {m} interro.", nl:"{n} groep(en) · {m} interview(s)", en:"{n} group(s) · {m} interview(s)", de:"{n} Gruppe(n) · {m} Interview(s)" },
+  th_group: { fr:"Groupe", nl:"Groep", en:"Group", de:"Gruppe" },
+  th_commune: { fr:"Commune", nl:"Gemeente", en:"Commune", de:"Gemeinde" },
+  th_quartier: { fr:"Quartier", nl:"Wijk", en:"Quartier", de:"Viertel" },
+  th_precision: { fr:"Précision", nl:"Nauwkeurigheid", en:"Precision", de:"Genauigkeit" },
+  th_next: { fr:"Prochaine", nl:"Volgende", en:"Next", de:"Nächste" },
+  geo_prec_high: { fr:"élevée", nl:"hoog", en:"high", de:"hoch" },
+  geo_prec_medium: { fr:"moyenne", nl:"gemiddeld", en:"medium", de:"mittel" },
+  geo_prec_low: { fr:"commune", nl:"gemeente", en:"municipality-level", de:"Gemeindeebene" },
+  geo_prec_low_approx: { fr:"commune (approx.)", nl:"gemeente (bij benadering)", en:"municipality-level (approx.)", de:"Gemeindeebene (ungefähr)" },
+  geo_prec_fail: { fr:"échec", nl:"mislukt", en:"failed", de:"fehlgeschlagen" },
+  geo_prec_pending: { fr:"…", nl:"…", en:"…", de:"…" },
+  src_centre: { fr:"centre commune", nl:"gemeentecentrum", en:"municipality centre", de:"Gemeindezentrum" },
+  txt_map_not_ready: { fr:"Carte non prête.", nl:"Kaart niet klaar.", en:"Map not ready.", de:"Karte nicht bereit." },
+  txt_searching: { fr:"Recherche…", nl:"Zoeken…", en:"Searching…", de:"Suche läuft…" },
+  txt_address_not_found: { fr:"❌ adresse introuvable", nl:"❌ adres niet gevonden", en:"❌ address not found", de:"❌ Adresse nicht gefunden" },
+  txt_approx: { fr:"⚠️ approximatif (hors commune ?)", nl:"⚠️ bij benadering (buiten de gemeente?)", en:"⚠️ approximate (outside the municipality?)", de:"⚠️ ungefähr (außerhalb der Gemeinde?)" },
+  txt_geocoded_n: { fr:"{n} quartier(s) localisé(s).", nl:"{n} wijk(en) gelokaliseerd.", en:"{n} quartier(s) located.", de:"{n} Viertel lokalisiert." },
+  txt_geocoding_progress: { fr:"Géocodage… {i}/{n}", nl:"Geocoderen… {i}/{n}", en:"Geocoding… {i}/{n}", de:"Geokodierung… {i}/{n}" },
+  txt_geocoding_done: { fr:"{n} quartier(s) — localisation terminée.", nl:"{n} wijk(en) — lokalisatie voltooid.", en:"{n} quartier(s) — locating complete.", de:"{n} Viertel — Lokalisierung abgeschlossen." },
+  txt_debug_analyzing: { fr:"🐞 {code} — analyse en cours…", nl:"🐞 {code} — analyse bezig…", en:"🐞 {code} — analyzing…", de:"🐞 {code} — Analyse läuft…" },
+
+  // ── Alertes / confirmations ───────────────────────────────────────
+  al_no_file_loaded: { fr:"Aucun fichier chargé.", nl:"Geen bestand geladen.", en:"No file loaded.", de:"Keine Datei geladen." },
+  al_no_source_file: { fr:"Aucun fichier source chargé.", nl:"Geen bronbestand geladen.", en:"No source file loaded.", de:"Keine Quelldatei geladen." },
+  cf_remove_source: { fr:"Retirer « {name} » des fichiers chargés ?", nl:"« {name} » uit de geladen bestanden verwijderen?", en:"Remove “{name}” from loaded files?", de:"„{name}“ aus den geladenen Dateien entfernen?" },
+  cf_delete_planning: { fr:"Supprimer le planning « {name} » ?", nl:"De planning « {name} » verwijderen?", en:"Delete planning “{name}”?", de:"Die Planung „{name}“ löschen?" },
+  al_empty_file: { fr:"Fichier vide ou sans données.", nl:"Leeg bestand of zonder gegevens.", en:"Empty file or no data.", de:"Leere Datei oder keine Daten." },
+  al_read_error: { fr:"Lecture impossible : {err}", nl:"Kan niet worden gelezen: {err}", en:"Unable to read: {err}", de:"Lesen nicht möglich: {err}" },
+  al_no_lfs_group: { fr:"Aucun groupe lisible dans ce fichier LFS.", nl:"Geen leesbare groep in dit LFS-bestand.", en:"No readable group in this LFS file.", de:"Keine lesbare Gruppe in dieser LFS-Datei." },
+  al_commune_required: { fr:"La colonne « Commune » est obligatoire.", nl:"De kolom « Gemeente » is verplicht.", en:"The “Municipality” column is required.", de:"Die Spalte „Gemeinde“ ist erforderlich." },
+  al_no_row_with_commune: { fr:"Aucune ligne avec une commune.", nl:"Geen enkele regel met een gemeente.", en:"No row with a municipality.", de:"Keine Zeile mit einer Gemeinde." },
+  al_unexpected_structure: { fr:"Structure de fichier inattendue — colonnes STATBEL requises absentes : {cols}. S'agit-il bien d'un export GRP ?", nl:"Onverwachte bestandsstructuur — vereiste STATBEL-kolommen ontbreken: {cols}. Is dit wel een GRP-export?", en:"Unexpected file structure — required STATBEL columns missing: {cols}. Is this really a GRP export?", de:"Unerwartete Dateistruktur — erforderliche STATBEL-Spalten fehlen: {cols}. Handelt es sich wirklich um einen GRP-Export?" },
+  al_empty_or_invalid: { fr:"Fichier vide ou invalide", nl:"Leeg of ongeldig bestand", en:"Empty or invalid file", de:"Leere oder ungültige Datei" },
+  al_no_rows_parsed: { fr:"Aucune ligne exploitable", nl:"Geen bruikbare regels", en:"No rows parsed", de:"Keine Zeilen erkannt" },
+  al_xlsx_lib_missing: { fr:"Bibliothèque Excel non chargée (vérifiez votre connexion)", nl:"Excel-bibliotheek niet geladen (controleer uw verbinding)", en:"Excel library not loaded (check your connection)", de:"Excel-Bibliothek nicht geladen (Verbindung prüfen)" },
+  al_no_sheet: { fr:"Aucune feuille trouvée dans le classeur", nl:"Geen werkblad gevonden in het bestand", en:"No sheet found in the workbook", de:"Kein Arbeitsblatt in der Arbeitsmappe gefunden" },
+  al_generic_error: { fr:"❌ Erreur : {msg}", nl:"❌ Fout: {msg}", en:"❌ Error: {msg}", de:"❌ Fehler: {msg}" },
+};
+
+function t(key) {
+  const e = I18N[key];
+  if (!e) return key;
+  return e[uiLang] || e.fr || key;
+}
+// Template avec variables : tf('key', {n:3}) remplace {n} dans la chaîne traduite
+function tf(key, vars) {
+  return t(key).replace(/\{(\w+)\}/g, (_, k) => (vars && vars[k] != null) ? vars[k] : '');
+}
+// Pluriel : la valeur du dico est [singulier, pluriel] par langue
+function tPlural(key, n) {
+  const e = I18N[key];
+  const arr = (e && (e[uiLang] || e.fr)) || [key, key];
+  return arr[n > 1 ? 1 : 0];
+}
+
+function detecterLangueNavigateur() {
+  const l = (navigator.language || 'fr').slice(0, 2).toLowerCase();
+  return LANGS.includes(l) ? l : 'fr';
+}
+// Langue partagée avec l'app enquête (index.html) via localStorage['statbel_settings'].lang
+function chargerLangueInitiale() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('statbel_settings') || '{}');
+    if (raw && LANGS.includes(raw.lang)) return raw.lang;
+  } catch (e) {}
+  return detecterLangueNavigateur();
+}
+let uiLang = chargerLangueInitiale();
+
+// Applique la langue courante à tout le DOM balisé (data-i18n[-ph|-tip|-title])
+function appliquerLangue() {
+  document.documentElement.lang = uiLang || 'fr';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('[data-i18n-tip]').forEach(el => { el.setAttribute('data-tip', t(el.getAttribute('data-i18n-tip'))); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+  const sel = document.getElementById('setLangConv'); if (sel) sel.value = uiLang;
+}
+
+// Changement de langue : persiste dans localStorage['statbel_settings'] (fusion — partagé avec index.html)
+// puis ré-applique le balisage et ré-rend les vues dynamiques (stats / planning / tableaux).
+function changerLangue(v) {
+  uiLang = LANGS.includes(v) ? v : 'fr';
+  let raw = {};
+  try { raw = JSON.parse(localStorage.getItem('statbel_settings') || '{}') || {}; } catch (e) { raw = {}; }
+  raw.lang = uiLang;
+  try { localStorage.setItem('statbel_settings', JSON.stringify(raw)); } catch (e) {}
+  appliquerLangue();
+  rafraichirVuesLangue();
+}
+
+// Ré-affiche le contenu dépendant de la langue (libellés générés en JS, pas couverts par data-i18n)
+function rafraichirVuesLangue() {
+  try {
+    if (typeof refreshSourceSelect === 'function') refreshSourceSelect();
+    if (_resultat) {
+      if (typeof afficherPlanning === 'function') afficherPlanning(_resultat.adminCols, _resultat);
+      if (typeof afficher === 'function') afficher(_resultat);
+    }
+    const modalParams = document.getElementById('modalParams');
+    if (modalParams && modalParams.classList.contains('open') && typeof initPays === 'function') {
+      initPays(); initCommunes();
+    }
+    const panPlanning = document.getElementById('pan-planning');
+    if (panPlanning && panPlanning.style.display !== 'none' && typeof filtrerPlanning === 'function') {
+      remplirSelecteurPlanning(); appliquerPlanningActif(); filtrerPlanning();
+    }
+  } catch (e) { /* pas bloquant */ }
+}
+
 // ════════════════════════════════════════════════════════════════════════
 //  TABLES DE CORRESPONDANCE
 // ════════════════════════════════════════════════════════════════════════
@@ -1029,8 +1345,11 @@ const NLTY_ALIAS = {
 };
 for (const [code, iso] of Object.entries(NLTY_ALIAS)) { if (!NLTY_ISO[code]) NLTY_ISO[code] = iso; }
 
-// Nom de pays affiché (anglais) à partir d'un code ISO3. Remplace l'ancien PAYS_FR.
-function paysNom(iso) { return (PAYS_I18N[iso] && PAYS_I18N[iso].en) || iso || ''; }
+// Nom de pays affiché (langue courante de l'UI) à partir d'un code ISO3. Remplace l'ancien PAYS_FR.
+function paysNom(iso) {
+  const e = PAYS_I18N[iso];
+  return (e && (e[typeof uiLang !== 'undefined' ? uiLang : 'en'] || e.en)) || iso || '';
+}
 // NB : les codes communes belges (5 chiffres, ex. 21015) ne sont PAS dans NLTY_ISO ;
 // le pays de naissance « BEL » est déduit dans decoder() pour tout REFNIS à 5 chiffres.
 
@@ -4516,8 +4835,8 @@ async function chargerSources() {
 
 // Retire le fichier source actif
 function supprimerSource() {
-  if (!sourceActive || !sources[sourceActive]) { alert('No file loaded.'); return; }
-  if (!confirm('Retirer « ' + nomEnquete(sources[sourceActive].res) + ' » des fichiers chargés ?')) return;
+  if (!sourceActive || !sources[sourceActive]) { alert(t('al_no_file_loaded')); return; }
+  if (!confirm(tf('cf_remove_source', { name: nomEnquete(sources[sourceActive].res) }))) return;
   delete sources[sourceActive];
   const noms = Object.keys(sources);
   sourceActive = noms[0] || '';
@@ -4587,8 +4906,8 @@ function basculerTab(nom) {
 function majLabels(res) {
   const nom = nomEnquete(res);
   const a = res.adminCols;
-  document.getElementById('lblCibles').textContent  = `${nom}.csv — ${res.outCibles.length} rows`;
-  document.getElementById('lblMembres').textContent = `${nom}_membres.csv — ${res.outMembres.length} rows`;
+  document.getElementById('lblCibles').textContent  = `${nom}.csv — ${res.outCibles.length} ${t('lbl_rows')}`;
+  document.getElementById('lblMembres').textContent = `${nom}_membres.csv — ${res.outMembres.length} ${t('lbl_rows')}`;
   document.getElementById('lblEnquete').textContent = `${nom}_enquete.csv — NR_GRP:${a.NR_GRP} YEAR:${a.NR_YEAR} SEQ:${a.NR_SEQ} WAVE:${a.NR_WAVE} REF:${a.NR_REF_WK}`;
   document.getElementById('lblRapport').textContent = `${nom}_rapport.txt`;
 }
@@ -4643,7 +4962,7 @@ document.addEventListener('click', e => {
 
 // Ouvre la fenêtre d'export (boutons CSV/rapport de la source active)
 function ouvrirExport() {
-  if (!_resultat) { alert('No source file loaded.'); return; }
+  if (!_resultat) { alert(t('al_no_source_file')); return; }
   document.getElementById('expNom').textContent = nomEnquete(_resultat);
   majLabels(_resultat);
   document.getElementById('modalExport').classList.add('open');
@@ -4661,7 +4980,7 @@ function afficherPlanning(adminCols, res) {
   const code = grp.slice(-5);
   const m = chercherPlanning(code);
   if (!m) {
-    el.innerHTML = grp ? `<div class="plan-box plan-none">📋 ${escHtml(code)} — introuvable dans les plannings chargés</div>` : '';
+    el.innerHTML = grp ? `<div class="plan-box plan-none">📋 ${escHtml(code)} — ${escHtml(t('plan_not_found'))}</div>` : '';
     return;
   }
   const e = m.e;
@@ -4694,11 +5013,11 @@ function afficher(res) {
   const grpSuffix = String(adminCols.NR_GRP).slice(-2);
 
   document.getElementById('adminCols').innerHTML = [
-    ['Year',     adminCols.NR_YEAR],
-    ['Wave',     adminCols.NR_WAVE],
-    ['Sequence', adminCols.NR_SEQ],
-    ['Ref. wk',  adminCols.NR_REF_WK],
-    ['Group',    grpSuffix],
+    [t('admin_year'),     adminCols.NR_YEAR],
+    [t('admin_wave'),     adminCols.NR_WAVE],
+    [t('admin_sequence'), adminCols.NR_SEQ],
+    [t('admin_refweek'),  adminCols.NR_REF_WK],
+    [t('admin_group'),    grpSuffix],
   ].map(([desc, val]) =>
     `<div class="admin-col">
       <span class="ac-label">${desc}</span>
@@ -4723,12 +5042,12 @@ function afficher(res) {
       const detail = gens ? `<div style="margin:2px 0 4px 14px;color:#bf360c">${gens}</div>` : '';
       return `<div style="margin-top:4px"><code style="background:#ffe0b2;padding:1px 5px;border-radius:4px">${escHtml(x.code)}</code> ×${x.count}${detail}</div>`;
     }).join('');
-    let html = '⚠️ <strong>Unknown codes</strong> — affected field left empty:';
-    if (cm.nlty    && cm.nlty.length)    html += `<div style="margin-top:6px"><u>Nationality (CD_MB_NLTY)</u> → not in NLTY_ISO:${fmtList(cm.nlty)}</div>`;
-    if (cm.bth     && cm.bth.length)     html += `<div style="margin-top:6px"><u>Birth country (CD_MB_BTH_REFNIS)</u> → not in NLTY_ISO:${fmtList(cm.bth)}</div>`;
-    if (cm.commune && cm.commune.length) html += `<div style="margin-top:6px"><u>Belgian municipality (CD_MB_BTH_REFNIS, 5 digits)</u> → not in REFNIS_COMMUNE:${fmtList(cm.commune)}</div>`;
-    if (cm.mrtl    && cm.mrtl.length)    html += `<div style="margin-top:6px"><u>Marital status (CD_MB_MRTL_STS)</u> → not in MRTL_FR:${fmtList(cm.mrtl)}</div>`;
-    html += '<div style="margin-top:8px;color:#bf360c;font-size:11px">Add these codes to the matching table in the source (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR) to decode them.</div>';
+    let html = `⚠️ <strong>${escHtml(t('warn_unknown_codes_title').replace(/^⚠️\s*/, ''))}</strong> ${escHtml(t('warn_unknown_codes_suffix'))}`;
+    if (cm.nlty    && cm.nlty.length)    html += `<div style="margin-top:6px"><u>${escHtml(t('field_nationality_code'))}</u> ${escHtml(t('txt_not_in'))} NLTY_ISO:${fmtList(cm.nlty)}</div>`;
+    if (cm.bth     && cm.bth.length)     html += `<div style="margin-top:6px"><u>${escHtml(t('field_birthcountry_code'))}</u> ${escHtml(t('txt_not_in'))} NLTY_ISO:${fmtList(cm.bth)}</div>`;
+    if (cm.commune && cm.commune.length) html += `<div style="margin-top:6px"><u>${escHtml(t('field_municipality_code'))}</u> ${escHtml(t('txt_not_in'))} REFNIS_COMMUNE:${fmtList(cm.commune)}</div>`;
+    if (cm.mrtl    && cm.mrtl.length)    html += `<div style="margin-top:6px"><u>${escHtml(t('field_marital_code'))}</u> ${escHtml(t('txt_not_in'))} MRTL_FR:${fmtList(cm.mrtl)}</div>`;
+    html += `<div style="margin-top:8px;color:#bf360c;font-size:11px">${escHtml(t('hint_add_codes'))}</div>`;
     elCM.innerHTML = html;
     elCM.classList.remove('hidden');
   } else {
@@ -4739,7 +5058,7 @@ function afficher(res) {
   const elSW = document.getElementById('structureWarn');
   const sw = res.structureWarn || [];
   if (sw.length) {
-    elSW.innerHTML = '⚠️ <strong>Some expected columns are missing</strong> — related data will be empty: '
+    elSW.innerHTML = `⚠️ <strong>${escHtml(t('warn_missing_cols_title').replace(/^⚠️\s*/, ''))}</strong> ${escHtml(t('warn_missing_cols_suffix'))} `
       + sw.map(c => `<code style="background:#ffe0b2;padding:1px 5px;border-radius:4px">${escHtml(c)}</code>`).join(' ');
     elSW.classList.remove('hidden');
   } else {
@@ -4849,11 +5168,11 @@ document.addEventListener('click', e => {
 
 function ouvrirParametres() {
   tableTriable('refSexe',
-    [{ label: 'Code', num: true }, { label: 'Abbr.' }, { label: 'Label' }],
+    [{ label: t('col_code'), num: true }, { label: t('col_abbr') }, { label: t('col_label') }],
     Object.entries(SEX_MAP).map(([c, a]) => [c, a, SEXE_LBL[a] || '']));
 
   tableTriable('refMrtl',
-    [{ label: 'Code', num: true }, { label: 'Label' }],
+    [{ label: t('col_code'), num: true }, { label: t('col_label') }],
     Object.entries(MRTL_FR).map(([c, l]) => [c, l || '—']));
 
   initPays();
@@ -4889,7 +5208,7 @@ function nuts0Code(iso3, iso2) {
   return NUTS0_OVERRIDE[iso3] || iso2 || '';
 }
 
-const PAYS_COLS = [{ label: 'NIS', num: true }, { label: 'ISO3' }, { label: 'ISO2' }, { label: 'NUTS0' }, { label: 'Country' }, { label: 'Continent' }, { label: 'EU' }];
+function PAYS_COLS() { return [{ label: t('col_nis'), num: true }, { label: t('col_iso3') }, { label: t('col_iso2') }, { label: t('col_nuts0') }, { label: t('col_country') }, { label: t('col_continent') }, { label: t('col_eu') }]; }
 let _paysAll = [];
 
 function initPays() {
@@ -4899,7 +5218,7 @@ function initPays() {
   });
   const conts = [...new Set(_paysAll.map(r => r[5]).filter(Boolean))].sort();
   document.getElementById('filtrePaysCont').innerHTML =
-    '<option value="">All continents</option>' + conts.map(c => `<option>${c}</option>`).join('');
+    `<option value="">${escHtml(t('opt_all_continents'))}</option>` + conts.map(c => `<option>${c}</option>`).join('');
   document.getElementById('filtrePaysUE').value = '';
   filtrerPays();
 }
@@ -4924,7 +5243,7 @@ function filtrerPays() {
       sansAccent(r[4]).includes(q))
   );
   document.getElementById('paysCount').textContent = `${rows.length} / ${_paysAll.length}`;
-  tableTriable('refNlty', PAYS_COLS, rows);
+  tableTriable('refNlty', PAYS_COLS(), rows);
 }
 
 // Bascule entre les tables de référence (sous-onglets de la modale Lookup)
@@ -4938,7 +5257,7 @@ function lookupTab(k) {
 // ── Filtrage des communes belges par région / province / recherche ──────
 // Colonnes : [REFNIS, Municipality, District, Province, Region, NUTS2, NUTS3]
 // Colonnes : [REFNIS, FR, NL, District, Province, Region, NUTS2, NUTS3]
-const COMMUNE_COLS = [{ label: 'REFNIS', num: true }, { label: 'Municipality (FR)' }, { label: 'Municipality (NL)' }, { label: 'District' }, { label: 'Province' }, { label: 'Region' }, { label: 'NUTS2' }, { label: 'NUTS3' }];
+function COMMUNE_COLS() { return [{ label: t('col_refnis'), num: true }, { label: t('col_muni_fr') }, { label: t('col_muni_nl') }, { label: t('col_district') }, { label: t('col_province') }, { label: t('col_region') }, { label: t('col_nuts2') }, { label: t('col_nuts3') }]; }
 let _communesAll = [];
 
 function initCommunes() {
@@ -4948,7 +5267,7 @@ function initCommunes() {
   });
   const regs = [...new Set(_communesAll.map(r => r[5]).filter(Boolean))].sort();
   document.getElementById('filtreRegion').innerHTML =
-    '<option value="">All regions</option>' + regs.map(r => `<option>${r}</option>`).join('');
+    `<option value="">${escHtml(t('opt_all_regions'))}</option>` + regs.map(r => `<option>${r}</option>`).join('');
   document.getElementById('filtreProvince').value = '';
   document.getElementById('filtreDistrict').value = '';
   majProvinces();
@@ -4968,7 +5287,7 @@ function majProvinces() {
   const sel = document.getElementById('filtreProvince');
   const cur = sel.value;
   const provs = [...new Set(_communesAll.filter(r => !reg || r[5] === reg).map(r => r[4]).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">All provinces</option>' +
+  sel.innerHTML = `<option value="">${escHtml(t('opt_all_provinces'))}</option>` +
     provs.map(p => `<option${p === cur ? ' selected' : ''}>${p}</option>`).join('');
   majDistricts();
 }
@@ -4982,7 +5301,7 @@ function majDistricts() {
   const dists = [...new Set(_communesAll
     .filter(r => (!reg || r[5] === reg) && (!prov || r[4] === prov))
     .map(r => r[3]).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">All districts</option>' +
+  sel.innerHTML = `<option value="">${escHtml(t('opt_all_districts'))}</option>` +
     dists.map(d => `<option${d === cur ? ' selected' : ''}>${d}</option>`).join('');
 }
 
@@ -4999,7 +5318,7 @@ function filtrerCommunes() {
     (!q || r[0].includes(q) || sansAccent(r[1]).includes(q) || sansAccent(r[2]).includes(q))
   );
   document.getElementById('communeCount').textContent = `${rows.length} / ${_communesAll.length}`;
-  tableTriable('refCommune', COMMUNE_COLS, rows);
+  tableTriable('refCommune', COMMUNE_COLS(), rows);
 }
 
 function fermerParametres() {
@@ -5074,7 +5393,7 @@ function remplirSelecteurPlanning() {
   const vals = Object.values(_plannings);
   document.getElementById('planSelect').innerHTML = vals.length
     ? vals.map(p => `<option value="${p.id}"${p.id === _planActif ? ' selected' : ''}>${escHtml(p.nom)}</option>`).join('')
-    : '<option value="">(aucun planning — importez-en un)</option>';
+    : `<option value="">${escHtml(t('planning_none_option'))}</option>`;
   majBadgePlanning();
 }
 
@@ -5090,7 +5409,7 @@ function appliquerPlanningActif() {
   document.getElementById('planDelBtn').style.display = p ? '' : 'none';
   if (!p) {
     _planRows = [];
-    document.getElementById('planProvince').innerHTML = '<option value="">All provinces</option>';
+    document.getElementById('planProvince').innerHTML = `<option value="">${escHtml(t('opt_all_provinces'))}</option>`;
     majCommunesPlan();
     return;
   }
@@ -5104,7 +5423,7 @@ function appliquerPlanningActif() {
   const provs = [...new Set(_planRows.map(r => r.prov).filter(Boolean))].sort();
   const defProv = provs.includes('BRU') ? 'BRU' : '';
   document.getElementById('planProvince').innerHTML =
-    '<option value="">All provinces</option>' +
+    `<option value="">${escHtml(t('opt_all_provinces'))}</option>` +
     provs.map(p2 => `<option value="${escHtml(p2)}"${p2 === defProv ? ' selected' : ''}>${escHtml(PROV_LABEL[p2] || p2)}</option>`).join('');
   majCommunesPlan();
 }
@@ -5118,7 +5437,7 @@ function chargerPlanningSelectionne() {
 function supprimerPlanningImporte() {
   const p = _plannings[_planActif];
   if (!p) return;
-  if (!confirm('Supprimer le planning « ' + p.nom + ' » ?')) return;
+  if (!confirm(tf('cf_delete_planning', { name: p.nom }))) return;
   delete _plannings[_planActif];
   sauverPlanningsImportes();
   _planActif = Object.keys(_plannings)[0] || '';
@@ -5161,6 +5480,7 @@ function effacerAdresseCheck() {
   document.getElementById('planAdrStatus').textContent = '';
   if (_planAdrLayer) _planAdrLayer.clearLayers();
 }
+// (labels de vérification d'adresse traduits dans verifierAdresse())
 
 // Vide le cache de géocodage des quartiers actuellement affichés, puis recalcule leur position
 function rafraichirGeocodage() {
@@ -5172,8 +5492,8 @@ function verifierAdresse() {
   const adr = (document.getElementById('planAdrCheck').value || '').trim();
   const stat = document.getElementById('planAdrStatus');
   if (!adr) { stat.textContent = ''; return; }
-  if (!_planMap || !_planAdrLayer) { stat.textContent = 'Carte non prête.'; return; }
-  stat.textContent = 'Recherche…';
+  if (!_planMap || !_planAdrLayer) { stat.textContent = t('txt_map_not_ready'); return; }
+  stat.textContent = t('txt_searching');
   const { region, communeFR } = regionSelectionPlan();
   const ctx = (communeFR && !sansAccent(adr).includes(sansAccent(communeFR))) ? adr + ', ' + communeFR : adr;
   const toks = tokensSignificatifs(adr);
@@ -5195,7 +5515,7 @@ function verifierAdresse() {
     const run = () => k >= sources.length ? Promise.resolve(null) : sources[k++]().then(r => r || run());
     return run().then(pt => pt || geocodeAdresseRegion(region, ctx).then(r => r ? Object.assign({ approx: true }, r) : null));
   }).then(pt => {
-    if (!pt) { stat.textContent = '❌ adresse introuvable'; return; }
+    if (!pt) { stat.textContent = t('txt_address_not_found'); return; }
     _planAdrLayer.clearLayers();
     const voie = pt.label ? ` — ${escHtml(pt.label)}` : '';
     const srcTxt = pt.source ? ' · via ' + SRC_LBL(pt.source) : '';
@@ -5203,7 +5523,7 @@ function verifierAdresse() {
     L.circleMarker([pt.lat, pt.lng], { radius: 9, color: '#c62828', weight: 3, fillColor: '#e53935', fillOpacity: 0.6 })
       .addTo(_planAdrLayer)
       .bindPopup(`📍 ${escHtml(adr)}${voie}${svcTxt}<br>${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}`
-        + (pt.approx ? '<br><span style="color:#c62828">⚠️ approximatif (hors commune ?)</span>' : (srcTxt ? `<br><span style="color:var(--text2)">●${srcTxt}</span>` : ''))).openPopup();
+        + (pt.approx ? `<br><span style="color:#c62828">${escHtml(t('txt_approx'))}</span>` : (srcTxt ? `<br><span style="color:var(--text2)">●${srcTxt}</span>` : ''))).openPopup();
     _planMap.setView([pt.lat, pt.lng], 17);
     stat.textContent = (pt.approx ? '⚠️ approx. ' : '✓ ') + (pt.label ? pt.label + ' · ' : '') + `${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}` + srcTxt;
   });
@@ -5223,13 +5543,13 @@ function importerPlanningFichier(input) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
       const rows = aoa.filter(r => r.some(c => c !== '' && c != null));
-      if (rows.length < 2) { alert('Fichier vide ou sans données.'); return; }
+      if (rows.length < 2) { alert(t('al_empty_file')); return; }
       _mapHeaders = rows[0].map(h => String(h).trim());
       _mapData = rows.slice(1);
       // Format officiel LFS GRP_APPEL (large, 4 interrogations) → parsing direct
       if (estFichierLFS(_mapHeaders)) { importerPlanningLFS(file.name); return; }
       ouvrirMappingPlanning(file.name);
-    } catch (err) { alert('Lecture impossible : ' + err); }
+    } catch (err) { alert(tf('al_read_error', { err })); }
   };
   reader.readAsArrayBuffer(file);
 }
@@ -5263,7 +5583,7 @@ function importerPlanningLFS(nomFichier) {
     }
     grp[code] = { p, c, q, i };
   });
-  if (!rows.length) { alert('Aucun groupe lisible dans ce fichier LFS.'); return; }
+  if (!rows.length) { alert(t('al_no_lfs_group')); return; }
   const nom = nomFichier.replace(/\.[^.]+$/, '');
   const id = 'plan_' + Date.now();
   _plannings[id] = { id, nom: nom + ' — EFT / LFS', type: 'EFT / LFS', rows, grp, embedded: false };
@@ -5286,7 +5606,7 @@ function ouvrirMappingPlanning(nomFichier) {
   document.getElementById('mapNbLignes').textContent = _mapData.length;
   document.getElementById('mapNom').value = nomFichier.replace(/\.[^.]+$/, '');
   document.getElementById('mapErreur').style.display = 'none';
-  const opts = '<option value="">— (aucune) —</option>' +
+  const opts = `<option value="">— (${escHtml(t('opt_none'))}) —</option>` +
     _mapHeaders.map((h, i) => `<option value="${i}">${escHtml(h)}</option>`).join('');
   const devine = (selId, motifs) => {
     const el = document.getElementById(selId);
@@ -5325,7 +5645,7 @@ function fmtDateCell(v) {
 function confirmerMappingPlanning() {
   const err = document.getElementById('mapErreur');
   if (document.getElementById('mapCommune').value === '') {
-    err.textContent = 'La colonne « Commune » est obligatoire.'; err.style.display = 'block'; return;
+    err.textContent = t('al_commune_required'); err.style.display = 'block'; return;
   }
   const nom = (document.getElementById('mapNom').value || 'Planning').trim();
   const type = document.getElementById('mapType').value;
@@ -5343,7 +5663,7 @@ function confirmerMappingPlanning() {
       stop: fmtDateCell(valCol(r, 'mapStop')),
     };
   }).filter(Boolean);
-  if (!rows.length) { err.textContent = 'Aucune ligne avec une commune.'; err.style.display = 'block'; return; }
+  if (!rows.length) { err.textContent = t('al_no_row_with_commune'); err.style.display = 'block'; return; }
   const id = 'plan_' + Date.now();
   _plannings[id] = { id, nom: nom + ' — ' + type, type, rows, embedded: false };
   sauverPlanningsImportes();
@@ -6607,14 +6927,14 @@ document.addEventListener('click', e => {
 // (cohérent avec le parsing CSV : les codes restent des chaînes, ex. '021015').
 function parseXlsx(arrayBuffer) {
   if (typeof XLSX === 'undefined')
-    throw new Error('Excel library not loaded (check your connection)');
+    throw new Error(t('al_xlsx_lib_missing'));
   const wb = XLSX.read(arrayBuffer, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];        // première feuille
-  if (!ws) throw new Error('No sheet found in the workbook');
+  if (!ws) throw new Error(t('al_no_sheet'));
   // header:1 → tableau de tableaux ; raw:false + defval:'' → tout en texte, cases vides = ''
   const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
   const nonVides = aoa.filter(r => r.some(c => String(c).trim() !== ''));
-  if (nonVides.length < 2) throw new Error('Empty or invalid file');
+  if (nonVides.length < 2) throw new Error(t('al_empty_or_invalid'));
 
   // Repérer la vraie ligne d'en-tête : certains exports ajoutent un titre parasite
   // (ex. « ## Sheet: in ») avant les colonnes. On cherche la 1re ligne qui contient
@@ -6626,7 +6946,7 @@ function parseXlsx(arrayBuffer) {
   let h = nonVides.findIndex(estEntete);
   if (h < 0) h = 0;                              // repli : 1re ligne non vide
   const lignes  = nonVides.slice(h);
-  if (lignes.length < 2) throw new Error('Empty or invalid file');
+  if (lignes.length < 2) throw new Error(t('al_empty_or_invalid'));
   const headers = lignes[0].map(c => String(c).trim().replace(/^\"|\"$/g, ''));
   return lignes.slice(1).map(vals => {
     const row = {};
@@ -6652,7 +6972,7 @@ function verifierStructure(srcRows) {
 function traiterFichier(file) {
   if (!file) return;
   document.getElementById('loading').classList.remove('hidden');
-  document.getElementById('loadingNom').textContent = 'Converting ' + file.name + '…';
+  document.getElementById('loadingNom').textContent = tf('loading_converting', { name: file.name });
   document.getElementById('dropzone').classList.add('hidden');
   document.getElementById('erreur').classList.add('hidden');
   // Masquer temporairement les résultats déjà affichés (évite la confusion pendant l'import)
@@ -6669,15 +6989,14 @@ function traiterFichier(file) {
       } else {
         const text  = e.target.result;                 // texte iso-8859-1
         const lines = text.split(/\r?\n/).filter(l => l.trim());
-        if (lines.length < 2) throw new Error('Empty or invalid file');
+        if (lines.length < 2) throw new Error(t('al_empty_or_invalid'));
         const sep   = detecterSep(lines[0]);
         srcRows     = parseCsv(text, sep);
       }
-      if (!srcRows.length) throw new Error('No rows parsed');
+      if (!srcRows.length) throw new Error(t('al_no_rows_parsed'));
       const struct = verifierStructure(srcRows);
       if (struct.missingRequired.length)
-        throw new Error('Unexpected file structure — required STATBEL columns missing: '
-          + struct.missingRequired.join(', ') + '. Is this really a GRP export?');
+        throw new Error(tf('al_unexpected_structure', { cols: struct.missingRequired.join(', ') }));
       const res = convertir(srcRows);
       res.structureWarn = struct.missingRecommended;   // colonnes optionnelles absentes (avertissement)
       sources[res.grpId] = { res, fileName: file.name };
@@ -6693,7 +7012,7 @@ function traiterFichier(file) {
       document.getElementById('hdrTabs').style.display = 'flex';
       document.getElementById('dropzone').classList.remove('hidden');
       const el = document.getElementById('erreur');
-      el.textContent = '❌ Error: ' + err.message;
+      el.textContent = tf('al_generic_error', { msg: err.message });
       el.classList.remove('hidden');
     }
   };
