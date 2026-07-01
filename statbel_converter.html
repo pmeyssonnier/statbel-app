@@ -870,7 +870,7 @@ const I18N = {
   col_nuts0: { fr:"NUTS0", nl:"NUTS0", en:"NUTS0", de:"NUTS0" },
   col_country: { fr:"Pays", nl:"Land", en:"Country", de:"Land" },
   col_continent: { fr:"Continent", nl:"Continent", en:"Continent", de:"Kontinent" },
-  col_eu: { fr:"UE", nl:"EU", en:"EU", de:"EU" },
+  col_eu: { fr:"EU", nl:"EU", en:"EU", de:"EU" },
   col_refnis: { fr:"REFNIS", nl:"REFNIS", en:"REFNIS", de:"REFNIS" },
   col_muni_fr: { fr:"Commune (FR)", nl:"Gemeente (FR)", en:"Municipality (FR)", de:"Gemeinde (FR)" },
   col_muni_nl: { fr:"Commune (NL)", nl:"Gemeente (NL)", en:"Municipality (NL)", de:"Gemeinde (NL)" },
@@ -888,6 +888,15 @@ const I18N = {
   opt_eu_and_noneu: { fr:"UE et hors UE", nl:"EU en niet-EU", en:"EU & non-EU", de:"EU und Nicht-EU" },
   opt_eu_only: { fr:"UE uniquement", nl:"Alleen EU", en:"EU only", de:"Nur EU" },
   opt_noneu: { fr:"Hors UE", nl:"Niet-EU", en:"Non-EU", de:"Nicht-EU" },
+  lbl_unknown: { fr:"Inconnu", nl:"Onbekend", en:"Unknown", de:"Unbekannt" },
+  lbl_eu_short: { fr:"UE", nl:"EU", en:"EU", de:"EU" },
+  lbl_noneu_short: { fr:"Hors UE", nl:"Niet-EU", en:"Non-EU", de:"Nicht-EU" },
+  continent_europe: { fr:"Europe", nl:"Europa", en:"Europe", de:"Europa" },
+  continent_asia: { fr:"Asie", nl:"Azië", en:"Asia", de:"Asien" },
+  continent_africa: { fr:"Afrique", nl:"Afrika", en:"Africa", de:"Afrika" },
+  continent_america_north: { fr:"Amérique (Nord/Centrale)", nl:"Amerika (Noord/Centraal)", en:"America (North/Central)", de:"Amerika (Nord/Mittel)" },
+  continent_america_south: { fr:"Amérique (Sud)", nl:"Amerika (Zuid)", en:"America (South)", de:"Amerika (Süd)" },
+  continent_oceania: { fr:"Océanie", nl:"Oceanië", en:"Oceania", de:"Ozeanien" },
   ph_search_country: { fr:"Rechercher par NIS, ISO ou nom…", nl:"Zoeken op NIS, ISO of naam…", en:"Search NIS, ISO or name…", de:"Suche nach NIS, ISO oder Name…" },
   ph_search_commune: { fr:"Rechercher par REFNIS ou nom…", nl:"Zoeken op REFNIS of naam…", en:"Search REFNIS or name…", de:"Suche nach REFNIS oder Name…" },
   btn_clear: { fr:"Effacer", nl:"Wissen", en:"Clear", de:"Löschen" },
@@ -5216,6 +5225,13 @@ function continentNIS(nis) {
     default:  return '';
   }
 }
+// Libellé affiché (langue courante) pour un continent — la clé interne (continentNIS) reste en anglais
+const CONTINENT_LBL_KEY = {
+  'Europe': 'continent_europe', 'Asia': 'continent_asia', 'Africa': 'continent_africa',
+  'America (North/Central)': 'continent_america_north', 'America (South)': 'continent_america_south',
+  'Oceania': 'continent_oceania', 'Unknown': 'lbl_unknown',
+};
+function continentLabel(c) { return CONTINENT_LBL_KEY[c] ? t(CONTINENT_LBL_KEY[c]) : c; }
 // 27 États membres de l'UE (ISO3) — liste statique (non déductible du code)
 const EU_MEMBERS = new Set(['AUT','BEL','BGR','HRV','CYP','CZE','DNK','EST','FIN','FRA','DEU','GRC','HUN','IRL','ITA','LVA','LTU','LUX','MLT','NLD','POL','PRT','ROU','SVK','SVN','ESP','SWE']);
 // Zone NUTS Eurostat hors UE : AELE + pays candidats (NUTS0 = code 2 lettres)
@@ -5235,7 +5251,7 @@ let _paysAll = [];
 function initPays() {
   _paysAll = Object.entries(NLTY_ISO).map(([code, iso]) => {
     const iso2 = (PAYS_I18N[iso] || {}).iso2 || '';
-    return [code, iso, iso2, nuts0Code(iso, iso2), paysNom(iso), continentNIS(code), EU_MEMBERS.has(iso) ? 'EU' : ''];
+    return [code, iso, iso2, nuts0Code(iso, iso2), paysNom(iso), continentLabel(continentNIS(code)), EU_MEMBERS.has(iso) ? 'EU' : ''];
   });
   const conts = [...new Set(_paysAll.map(r => r[5]).filter(Boolean))].sort();
   document.getElementById('filtrePaysCont').innerHTML =
@@ -6524,15 +6540,16 @@ function majStats(res) {
     if (s) { nlty[r.nationality][s]++; mrtl[r.marital_status][s]++; cont[ck][s]++; eu[ek][s]++; }
   });
   renderBarresStack('statsCont', Object.entries(cont).sort((a, b) => (b[1].h + b[1].f) - (a[1].h + a[1].f))
-    .map(([c, v]) => ({ label: c, h: v.h, f: v.f })));
+    .map(([c, v]) => ({ label: continentLabel(c), h: v.h, f: v.f })));
   const euOrdre = { 'EU': 0, 'Non-EU': 1, 'Unknown': 2 };
   const euCoul = { 'EU': '#1a237e', 'Non-EU': '#f9a825', 'Unknown': '#9e9e9e' };
+  const euLbl = { 'EU': t('lbl_eu_short'), 'Non-EU': t('lbl_noneu_short'), 'Unknown': t('lbl_unknown') };
   renderDonut('statsEU', Object.entries(eu).sort((a, b) => (euOrdre[a[0]] ?? 9) - (euOrdre[b[0]] ?? 9))
-    .map(([k, v]) => ({ label: k, value: v.h + v.f, color: euCoul[k] })));
+    .map(([k, v]) => ({ label: euLbl[k] || k, value: v.h + v.f, color: euCoul[k] })));
   _maritalPop = pop;
   document.getElementById('statsMrtlDetail').innerHTML = '';   // reset détail
   renderBarres100('statsMrtl', Object.entries(mrtl).sort((a, b) => (b[1].h + b[1].f) - (a[1].h + a[1].f))
-    .map(([lib, v]) => ({ key: lib, label: lib || '—', value: v.h + v.f })), 'zoomMarital');
+    .map(([lib, v]) => ({ key: lib, label: lib ? mrtlLabel(lib) : '—', value: v.h + v.f })), 'zoomMarital');
   // Lieu de naissance en Belgique (toute nationalité) — drill-down Région → Province → Arr. → Commune.
   // On exige une région déduite d'un vrai REFNIS : exclut les « BEL » issus seulement de la
   // nationalité (REFNIS de naissance vide → pas de localisation).
@@ -6545,8 +6562,8 @@ function majStats(res) {
   const nbF = pop.filter(m => m.sexe === 'F').length;
   const nbX = pop.length - nbM - nbF;
   const sexeItems = [
-    { key: 'M', label: 'Masculin', count: nbM, color: 'var(--bar-h)' },
-    { key: 'F', label: 'Féminin',  count: nbF, color: 'var(--bar-f)' },
+    { key: 'M', label: t('gender_men'), count: nbM, color: 'var(--bar-h)' },
+    { key: 'F', label: t('gender_women'),  count: nbF, color: 'var(--bar-f)' },
   ];
   if (nbX) sexeItems.push({ key: 'X', label: '—', count: nbX, color: '#9e9e9e' });
   _genderPop = pop;
