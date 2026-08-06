@@ -1,3 +1,4 @@
+# Static GitHub Pages deployment
 name: Deploy GitHub Pages
 
 on:
