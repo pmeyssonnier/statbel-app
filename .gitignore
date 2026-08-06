@@ -1,6 +1,7 @@
 # Liste blanche stricte — ne versionner que le code + les fichiers PWA
 *
 !.gitignore
+!.nojekyll
 !README.md
 !index.html
 !statbel_converter.html
