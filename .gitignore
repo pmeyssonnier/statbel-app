@@ -15,6 +15,9 @@
 # CSS externalisé (PR découpage)
 !css/
 !css/*.css
+# Librairies vendorisées (Leaflet, SheetJS) — versions figées, hors CDN
+!vendor/
+!vendor/**
 # Tests de non-régression (dev)
 !tests/
 !tests/*.js
