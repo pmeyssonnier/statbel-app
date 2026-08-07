@@ -240,7 +240,7 @@ select[multiple]{height:120px}
   <div class="logo">📋</div>
   <div class="header-text">
     <h1>Statbel Planner</h1>
-    <p>Agenda des enquêtes Statbel — Belgium</p>
+    <p>Agenda des enquêtes Statbel — Belgium <span id="appVer" style="opacity:.55;font-weight:600"></span></p>
   </div>
   <div class="header-right">
     <span class="pill" id="hdrCount">0 groupe(s) sélectionné(s)</span>
@@ -373,7 +373,8 @@ select[multiple]{height:120px}
 
     <div class="cand-grid">
       <div class="cand-field cand-wide"><label>Enquête — sigle + période (ex. EFT 2026-T3)</label>
-        <input type="text" id="candSurvey" placeholder="EFT 2026-Q4" value="EFT 2026-T3"></div>
+        <input type="text" id="candSurvey" placeholder="EFT 2026-Q4" value="EFT 2026-T3"
+          style="font-size:16px;font-weight:700;padding:12px 14px;letter-spacing:.3px"></div>
       <div class="cand-field"><label>Nom</label><input type="text" id="candNom"></div>
       <div class="cand-field"><label>Prénom</label><input type="text" id="candPrenom"></div>
       <div class="cand-field cand-wide"><label>Adresse</label><input type="text" id="candAdresse"></div>
@@ -1662,6 +1663,10 @@ function candSaveSig(){
 }
 
 candLoadInfos();
+
+// Numéro de version (à garder aligné avec le cache du service worker, sw.js)
+const APP_VERSION = '155';
+(function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
 </body>

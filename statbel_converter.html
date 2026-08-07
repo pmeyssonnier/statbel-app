@@ -411,6 +411,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <hr>
         <button class="menu-item" data-i18n="menu_interviews" onclick="location.href='index.html'">📋 Interviews app</button>
         <button class="menu-item" data-i18n="menu_planner" onclick="location.href='statbel_planner.html'">🗓️ Statbel planner</button>
+        <hr>
+        <div class="menu-item" id="appVer" style="opacity:.55;cursor:default;pointer-events:none;text-align:center"></div>
       </div>
     </div>
     </div>
@@ -7106,6 +7108,10 @@ document.getElementById('btnRapport').addEventListener('click', () => {
     }
   } catch (e) { console.error('init():', e); }
 })();
+
+// Numéro de version (à garder aligné avec le cache du service worker, sw.js)
+const APP_VERSION = '155';
+(function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
 </body>
