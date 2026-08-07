@@ -12,6 +12,9 @@
 !icon-192.png
 !icon-512.png
 !icon-512-mask.png
+# Tests de non-régression (dev)
+!tests/
+!tests/*.js
 
 # Données personnelles : jamais (sécurité renforcée)
 *.csv

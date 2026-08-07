@@ -2939,13 +2939,12 @@ function ouvrirModalImport(parsed, defaultName) {
 // Retourne { result:[...], exclus:[{c,raisons,garde}] }.
 function preparerImport(rawRows, nom) {
   const old = enquetes[nom];
-  const mapOld = {};
-  if (old) old.forEach(c => { mapOld[_contactKey(c)] = c; });
+  const match = apparieurAnciens(old || []);
   const chk = document.getElementById('chkOnlyValid');
   const onlyValid = chk ? chk.checked : false;
   const result = [], exclus = [];
   (rawRows || []).forEach(neu => {
-    const o = mapOld[_contactKey(neu)];
+    const o = match(neu);
     if (onlyValid && recordEnErreur(neu)) {
       const raisons = raisonsErreur(neu);
       if (o) { result.push(o); exclus.push({ c: neu, raisons, garde: true }); }   // existant → conservé
@@ -3623,8 +3622,8 @@ function trierHistorique(c) {
 function syncStatutCourant(c) {
   if (!Array.isArray(c.historique)) return;
   const cd = statutDef(c.statut || '');
-  if (c.statut && cd.done && c.date && !c.historique.some(h => h.statut === c.statut)) {
-    c.historique.push({ statut: c.statut, date: c.date });   // statut importé jamais historisé → on le garde
+  if (c.statut && cd.done && c.date && !c.historique.some(h => h.statut === c.statut && h.date === c.date)) {
+    c.historique.push({ statut: c.statut, date: c.date });   // statut importé jamais historisé (à cette date) → on le garde
     trierHistorique(c);
   }
   if (!c.historique.length) return;
@@ -3678,7 +3677,7 @@ function ajouterHistorique(i) {
   const dCur = statutDef(c.statut || '');
   // Archiver d'abord le statut courant « terminé » jamais historisé (ex. importé),
   // sinon il serait perdu quand le statut courant prendra la nouvelle entrée.
-  if (c.statut && dCur.done && c.date && !c.historique.some(h => h.statut === c.statut)) {
+  if (c.statut && dCur.done && c.date && !c.historique.some(h => h.statut === c.statut && h.date === c.date)) {
     c.historique.push({ statut: c.statut, date: c.date });
   }
   const defaut = (dCur && (dCur.done || dCur.rdv)) ? c.statut
@@ -4545,6 +4544,55 @@ function _contactKey(c) {
   return `adr:${(c.adresse || '').toString().trim().toLowerCase()}`;
 }
 
+// Appariement hiérarchique d'un nouveau contact avec un ancien, pour préserver
+// le suivi (historique / statut / date / RDV) même si le nom/prénom a été
+// corrigé, l'ordre changé, etc. Priorité :
+//   1. numéro d'ordre (s'il existe et est UNIQUE côté ancien)
+//   2. nom + prénom + date de naissance
+//   3. nom + prénom + adresse normalisée
+//   4. adresse seule (uniquement pour les contacts sans ordre ni nom ni prénom)
+//   sinon → nouveau contact
+// Chaque ancien contact ne peut être apparié qu'une seule fois.
+// Retourne une fonction match(neu) → ancien|null, dotée de .restants().
+function apparieurAnciens(oldArr) {
+  const used = new Set();
+  const norm    = s => (s == null ? '' : String(s)).trim().toLowerCase();
+  const normAdr = s => norm(s).replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim();
+  const byOrdre = new Map(), byNPB = new Map(), byNPA = new Map(), byAdr = new Map();
+  const add = (m, k, c) => { if (!k) return; const l = m.get(k); if (l) l.push(c); else m.set(k, [c]); };
+  (oldArr || []).forEach(c => {
+    const ord = norm(c.ordre), nom = norm(c.nom), pre = norm(c.prenom);
+    add(byOrdre, ord, c);
+    if (nom || pre) {
+      const np = nom + '' + pre;
+      add(byNPB, np + '' + norm(c.birth_date), c);   // clé nulle ignorée par add() si naissance vide
+      add(byNPA, np + '' + normAdr(c.adresse), c);
+    } else {
+      add(byAdr, normAdr(c.adresse), c);                   // ni ordre ni identité → adresse seule
+    }
+  });
+  const firstFree = l => { if (l) for (const c of l) if (!used.has(c)) return c; return null; };
+  const take = c => { if (c) used.add(c); return c; };
+  const match = function (neu) {
+    const ord = norm(neu.ordre), nom = norm(neu.nom), pre = norm(neu.prenom);
+    if (ord) { const l = byOrdre.get(ord); if (l && l.length === 1 && !used.has(l[0])) return take(l[0]); }
+    if (nom || pre) {
+      const np = nom + '' + pre;
+      const bd = norm(neu.birth_date);
+      let c = bd ? firstFree(byNPB.get(np + '' + bd)) : null;
+      if (c) return take(c);
+      c = firstFree(byNPA.get(np + '' + normAdr(neu.adresse)));
+      if (c) return take(c);
+    } else {
+      const c = firstFree(byAdr.get(normAdr(neu.adresse)));
+      if (c) return take(c);
+    }
+    return null;
+  };
+  match.restants = () => (oldArr || []).filter(c => !used.has(c));
+  return match;
+}
+
 // Champs comparés pour détecter une "modification" (les champs purement
 // d'horodatage ou de cache ne sont pas pris en compte)
 const _CHAMPS_COMPARES = [
@@ -4661,28 +4709,18 @@ function buildCompareHTML(src, meta) {
     const arrNew = src[nom] || [];
     const arrOld = enquetes[nom] || null; // null = enquête entièrement nouvelle
 
-    const mapOld = {};
-    if (arrOld) arrOld.forEach(c => { mapOld[_contactKey(c)] = c; });
-    const mapNew = {};
-    arrNew.forEach(c => { mapNew[_contactKey(c)] = c; });
-
+    const match = apparieurAnciens(arrOld || []);
     const rowsAdd = [], rowsRem = [], rowsMod = [];
     let unch = 0;
 
     arrNew.forEach(c => {
-      const k = _contactKey(c);
-      const old = mapOld[k];
+      const old = arrOld ? match(c) : null;
       if (!old) { rowsAdd.push(c); return; }
       const diffs = _diffContacts(old, c);
       if (diffs.length) rowsMod.push({ c, old, diffs });
       else unch++;
     });
-    if (arrOld) {
-      arrOld.forEach(c => {
-        const k = _contactKey(c);
-        if (!mapNew[k]) rowsRem.push(c);
-      });
-    }
+    if (arrOld) match.restants().forEach(c => rowsRem.push(c));
 
     totAdd += rowsAdd.length;
     totRem += rowsRem.length;
@@ -4869,12 +4907,11 @@ function majComparaisonRestore() {
   const exclus = [];   // {c, raisons, garde}
   Object.entries(_restoreRaw).forEach(([n, arr]) => {
     if (!onlyValid) { filtered[n] = arr; return; }
-    const cur = enquetes[n]; const mapCur = {};
-    if (cur) cur.forEach(c => { mapCur[_contactKey(c)] = c; });
+    const cur = enquetes[n]; const trouver = apparieurAnciens(cur || []);
     const out = [];
     arr.forEach(rec => {
       if (recordEnErreur(rec)) {
-        const o = mapCur[_contactKey(rec)];
+        const o = trouver(rec);
         if (o) { out.push(o); exclus.push({ c: rec, raisons: raisonsErreur(rec), garde: true }); }  // existant conservé
         else exclus.push({ c: rec, raisons: raisonsErreur(rec), garde: false });                    // non restauré
       } else out.push(rec);
@@ -4946,10 +4983,9 @@ function importerBackup(event) {
           let arr = _pendingRestore[n];
           if (preserver && enquetes[n]) {
             // Conserver historique + RDV (et statut/date) des contacts appariés déjà suivis
-            const mapOld = {};
-            enquetes[n].forEach(c => { mapOld[_contactKey(c)] = c; });
+            const trouver = apparieurAnciens(enquetes[n]);
             arr = arr.map(neu => {
-              const o = mapOld[_contactKey(neu)];
+              const o = trouver(neu);
               if (!o) return neu;
               const travaille = (Array.isArray(o.historique) && o.historique.length)
                 || (o.statut && o.statut !== statutDefaut()) || o.rdv;
@@ -5104,8 +5140,12 @@ function modifierStatut(idx, field, value) {
   if (field === 'label') {
     const old = st.label, nw = (value || '').trim() || old;
     if (nw !== old) {
-      // Migrer les contacts existants vers le nouveau libellé
-      Object.values(enquetes).forEach(arr => arr.forEach(c => { if ((c.statut||'') === old) c.statut = nw; }));
+      // Migrer les contacts existants vers le nouveau libellé (statut courant
+      // ET historique, sinon les entrées d'historique deviennent orphelines).
+      Object.values(enquetes).forEach(arr => arr.forEach(c => {
+        if ((c.statut || '') === old) c.statut = nw;
+        if (Array.isArray(c.historique)) c.historique.forEach(h => { if (h.statut === old) h.statut = nw; });
+      }));
       if (filtreActif === old) filtreActif = nw;
       st.label = nw;
       sauver();
@@ -5136,6 +5176,8 @@ function supprimerStatut(idx) {
   let migres = 0;
   Object.values(enquetes).forEach(arr => arr.forEach(c => {
     if ((c.statut || '') === st.label) { c.statut = repli; migres++; }
+    // Migrer aussi les entrées d'historique vers le statut de repli
+    if (Array.isArray(c.historique)) c.historique.forEach(h => { if (h.statut === st.label) { h.statut = repli; migres++; } });
   }));
   if (filtreActif === st.label) filtreActif = 'Tous';
   if (migres) sauver();
