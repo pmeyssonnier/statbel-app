@@ -302,10 +302,39 @@ function idbTx(tx) {
 }
 
 /** Sauvegarde toutes les enquêtes dans IndexedDB (fire-and-forget) */
+// Indicateur d'état de sauvegarde (en-tête) : ⏳ en cours · ✓ enregistré · ⚠️ erreur
+let _saveErrAlerted = false;
+function majEtatSauvegarde(etat) {
+  const el = document.getElementById('saveState');
+  if (!el) return;
+  const map = {
+    saving: { t: '⏳', c: '#888',    title: 'Enregistrement…' },
+    ok:     { t: '✓',  c: '#2e7d32', title: 'Modifications enregistrées' },
+    error:  { t: '⚠️', c: '#c62828', title: 'Erreur de stockage — faites une sauvegarde JSON' },
+  }[etat] || {};
+  el.textContent = map.t || '';
+  el.style.color = map.c || '';
+  el.title = map.title || '';
+  el.dataset.state = etat || '';
+}
+
+function signalerEchecSauvegarde(e) {
+  console.error('sauvegarde impossible:', e);
+  majEtatSauvegarde('error');
+  if (!_saveErrAlerted) {   // une seule alerte bloquante ; l'indicateur ⚠️ reste visible ensuite
+    _saveErrAlerted = true;
+    const msg = (typeof t === 'function' && t('al_save_failed') !== 'al_save_failed')
+      ? t('al_save_failed')
+      : '⚠️ Les dernières modifications n\'ont pas pu être enregistrées.\nFaites une sauvegarde JSON (⋮ → Sauvegarder) dès que possible.';
+    try { alert(msg); } catch(_) {}
+  }
+}
+
 async function sauver() {
+  majEtatSauvegarde('saving');
   if (!db) {
     // db pas encore prête : on attend l'initialisation au lieu d'abandonner
-    try { await ouvrirDB(); } catch(e) { console.error('sauver(): DB indisponible', e); return; }
+    try { await ouvrirDB(); } catch(e) { signalerEchecSauvegarde(e); return; }
   }
   try {
     const tx    = db.transaction('enquetes', 'readwrite');
@@ -316,7 +345,9 @@ async function sauver() {
     }
     await idbTx(tx);
     localStorage.setItem('statbel_active', enqueteActive);
-  } catch(e) { console.error('sauver() erreur:', e); }
+    majEtatSauvegarde('ok');
+    _saveErrAlerted = false;
+  } catch(e) { signalerEchecSauvegarde(e); }
 }
 
 /** Charge toutes les enquêtes depuis IndexedDB, avec migration localStorage → IDB */
@@ -435,6 +466,7 @@ let enquetes      = {};
 let enqueteActive = '';
 let filtreActif   = 'Tous';
 let csvEnAttente  = null;
+let coordsEnAttente = null;   // coords d'import en attente (écrites à la confirmation)
 
 function contacts() { return enquetes[enqueteActive] || []; }
 
@@ -1403,7 +1435,7 @@ function parseCSV(text) {
     .filter(x => x.h && !used.has(x.i))
     .map(x => x.h);
 
-  const g = (cols, i) => i >= 0 ? (cols[i]||'').trim() : '';
+  const g = (cols, i) => i >= 0 ? csvDeguard((cols[i]||'').trim()) : '';
   const bodyRows = nonEmpty.slice(1);
   const rows = [];
   const motifs = { sansIdentite: 0, adresseVide: 0, doublonOrdre: 0 };
@@ -1455,11 +1487,11 @@ function parseCSV(text) {
       ...(histArr.length ? { historique: histArr } : {}),
     });
   });
-  // Pré-remplit le cache de coordonnées : les fiches importées avec lat/lng
-  // n'auront pas à être re-géocodées (adresses nominatives non ré-envoyées).
-  coordsAImporter.forEach(c => { try { saveCoords(c.adresse, c.lat, c.lng); } catch(e){} });
+  // Les coordonnées ne sont PAS écrites ici : elles ne le seront qu'à la
+  // confirmation de l'import (sinon un simple aperçu puis Annuler modifierait
+  // déjà le cache). On les retourne pour application dans confirmerImport().
   const rejetees = motifs.sansIdentite + motifs.adresseVide + motifs.doublonOrdre;
-  return { rows, stats: { lues: bodyRows.length, importees: rows.length, rejetees, motifs, rejets, reconnues, nonReconnues } };
+  return { rows, coords: coordsAImporter, stats: { lues: bodyRows.length, importees: rows.length, rejetees, motifs, rejets, reconnues, nonReconnues } };
 }
 
 function splitLine(line, sep) {
@@ -1502,6 +1534,7 @@ function importerFichier(event) {
 
 function ouvrirModalImport(parsed, defaultName) {
   csvEnAttente = parsed.rows;
+  coordsEnAttente = parsed.coords || [];   // appliquées seulement à la confirmation
   document.getElementById('importApercu').innerHTML = renderImportApercu(parsed.stats);
   document.getElementById('inputNomEnquete').value = defaultName;
   document.getElementById('modalNom').classList.add('open');
@@ -1635,7 +1668,10 @@ function confirmerImport() {
   // (un erroné déjà présent est conservé tel quel, jamais supprimé).
   enquetes[nom] = preparerImport(csvEnAttente, nom).result;
   enqueteActive = nom;
+  // Cache de coordonnées écrit MAINTENANT (après confirmation), pas au parse
+  (coordsEnAttente || []).forEach(c => { try { saveCoords(c.adresse, c.lat, c.lng); } catch(e){} });
   csvEnAttente  = null;
+  coordsEnAttente = null;
   fermerModal();
   sauver();
   refreshSelect();
@@ -1647,6 +1683,7 @@ function confirmerImport() {
 function fermerModal() {
   document.getElementById('modalNom').classList.remove('open');
   csvEnAttente = null;
+  coordsEnAttente = null;   // annulation : ne pas écrire les coords en attente
 }
 
 
@@ -1654,8 +1691,15 @@ function fermerModal() {
 // EXPORT — CSV et vCard
 // ════════════════════════════════════════════════════════════════════
 
+// Injection de formule CSV : une cellule commençant par = + - @ (ou tab)
+// peut être interprétée comme formule à l'ouverture dans Excel. On la préfixe
+// d'une apostrophe (neutralise dans Excel). Réversible : csvDeguard() retire
+// exactement ce préfixe à la ré-importation → round-trip préservé.
+function csvGuard(s)   { return /^[=+\-@\t\r]/.test(s) ? "'" + s : s; }
+function csvDeguard(s) { return /^'[=+\-@\t\r]/.test(s) ? s.slice(1) : s; }
+
 function csvCell(v) {
-  const str = (v||'').toString().trim();
+  const str = csvGuard((v||'').toString().trim());
   const escaped = str.replace(/"/g,'""');
   // Guillemets si la cellule contient un séparateur possible (, ou ;), un guillemet ou un saut de ligne
   return /[,;"\r\n]/.test(str) || escaped !== str ? '"'+escaped+'"' : escaped;
@@ -2331,7 +2375,7 @@ function changerDateHistorique(i, idx, val) {
   val = (val || '').trim();
   // Valider le format jj/mm/aaaa
   const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12) {
+  if (!m || !jourValide(+m[3], +m[2], +m[1])) {
     alert(t('al_date_invalid'));
     rafraichirHistorique(i);
     return;
@@ -3180,6 +3224,14 @@ const _CHAMPS_COMPARES = [
 ];
 
 // Vrai si la valeur d'un champ est incohérente (pour barrer en rouge dans la comparaison)
+// Vraie validité calendaire (rejette 31/02, 31/04, 29/02 hors bissextile…)
+// via un aller-retour Date, plutôt qu'un simple jour<=31 / mois<=12.
+function jourValide(y, m, d) {
+  if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return false;
+  const dt = new Date(y, m - 1, d);
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+}
+
 function valeurIncoherente(champ, val) {
   const v = (val == null ? '' : val).toString().trim();
   if (!v) return false;
@@ -3188,8 +3240,8 @@ function valeurIncoherente(champ, val) {
   if (champ === 'statut') return !statutDefs().some(s => s.label === v);
   if (champ === 'birth_date') {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return true;
-    const [, m, d] = v.split('-').map(Number);
-    return m < 1 || m > 12 || d < 1 || d > 31;
+    const [y, m, d] = v.split('-').map(Number);
+    return !jourValide(y, m, d);
   }
   return false;
 }

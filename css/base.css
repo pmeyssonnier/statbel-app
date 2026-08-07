@@ -398,6 +398,7 @@
     margin-right:2px;
   }
   .net-indicator.offline { background:#e53935; }
+  .save-state { font-size:14px; font-weight:700; line-height:1; margin-right:2px; flex-shrink:0; }
 
   /* Bandeau de rappel de sauvegarde (non-modal, dans la liste) */
   .backup-banner {
