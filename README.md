@@ -1,9 +1,11 @@
 # Statbel — Suite d'outils enquêtes
 
-Trois applications **mono-fichier** (HTML/CSS/JS, **sans dépendance ni build**), pensées
-pour un usage **terrain, hors-ligne**. Chacune s'ouvre dans un navigateur (double-clic,
-`file://`) ou s'installe en **PWA** (GitHub Pages), et les trois sont reliées entre elles
-(navigation croisée dans l'en-tête / le menu).
+Trois applications web **sans build ni dépendance externe** (tout est vendoré), pensées
+pour un usage **terrain, hors-ligne**, reliées entre elles (navigation croisée dans
+l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
+
+- **Convertisseur** et **Planner** restent **mono-fichier** (un seul `.html`) : ouvrables par simple double-clic (`file://`).
+- **Interviews** est découpé en **modules ES** (voir [Architecture](#architecture-modules-es-sans-build)) : il doit être **servi en http(s)** (PWA / Pages, ou un serveur statique local) — les modules ES ne se chargent pas en `file://`.
 
 | App | Fichier | Rôle |
 |---|---|---|
@@ -45,6 +47,36 @@ Suivi des contacts à interviewer dans le cadre des enquêtes Statbel.
 ### Interface
 - **Multilingue FR / NL / EN / DE** (pivot interne = anglais ; détection au 1er lancement).
 - **Apparence** : police, taille du texte, thème. **Verrouillage par code PIN** (optionnel).
+
+### Architecture (modules ES, sans build)
+
+`index.html` charge `js/app.js` comme **module ES** (`<script type="module">`), qui orchestre
+**16 modules**. Aucun bundler : les fichiers sont servis tels quels et pré-cachés par le
+service worker.
+
+| Dossier | Modules |
+|---|---|
+| `js/core/` | **util** (helpers purs) · **i18n** (dictionnaire FR/NL/EN/DE + `t()`) |
+| `js/data/` | **idb** (persistance IndexedDB + localStorage) · **csv** (import/export CSV) · **canon** (canonicalisation pays / état civil / statuts + libellés) |
+| `js/features/` | **geocoding** (fournisseurs carte/géocodage régionaux) · **history** (historique des visites) · **import** (CSV/XLSX + appariement/comparaison) · **backup** (sauvegarde/restauration JSON) |
+| `js/ui/` | **pin** (verrouillage) · **stats** (graphes & journal) · **settings** (réglages + éditeur de statuts) · **map** (carte Leaflet) · **contacts** (liste & fiche) · **rdv** (vue Suivi) · **resume** (vue Résumé) |
+
+- **`js/app.js`** — orchestration : état, accesseurs, gestion des enquêtes, `setView`, thème/langue, cache géo, `init`.
+- **`css/`** — styles (`base`, `summary`, `modals`, `mobile`) · **`vendor/`** — Leaflet + SheetJS vendorés (aucun CDN).
+
+Les modules communiquent par `import`/`export` ; les fonctions attendues par les gestionnaires
+`onclick=` du HTML et par les tests sont réexposées au global par un **pont de compatibilité**
+dans `app.js`.
+
+### Tests
+
+`tests/` — tests **headless** (`playwright-core`, servis via un petit serveur http local
+`tests/_serve.js`) : non-régression sur l'**intégrité des données**, la **robustesse** (CSV,
+dates, cache), le **confort**, la **sauvegarde**, la **CSP** et le **PIN**.
+
+```
+CHROMIUM_PATH=/chemin/vers/chrome node tests/data-integrity.test.js
+```
 
 ---
 
@@ -89,8 +121,10 @@ XML tokenisé, ZIP + CRC32) :
 - Toutes les données restent **dans le navigateur** (IndexedDB / localStorage) — **aucun serveur**.
 - Géocodage par **services publics belges** (UrbIS/CIRB · Bruxelles, SPW · Wallonie, Geopunt · Flandre ; OSM/Nominatim en repli) — pas de transfert hors UE.
 - ⚠️ **Aucune donnée personnelle n'est versionnée** : `.gitignore` en **liste blanche stricte**
-  (seuls le code HTML des apps, les fichiers PWA, `README.md` et `.gitignore`). Les
-  CSV / JSON / vCard / xlsx d'enquêtés sont exclus.
+  (seuls le code des apps — HTML, `css/`, `js/`, `vendor/`, `tests/` —, les fichiers PWA,
+  `README.md` et `.gitignore`). Les CSV / JSON / vCard / xlsx d'enquêtés sont exclus.
+- **CSP** (Content-Security-Policy) sur les trois pages : sources verrouillées sur l'origine,
+  connexions réseau limitées aux seuls géocodeurs régionaux (aucun script/style externe — tout est vendoré).
 
 ## Déploiement
 
