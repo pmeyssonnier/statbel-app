@@ -9,6 +9,7 @@
  */
 import { csvGuard, csvDeguard } from '../core/util.js';
 import { coordsCache } from './idb.js';
+import { statutCanon, normaliserPays, maritalCanon } from './canon.js';
 
 
 
