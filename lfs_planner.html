@@ -236,7 +236,12 @@ select[multiple]{height:120px}
 .cand-preview th{text-align:left;color:var(--ink3);font-weight:600;padding:3px 6px;border-bottom:1px solid var(--border)}
 .cand-preview td{padding:3px 6px;border-bottom:1px solid #eef0f2;color:var(--ink)}
 .cand-preview tr:last-child td{border-bottom:none}
-@media(max-width:640px){.cand-grid{grid-template-columns:1fr}}
+.cand-modal{position:fixed;inset:0;background:rgba(15,20,30,.5);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;z-index:1000;overflow:auto}
+.cand-modal-box{background:var(--card);border-radius:var(--radius);box-shadow:0 16px 48px rgba(0,0,0,.28);max-width:780px;width:100%;padding:22px 24px;margin:auto;position:relative}
+.cand-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
+.cand-close{border:none;background:none;font-size:26px;line-height:1;color:var(--ink3);cursor:pointer;padding:0 6px;border-radius:6px}
+.cand-close:hover{background:var(--v1l);color:var(--ink)}
+@media(max-width:640px){.cand-grid{grid-template-columns:1fr}.cand-modal{padding:12px 8px}.cand-modal-box{padding:18px 16px}}
 </style>
 </head>
 <body>
@@ -251,7 +256,7 @@ select[multiple]{height:120px}
     <span class="pill" id="hdrCount">0 groupe(s) sélectionné(s)</span>
     <a class="pill" href="index.html" title="App enquête" style="text-decoration:none">📋 Enquête</a>
     <a class="pill" href="statbel_converter.html" title="Convertisseur" style="text-decoration:none">🔄 Convertisseur</a>
-    <a class="pill" href="#candidatureCard" title="Candidature enquêteur" style="text-decoration:none" onclick="document.getElementById('candidatureCard').scrollIntoView({behavior:'smooth'});return false">📝 Candidature</a>
+    <a class="pill" href="#" title="Candidature enquêteur" style="text-decoration:none" onclick="openCandidature();return false">📝 Candidature</a>
   </div>
 </header>
 
@@ -336,6 +341,7 @@ select[multiple]{height:120px}
         <button class="nav-btn" onclick="exportCsvApp()" title="Export CSV pour enquetes_statbel.html" style="border-color:#1a237e;color:#1a237e;font-weight:600">⬇️ CSV App</button>
         <button class="nav-btn" onclick="exportIcs()" title="Exporter vers Google Agenda / iCal" style="border-color:#7b22cc;color:#7b22cc;font-weight:600">📅 iCal</button>
         <button class="nav-btn" onclick="exportChevauchements()" title="Exporter les chevauchements" style="border-color:#f57f17;color:#f57f17;font-weight:600">⚠️ Chevauch.</button>
+        <button class="nav-btn" onclick="openCandidature()" title="Candidature enquêteur (formulaire officiel .docx)" style="border-color:#7b22cc;color:#7b22cc;font-weight:600">📝 Candidature</button>
       </div>
     </div>
 
@@ -363,11 +369,15 @@ select[multiple]{height:120px}
     </div>
   </div>
 
-  <!-- 4. Candidature enquêteur -->
-  <div class="card" id="candidatureCard" style="border-left:4px solid #7b22cc">
-    <div class="card-title"><span>📝</span> Candidature enquêteur — <span style="color:#7b22cc">EFT 2026-T3</span></div>
+  <!-- 4. Candidature enquêteur (modale, ouverte via le bouton 📝 Candidature) -->
+  <div id="candModal" class="cand-modal" style="display:none" onclick="if(event.target===this)closeCandidature()">
+   <div class="cand-modal-box" role="dialog" aria-modal="true" aria-label="Candidature enquêteur">
+    <div class="cand-modal-head">
+      <div class="card-title" style="margin:0"><span>📝</span> Candidature enquêteur — <span style="color:#7b22cc">EFT 2026-T3</span></div>
+      <button class="cand-close" onclick="closeCandidature()" title="Fermer" aria-label="Fermer">×</button>
+    </div>
     <p style="font-size:12px;color:var(--ink3);margin:0 0 14px">
-      Remplit le formulaire officiel de candidature avec vos coordonnées et les groupes sélectionnés ci-dessus.
+      Remplit le formulaire officiel de candidature avec vos coordonnées et les groupes sélectionnés.
       Vos informations personnelles sont mémorisées sur cet appareil.
     </p>
 
@@ -405,6 +415,7 @@ select[multiple]{height:120px}
       <button onclick="genererCandidature()" style="padding:9px 18px;border-radius:8px;border:1px solid #7b22cc;background:#7b22cc;color:#fff;font-size:13px;font-weight:700;cursor:pointer">⬇️ Générer la candidature (.docx)</button>
       <span style="font-size:11px;color:var(--ink3)">Modèle officiel EFT 2026-T3 — s'ouvre dans Word / LibreOffice</span>
     </div>
+   </div>
   </div>
 
 
@@ -1508,6 +1519,20 @@ function genererCandidature(){
     candSaveInfos();
     afficherToast('📝 Candidature générée !');
   }catch(e){ alert('Erreur lors de la génération : '+e.message); }
+}
+
+function candEscHandler(e){ if(e.key==='Escape') closeCandidature(); }
+function openCandidature(){
+  const m=document.getElementById('candModal');
+  if(!m) return;
+  updateCandidaturePreview();
+  m.style.display='flex';
+  document.addEventListener('keydown', candEscHandler);
+}
+function closeCandidature(){
+  const m=document.getElementById('candModal');
+  if(m) m.style.display='none';
+  document.removeEventListener('keydown', candEscHandler);
 }
 
 candLoadInfos();
