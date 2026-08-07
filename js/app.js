@@ -330,6 +330,7 @@ function signalerEchecSauvegarde(e) {
   }
 }
 
+let _lastSaved = {};   // nom -> JSON du dernier état persisté (n'écrire que le modifié)
 async function sauver() {
   majEtatSauvegarde('saving');
   if (!db) {
@@ -339,11 +340,21 @@ async function sauver() {
   try {
     const tx    = db.transaction('enquetes', 'readwrite');
     const store = tx.objectStore('enquetes');
-    await idbReq(store.clear());
+    // N'écrire QUE les enquêtes modifiées depuis la dernière sauvegarde
+    // (au lieu d'un clear() + réécriture complète à chaque petit changement).
+    const aEcrire = [];
     for (const [nom, cts] of Object.entries(enquetes)) {
-      store.put({ nom, contacts: cts });
+      const snap = JSON.stringify(cts);
+      if (_lastSaved[nom] !== snap) { store.put({ nom, contacts: cts }); aEcrire.push([nom, snap]); }
     }
+    // Supprimer les enquêtes retirées
+    const aSupprimer = Object.keys(_lastSaved).filter(nom => !(nom in enquetes));
+    aSupprimer.forEach(nom => store.delete(nom));
     await idbTx(tx);
+    // Transaction validée → on mémorise l'état persisté. Jamais avant : sinon un
+    // échec ferait « oublier » une écriture non faite (= perte silencieuse).
+    aEcrire.forEach(([nom, snap]) => { _lastSaved[nom] = snap; });
+    aSupprimer.forEach(nom => { delete _lastSaved[nom]; });
     localStorage.setItem('statbel_active', enqueteActive);
     majEtatSauvegarde('ok');
     _saveErrAlerted = false;
@@ -1469,7 +1480,7 @@ function parseCSV(text) {
       return e;
     });
     rows.push({
-      ordre:          ordreVal || String(rows.length+1).padStart(2,'0'),
+      ordre:          ordreVal,   // vide si absent : ne PAS inventer un numéro (collision + faux appariement) — l'appariement se fait alors par nom/naissance/adresse
       prenom, nom, adresse,
       statut:         statutCanon(g(cols,map.statut)) || 'To do',
       date:           g(cols,map.date),
@@ -2862,7 +2873,7 @@ function fermerSettings() { document.getElementById('modalSettings').classList.r
 // Contenu de l'aide par langue (HTML). La ligne de version est ajoutée par renderAide().
 const AIDE_HTML = {
   fr: `
-    <p>Cette application aide les <strong>enquêteurs Statbel</strong> à suivre leurs contacts à interviewer (enquête sur les forces de travail, LFS). Tout fonctionne <strong>dans votre navigateur</strong> : aucune donnée n'est envoyée vers un serveur, et l'application reste utilisable hors-ligne une fois chargée.</p>
+    <p>Cette application aide les <strong>enquêteurs Statbel</strong> à suivre leurs contacts à interviewer (enquête sur les forces de travail, LFS). Tout fonctionne <strong>dans votre navigateur</strong> : vos données de suivi restent <strong>stockées localement</strong> (aucune donnée personnelle n'est envoyée à un serveur). Seul le <strong>géocodage</strong> transmet l'adresse postale (sans numéro de boîte) au service géographique public belge de la région concernée. L'application reste utilisable hors-ligne une fois chargée.</p>
     <h3>🗂️ Enquêtes &amp; import</h3>
     <ul>
       <li>Importez vos contacts depuis un fichier <strong>CSV ou Excel</strong> (menu ⋮ → Importer).</li>
@@ -2895,7 +2906,7 @@ const AIDE_HTML = {
       <li>Langue, thème et taille du texte se règlent dans les Paramètres.</li>
     </ul>`,
   nl: `
-    <p>Deze app helpt <strong>Statbel-enquêteurs</strong> bij het opvolgen van hun te interviewen contacten (enquête naar de arbeidskrachten, LFS). Alles werkt <strong>in uw browser</strong>: er worden geen gegevens naar een server gestuurd en de app blijft offline bruikbaar na het laden.</p>
+    <p>Deze app helpt <strong>Statbel-enquêteurs</strong> bij het opvolgen van hun te interviewen contacten (enquête naar de arbeidskrachten, LFS). Alles werkt <strong>in uw browser</strong>: uw opvolggegevens blijven <strong>lokaal opgeslagen</strong> (er worden geen persoonsgegevens naar een server gestuurd). Enkel bij het <strong>geocoderen</strong> wordt het postadres (zonder busnummer) doorgestuurd naar de bevoegde Belgische openbare geografische dienst van het gewest. De app blijft offline bruikbaar na het laden.</p>
     <h3>🗂️ Enquêtes &amp; import</h3>
     <ul>
       <li>Importeer uw contacten uit een <strong>CSV- of Excel-bestand</strong> (menu ⋮ → Importeren).</li>
@@ -2928,7 +2939,7 @@ const AIDE_HTML = {
       <li>Taal, thema en tekstgrootte stelt u in bij de Instellingen.</li>
     </ul>`,
   en: `
-    <p>This app helps <strong>Statbel field interviewers</strong> track the contacts they need to interview (Labour Force Survey, LFS). Everything runs <strong>in your browser</strong>: no data is sent to a server, and the app stays usable offline once loaded.</p>
+    <p>This app helps <strong>Statbel field interviewers</strong> track the contacts they need to interview (Labour Force Survey, LFS). Everything runs <strong>in your browser</strong>: your tracking data stays <strong>stored locally</strong> (no personal data is sent to a server). Only <strong>geocoding</strong> sends the postal address (without box number) to the relevant Belgian public geographic service for the region. The app stays usable offline once loaded.</p>
     <h3>🗂️ Surveys &amp; import</h3>
     <ul>
       <li>Import your contacts from a <strong>CSV or Excel file</strong> (⋮ menu → Import).</li>
@@ -2961,7 +2972,7 @@ const AIDE_HTML = {
       <li>Language, theme and text size are set in Settings.</li>
     </ul>`,
   de: `
-    <p>Diese Anwendung hilft <strong>Statbel-Befragern</strong>, ihre zu befragenden Kontakte zu verfolgen (Arbeitskräfteerhebung, LFS). Alles läuft <strong>in Ihrem Browser</strong>: Es werden keine Daten an einen Server gesendet, und die App bleibt nach dem Laden offline nutzbar.</p>
+    <p>Diese Anwendung hilft <strong>Statbel-Befragern</strong>, ihre zu befragenden Kontakte zu verfolgen (Arbeitskräfteerhebung, LFS). Alles läuft <strong>in Ihrem Browser</strong>: Ihre Nachverfolgungsdaten bleiben <strong>lokal gespeichert</strong> (es werden keine personenbezogenen Daten an einen Server gesendet). Nur bei der <strong>Geokodierung</strong> wird die Postanschrift (ohne Busnummer) an den zuständigen belgischen öffentlichen Geodienst der Region übermittelt. Die App bleibt nach dem Laden offline nutzbar.</p>
     <h3>🗂️ Umfragen &amp; Import</h3>
     <ul>
       <li>Importieren Sie Ihre Kontakte aus einer <strong>CSV- oder Excel-Datei</strong> (Menü ⋮ → Importieren).</li>
