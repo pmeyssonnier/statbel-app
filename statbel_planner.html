@@ -360,7 +360,7 @@ select[multiple]{height:120px}
   </div>
 
   <!-- 4. Candidature enquêteur (modale, ouverte via le bouton 📝 Candidature) -->
-  <div id="candModal" class="cand-modal" style="display:none" onclick="if(event.target===this)closeCandidature()">
+  <div id="candModal" class="cand-modal" style="display:none">
    <div class="cand-modal-box" role="dialog" aria-modal="true" aria-label="Candidature enquêteur">
     <div class="cand-modal-head">
       <div class="card-title" style="margin:0"><span>📝</span> Candidature enquêteur</div>
@@ -1665,7 +1665,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '159';
+const APP_VERSION = '160';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
