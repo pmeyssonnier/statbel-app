@@ -1,0 +1,55 @@
+  /* ── Mobile : champs en colonne ──────────────────────────────────── */
+  @media (max-width: 599px) {
+    .edit-area [style*="display:flex;gap:10px"] { flex-direction: column !important; }
+    .edit-area [style*="display:flex;gap:10px"] .edit-row { flex: 1 1 100% !important; width: 100% !important; }
+    .edit-area [style*="display:flex;gap:10px"] .edit-row input { max-width: 100% !important; width: 100% !important; }
+    .email-wrap input { width: 100% !important; }
+    /* iOS Safari zoome à la prise de focus si la police < 16px : on force 16px
+       sur les champs de saisie en mobile (évite le zoom parasite en pleine saisie). */
+    input, select, textarea,
+    .edit-row input, .demo-item input, .demo-item select,
+    .search-bar input, .rdv-search input, .extra-area textarea { font-size: 16px !important; }
+  }
+
+  /* ── Tablette ≥ 600px ─────────────────────────────────────────────── */
+  @media (min-width: 600px) {
+    header { padding: 10px 20px; }
+    header h1 { font-size: 18px; }
+    #surveySelect { font-size: 14px; padding: 6px 10px; }
+    .search-bar { padding: 8px 20px; }
+    .search-bar input { font-size: 15px; padding: 9px 14px 9px 36px; }
+    .filters { padding: 10px 20px; gap: 8px; }
+    .filter-btn { font-size: 13px; padding: 6px 16px; }
+    .contact-list { padding: 14px 20px; gap: 14px; }
+    .card { padding: 14px 18px; }
+    .card-name { font-size: 17px; }
+    .card-ordre { font-size: 13px; }
+    .card-adresse { font-size: 14px; }
+    .badge { font-size: 12px; }
+    .s-btn { font-size: 12px; padding: 5px 12px; }
+    .edit-row input, .extra-area textarea { font-size: 15px; }
+    .btn-save-edit, .btn-cancel-edit, .btn-vcard { font-size: 14px; padding: 9px 16px; }
+  }
+
+  /* ── PC ≥ 1024px ──────────────────────────────────────────────────── */
+  @media (min-width: 1024px) {
+    body { font-size: 16px; }
+    header { padding: 12px 32px; }
+    header h1 { font-size: 20px; }
+    #surveySelect { font-size: 15px; }
+    .search-bar { padding: 10px 32px; }
+    .search-bar input { font-size: 16px; padding: 10px 16px 10px 38px; border-radius: 24px; }
+    .filters { padding: 10px 32px; gap: 10px; }
+    .filter-btn { font-size: 14px; padding: 7px 18px; }
+    .contact-list { padding: 16px 32px; gap: 16px; display: grid; grid-template-columns: repeat(2, 1fr); }
+    .card { padding: 16px 20px; }
+    .card-name { font-size: 18px; }
+    .card-ordre { font-size: 14px; padding: 3px 10px; }
+    .card-adresse { font-size: 15px; }
+    .badge { font-size: 13px; padding: 3px 10px; }
+    .badge-dist { font-size: 13px; }
+    .s-btn { font-size: 13px; padding: 6px 14px; }
+    .edit-row input, .extra-area textarea { font-size: 16px; padding: 9px 12px; }
+    .btn-save-edit, .btn-cancel-edit, .btn-vcard { font-size: 15px; padding: 10px 18px; }
+    .no-coords { font-size: 12px; }
+  }
