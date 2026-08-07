@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!-- CSP pragmatique (voir index.html) : connexions réseau limitées aux
      géocodeurs régionaux ; 'unsafe-inline' conservé pour script/style. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.irisnet.be https://*.wallonie.be https://*.vlaanderen.be https://*.ngi.be https://*.openstreetmap.org">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.irisnet.be https://*.wallonie.be https://*.vlaanderen.be https://*.ngi.be https://*.openstreetmap.org">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statbel — Convertisseur d'enquête</title>
 <script>
@@ -22,6 +22,7 @@
      Le reste du convertisseur fonctionne hors-ligne. -->
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <script src="vendor/leaflet/leaflet.js"></script>
+<script src="vendor/pdfjs/pdf.min.js"></script>
 <style>
   :root {
     --bleu:   #1a237e;
@@ -429,8 +430,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="icon">📂</div>
     <div class="titre" data-i18n="dz_title">Drag the GRP file here</div>
     <div class="sous" data-i18n="dz_sub">or click to select</div>
-    <div class="note">CSV / TSV / XLSX / XLS — GRP_2026xxxxx_CORRIGE</div>
-    <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls">
+    <div class="note">CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx</div>
+    <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls,.pdf">
   </div>
 
   <!-- Chargement -->
@@ -7015,6 +7016,131 @@ function verifierStructure(srcRows) {
   };
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  IMPORT PDF — listing GRP officiel (GRP_2026xxxxxxxxxxx.pdf) → lignes GRP
+// ════════════════════════════════════════════════════════════════════════
+// Le PDF n'expose PAS la date de naissance complète (DT_MB_BTH) ni la commune
+// de naissance (CD_MB_BTH_REFNIS) — uniquement l'âge et le pays en toutes
+// lettres. Ces deux colonnes restent donc vides. Tout le reste est reconstruit.
+const _PDF_SEX = { 'Masculin':'1', 'Féminin':'2' };
+const _PDF_MRTL = { 'Célibataire':'1', 'Marié(e)':'2', 'Divorcé(e)':'3', 'Veuve/veuf':'4',
+  'Divorcé(e), séparé(e) de fait':'5', 'Séparé(e) de corps et de biens':'6' };
+// Codes nationalité NIS (extensible ; complété au fil des groupes rencontrés).
+const _PDF_NLTY = { 'Belgique':'150', 'Allemagne (Rép.féd.)':'103', 'France':'111', 'Bulgarie':'106',
+  'Pologne ( Rép. )':'122', 'Roumanie':'124', 'Turquie':'262', 'Syrie (République Arabe)':'261', 'Brésil':'513' };
+const _PDF_HH_LABELS = ['NR_DBENQ_HH','Contact name','Size','HH N','Address','Wave','User ID','Phone','CATI / CAWI','Password','EMail','Language'];
+const _PDF_MB_COLS   = ['Nr_MB','First name','Last name','Age','Sex','Country birth','Nationality','Marital status'];
+const _pdfPad = (n, w) => String(n).padStart(w, '0');
+
+// « Rue X, 12, ETSS 1030 Schaerbeek » → [rue, n°, boîte, CP, commune].
+// Gère l'absence de boîte et une boîte numérique, avec ou sans virgule.
+function _pdfParseAddr(a) {
+  const parts = a.split(',').map(s => s.trim());
+  const street = parts[0] || '';
+  const tail = parts.slice(1).join(' , ');
+  const m = tail.match(/^(\d+[A-Za-z]?)\s*,?\s*(?:([A-Za-z0-9]+)\s+)?(\d{4})\s+(.+)$/);
+  if (!m) return [street, tail, '', '', ''];
+  return [street, m[1], m[2] || '', m[3], m[4]];
+}
+
+// Extrait le PDF en « lignes visuelles » : items regroupés par Y (haut→bas),
+// triés par X. Chaque cellule = un item (pdf.js n'émet rien pour les vides).
+async function _pdfExtractRows(arrayBuffer) {
+  if (typeof pdfjsLib === 'undefined') throw new Error('pdf.js indisponible');
+  if (!pdfjsLib.GlobalWorkerOptions.workerSrc)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const rows = [];
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const tc = await (await pdf.getPage(n)).getTextContent();
+    const byY = {};
+    for (const it of tc.items) {
+      const s = (it.str || '').trim(); if (!s) continue;
+      const y = Math.round(it.transform[5]);
+      (byY[y] = byY[y] || []).push({ x: it.transform[4], s });
+    }
+    Object.keys(byY).map(Number).sort((a, b) => b - a)
+      .forEach(y => rows.push(byY[y].sort((a, b) => a.x - b.x)));
+  }
+  return rows;
+}
+
+// Lignes visuelles → lignes GRP {COLONNE: valeur} (même format que parseXlsx).
+function _pdfGrpRows(rows) {
+  const out = [], unknown = { nlty: new Set(), mrtl: new Set() };
+  const isLabel = s => _PDF_HH_LABELS.indexOf(s) >= 0;
+  let i = 0;
+  while (i < rows.length) {
+    const r = rows[i];
+    if (r[0] && r[0].s.indexOf('Group Info') === 0) { i++; continue; }
+    if (!(r[0] && r[0].s === 'Identification')) { i++; continue; }
+    i++;
+    const info = {};
+    // Infos ménage (3 colonnes label→valeur) jusqu'à l'en-tête de membres.
+    while (i < rows.length && !rows[i].some(t => t.s === 'Nr_MB') && !(rows[i][0] && rows[i][0].s === 'Identification')) {
+      if (rows[i][0] && rows[i][0].s.indexOf('Group Info') === 0) { i++; continue; }
+      let cur = null;
+      for (const t of rows[i]) {
+        if (isLabel(t.s)) { cur = t.s; if (!(cur in info)) info[cur] = ''; }
+        else if (cur) { info[cur] = info[cur] ? info[cur] + ' ' + t.s : t.s; }
+      }
+      i++;
+    }
+    // En-tête du tableau de membres → ancres X des 8 colonnes.
+    let anchors = null;
+    if (i < rows.length && rows[i].some(t => t.s === 'Nr_MB')) {
+      anchors = _PDF_MB_COLS.map(c => { const it = rows[i].find(t => t.s === c); return it ? it.x : null; });
+      i++;
+    }
+    const size = parseInt(info['Size'] || '0', 10) || 0;
+    const members = []; let cnt = 0;
+    while (cnt < size && i < rows.length && anchors) {
+      const items = rows[i];
+      if (items[0] && (items[0].s === 'Identification' || items[0].s.indexOf('Group Info') === 0 || items.some(t => t.s === 'Nr_MB'))) break;
+      const cells = new Array(_PDF_MB_COLS.length).fill('');
+      for (const t of items) {                       // chaque item → colonne d'ancre la plus proche
+        let best = 0, bd = 1e9;
+        anchors.forEach((ax, ci) => { if (ax == null) return; const d = Math.abs(ax - t.x); if (d < bd) { bd = d; best = ci; } });
+        cells[best] = cells[best] ? cells[best] + ' ' + t.s : t.s;
+      }
+      if (!/^\d{1,2}$/.test(cells[0])) break;
+      members.push(cells); cnt++; i++;
+    }
+    const grp = (info['NR_DBENQ_HH'] || '').replace(/-\d+$/, '');   // 2026-12305
+    const nrgrp = grp.replace(/-/g, '');
+    const hn = parseInt(info['HH N'] || '0', 10);
+    const ad = _pdfParseAddr(info['Address'] || '');
+    members.forEach((m, mi) => {
+      const mb = mi + 1;
+      if (m[6] && !(m[6] in _PDF_NLTY)) unknown.nlty.add(m[6]);
+      if (m[7] && !(m[7] in _PDF_MRTL)) unknown.mrtl.add(m[7]);
+      out.push({
+        NR_GRP: nrgrp, NR_HH: String(hn), NR_DBENQ_MB: '' + nrgrp + _pdfPad(hn, 3) + _pdfPad(mb, 4),
+        NR_YEAR: grp.slice(0, 4), NR_SEQ: '2', NR_WAVE: info['Wave'] || '', NR_REF_WK: '23',
+        TX_WEB_USER_ID: info['User ID'] || '', TX_WEB_USER_PSWRD: info['Password'] || '', CD_CNTCT_LG: info['Language'] || '',
+        FL_MB_CNTCT: mb === 1 ? '1' : '0', TX_MB_NM_FST: m[1] || '', TX_MB_NM_LST: m[2] || '',
+        CD_MB_SEX: _PDF_SEX[m[4]] || '', DT_MB_BTH: '', MS_MB_AGE: m[3] || '', CD_MB_BTH_REFNIS: '',
+        CD_MB_NLTY: _PDF_NLTY[m[6]] || '', CD_MB_MRTL_STS: m[7] ? (_PDF_MRTL[m[7]] || '') : '',
+        TX_ADRS_USTR_NM: ad[0], CD_ADRS_HS: ad[1], CD_ADRS_BX: ad[2], CD_ADRS_ZIP: ad[3], TX_ADRS_REFNIS_NM: ad[4],
+        TX_DBENQ_GRP: grp, TX_DBENQ_HH: info['NR_DBENQ_HH'] || '',
+        NR_PHONE: info['Phone'] || '', TX_EMAIL: info['EMail'] || '', CD_WSH_CLCT_MTHD: info['CATI / CAWI'] || '',
+        TX_GRP_LISTING_XLS: ''
+      });
+    });
+  }
+  return { out, unknown };
+}
+
+// ArrayBuffer d'un PDF listing GRP → lignes {COLONNE: valeur} (+ alerte sur les
+// codes pays / états civils inconnus, laissés vides).
+async function pdfGrpVersRows(arrayBuffer) {
+  const { out, unknown } = _pdfGrpRows(await _pdfExtractRows(arrayBuffer));
+  const inc = [...unknown.nlty, ...unknown.mrtl];
+  if (inc.length) alert('Valeurs sans code (laissées vides) : ' + inc.join(', ')
+    + '\nAjoutez-les à _PDF_NLTY / _PDF_MRTL dans le convertisseur.');
+  return out;
+}
+
 function traiterFichier(file) {
   if (!file) return;
   document.getElementById('loading').classList.remove('hidden');
@@ -7026,11 +7152,14 @@ function traiterFichier(file) {
   document.getElementById('hdrTabs').style.display = 'flex';
 
   const estExcel = /\.(xlsx|xls)$/i.test(file.name);
+  const estPdf   = /\.pdf$/i.test(file.name);
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       let srcRows;
-      if (estExcel) {
+      if (estPdf) {
+        srcRows = await pdfGrpVersRows(e.target.result);  // ArrayBuffer → lignes GRP
+      } else if (estExcel) {
         srcRows = parseXlsx(e.target.result);          // ArrayBuffer
       } else {
         const text  = e.target.result;                 // texte iso-8859-1
@@ -7062,8 +7191,8 @@ function traiterFichier(file) {
       el.classList.remove('hidden');
     }
   };
-  if (estExcel) reader.readAsArrayBuffer(file);
-  else          reader.readAsText(file, 'iso-8859-1');
+  if (estExcel || estPdf) reader.readAsArrayBuffer(file);
+  else                    reader.readAsText(file, 'iso-8859-1');
 }
 
 // Drop zone
