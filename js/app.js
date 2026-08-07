@@ -208,7 +208,11 @@ const SETTINGS_DEFAULTS = {
   // Langue : détectée depuis le navigateur au 1er lancement (fr/nl/en), défaut fr
   lang: (() => { const l = (navigator.language || 'fr').slice(0,2).toLowerCase(); return ['fr','nl','en','de'].includes(l) ? l : 'fr'; })(),
 };
-let settings = Object.assign({}, SETTINGS_DEFAULTS, { statuts: cloneStatuts() });
+// État mutable partagé au-delà de la frontière du module (gestionnaires inline
+// + tests headless) : déclaré sur globalThis pour rester un vrai global. Les
+// lectures/écritures non qualifiées (`settings = …`, `settings.x`) résolvent
+// vers cette propriété globale.
+globalThis.settings = Object.assign({}, SETTINGS_DEFAULTS, { statuts: cloneStatuts() });
 let GEO = GEO_PROVIDERS[settings.provider];
 
 function chargerSettings() {
@@ -266,7 +270,7 @@ function statutDef(label)   {
 
 const DB_NAME    = 'StatbelInterviewer';
 const DB_VERSION = 1;
-let db = null;
+globalThis.db = null;   // global partagé (tests headless ouvrent des transactions)
 let dbPromise = null;   // promesse de connexion mémorisée (évite double ouverture / race)
 
 /** Ouvre (ou crée) la base IndexedDB — une seule connexion, partagée. */
@@ -330,7 +334,7 @@ function signalerEchecSauvegarde(e) {
   }
 }
 
-let _lastSaved = {};   // nom -> JSON du dernier état persisté (n'écrire que le modifié)
+globalThis._lastSaved = {};   // nom -> JSON du dernier état persisté (n'écrire que le modifié) — global partagé (tests)
 async function sauver() {
   majEtatSauvegarde('saving');
   if (!db) {
@@ -473,9 +477,9 @@ function fermerBackupBanner() {
 // STATE — Variables globales et sélecteur d'enquêtes
 // ════════════════════════════════════════════════════════════════════
 
-let enquetes      = {};
-let enqueteActive = '';
-let filtreActif   = 'Tous';
+globalThis.enquetes      = {};    // globaux partagés (gestionnaires inline + tests)
+globalThis.enqueteActive = '';
+globalThis.filtreActif   = 'Tous';
 let csvEnAttente  = null;
 let coordsEnAttente = null;   // coords d'import en attente (écrites à la confirmation)
 
@@ -4810,5 +4814,56 @@ async function init() {
 
   pinSurveillerInactivite();
 }
+
+// ── Pont de compatibilité (module → global) ───────────────────────
+// app.js est un module ES (scope isolé). Les gestionnaires inline du HTML
+// (onclick=…) et les tests headless attendent ces fonctions dans le scope
+// global : on les y réexpose explicitement. (L'état mutable partagé — settings,
+// enquetes, enqueteActive, db, filtreActif, _lastSaved — est déclaré via
+// globalThis plus haut.) À mesure que les onclick migrent vers
+// addEventListener, cette liste se réduira.
+Object.assign(window, {
+  debounce, esc, correspondRecherche, regionPourCP, chargerSettings, saveSettings,
+  statutDefs, statutDefaut, statutDef, ouvrirDB, idbReq, idbTx, majEtatSauvegarde,
+  signalerEchecSauvegarde, sauver, charger, coordsCache, saveCoords, majIndicateurReseau,
+  restaurerIndicateur, setupA11y, majBackupBanner, fermerBackupBanner, contacts,
+  contactsFiltres, refreshSelect, changerEnquete, renommerEnquete, fermerRename,
+  confirmerRename, supprimerEnquete, parseAdresse, composeAdresse, adresseSansBoite,
+  mapsUrl, todayStr, nowHHMM, dateFrToISO, dateISOToFr, formatDateJour, changerStatut,
+  sauverBientot, flushSauver, changerNotes, changerEmail, changerGsm, formaterGsm,
+  formatHeureSaisie, lireRdvFields, changerRdvDH, ouvrirCalendrierRdv, majAge, formatRdv,
+  calcAge, maritalCanon, etatCivilGenre, paysNom, normaliserPays, paysAffiche,
+  detecterNonTraduits, renderNonTraduits, detecterIncoherences, renderCoherence,
+  statutCanon, statutLabel, ligneDemographie, toggleEdit, ouvrirEdit, buildEditForm,
+  sauverEdit, filtrer, champLabel, parseCSVRows, parseCSV, splitLine, importerFichier,
+  ouvrirModalImport, preparerImport, renderExclus, majComparaisonImport,
+  renderImportApercu, confirmerImport, fermerModal, csvGuard, csvDeguard, csvCell,
+  sepRegionalAuto, sepCSVexport, genererCSV, exporterCSV, exporterVCard, renderFilters,
+  rendu, haversine, formatDist, distanceBadge, afficherToast, toggleMaPosition,
+  demanderPosition, placerMarqueurMoi, recentrerCarte, changerStatutCarte,
+  ouvrirFicheDepuisCarte, renderLegend, initCarte, redessinerCourbeApresLayout,
+  afficherMarqueurs, filtrerActiviteJour, ouvrirFicheEvtIdx, rdvTitreStatut,
+  renderRdvFilters, filtrerRdv, renduRdv, buildHistoriqueHTML, rafraichirHistorique,
+  trierHistorique, syncStatutCourant, majCarteStatut, apresModifHistorique,
+  ajouterHistorique, modifierStatutHistorique, modifierRdvHistorique, formatDateFrSaisie,
+  ouvrirCalendrierHist, ouvrirCalendrierRdvHist, changerDateHistorique,
+  supprimerHistorique, buildRdvCard, setView, appliquerTheme, appliquerPolice, t, tf,
+  tPlural, appliquerLangue, changerLangue, localeApp, nomJourCourt, labelNbEnquetes,
+  ouvrirSettings, fermerSettings, renderAide, ouvrirAide, fermerAide, majSettingsUI,
+  changerProvider, regionDominante, fondEffectif, rafraichirFond, buildBackupDetailHTML,
+  _contactKey, apparieurAnciens, jourValide, valeurIncoherente, diffHistorique,
+  recordEnErreur, raisonsErreur, _diffContacts, buildCompareHTML, fermerBackupDetail,
+  renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
+  exporterBackup, majLastBackupInfo, majComparaisonRestore, importerBackup,
+  viderCacheCoords, listerNonGeocodees, renderNonGeo, allerAFiche, renderStatutsEditor,
+  rafraichirStatutsVues, modifierStatut, ajouterStatut, supprimerStatut, toggleKebab,
+  emailSuggest, choisirSuggestion, fermerSuggestions, emailKeydown, exporterResumeXLSX,
+  exporterResumePDF, collecterVisites, renderActiviteQuotidienne, renderProgressionGlobale,
+  renderCourbeAvancement, dessinerCourbeProgression, renderEvenementsChrono,
+  setResumeScope, renduResume, _pinHash, pinEstActif, renderLockDots, renderLockKeypad,
+  pinToucheAppuyee, pinAfficherErreur, pinValiderSaisie, ouvrirLockScreen,
+  fermerLockScreen, ouvrirGestionPin, fermerModalPin, pinChanger, pinDesactiver, majPinUI,
+  pinVerifierAuDemarrage, pinSurveillerInactivite, migrerVersAnglais, init
+});
 
 init();

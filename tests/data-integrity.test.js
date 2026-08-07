@@ -13,21 +13,21 @@
  * Lancer :  CHROMIUM_PATH=/chemin/vers/chrome node tests/data-integrity.test.js
  * Sortie : "TOUS LES TESTS PASSENT" + code de sortie 0 si OK, 1 sinon.
  */
-const path = require('path');
 const { chromium } = require('playwright-core');
+const { serve } = require('./_serve');
 
 const EXEC = process.env.CHROMIUM_PATH
   || process.env.PLAYWRIGHT_CHROMIUM
   || '/usr/bin/chromium'; // repli ; surcharger via CHROMIUM_PATH au besoin
-const INDEX_URL = 'file://' + path.resolve(__dirname, '..', 'index.html');
 
 (async () => {
+  const srv = await serve();   // app.js est un module ES → servir en http(s)
   const b = await chromium.launch({ executablePath: EXEC, args: ['--no-sandbox'] });
   const p = await b.newPage();
   const perr = [];
   p.on('pageerror', e => perr.push(e.message));
   p.on('dialog', d => d.accept());               // confirm() → true
-  await p.goto(INDEX_URL, { waitUntil: 'load' });
+  await p.goto(srv.url + '/index.html', { waitUntil: 'load' });
   await p.waitForTimeout(400);
 
   // Helper exécuté dans la page : réinitialise settings.statuts + enquetes
@@ -116,6 +116,7 @@ const INDEX_URL = 'file://' + path.resolve(__dirname, '..', 'index.html');
   });
 
   await b.close();
+  await srv.close();
 
   const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const checks = [
