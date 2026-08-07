@@ -12,6 +12,9 @@
 !icon-192.png
 !icon-512.png
 !icon-512-mask.png
+# CSS externalisé (PR découpage)
+!css/
+!css/*.css
 # Tests de non-régression (dev)
 !tests/
 !tests/*.js
