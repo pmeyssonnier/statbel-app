@@ -1465,7 +1465,7 @@ function candGenerateDocxBytes(data) {
     '@@TEL_PORT@@': data.telPort, '@@HEURES_PORT@@': data.heuresPort,
     '@@TEL_BUR@@': data.telBur, '@@HEURES_BUR@@': data.heuresBur,
     '@@EMAIL_PRIVE@@': data.emailPrive, '@@EMAIL_BUR@@': data.emailBur,
-    '@@NBGROUPES@@': data.nbGroupes, '@@DATE@@': data.date,
+    '@@NBGROUPES@@': '    ' + (data.nbGroupes != null ? data.nbGroupes : ''), '@@DATE@@': data.date,
   };
   for (const k in map) doc = doc.replace(k, candXmlEsc(map[k]));
 
@@ -1665,7 +1665,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '157';
+const APP_VERSION = '158';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
