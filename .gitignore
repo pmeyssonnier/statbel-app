@@ -12,9 +12,11 @@
 !icon-192.png
 !icon-512.png
 !icon-512-mask.png
-# CSS externalisé (PR découpage)
+# CSS + JS externalisés (PR découpage)
 !css/
 !css/*.css
+!js/
+!js/**
 # Librairies vendorisées (Leaflet, SheetJS) — versions figées, hors CDN
 !vendor/
 !vendor/**
