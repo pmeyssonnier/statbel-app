@@ -224,6 +224,55 @@ function chargerSettings() {
 }
 function saveSettings() { localStorage.setItem('statbel_settings', JSON.stringify(settings)); }
 
+// Valide/assainit un objet « settings » d'origine externe (fichier de
+// sauvegarde importé) : ne conserve QUE les clés connues, chaque valeur
+// contrainte à son domaine (enum / type / borne), repli sur le défaut sinon.
+// Empêche un fichier d'injecter des clés arbitraires ou des valeurs
+// hors-domaine (provider inexistant, lang invalide, statuts malformés…).
+// Le PIN n'est jamais repris d'un backup (géré à part par l'appelant).
+function validerSettings(raw) {
+  const out = Object.assign({}, SETTINGS_DEFAULTS, { statuts: cloneStatuts() });
+  if (!raw || typeof raw !== 'object') return out;
+  const enums = {
+    theme:      ['light', 'dark', 'auto'],
+    provider:   Object.keys(GEO_PROVIDERS),
+    mapStyle:   ['gray', 'color'],
+    navMode:    ['coords', 'adresse'],
+    fontFamily: Object.keys(FONT_FAMILIES),
+    fontSize:   Object.keys(FONT_SIZES),
+    csvSep:     ['auto', ',', ';'],
+    lang:       LANGS.slice(),
+  };
+  for (const [k, allowed] of Object.entries(enums)) {
+    if (allowed.includes(raw[k])) out[k] = raw[k];
+  }
+  if (Number.isInteger(raw.statutsV) && raw.statutsV >= 0) out.statutsV = raw.statutsV;
+  const st = validerStatuts(raw.statuts);
+  if (st) out.statuts = st;
+  return out;
+}
+
+// Valide un tableau de statuts importé : chaque entrée doit porter un label
+// (chaîne non vide, longueur bornée) ; couleur (hex) / icône / booléens
+// assainis. Renvoie null si rien d'exploitable (→ statuts par défaut).
+function validerStatuts(arr) {
+  if (!Array.isArray(arr) || !arr.length) return null;
+  const out = [];
+  for (const s of arr) {
+    if (!s || typeof s !== 'object') continue;
+    const label = typeof s.label === 'string' ? s.label.trim().slice(0, 40) : '';
+    if (!label) continue;
+    out.push({
+      label,
+      color: (typeof s.color === 'string' && /^#[0-9a-f]{3,8}$/i.test(s.color)) ? s.color : '#90a4ae',
+      icon:  typeof s.icon === 'string' ? s.icon.slice(0, 4) : '•',
+      done:  s.done === true,
+      rdv:   s.rdv === true,
+    });
+  }
+  return out.length ? out : null;
+}
+
 // ── Accès aux statuts (pilotés par les paramètres) ───────────────────
 function statutDefs()       { return settings.statuts; }
 function statutDefaut()     { return (settings.statuts[0] || {label:'To do'}).label; }
@@ -2534,8 +2583,12 @@ function importerBackup(event) {
           // Préserver le verrouillage PIN local : il ne doit jamais être
           // écrasé/activé par un backup (évite tout blocage de l'app).
           const pinLocal = { pinCode: settings.pinCode, pinTimeout: settings.pinTimeout };
-          settings = Object.assign({}, SETTINGS_DEFAULTS, _pendingSettings, pinLocal);
-          if (!Array.isArray(settings.statuts) || !settings.statuts.length) settings.statuts = cloneStatuts();
+          // Réglages issus d'un fichier externe : jamais fusionnés tels quels.
+          // On valide/assainit (clés connues + valeurs contraintes), puis on
+          // réimpose le PIN local (validerSettings guarantit déjà des statuts).
+          settings = validerSettings(_pendingSettings);
+          settings.pinCode = pinLocal.pinCode;
+          settings.pinTimeout = pinLocal.pinTimeout;
           GEO = GEO_PROVIDERS[settings.provider] || GEO_PROVIDERS.bruxelles;
           saveSettings();
           appliquerTheme();
@@ -3702,6 +3755,7 @@ async function init() {
 // globalThis plus haut.) À mesure que les onclick migrent vers
 // addEventListener, cette liste se réduira.
 Object.assign(window, {
+  validerSettings, validerStatuts,
   debounce, esc, correspondRecherche, regionPourCP, chargerSettings, saveSettings,
   statutDefs, statutDefaut, statutDef, ouvrirDB, idbReq, idbTx, majEtatSauvegarde,
   signalerEchecSauvegarde, sauver, charger, coordsCache, saveCoords, majIndicateurReseau,
