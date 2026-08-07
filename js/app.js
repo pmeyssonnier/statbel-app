@@ -808,9 +808,6 @@ document.addEventListener('click', e => {
   if (wrap&&!wrap.contains(e.target)) document.getElementById('kebabMenu').classList.remove('open');
 });
 
-// Autocomplétion email
-const EMAIL_DOMAINES = ['gmail.com','skynet.be','yahoo.com','hotmail.com','outlook.com','live.be','telenet.be','proximus.be','icloud.com'];
-
 
 // ════════════════════════════════════════════════════════════════════
 // INIT — Démarrage asynchrone de l'application
