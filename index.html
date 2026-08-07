@@ -2,6 +2,14 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<!-- Politique de sécurité du contenu (pragmatique) : verrouille les sources par
+     défaut sur l'origine, restreint les connexions réseau (fetch) aux seuls
+     géocodeurs régionaux, interdit plugins/injection <base>/exfiltration de
+     formulaire. On conserve 'unsafe-inline' pour script/style (gestionnaires
+     on*= et styles inline dynamiques) — leur retrait fera l'objet d'un durcissement
+     ultérieur (migration onclick → addEventListener). NB : frame-ancestors est
+     ignoré en <meta> (nécessiterait un en-tête HTTP, non disponible sur Pages). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.irisnet.be https://*.wallonie.be https://*.vlaanderen.be https://*.ngi.be https://*.openstreetmap.org">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Statbel – Interviews</title>
 <link rel="icon" href="data:,">
