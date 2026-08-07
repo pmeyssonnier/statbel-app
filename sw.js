@@ -1,15 +1,15 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v166';
+const CACHE = 'statbel-v167';
 
-const APP_SHELL = [
+// Ressources CRITIQUES : indispensables au fonctionnement hors-ligne. Si l'une
+// manque, l'installation doit ÉCHOUER (ne pas activer un cache incomplet qui
+// ferait croire à une PWA installée mais cassée hors-ligne).
+const APP_CRITICAL = [
   './',
   './index.html',
   './statbel_converter.html',
   './statbel_planner.html',
-  './manifest.webmanifest',
-  './icon-192.png',
-  './icon-512.png',
   './css/base.css',
   './css/summary.css',
   './css/modals.css',
@@ -18,22 +18,28 @@ const APP_SHELL = [
   './vendor/leaflet/leaflet.css',
   './vendor/leaflet/leaflet.js',
   './vendor/leaflet/images/marker-icon.png',
-  './vendor/leaflet/images/marker-icon-2x.png',
   './vendor/leaflet/images/marker-shadow.png',
-  './vendor/leaflet/images/layers.png',
-  './vendor/leaflet/images/layers-2x.png',
   './vendor/xlsx/xlsx.full.min.js'
 ];
+// Ressources OPTIONNELLES : confort (icônes PWA, variantes retina, calques).
+// Leur absence ne doit pas faire échouer l'installation.
+const APP_OPTIONAL = [
+  './manifest.webmanifest',
+  './icon-192.png',
+  './icon-512.png',
+  './vendor/leaflet/images/marker-icon-2x.png',
+  './vendor/leaflet/images/layers.png',
+  './vendor/leaflet/images/layers-2x.png'
+];
+const APP_SHELL = APP_CRITICAL.concat(APP_OPTIONAL);   // pour la stratégie fetch
 
-// Installation : pré-cache de la coquille applicative
+// Installation : les critiques via addAll() (atomique → échec si l'une manque),
+// les optionnelles en best-effort (échecs unitaires tolérés).
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    // addAll échouerait si une seule ressource manque ; on tolère les échecs unitaires
-    await Promise.all(APP_SHELL.map(u =>
-      c.add(new Request(u, { mode: u.startsWith('http') && !u.startsWith(self.location.origin) ? 'no-cors' : 'same-origin' }))
-        .catch(() => {})
-    ));
+    await c.addAll(APP_CRITICAL);
+    await Promise.all(APP_OPTIONAL.map(u => c.add(u).catch(() => {})));
     self.skipWaiting();
   })());
 });
