@@ -1517,7 +1517,7 @@ const CAND_FIELDS = ['Survey','Nom','Prenom','Adresse','Cp','Commune','TelPrive'
 // Sigle d'enquête -> nom complet (pour développer le titre du document).
 // Le sigle inconnu est utilisé tel quel comme nom. Ajouter les enquêtes ici.
 const CAND_SURVEYS = {
-  'EFT': 'Enquête sur les Forces de Travail',
+  'EFT': 'Enquêtes Force du Travail',
 };
 
 function candEl(f){ return document.getElementById('cand'+f); }
@@ -1665,7 +1665,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '155';
+const APP_VERSION = '156';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
