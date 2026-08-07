@@ -204,16 +204,6 @@ select[multiple]{height:120px}
 .year-month-head{font-weight:700;color:var(--ink2);text-align:center;
                  padding:4px 2px;background:var(--bg);font-size:11px}
 .year-cell{height:18px;border-radius:2px;margin:1px}
-/* Vue Année compacte (mois × groupe) */
-.year-table{width:100%;border-collapse:separate;border-spacing:2px;font-size:11px}
-.year-table th{background:var(--ink);color:#fff;padding:5px 4px;font-size:10px;
-               font-weight:700;text-transform:uppercase;text-align:center}
-.year-table th.yt-grp{text-align:left;padding-left:10px;min-width:150px}
-.yt-grp{white-space:nowrap;font-size:11px;padding:4px 8px}
-.yt-q{color:var(--ink3);font-weight:400}
-.yt-cell{width:36px;height:26px;text-align:center;font-size:10px;font-weight:700;
-         border:1px solid var(--border);border-radius:4px;background:#f4f4f6}
-.yt-today{outline:2px solid var(--accent);outline-offset:-2px}
 
 /* ══ Vide ════════════════════════════════════════════════════════════ */
 .empty{text-align:center;padding:40px 20px;color:var(--ink3)}
@@ -911,44 +901,58 @@ function renderAnnee() {
       '<div class="empty"><div class="em-icon">📅</div>Aucun groupe sélectionné</div>';
     return;
   }
-  const today  = new Date(); today.setHours(0,0,0,0);
-  const curMo  = (today.getFullYear() === yr) ? today.getMonth() : -1;
-
-  // Vue Année : grille compacte mois × groupe. Chaque cellule mois est colorée
-  // par la vague qui couvre le plus de jours ce mois-là (≈ vue d'ensemble annuelle).
-  // Bien plus léger que 12 mini-calendriers/groupe (perf : ~12 cellules/groupe).
-  let html = '<div style="overflow-x:auto"><table class="year-table"><thead><tr><th class="yt-grp">Groupe</th>';
-  MOIS_FR.forEach(m => html += `<th>${m.slice(0,3)}</th>`);
-  html += '</tr></thead><tbody>';
-
+  const today = new Date(); today.setHours(0,0,0,0);
+  const JOURS_COURT = ['L','M','M','J','V','S','D'];
+  let html = '';
   rowsSorted.forEach(row => {
-    html += `<tr><td class="yt-grp" title="${esc(row.quartier)}"><strong>${esc(row.numero)}</strong> `
-          + `<span class="yt-q">${esc(row.quartier.split(' ').slice(0,2).join(' '))}</span></td>`;
+    html += `<div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px;
+                  padding:5px 10px;background:var(--bg);border-radius:6px;
+                  border-left:3px solid var(--accent)">
+        ${esc(row.numero)} — ${esc(row.quartier)}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">`;
+
     for (let mo = 0; mo < 12; mo++) {
-      const mStart = new Date(yr, mo, 1).getTime();
-      const mEnd   = new Date(yr, mo+1, 0).getTime();
-      // Vague dominante du mois (par nombre de jours de recouvrement)
-      let best = null, bestDays = 0, semBest = null;
-      row.vagues.forEach(v => {
-        if (!v.start || !v.stop) return;
-        const os = Math.max(mStart, v.start.getTime());
-        const oe = Math.min(mEnd,  v.stop.getTime());
-        if (oe >= os) {
-          const days = Math.round((oe - os) / 86400000) + 1;
-          if (days > bestDays) { bestDays = days; best = v.idx; semBest = v.sem; }
-        }
+      const daysInMonth = new Date(yr, mo+1, 0).getDate();
+      // Jour de semaine du 1er du mois (0=lun … 6=dim)
+      const firstDow = (new Date(yr, mo, 1).getDay() + 6) % 7;
+
+      html += `<div>
+        <div style="font-size:9px;font-weight:700;text-align:center;color:var(--accent);
+                    margin-bottom:4px;text-transform:uppercase">${MOIS_FR[mo].slice(0,3)}</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px">`;
+
+      // En-tête L M M J V S D
+      JOURS_COURT.forEach(j => {
+        html += `<div style="font-size:7px;text-align:center;color:var(--ink3);font-weight:700;
+                             padding-bottom:2px">${j}</div>`;
       });
-      const isCur = mo === curMo;
-      if (best) {
-        html += `<td class="yt-cell ${VAGUE_COLORS[best-1]}${isCur?' yt-today':''}" `
-              + `title="${MOIS_FR[mo]} ${yr} — V${best} (S${semBest})">V${best}</td>`;
-      } else {
-        html += `<td class="yt-cell${isCur?' yt-today':''}"></td>`;
+
+      // Cases vides avant le 1er
+      for (let i = 0; i < firstDow; i++) {
+        html += `<div style="height:10px"></div>`;
       }
+
+      // Jours du mois
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cur = new Date(yr, mo, d);
+        const v   = vagueForDate(row, cur);
+        const isT = cur.toDateString() === today.toDateString();
+        const bg  = v ? `var(--${VAGUE_COLORS[v.idx-1]}l)` : '#f0f0f0';
+        const brd = v ? `2px solid var(--${VAGUE_COLORS[v.idx-1]})` : '1px solid transparent';
+        html += `<div title="${fmtDate(cur)}${v?' — V'+v.idx:''}"
+          style="height:10px;border-radius:2px;background:${bg};border:${brd};
+                 ${isT?'outline:1px solid var(--accent);outline-offset:1px;':''}
+                 cursor:default">
+        </div>`;
+      }
+      html += '</div></div>';
     }
-    html += '</tr>';
+    html += '</div></div>';
   });
-  html += '</tbody></table></div>';
+
+  if (!html) html = '<div class="empty"><div class="em-icon">📅</div>Aucun groupe sélectionné</div>';
   document.getElementById('agendaContent').innerHTML = html;
 }
 
