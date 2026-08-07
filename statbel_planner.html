@@ -227,7 +227,7 @@ select[multiple]{height:120px}
 .cand-preview td{padding:3px 6px;border-bottom:1px solid #eef0f2;color:var(--ink)}
 .cand-preview tr:last-child td{border-bottom:none}
 .cand-modal{position:fixed;inset:0;background:rgba(15,20,30,.5);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;z-index:1000;overflow:auto}
-.cand-modal-box{background:var(--card);border-radius:var(--radius);box-shadow:0 16px 48px rgba(0,0,0,.28);max-width:780px;width:100%;padding:22px 24px;margin:auto;position:relative}
+.cand-modal-box{background:var(--card);border-radius:var(--radius);box-shadow:0 16px 48px rgba(0,0,0,.28);max-width:780px;width:100%;padding:14px 24px;margin:auto;position:relative}
 .cand-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
 .cand-close{border:none;background:none;font-size:26px;line-height:1;color:var(--ink3);cursor:pointer;padding:0 6px;border-radius:6px}
 .cand-close:hover{background:var(--v1l);color:var(--ink)}
@@ -360,7 +360,7 @@ select[multiple]{height:120px}
   </div>
 
   <!-- 4. Candidature enquêteur (modale, ouverte via le bouton 📝 Candidature) -->
-  <div id="candModal" class="cand-modal" style="display:none" onclick="if(event.target===this)closeCandidature()">
+  <div id="candModal" class="cand-modal" style="display:none">
    <div class="cand-modal-box" role="dialog" aria-modal="true" aria-label="Candidature enquêteur">
     <div class="cand-modal-head">
       <div class="card-title" style="margin:0"><span>📝</span> Candidature enquêteur</div>
@@ -395,7 +395,7 @@ select[multiple]{height:120px}
       <div class="cand-field"><label>Date</label><input type="text" id="candDate"></div>
     </div>
 
-    <div style="margin-top:16px">
+    <div style="margin-top:10px">
       <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px">
         Communes choisies — <span id="candGrpCount">0</span> groupe(s)
       </div>
@@ -404,17 +404,17 @@ select[multiple]{height:120px}
       </div>
     </div>
 
-    <div style="margin-top:16px">
+    <div style="margin-top:10px">
       <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px">Signature</div>
-      <canvas id="candSigCanvas" width="480" height="140"
-        style="border:1px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:480px;height:140px;cursor:crosshair;display:block"></canvas>
+      <canvas id="candSigCanvas" width="480" height="100"
+        style="border:1px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:480px;height:100px;cursor:crosshair;display:block"></canvas>
       <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button type="button" onclick="candSigClear()" style="padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--ink2);font-size:12px;cursor:pointer">✕ Effacer la signature</button>
         <span style="font-size:11px;color:var(--ink3)">Signez à la souris ou au doigt — la signature est intégrée au .docx.</span>
       </div>
     </div>
 
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <button onclick="genererCandidature()" style="padding:9px 18px;border-radius:8px;border:1px solid #7b22cc;background:#7b22cc;color:#fff;font-size:13px;font-weight:700;cursor:pointer">⬇️ Générer la candidature (.docx)</button>
       <span style="font-size:11px;color:var(--ink3)">Formulaire de candidature rempli — s'ouvre dans Word / LibreOffice</span>
     </div>
@@ -1465,7 +1465,7 @@ function candGenerateDocxBytes(data) {
     '@@TEL_PORT@@': data.telPort, '@@HEURES_PORT@@': data.heuresPort,
     '@@TEL_BUR@@': data.telBur, '@@HEURES_BUR@@': data.heuresBur,
     '@@EMAIL_PRIVE@@': data.emailPrive, '@@EMAIL_BUR@@': data.emailBur,
-    '@@NBGROUPES@@': '    ' + (data.nbGroupes != null ? data.nbGroupes : ''), '@@DATE@@': data.date,
+    '@@NBGROUPES@@': '       ' + (data.nbGroupes != null ? data.nbGroupes : ''), '@@DATE@@': data.date,
   };
   for (const k in map) doc = doc.replace(k, candXmlEsc(map[k]));
 
@@ -1665,7 +1665,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '158';
+const APP_VERSION = '161';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
