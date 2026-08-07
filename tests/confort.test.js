@@ -11,18 +11,18 @@
  * Pré-requis (dev) :  npm i -D playwright-core   ·   CHROMIUM_PATH=/chemin/chrome
  * Lancer :  CHROMIUM_PATH=… node tests/confort.test.js
  */
-const path = require('path');
 const { chromium } = require('playwright-core');
+const { serve } = require('./_serve');
 
 const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/usr/bin/chromium';
-const INDEX_URL = 'file://' + path.resolve(__dirname, '..', 'index.html');
 
 (async () => {
+  const srv = await serve();   // app.js est un module ES → servir en http(s)
   const b = await chromium.launch({ executablePath: EXEC, args: ['--no-sandbox'] });
   const p = await b.newPage();
   const perr = [];
   p.on('pageerror', e => perr.push(e.message));
-  await p.goto(INDEX_URL, { waitUntil: 'load' });
+  await p.goto(srv.url + '/index.html', { waitUntil: 'load' });
   await p.waitForTimeout(700);
 
   const r = await p.evaluate(async () => {
@@ -61,6 +61,7 @@ const INDEX_URL = 'file://' + path.resolve(__dirname, '..', 'index.html');
   });
 
   await b.close();
+  await srv.close();
 
   const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const checks = [

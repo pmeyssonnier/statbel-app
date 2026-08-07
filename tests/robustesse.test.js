@@ -12,18 +12,18 @@
  * Navigateur : CHROMIUM_PATH=/chemin/vers/chrome
  * Lancer :  CHROMIUM_PATH=… node tests/robustesse.test.js
  */
-const path = require('path');
 const { chromium } = require('playwright-core');
+const { serve } = require('./_serve');
 
 const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/usr/bin/chromium';
-const INDEX_URL = 'file://' + path.resolve(__dirname, '..', 'index.html');
 
 (async () => {
+  const srv = await serve();   // app.js est un module ES → servir en http(s)
   const b = await chromium.launch({ executablePath: EXEC, args: ['--no-sandbox'] });
   const p = await b.newPage();
   const perr = [];
   p.on('pageerror', e => perr.push(e.message));
-  await p.goto(INDEX_URL, { waitUntil: 'load' });
+  await p.goto(srv.url + '/index.html', { waitUntil: 'load' });
   await p.waitForTimeout(600);
 
   const r = await p.evaluate(async () => {
@@ -63,6 +63,7 @@ const INDEX_URL = 'file://' + path.resolve(__dirname, '..', 'index.html');
   });
 
   await b.close();
+  await srv.close();
 
   const checks = [
     ['#12 31/02 rejeté',                 r.d_31_02 === false],
