@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v187';
+const CACHE = 'statbel-v188';
 
 // Ressources CRITIQUES : indispensables au fonctionnement hors-ligne. Si l'une
 // manque, l'installation doit ÉCHOUER (ne pas activer un cache incomplet qui
@@ -45,7 +45,10 @@ const APP_OPTIONAL = [
   './icon-512.png',
   './vendor/leaflet/images/marker-icon-2x.png',
   './vendor/leaflet/images/layers.png',
-  './vendor/leaflet/images/layers-2x.png'
+  './vendor/leaflet/images/layers-2x.png',
+  // pdf.js (import PDF du convertisseur) — volumineux, mis en cache best-effort
+  './vendor/pdfjs/pdf.min.js',
+  './vendor/pdfjs/pdf.worker.min.js'
 ];
 const APP_SHELL = APP_CRITICAL.concat(APP_OPTIONAL);   // pour la stratégie fetch
 
