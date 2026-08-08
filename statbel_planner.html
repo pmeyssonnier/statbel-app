@@ -255,16 +255,21 @@ select[multiple]{height:120px}
 
 <div class="main">
 
-  <!-- 1. Chargement fichiers -->
+  <!-- 1. Source : plannings déjà importés dans le Convertisseur -->
   <div class="card">
-    <div class="card-title"><span>📂</span> Charger les fichiers trimestriels</div>
-    <div id="dropzone">
-      <div class="dz-icon">⬆️</div>
-      <div class="dz-title">Glisser les fichiers Excel ici</div>
-      <div class="dz-sub">LFS_IESS_GRP_APPEL_Y2026QX_FR.xlsx — plusieurs fichiers acceptés</div>
-      <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+    <div class="card-title"><span>🗂️</span> Trimestre / planning</div>
+    <div id="planEmpty" style="display:none;font-size:13px;color:var(--ink3);line-height:1.6">
+      Aucun planning chargé. Importez vos fichiers trimestriels LFS dans le
+      <a href="statbel_converter.html" style="color:var(--accent);font-weight:600;text-decoration:none">🔄 Convertisseur</a>
+      (onglet « Planning ») — ils apparaîtront ici automatiquement.
     </div>
-    <div class="file-chips" id="fileChips"></div>
+    <div id="planPicker" style="display:none">
+      <div class="filter-group" style="max-width:560px">
+        <label>Trimestre — sélectionnez « Tout » pour agréger tous les trimestres</label>
+        <select id="selPlanning" onchange="onChangePlanning()" style="width:100%"></select>
+      </div>
+      <div class="file-chips" id="planInfo" style="margin-top:10px"></div>
+    </div>
   </div>
 
   <!-- 2. Filtres & sélection -->
@@ -431,54 +436,36 @@ select[multiple]{height:120px}
 // ══════════════════════════════════════════════════════════════════════
 //  ÉTAT GLOBAL
 // ══════════════════════════════════════════════════════════════════════
-let allRows    = [];       // toutes les lignes de tous les fichiers chargés
+let allRows    = [];       // groupes du trimestre (ou de tous) actuellement affichés
 let filtered   = [];       // lignes filtrées
 let selected   = new Set();// numéros de groupes sélectionnés
-let files      = [];       // { name, rows }
+let _plans     = [];       // plannings importés dans le Convertisseur : [{id, nom, rows}]
 
 let view       = 'liste';
 let navDate    = new Date();
 
 const VAGUE_COLORS = ['v1','v2','v3','v4'];
+
+// Codes province (fichiers LFS Statbel) → libellés complets. Repli : code brut.
+const PROV_LABELS = {
+  BRU:'Bruxelles', BWA:'Brabant wallon', HAI:'Hainaut', LIE:'Liège',
+  LUX:'Luxembourg', NAM:'Namur', ANV:'Anvers', BFL:'Brabant flamand',
+  FOC:'Flandre occidentale', FOR:'Flandre orientale', LIM:'Limbourg',
+  // variantes d'abréviation rencontrées selon les millésimes
+  VBR:'Brabant flamand', WVL:'Flandre occidentale', OVL:'Flandre orientale',
+  ANT:'Anvers', BXL:'Bruxelles',
+};
+function provLabel(code) {
+  const c = String(code || '').trim().toUpperCase();
+  return PROV_LABELS[c] || code || '';
+}
 const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin',
                  'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 // ══════════════════════════════════════════════════════════════════════
-//  LECTURE XLSX
+//  LECTURE DES DATES (chaînes jj/mm/aaaa ou ISO issues du Convertisseur)
 // ══════════════════════════════════════════════════════════════════════
-function parseXlsx(ab, filename) {
-  const wb = XLSX.read(ab, { type:'array', cellDates:true });
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  // raw:true → valeurs natives (nombres, Date, strings), pas de reformatage
-  const data = XLSX.utils.sheet_to_json(ws, { raw:true, defval:'' });
-  return data.map(r => {
-    const grp = {};
-    grp.province = String(r['Province'] || '').trim();
-    grp.numero   = String(r['Numero_du_groupe'] || '').replace(/\.0$/, '').trim();
-    grp.commune  = String(r['Commune'] || '').trim();
-    grp.lettre   = String(r['Lettre']  || '').trim();
-    grp.quartier = String(r['Quartier_central'] || '').trim();
-    grp.nInterro = parseInt(r['Nombre_interrogations']) || 4;
-    grp.source   = filename;
-    grp.vagues   = [];
-    for (let i = 1; i <= 4; i++) {
-      const sem   = r[`Semaine_ref_Interro_${i}`];
-      const start = parseDate(r[`Start_Interrogation_${i}`]);
-      const stop  = parseDate(r[`Stop_Interrogation_${i}`]);
-      if (start && stop) {
-        grp.vagues.push({
-          idx:   i,
-          sem:   parseInt(String(sem).replace(/\.0$/,'')) || i,
-          start,
-          stop,
-        });
-      }
-    }
-    return grp;
-  }).filter(g => g.numero && g.vagues.length);
-}
-
 function parseDate(v) {
   if (!v && v !== 0) return null;
   // 1. Objet Date JS natif — cas le plus fréquent avec cellDates:true
@@ -512,76 +499,89 @@ function parseDate(v) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  DROP ZONE
+//  SOURCE : plannings importés dans le Convertisseur (localStorage partagé)
 // ══════════════════════════════════════════════════════════════════════
-const dz = document.getElementById('dropzone');
-const fi = document.getElementById('fileInput');
+// Le Convertisseur d'enquêtes persiste les plannings trimestriels LFS dans
+// localStorage['plannings'] : [{ id, nom, type, rows:[{code,prov,commune,
+// quartier,wave,sem,start,stop}], grp, embedded }]. Le Planner les lit
+// directement — plus besoin de recharger les fichiers ici.
 
-dz.addEventListener('click', () => fi.click());
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-dz.addEventListener('drop', e => {
-  e.preventDefault(); dz.classList.remove('drag');
-  handleFiles(Array.from(e.dataTransfer.files));
-});
-fi.addEventListener('change', e => {
-  handleFiles(Array.from(e.target.files));
-  e.target.value = '';
-});
-
-function handleFiles(flist) {
-  flist.forEach(f => {
-    if (!f.name.match(/\.xlsx?$/i)) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const rows = parseXlsx(new Uint8Array(ev.target.result), f.name);
-        console.log(`[LFS] ${f.name} → ${rows.length} groupes parsés`, rows[0] || 'vide');
-        if (!rows.length) {
-          alert(`⚠️ Aucun groupe trouvé dans "${f.name}".\nVérifiez que le fichier est un planning LFS valide.`);
-          return;
-        }
-        files = files.filter(x => x.name !== f.name);
-        files.push({ name: f.name, rows });
-        rebuildAllRows();
-      } catch(e) {
-        console.error('[LFS] Erreur parsing:', e);
-        alert(`❌ Erreur lors de la lecture de "${f.name}" :\n${e.message}`);
-      }
-    };
-    reader.readAsArrayBuffer(f);
+// Convertit un planning du Convertisseur en groupes du Planner
+// ({province,numero,commune,quartier,vagues:[{idx,sem,start,stop}]}).
+function planningVersRows(p) {
+  const byCode = new Map();
+  (p.rows || []).forEach(r => {
+    const code = String(r.code || '').trim();
+    if (!code) return;
+    let g = byCode.get(code);
+    if (!g) {
+      g = { province: String(r.prov || '').trim(), numero: code,
+            commune: String(r.commune || '').trim(), lettre: '',
+            quartier: String(r.quartier || '').trim(), nInterro: 0,
+            source: p.nom, vagues: [] };
+      byCode.set(code, g);
+    }
+    const idx   = parseInt(r.wave) || (g.vagues.length + 1);
+    const start = parseDate(r.start), stop = parseDate(r.stop);
+    if (start && stop)
+      g.vagues.push({ idx, sem: parseInt(String(r.sem).replace(/\.0$/, '')) || idx, start, stop });
   });
+  const rows = [...byCode.values()];
+  rows.forEach(g => { g.vagues.sort((a, b) => a.idx - b.idx); g.nInterro = g.vagues.length; });
+  return rows.filter(g => g.vagues.length);
 }
 
-function rebuildAllRows() {
-  // Dédupliquer par numéro de groupe (le plus récent gagne)
-  const map = new Map();
-  files.forEach(f => f.rows.forEach(r => map.set(r.numero, r)));
-  allRows = Array.from(map.values());
-  renderChips();
-  populateFilters();
-  document.getElementById('filterCard').style.display = '';
-}
+// Charge (ou recharge) la liste des plannings depuis le Convertisseur.
+function chargerPlanningsConvertisseur() {
+  let imp = [];
+  try { imp = JSON.parse(localStorage.getItem('plannings') || '[]'); } catch (e) { imp = []; }
+  // Ne garder que les plannings exploitables (au moins un groupe avec des vagues)
+  _plans = imp.filter(p => p && p.id)
+              .map(p => ({ id: p.id, nom: p.nom || p.id, rows: planningVersRows(p) }))
+              .filter(p => p.rows.length);
 
-function renderChips() {
-  const el = document.getElementById('fileChips');
-  el.innerHTML = files.map(f => `
-    <div class="file-chip">
-      📄 ${f.name} <span style="opacity:.5">(${f.rows.length} groupes)</span>
-      <span class="chip-remove" onclick="removeFile('${f.name}')">✕</span>
-    </div>`).join('');
-}
-
-function removeFile(name) {
-  files = files.filter(f => f.name !== name);
-  if (!files.length) {
-    allRows = []; filtered = []; selected.clear();
-    renderChips();
+  const picker = document.getElementById('planPicker');
+  const empty  = document.getElementById('planEmpty');
+  const sel    = document.getElementById('selPlanning');
+  if (!_plans.length) {
+    picker.style.display = 'none'; empty.style.display = '';
+    allRows = []; filtered = [];
     document.getElementById('filterCard').style.display = 'none';
     document.getElementById('agendaCard').style.display = 'none';
     return;
   }
-  rebuildAllRows();
+  empty.style.display = 'none'; picker.style.display = '';
+
+  const prev = sel.value;                       // préserver le choix courant si possible
+  const opts = [];
+  if (_plans.length > 1)
+    opts.push(`<option value="__ALL__">Tout — ${_plans.length} trimestres</option>`);
+  _plans.forEach(p => opts.push(`<option value="${esc(p.id)}">${esc(p.nom)}</option>`));
+  sel.innerHTML = opts.join('');
+  if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+  onChangePlanning();
+}
+
+// Applique le trimestre choisi (ou « Tout ») → allRows + filtres + agenda.
+function onChangePlanning() {
+  const sel = document.getElementById('selPlanning');
+  const id  = sel ? sel.value : '';
+  const src = id === '__ALL__' ? _plans : _plans.filter(p => p.id === id);
+  // Agréger en dédupliquant par numéro de groupe (dernier trimestre gagne)
+  const map = new Map();
+  src.forEach(p => p.rows.forEach(g => map.set(g.numero, g)));
+  allRows  = [...map.values()];
+  selected = new Set([...selected].filter(n => map.has(n)));   // garder la sélection valide
+  filtered = allRows.slice();
+
+  populateFilters();
+  document.getElementById('filterCard').style.display = allRows.length ? '' : 'none';
+  renderGroupsList();
+  updateAgenda();
+
+  const info = document.getElementById('planInfo');
+  if (info) info.innerHTML = `<div class="file-chip">📊 ${allRows.length} groupe(s)`
+    + (src.length > 1 ? ` · ${src.length} trimestres agrégés` : '') + `</div>`;
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -598,9 +598,14 @@ function getSelValues(id) {
 // Chaque select ne montre que ce qui existe dans le contexte des sélections parentes.
 
 function populateFilters() {
-  // Au premier chargement : remplir uniquement la province (sans sélection)
-  const provs = [...new Set(allRows.map(r => r.province))].sort();
-  fillSelect('selProvince', provs, []);
+  // Province : valeur = code brut (BRU…), libellé = nom complet (Bruxelles…).
+  const provs = [...new Set(allRows.map(r => r.province))]
+    .sort((a, b) => provLabel(a).localeCompare(provLabel(b), 'fr', { sensitivity: 'base' }));
+  const prev = getSelValues('selProvince').filter(v => provs.includes(v));
+  const sel  = document.getElementById('selProvince');
+  sel.innerHTML = provs.map(v =>
+    `<option value="${esc(v)}"${prev.includes(v) ? ' selected' : ''}>${esc(provLabel(v))}</option>`
+  ).join('');
   cascadeCommune();
 }
 
@@ -796,7 +801,7 @@ function renderListe() {
     const days = Math.round((v.stop - v.start) / 86400000) + 1;
     html += `<tr>
       <td><strong>${row.numero}</strong></td>
-      <td>${row.province}</td>
+      <td>${provLabel(row.province)}</td>
       <td style="font-size:12px">${row.commune.split('/')[0].trim()}</td>
       <td style="font-size:12px">${row.quartier}</td>
       <td><span class="v-badge ${VAGUE_COLORS[v.idx-1]}">V${v.idx}</span></td>
@@ -1233,24 +1238,14 @@ function exportCsvApp() {
 // ══════════════════════════════════════════════════════════════════════
 const LS_KEY = 'lfs_planner_save';
 
-function serializeRow(r) {
-  return {...r, vagues: r.vagues.map(v=>({...v,
-    start: v.start ? v.start.toISOString() : null,
-    stop:  v.stop  ? v.stop.toISOString()  : null,
-  }))};
-}
-function deserializeRow(r) {
-  return {...r, vagues: r.vagues.map(v=>({...v,
-    start: v.start ? new Date(v.start) : null,
-    stop:  v.stop  ? new Date(v.stop)  : null,
-  }))};
-}
-
+// Les données (groupes/vagues) proviennent du Convertisseur : la sauvegarde ne
+// mémorise donc que le choix de trimestre, la sélection de groupes et la vue.
 function sauvegarder() {
   try {
+    const sel = document.getElementById('selPlanning');
     localStorage.setItem(LS_KEY, JSON.stringify({
       date: new Date().toISOString(),
-      files: files.map(f=>({name:f.name, rows:f.rows.map(serializeRow)})),
+      plan: sel ? sel.value : '',
       selected: Array.from(selected),
       view,
     }));
@@ -1264,11 +1259,15 @@ function restaurer() {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) { alert('Aucune sauvegarde.'); return; }
     const p = JSON.parse(raw);
-    files    = p.files.map(f=>({name:f.name, rows:f.rows.map(deserializeRow)}));
-    selected = new Set(p.selected||[]);
-    view     = p.view||'liste';
-    rebuildAllRows();
+    const sel = document.getElementById('selPlanning');
+    if (sel && p.plan && [...sel.options].some(o => o.value === p.plan)) sel.value = p.plan;
+    onChangePlanning();                       // charge le trimestre choisi
+    selected = new Set(p.selected || []);     // puis restaure la sélection
+    selected = new Set([...selected].filter(n => allRows.some(r => r.numero === n)));
+    view = p.view || 'liste';
+    renderGroupsList();
     setView(view);
+    updateAgenda();
     afficherToast('↩ Restauré !');
   } catch(e) { alert('Erreur : ' + e.message); }
 }
@@ -1288,8 +1287,7 @@ function majInfoSauvegarde() {
     try {
       const p = JSON.parse(raw);
       const d = new Date(p.date);
-      const nb = p.files.reduce((s,f)=>s+f.rows.length,0);
-      info.textContent = `Dernière sauvegarde : ${d.toLocaleDateString('fr-BE')} ${d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'})} — ${nb} groupes, ${(p.selected||[]).length} sélectionnés`;
+      info.textContent = `Dernière sauvegarde : ${d.toLocaleDateString('fr-BE')} ${d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'})} — ${(p.selected||[]).length} groupe(s) sélectionné(s)`;
       btn.style.display = '';
     } catch { info.textContent = 'Sauvegarde corrompue'; }
   } else {
@@ -1312,20 +1310,29 @@ function afficherToast(msg) {
   t._timer=setTimeout(()=>{t.style.opacity='0';},2200);
 }
 
-// Vérifier sauvegarde au démarrage via bannière non-bloquante
-(function checkSave() {
-  const raw = localStorage.getItem(LS_KEY);
+// Démarrage : charger les plannings du Convertisseur, puis proposer de
+// restaurer la sélection sauvegardée (bannière non-bloquante).
+(function init() {
+  chargerPlanningsConvertisseur();
   majInfoSauvegarde();
-  if (!raw) return;
+
+  // Un import de planning dans un autre onglet (Convertisseur) rafraîchit la liste.
+  window.addEventListener('storage', e => {
+    if (e.key === 'plannings') chargerPlanningsConvertisseur();
+  });
+
+  const raw = localStorage.getItem(LS_KEY);
+  if (!raw || !_plans.length) return;
   try {
     const p = JSON.parse(raw);
-    const nb = p.files.reduce((s,f)=>s+f.rows.length,0);
+    const nb = (p.selected || []).length;
+    if (!nb) return;
     const d  = new Date(p.date);
     const banner = document.createElement('div');
     banner.style.cssText='background:#e8f5e9;border-bottom:2px solid #2e7d32;padding:10px 20px;'+
       'display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;color:#1b5e20;'+
       'position:sticky;top:56px;z-index:90';
-    banner.innerHTML=`<span>💾 Sauvegarde du <strong>${d.toLocaleDateString('fr-BE')}</strong> — ${nb} groupes</span>
+    banner.innerHTML=`<span>💾 Sauvegarde du <strong>${d.toLocaleDateString('fr-BE')}</strong> — ${nb} groupe(s) sélectionné(s)</span>
       <button onclick="restaurer();this.closest('[style]').remove()"
         style="padding:5px 14px;border-radius:7px;border:1px solid #2e7d32;background:#2e7d32;color:#fff;font-size:12px;font-weight:600;cursor:pointer">↩ Restaurer</button>
       <button onclick="this.closest('[style]').remove()"
@@ -1668,7 +1675,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '167';
+const APP_VERSION = '168';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
