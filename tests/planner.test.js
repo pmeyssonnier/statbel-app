@@ -92,6 +92,21 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(base.provOpts.some(o => o.v === 'BWA' && o.t === 'Brabant wallon'), 'province BWA → « Brabant wallon »');
     A(base.provOpts.some(o => o.v === 'LIE' && o.t === 'Liège'), 'province LIE → « Liège »');
 
+    // Bandeau aligné sur Interviews / Convertisseur : sélecteur DANS l'en-tête,
+    // navigation vers les autres apps dans le menu ⋮.
+    const hdr = await p.evaluate(() => {
+      const sel = document.querySelector('header #selPlanning');
+      const items = [...document.querySelectorAll('#kebabMenu .kebab-item')].map(x => x.textContent.trim());
+      const menu = document.getElementById('kebabMenu');
+      const before = menu.classList.contains('open');
+      toggleKebab(); const after = menu.classList.contains('open');
+      return { selInHeader: !!sel && getComputedStyle(sel).display !== 'none', items, toggles: !before && after };
+    });
+    A(hdr.selInHeader, 'sélecteur de trimestre placé DANS le bandeau');
+    A(hdr.items.some(t => /Interviews/.test(t)) && hdr.items.some(t => /Convertisseur/.test(t)),
+      `menu ⋮ contient la navigation (got ${JSON.stringify(hdr.items)})`);
+    A(hdr.toggles, 'menu ⋮ s\'ouvre via toggleKebab()');
+
     // Un seul trimestre (Q1) = sous-ensemble (2 groupes)
     const single = await p.evaluate(() => {
       const sel = document.getElementById('selPlanning');
