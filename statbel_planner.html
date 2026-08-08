@@ -65,23 +65,69 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 }
 body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh}
 
-/* ══ Header ═════════════════════════════════════════════════════════ */
+/* ══ Header (même bandeau que Interviews / Convertisseur) ════════════ */
 header{
   background:var(--ink);color:#fff;
-  padding:16px 24px;
-  display:flex;align-items:center;gap:14px;
+  padding:10px 16px;
   box-shadow:0 2px 8px rgba(0,0,0,.25);
   position:sticky;top:0;z-index:100;
 }
-.logo{font-size:22px}
-.header-text h1{font-size:17px;font-weight:700;letter-spacing:-.3px}
-.header-text p{font-size:11px;opacity:.6;margin-top:1px}
-.header-right{margin-left:auto;display:flex;gap:8px;align-items:center}
-.pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
-      border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600}
+.header-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;min-height:38px}
+.header-col1{display:flex;align-items:center;gap:8px;min-width:0}
+.header-col3{display:flex;align-items:center;gap:6px}
+.header-mid{display:flex;justify-content:flex-start;min-width:0}
+.logo{font-size:22px;line-height:1}
+.header-col1 h1{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap}
+.header-col1 h1 small{font-size:11px;font-weight:600;opacity:.55}
+/* Comme les autres apps : en mobile on ne garde que le logo. */
+@media(max-width:560px){.header-col1 h1{display:none}}
+
+/* Sélecteur de trimestre au centre du bandeau (≈ #surveySelect / #sourceSelect) */
+#selPlanning{
+  width:100%;max-width:560px;min-width:0;
+  padding:6px 10px;border-radius:8px;border:none;
+  font-size:13px;font-family:var(--font);
+  background:rgba(255,255,255,.15);color:#fff;cursor:pointer;
+}
+#selPlanning option{background:var(--ink);color:#fff}
+
+.hdr-status{
+  font-size:12px;font-weight:700;color:#fff;white-space:nowrap;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+  border-radius:20px;padding:3px 10px;
+}
+.btn-ico{
+  background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);
+  width:36px;height:36px;border-radius:7px;font-size:18px;cursor:pointer;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;padding:0;
+}
+.btn-ico:hover{background:rgba(255,255,255,.25)}
+.kebab-wrap{position:relative}
+.kebab-menu{
+  display:none;position:absolute;right:0;top:calc(100% + 6px);
+  background:var(--card);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.28);
+  min-width:220px;z-index:300;overflow:hidden;border:1px solid var(--border);
+}
+.kebab-menu.open{display:block}
+.kebab-item{
+  display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:14px;
+  color:var(--ink);cursor:pointer;border:none;background:none;width:100%;
+  text-align:left;font-family:var(--font);
+}
+.kebab-item:hover{background:var(--bg)}
+.kebab-sep{border:none;border-top:1px solid var(--border);margin:4px 0}
 
 /* ══ Layout ══════════════════════════════════════════════════════════ */
 .main{max-width:1200px;margin:0 auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px}
+/* Les vues larges (liste 9 colonnes, semaine 8 colonnes) défilent DANS leur carte
+   au lieu d'élargir la page en portrait. */
+#agendaContent{overflow-x:auto}
+
+/* ══ Portrait / mobile ═══════════════════════════════════════════════ */
+@media(max-width:640px){
+  .main{padding:14px 12px}
+  .card{padding:16px 14px}
+}
 
 /* ══ Cards ═══════════════════════════════════════════════════════════ */
 .card{background:var(--card);border-radius:var(--radius);
@@ -240,34 +286,48 @@ select[multiple]{height:120px}
 <body>
 
 <header>
-  <div class="logo">📋</div>
-  <div class="header-text">
-    <h1>Statbel Planner</h1>
-    <p>Agenda des enquêtes Statbel — Belgium <span id="appVer" style="opacity:.55;font-weight:600"></span></p>
-  </div>
-  <div class="header-right">
-    <span class="pill" id="hdrCount">0 groupe(s) sélectionné(s)</span>
-    <a class="pill" href="index.html" title="App enquête" style="text-decoration:none">📋 Enquête</a>
-    <a class="pill" href="statbel_converter.html" title="Convertisseur" style="text-decoration:none">🔄 Convertisseur</a>
-    <a class="pill" href="#" title="Candidature enquêteur" style="text-decoration:none" onclick="openCandidature();return false">📝 Candidature</a>
+  <div class="header-row">
+    <div class="header-col1">
+      <span class="logo">🗓️</span>
+      <h1>Statbel Planner</h1>
+    </div>
+    <div class="header-mid">
+      <select id="selPlanning" onchange="onChangePlanning()" title="Trimestre / planning" style="display:none"></select>
+    </div>
+    <div class="header-col3">
+      <span class="hdr-status" id="hdrCount" title="Groupes sélectionnés">0</span>
+      <div class="kebab-wrap">
+        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" aria-label="Plus d'options">⋮</button>
+        <div class="kebab-menu" id="kebabMenu">
+          <button class="kebab-item" onclick="openCandidature();toggleKebab()">📝 Candidature enquêteur</button>
+          <hr class="kebab-sep">
+          <button class="kebab-item" onclick="sauvegarder();toggleKebab()">💾 Sauvegarder</button>
+          <button class="kebab-item" onclick="restaurer();toggleKebab()">↩ Restaurer la sélection</button>
+          <hr class="kebab-sep">
+          <button class="kebab-item" onclick="location.href='index.html'">📋 Interviews</button>
+          <button class="kebab-item" onclick="location.href='statbel_converter.html'">🔄 Convertisseur</button>
+          <hr class="kebab-sep">
+          <div class="kebab-item" id="appVer" style="opacity:.55;cursor:default;pointer-events:none;justify-content:center"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
 <div class="main">
 
-  <!-- 1. Source : plannings déjà importés dans le Convertisseur -->
-  <div class="card">
-    <div class="card-title"><span>🗂️</span> Trimestre / planning</div>
+  <!-- 1. Source : plannings déjà importés dans le Convertisseur.
+       Le sélecteur de trimestre est dans le bandeau (comme #surveySelect /
+       #sourceSelect) ; cette carte ne porte que l'invite ou le récapitulatif. -->
+  <div class="card" id="planCard">
     <div id="planEmpty" style="display:none;font-size:13px;color:var(--ink3);line-height:1.6">
       Aucun planning chargé. Importez vos fichiers trimestriels LFS dans le
       <a href="statbel_converter.html" style="color:var(--accent);font-weight:600;text-decoration:none">🔄 Convertisseur</a>
       (onglet « Planning ») — ils apparaîtront ici automatiquement.
     </div>
     <div id="planPicker" style="display:none">
-      <div class="filter-group" style="max-width:560px">
-        <label>Trimestre — sélectionnez « Tout » pour agréger tous les trimestres</label>
-        <select id="selPlanning" onchange="onChangePlanning()" style="width:100%"></select>
-      </div>
+      <div class="card-title" style="margin:0"><span>🗂️</span>
+        Trimestre — choisissez « Tout » dans le bandeau pour agréger tous les trimestres</div>
       <div class="file-chips" id="planInfo" style="margin-top:10px"></div>
     </div>
   </div>
@@ -544,13 +604,15 @@ function chargerPlanningsConvertisseur() {
   const empty  = document.getElementById('planEmpty');
   const sel    = document.getElementById('selPlanning');
   if (!_plans.length) {
+    // Comme #sourceSelect du Convertisseur : sélecteur masqué quand vide.
+    sel.style.display = 'none'; sel.innerHTML = '';
     picker.style.display = 'none'; empty.style.display = '';
     allRows = []; filtered = [];
     document.getElementById('filterCard').style.display = 'none';
     document.getElementById('agendaCard').style.display = 'none';
     return;
   }
-  empty.style.display = 'none'; picker.style.display = '';
+  empty.style.display = 'none'; picker.style.display = ''; sel.style.display = '';
 
   const prev = sel.value;                       // préserver le choix courant si possible
   const opts = [];
@@ -583,6 +645,13 @@ function onChangePlanning() {
   if (info) info.innerHTML = `<div class="file-chip">📊 ${allRows.length} groupe(s)`
     + (src.length > 1 ? ` · ${src.length} trimestres agrégés` : '') + `</div>`;
 }
+
+// Menu ⋮ du bandeau (même comportement que Interviews / Convertisseur).
+function toggleKebab() { document.getElementById('kebabMenu').classList.toggle('open'); }
+document.addEventListener('click', e => {
+  const wrap = document.querySelector('.kebab-wrap');
+  if (wrap && !wrap.contains(e.target)) document.getElementById('kebabMenu').classList.remove('open');
+});
 
 // ══════════════════════════════════════════════════════════════════════
 //  FILTRES
@@ -728,7 +797,9 @@ function clearAll() {
 
 function updateAgenda() {
   const count = selected.size;
-  document.getElementById('hdrCount').textContent = count + ' groupe(s) sélectionné(s)';
+  const hc = document.getElementById('hdrCount');
+  hc.textContent = '✓ ' + count;                       // compact dans le bandeau
+  hc.title = count + ' groupe(s) sélectionné(s)';
   const card = document.getElementById('agendaCard');
   if (count === 0) {
     card.style.display = 'none';
@@ -1675,7 +1746,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '168';
+const APP_VERSION = '170';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
