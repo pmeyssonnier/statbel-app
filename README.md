@@ -72,7 +72,8 @@ dans `app.js`.
 
 `tests/` — tests **headless** (`playwright-core`, servis via un petit serveur http local
 `tests/_serve.js`) : non-régression sur l'**intégrité des données**, la **robustesse** (CSV,
-dates, cache), le **confort**, la **sauvegarde**, la **CSP** et le **PIN**.
+dates, cache), le **confort**, la **sauvegarde**, la **CSP**, le **PIN**, la **vue contacts**
+et le **Planner** (consommation des plannings du Convertisseur, agrégation « Tout », libellés province).
 
 ```
 CHROMIUM_PATH=/chemin/vers/chrome node tests/data-integrity.test.js
@@ -93,13 +94,17 @@ l'app Interviews.
 
 ## 🗓️ Statbel Planner (`statbel_planner.html`)
 
-Agenda des vagues d'enquête (LFS / IESS…) à partir des **fichiers trimestriels Excel**
-(`LFS_IESS_GRP_APPEL_Y2026QX_FR.xlsx`).
+Agenda des vagues d'enquête (LFS / IESS…). Les **plannings trimestriels** sont ceux
+**déjà importés dans le Convertisseur** (onglet « Planning ») : le Planner les lit
+directement (localStorage partagé) — **plus aucun fichier à recharger ici**.
 
-- Chargement **multi-fichiers**, filtres en cascade **province / commune / quartier**, sélection de groupes.
+- **Sélecteur de trimestre** avec une entrée **« Tout »** qui agrège tous les trimestres
+  (déduplication par n° de groupe).
+- Filtres en cascade **province / commune / quartier** ; la province est affichée en
+  **libellé complet** (`BRU` → Bruxelles, `BWA` → Brabant wallon…).
 - Vues **Liste / Semaine / Mois / Année** (mini-calendriers colorés par vague, mise en évidence du jour).
 - Exports **Excel / CSV (app Interviews) / iCal / chevauchements**.
-- **Sauvegarde locale** (localStorage).
+- **Sauvegarde locale** du choix de trimestre et de la sélection (localStorage).
 
 ### Candidature enquêteur (.docx)
 Pop-up qui remplit le **formulaire officiel** de candidature et le télécharge en **`.docx`**,
