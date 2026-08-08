@@ -313,6 +313,7 @@ select[multiple]{height:120px}
           <hr class="kebab-sep">
           <button class="kebab-item" onclick="sauvegarder();toggleKebab()">💾 Sauvegarder</button>
           <button class="kebab-item" onclick="restaurer();toggleKebab()">↩ Restaurer la sélection</button>
+          <button class="kebab-item" onclick="effacerSauvegarde();toggleKebab()">🗑️ Effacer la sauvegarde</button>
           <hr class="kebab-sep">
           <button class="kebab-item" onclick="location.href='index.html'">📋 Interviews</button>
           <button class="kebab-item" onclick="location.href='statbel_converter.html'">🔄 Convertisseur</button>
@@ -423,19 +424,7 @@ select[multiple]{height:120px}
     <div id="agendaContent"></div>
   </div>
 
-  <!-- Bandeau sauvegarde locale -->
-  <div class="card" id="saveCard" style="border-left:4px solid var(--accent);margin-top:0">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <span style="font-size:15px">💾</span>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:13px">Sauvegarde locale</div>
-        <div style="font-size:12px;color:var(--ink3)" id="saveInfo">Aucune sauvegarde — cliquer sur 💾 pour mémoriser</div>
-      </div>
-      <button onclick="sauvegarder()" style="padding:7px 16px;border-radius:7px;border:1px solid var(--accent);background:var(--v1l);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">💾 Sauvegarder</button>
-      <button onclick="restaurer()" id="btnRestaurer" style="display:none;padding:7px 16px;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--ink2);font-size:12px;cursor:pointer">↩ Restaurer</button>
-      <button onclick="effacerSauvegarde()" style="padding:7px 16px;border-radius:7px;border:1px solid #ffcdd2;background:#fff;color:#c62828;font-size:12px;cursor:pointer">✕ Effacer</button>
-    </div>
-  </div>
+  <!-- Sauvegarde locale : accessible via le menu ⋮ (Sauvegarder / Restaurer / Effacer). -->
 
   <!-- 4. Candidature enquêteur (modale, ouverte via le bouton 📝 Candidature) -->
   <div id="candModal" class="cand-modal" style="display:none">
@@ -1332,7 +1321,6 @@ function sauvegarder() {
       selected: Array.from(selected),
       view,
     }));
-    majInfoSauvegarde();
     afficherToast('💾 Sauvegardé !');
   } catch(e) { alert('Erreur : ' + e.message); }
 }
@@ -1356,27 +1344,10 @@ function restaurer() {
 }
 
 function effacerSauvegarde() {
+  if (!localStorage.getItem(LS_KEY)) { afficherToast('Aucune sauvegarde'); return; }
   if (!confirm('Effacer la sauvegarde locale ?')) return;
   localStorage.removeItem(LS_KEY);
-  majInfoSauvegarde();
   afficherToast('✕ Sauvegarde effacée');
-}
-
-function majInfoSauvegarde() {
-  const raw = localStorage.getItem(LS_KEY);
-  const btn = document.getElementById('btnRestaurer');
-  const info = document.getElementById('saveInfo');
-  if (raw) {
-    try {
-      const p = JSON.parse(raw);
-      const d = new Date(p.date);
-      info.textContent = `Dernière sauvegarde : ${d.toLocaleDateString('fr-BE')} ${d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'})} — ${(p.selected||[]).length} groupe(s) sélectionné(s)`;
-      btn.style.display = '';
-    } catch { info.textContent = 'Sauvegarde corrompue'; }
-  } else {
-    info.textContent = 'Aucune sauvegarde — cliquer sur 💾 pour mémoriser';
-    btn.style.display = 'none';
-  }
 }
 
 function afficherToast(msg) {
@@ -1397,7 +1368,6 @@ function afficherToast(msg) {
 // se fait via le menu ⋮ (plus de bannière verte au démarrage).
 (function init() {
   chargerPlanningsConvertisseur();
-  majInfoSauvegarde();
 
   // Un import de planning dans un autre onglet (Convertisseur) rafraîchit la liste.
   window.addEventListener('storage', e => {
@@ -1740,7 +1710,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '173';
+const APP_VERSION = '174';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
