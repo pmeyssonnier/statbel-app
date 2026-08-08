@@ -265,7 +265,9 @@ select[multiple]{height:120px}
 .v4{background:var(--v4l);color:var(--v4);border-color:#ffbf99}
 
 /* Candidature */
-.cand-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px}
+/* align-items:end → les champs restent alignés par le bas même quand un libellé
+   voisin passe sur deux lignes (ex. « Heures limites d'appel (portable) »). */
+.cand-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;align-items:end}
 .cand-field{display:flex;flex-direction:column;gap:4px}
 .cand-field.cand-wide{grid-column:1 / -1}
 .cand-field label{font-size:11px;font-weight:600;color:var(--ink2)}
@@ -280,7 +282,11 @@ select[multiple]{height:120px}
 .cand-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
 .cand-close{border:none;background:none;font-size:26px;line-height:1;color:var(--ink3);cursor:pointer;padding:0 6px;border-radius:6px}
 .cand-close:hover{background:var(--v1l);color:var(--ink)}
-@media(max-width:640px){.cand-grid{grid-template-columns:1fr}.cand-modal{padding:12px 8px}.cand-modal-box{padding:18px 16px}}
+/* Mobile : on GARDE 2 colonnes pour que les paires associées (Nom/Prénom,
+   CP/Commune, Tél/Heures d'appel…) restent sur une même ligne ; seul l'écart
+   est resserré. Les champs pleine largeur (Enquête, Adresse) conservent .cand-wide. */
+@media(max-width:640px){.cand-grid{gap:10px 8px}.cand-modal{padding:12px 8px}.cand-modal-box{padding:18px 16px}}
+@media(max-width:380px){.cand-field label{font-size:10px}.cand-field input{font-size:13px;padding:8px}}
 </style>
 </head>
 <body>
@@ -1746,7 +1752,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '170';
+const APP_VERSION = '171';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
