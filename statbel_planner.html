@@ -1393,8 +1393,8 @@ function afficherToast(msg) {
   t._timer=setTimeout(()=>{t.style.opacity='0';},2200);
 }
 
-// Démarrage : charger les plannings du Convertisseur, puis proposer de
-// restaurer la sélection sauvegardée (bannière non-bloquante).
+// Démarrage : charger les plannings du Convertisseur. La sauvegarde/restauration
+// se fait via le menu ⋮ (plus de bannière verte au démarrage).
 (function init() {
   chargerPlanningsConvertisseur();
   majInfoSauvegarde();
@@ -1403,25 +1403,6 @@ function afficherToast(msg) {
   window.addEventListener('storage', e => {
     if (e.key === 'plannings') chargerPlanningsConvertisseur();
   });
-
-  const raw = localStorage.getItem(LS_KEY);
-  if (!raw || !_plans.length) return;
-  try {
-    const p = JSON.parse(raw);
-    const nb = (p.selected || []).length;
-    if (!nb) return;
-    const d  = new Date(p.date);
-    const banner = document.createElement('div');
-    banner.style.cssText='background:#e8f5e9;border-bottom:2px solid #2e7d32;padding:10px 20px;'+
-      'display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;color:#1b5e20;'+
-      'position:sticky;top:56px;z-index:90';
-    banner.innerHTML=`<span>💾 Sauvegarde du <strong>${d.toLocaleDateString('fr-BE')}</strong> — ${nb} groupe(s) sélectionné(s)</span>
-      <button onclick="restaurer();this.closest('[style]').remove()"
-        style="padding:5px 14px;border-radius:7px;border:1px solid #2e7d32;background:#2e7d32;color:#fff;font-size:12px;font-weight:600;cursor:pointer">↩ Restaurer</button>
-      <button onclick="this.closest('[style]').remove()"
-        style="padding:5px 14px;border-radius:7px;border:1px solid #a5d6a7;background:#fff;color:#2e7d32;font-size:12px;cursor:pointer">Ignorer</button>`;
-    document.body.insertBefore(banner, document.body.firstChild);
-  } catch(e) {}
 })();
 
 </script>
@@ -1759,7 +1740,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '172';
+const APP_VERSION = '173';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
