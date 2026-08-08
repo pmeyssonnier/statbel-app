@@ -69,19 +69,35 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 header{
   background:var(--ink);color:#fff;
   padding:16px 24px;
-  display:flex;align-items:center;gap:14px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
   box-shadow:0 2px 8px rgba(0,0,0,.25);
   position:sticky;top:0;z-index:100;
 }
 .logo{font-size:22px}
+.header-text{min-width:0}
 .header-text h1{font-size:17px;font-weight:700;letter-spacing:-.3px}
 .header-text p{font-size:11px;opacity:.6;margin-top:1px}
-.header-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.header-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
-      border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600}
+      border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;
+      white-space:nowrap;text-decoration:none;color:#fff}
 
 /* ══ Layout ══════════════════════════════════════════════════════════ */
 .main{max-width:1200px;margin:0 auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px}
+/* Les vues larges (liste 9 colonnes, semaine 8 colonnes) défilent DANS leur carte
+   au lieu d'élargir la page en portrait. */
+#agendaContent{overflow-x:auto}
+
+/* ══ Portrait / mobile ═══════════════════════════════════════════════ */
+@media(max-width:640px){
+  header{padding:12px 16px;gap:10px}
+  .header-text h1{font-size:16px}
+  /* La barre d'actions passe en pleine largeur sous le titre et s'enroule
+     proprement DANS le bandeau (plus de pilules « derrière » l'en-tête). */
+  .header-right{margin-left:0;width:100%;justify-content:flex-start}
+  .main{padding:14px 12px}
+  .card{padding:16px 14px}
+}
 
 /* ══ Cards ═══════════════════════════════════════════════════════════ */
 .card{background:var(--card);border-radius:var(--radius);
@@ -1675,7 +1691,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '168';
+const APP_VERSION = '169';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
