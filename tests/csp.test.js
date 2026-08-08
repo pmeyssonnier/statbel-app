@@ -17,7 +17,7 @@ const { chromium } = require('playwright-core');
 const { serve } = require('./_serve');
 
 const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/usr/bin/chromium';
-const PAGES = ['/index.html', '/statbel_planner.html', '/statbel_converter.html'];
+const PAGES = ['/index.html', '/statbel_planner.html', '/statbel_converter.html', '/statbel_pdf2grp.html'];
 
 (async () => {
   const srv = await serve();

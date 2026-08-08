@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<!-- CSP : tout est local (aucun réseau). pdf.js utilise un worker → worker-src. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statbel — PDF → GRP (XLSX / CSV)</title>
+<link rel="icon" href="data:,">
+<meta name="theme-color" content="#1a237e">
+<style>
+  :root{ --bg:#f4f6fb; --card:#fff; --ink:#1a2230; --mut:#66707f; --line:#e2e7f0;
+         --accent:#1a237e; --accent2:#3949ab; --ok:#2e7d32; --warn:#e65100; }
+  @media (prefers-color-scheme: dark){ :root{ --bg:#12151c; --card:#1b2029; --ink:#e7ebf2;
+         --mut:#9aa4b2; --line:#2b323d; --accent:#7986cb; --accent2:#9fa8da; } }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+        background:var(--bg); color:var(--ink); }
+  header{ background:var(--accent); color:#fff; padding:14px 18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1{ font-size:17px; margin:0; font-weight:700; }
+  header .nav{ margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+  header .nav a{ color:#fff; text-decoration:none; font-size:13px; opacity:.9; border:1px solid rgba(255,255,255,.35);
+                 border-radius:8px; padding:4px 9px; }
+  header .nav a:hover{ opacity:1; background:rgba(255,255,255,.12); }
+  main{ max-width:1000px; margin:22px auto; padding:0 16px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
+  #dz{ border:2px dashed var(--line); border-radius:14px; padding:38px 18px; text-align:center; cursor:pointer;
+       transition:.15s; background:var(--card); }
+  #dz:hover,#dz.drag{ border-color:var(--accent2); background:color-mix(in srgb, var(--accent2) 8%, var(--card)); }
+  #dz .ic{ font-size:42px; }
+  #dz .t{ font-weight:700; margin-top:8px; }
+  #dz .s{ color:var(--mut); font-size:13px; margin-top:2px; }
+  #dz .n{ color:var(--mut); font-size:12px; margin-top:10px; }
+  input[type=file]{ display:none; }
+  .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+  button{ font:inherit; font-weight:600; border:0; border-radius:10px; padding:10px 16px; cursor:pointer; color:#fff; background:var(--accent2); }
+  button.sec{ background:transparent; color:var(--accent2); border:1px solid var(--accent2); }
+  button:disabled{ opacity:.5; cursor:default; }
+  .stats{ display:flex; gap:18px; flex-wrap:wrap; margin:2px 0 14px; }
+  .stat b{ font-size:22px; display:block; } .stat span{ color:var(--mut); font-size:12px; }
+  .warn{ background:color-mix(in srgb, var(--warn) 12%, var(--card)); border:1px solid var(--warn); color:var(--warn);
+         border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:14px; }
+  .note{ color:var(--mut); font-size:12.5px; margin-top:10px; }
+  .tblwrap{ overflow:auto; border:1px solid var(--line); border-radius:10px; max-height:52vh; }
+  table{ border-collapse:collapse; font-size:12px; white-space:nowrap; }
+  th,td{ border-bottom:1px solid var(--line); padding:5px 8px; text-align:left; }
+  th{ position:sticky; top:0; background:var(--card); font-weight:700; }
+  .hidden{ display:none; }
+  .err{ color:#c62828; font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <span style="font-size:20px;">📄→📊</span>
+  <h1>PDF → GRP · export XLSX / CSV</h1>
+  <nav class="nav">
+    <a href="index.html">📋 Interviews</a>
+    <a href="statbel_converter.html">🔄 Convertisseur</a>
+    <a href="statbel_planner.html">🗓️ Planner</a>
+  </nav>
+</header>
+
+<main>
+  <div class="card">
+    <div id="dz">
+      <div class="ic">📂</div>
+      <div class="t">Glissez le listing GRP (PDF) ici</div>
+      <div class="s">ou cliquez pour choisir un fichier</div>
+      <div class="n">GRP_2026xxxxxxxxxxx.pdf — traitement 100 % local, hors-ligne</div>
+      <input type="file" id="file" accept=".pdf">
+    </div>
+    <p id="msg" class="note"></p>
+  </div>
+
+  <div class="card hidden" id="res">
+    <div class="stats">
+      <div class="stat"><b id="stMenages">0</b><span>ménages</span></div>
+      <div class="stat"><b id="stPersonnes">0</b><span>personnes</span></div>
+      <div class="stat"><b id="stGroupe">—</b><span>groupe</span></div>
+    </div>
+    <div class="warn hidden" id="warn"></div>
+    <div class="btns">
+      <button id="dlXlsx">⬇️ Télécharger .xlsx</button>
+      <button id="dlCsv" class="sec">⬇️ Télécharger .csv</button>
+    </div>
+    <p class="note">Format GRP à 30 colonnes (identique à l'export Statbel). <b>DT_MB_BTH</b> (date de
+       naissance) et <b>CD_MB_BTH_REFNIS</b> (commune de naissance) restent vides : absents du PDF
+       (il ne porte que l'âge et le pays). Aperçu des 25 premières lignes :</p>
+    <div class="tblwrap"><table id="preview"></table></div>
+  </div>
+</main>
+
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script src="vendor/xlsx/xlsx.full.min.js"></script>
+<script src="js/pdfgrp.js"></script>
+<script>
+(function(){
+  var dz = document.getElementById('dz'), fileInput = document.getElementById('file');
+  var msg = document.getElementById('msg'), res = document.getElementById('res');
+  var lastRows = null, lastAoa = null, lastName = 'GRP';
+
+  function setMsg(t, err){ msg.textContent = t || ''; msg.className = err ? 'note err' : 'note'; }
+
+  function traiter(file){
+    if (!file) return;
+    if (!/\.pdf$/i.test(file.name)) { setMsg('Fichier non-PDF ignoré.', true); return; }
+    setMsg('Lecture de « ' + file.name + ' »…'); res.classList.add('hidden');
+    var reader = new FileReader();
+    reader.onload = function(e){
+      pdfGrpParse(e.target.result).then(function(out){
+        if (!out.rows.length) { setMsg('Aucune personne trouvée — est-ce bien un listing GRP ?', true); return; }
+        lastRows = out.rows; lastAoa = pdfGrpToAoa(out.rows);
+        lastName = 'GRP_' + (out.rows[0].NR_GRP || 'export');
+        afficher(out);
+        setMsg('');
+      }).catch(function(err){ setMsg('Erreur de lecture du PDF : ' + err.message, true); });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function afficher(out){
+    var rows = out.rows;
+    var menages = {}; rows.forEach(function(r){ menages[r.NR_HH] = 1; });
+    document.getElementById('stMenages').textContent = Object.keys(menages).length;
+    document.getElementById('stPersonnes').textContent = rows.length;
+    document.getElementById('stGroupe').textContent = rows[0].TX_DBENQ_GRP || '—';
+    var warn = document.getElementById('warn');
+    var inc = out.unknown.nlty.concat(out.unknown.mrtl);
+    if (inc.length){ warn.textContent = '⚠️ Valeurs sans code (colonnes laissées vides) : ' + inc.join(', ')
+                       + '. Complétez la table dans js/pdfgrp.js.'; warn.classList.remove('hidden'); }
+    else warn.classList.add('hidden');
+    // aperçu (25 lignes)
+    var cols = PDF_GRP_COLS, tbl = document.getElementById('preview');
+    var html = '<tr>' + cols.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr>';
+    rows.slice(0, 25).forEach(function(r){
+      html += '<tr>' + cols.map(function(c){ var v = r[c] == null ? '' : String(r[c]);
+        return '<td>' + v.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</td>'; }).join('') + '</tr>';
+    });
+    tbl.innerHTML = html;
+    res.classList.remove('hidden');
+  }
+
+  function dlXlsx(){
+    if (!lastAoa) return;
+    var ws = XLSX.utils.aoa_to_sheet(lastAoa);
+    var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Feuille1');
+    XLSX.writeFile(wb, lastName + '.xlsx');
+  }
+  function dlCsv(){
+    if (!lastAoa) return;
+    var esc = function(v){ v = v == null ? '' : String(v);
+      return /[;"\r\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+    var csv = '﻿' + lastAoa.map(function(r){ return r.map(esc).join(';'); }).join('\r\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+    a.download = lastName + '.csv'; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  dz.addEventListener('click', function(){ fileInput.click(); });
+  fileInput.addEventListener('change', function(e){ traiter(e.target.files[0]); e.target.value = ''; });
+  dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', function(){ dz.classList.remove('drag'); });
+  dz.addEventListener('drop', function(e){ e.preventDefault(); dz.classList.remove('drag'); traiter(e.dataTransfer.files[0]); });
+  document.getElementById('dlXlsx').addEventListener('click', dlXlsx);
+  document.getElementById('dlCsv').addEventListener('click', dlCsv);
+
+  // PWA (servi en http(s))
+  if (location.protocol === 'https:' || location.protocol === 'http:') {
+    if ('serviceWorker' in navigator) window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
+})();
+</script>
+</body>
+</html>
