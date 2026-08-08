@@ -272,6 +272,10 @@ select[multiple]{height:120px}
 .cand-field.cand-wide{grid-column:1 / -1}
 .cand-field label{font-size:11px;font-weight:600;color:var(--ink2)}
 .cand-field input{margin:0}
+/* Champs calculés (nb de groupes, date) : lecture seule, aspect atténué. */
+.cand-field input[readonly]{background:var(--bg);color:var(--ink2);cursor:default}
+.cand-auto{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+  color:var(--accent);background:var(--v1l);border-radius:4px;padding:1px 5px;margin-left:4px}
 .cand-preview{border:1px solid var(--border);border-radius:8px;padding:8px 10px;max-height:200px;overflow:auto;background:#fafbfc}
 .cand-preview table{width:100%;border-collapse:collapse;font-size:12px}
 .cand-preview th{text-align:left;color:var(--ink3);font-weight:600;padding:3px 6px;border-bottom:1px solid var(--border)}
@@ -465,8 +469,10 @@ select[multiple]{height:120px}
       <div class="cand-field"><label>E-mail privé</label><input type="text" id="candEmailPrive"></div>
       <div class="cand-field"><label>E-mail bureau</label><input type="text" id="candEmailBur"></div>
 
-      <div class="cand-field"><label>Nombre de groupes souhaités</label><input type="text" id="candNbGroupes"></div>
-      <div class="cand-field"><label>Date</label><input type="text" id="candDate"></div>
+      <div class="cand-field"><label>Nombre de groupes souhaités <span class="cand-auto">auto</span></label>
+        <input type="text" id="candNbGroupes" readonly title="Automatique — égal au nombre de groupes sélectionnés"></div>
+      <div class="cand-field"><label>Date <span class="cand-auto">auto</span></label>
+        <input type="text" id="candDate" readonly title="Automatique — date du jour"></div>
     </div>
 
     <div style="margin-top:10px">
@@ -1599,8 +1605,10 @@ function candGenerateDocxBytes(data) {
    CANDIDATURE — câblage interface (panneau + persistance + génération)
    ══════════════════════════════════════════════════════════════════════ */
 const CAND_LS_KEY = 'lfs_candidature_infos';
+// Champs mémorisés (coordonnées). NbGroupes et Date sont CALCULÉS (nb de groupes
+// sélectionnés / date du jour) → ni mémorisés ni restaurés.
 const CAND_FIELDS = ['Survey','Nom','Prenom','Adresse','Cp','Commune','TelPrive','HeuresPrive',
-  'TelPort','HeuresPort','TelBur','HeuresBur','EmailPrive','EmailBur','NbGroupes','Date'];
+  'TelPort','HeuresPort','TelBur','HeuresBur','EmailPrive','EmailBur'];
 // Sigle d'enquête -> nom complet (pour développer le titre du document).
 // Le sigle inconnu est utilisé tel quel comme nom. Ajouter les enquêtes ici.
 const CAND_SURVEYS = {
@@ -1613,21 +1621,20 @@ function candEscHtml(s){
   return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// Date du jour (jj/mm/aaaa) dans le champ Date — appelée à chaque ouverture.
+function candSetDateAujourdhui(){
+  const d=candEl('Date'); if(d) d.value=new Date().toLocaleDateString('fr-BE');
+}
+
 function candLoadInfos(){
   let saved={};
   try{ saved=JSON.parse(localStorage.getItem(CAND_LS_KEY)||'{}'); }catch(e){}
   CAND_FIELDS.forEach(f=>{ const el=candEl(f); if(el && saved[f]!=null) el.value=saved[f]; });
-  const dateEl=candEl('Date');
-  if(dateEl && !dateEl.value) dateEl.value=new Date().toLocaleDateString('fr-BE');
   CAND_FIELDS.forEach(f=>{ const el=candEl(f); if(el) el.addEventListener('input',candSaveInfos); });
-  const nb=candEl('NbGroupes');
-  if(nb){
-    if(!(nb.value.trim()==='')) nb.dataset.auto='0';   // valeur restaurée => manuelle
-    nb.addEventListener('input',()=>{ nb.dataset.auto='0'; });
-  }
+  candSetDateAujourdhui();          // Date = date du jour
   candSigInit();
   candSigLoad(localStorage.getItem(CAND_SIG_KEY));
-  updateCandidaturePreview();
+  updateCandidaturePreview();       // NbGroupes = nb de groupes sélectionnés
 }
 
 function candSaveInfos(){
@@ -1657,10 +1664,9 @@ function updateCandidaturePreview(){
       groups.map(g=>'<tr><td>'+candEscHtml(g.numero)+'</td><td>'+candEscHtml(g.commune)+'</td></tr>').join('')+
       '</tbody></table>';
   }
+  // NbGroupes est toujours égal au nombre de groupes sélectionnés (champ calculé).
   const nb=candEl('NbGroupes');
-  if(nb && (nb.value.trim()==='' || nb.dataset.auto==='1')){
-    nb.value=String(groups.length); nb.dataset.auto='1'; candSaveInfos();
-  }
+  if(nb) nb.value=String(groups.length);
 }
 
 function genererCandidature(){
@@ -1705,7 +1711,8 @@ function candEscHandler(e){ if(e.key==='Escape') closeCandidature(); }
 function openCandidature(){
   const m=document.getElementById('candModal');
   if(!m) return;
-  updateCandidaturePreview();
+  candSetDateAujourdhui();        // Date = date du jour à chaque ouverture
+  updateCandidaturePreview();     // NbGroupes = nb de groupes sélectionnés
   m.style.display='flex';
   document.addEventListener('keydown', candEscHandler);
 }
@@ -1752,7 +1759,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '171';
+const APP_VERSION = '172';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

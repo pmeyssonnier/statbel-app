@@ -138,6 +138,23 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(flow.listeRows > 0, `vue liste rend des lignes (${flow.listeRows})`);
     A(String(flow.cand) === String(flow.selSize), `candidature reflète la sélection (${flow.cand} = ${flow.selSize})`);
 
+    // Candidature : NbGroupes = nb de groupes sélectionnés (calculé, lecture seule),
+    // Date = date du jour. Les deux écrasent toute valeur mémorisée.
+    const cand = await p.evaluate(() => {
+      openCandidature();
+      const today = new Date().toLocaleDateString('fr-BE');
+      const r = { nb: candNbGroupes.value, date: candDate.value, today,
+                  nbRO: candNbGroupes.readOnly, dRO: candDate.readOnly, sel: selected.size };
+      // désélectionner un groupe → NbGroupes doit suivre en direct
+      const first = [...selected][0]; toggleGroup(first);
+      r.nbAfter = candNbGroupes.value; r.selAfter = selected.size;
+      return r;
+    });
+    A(cand.nb === String(cand.sel), `NbGroupes = groupes sélectionnés (${cand.sel}) → "${cand.nb}"`);
+    A(cand.date === cand.today, `Date = date du jour (${cand.today}) → "${cand.date}"`);
+    A(cand.nbRO && cand.dRO, 'NbGroupes et Date en lecture seule (champs calculés)');
+    A(cand.nbAfter === String(cand.selAfter), `NbGroupes suit la sélection en direct (${cand.selAfter}) → "${cand.nbAfter}"`);
+
     A(perr.length === 0, 'plannings présents : aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
     await p.close();
   }
