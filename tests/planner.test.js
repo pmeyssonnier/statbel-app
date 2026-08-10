@@ -52,11 +52,11 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     await p.goto(srv.url + '/statbel_planner.html', { waitUntil: 'load' });
     await p.waitForTimeout(300);
     const st = await p.evaluate(() => ({
-      empty:  document.getElementById('planEmpty').style.display !== 'none',
-      picker: document.getElementById('planPicker').style.display !== 'none',
+      invite: document.getElementById('planCard').style.display !== 'none',
+      selHidden: getComputedStyle(document.getElementById('selPlanning')).display === 'none',
       filter: document.getElementById('filterCard').style.display !== 'none',
     }));
-    A(st.empty && !st.picker && !st.filter, 'état vide : invite affichée, sélecteur + filtres masqués');
+    A(st.invite && st.selHidden && !st.filter, 'état vide : invite affichée, sélecteur + filtres masqués');
     A(perr.length === 0, 'état vide : aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
     await p.close();
   }
@@ -76,7 +76,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     const base = await p.evaluate(() => {
       const sel = document.getElementById('selPlanning');
       return {
-        picker: document.getElementById('planPicker').style.display !== 'none',
+        selShown: getComputedStyle(sel).display !== 'none',
+        inviteHidden: document.getElementById('planCard').style.display === 'none',
+        planInfo: document.getElementById('planInfo').textContent,
+        planInfoInHeader: !!document.querySelector('#filterCard .card-title #planInfo'),
         opts: [...sel.options].map(o => ({ v: o.value, t: o.text })),
         allRows: allRows.length,
         provOpts: [...document.getElementById('selProvince').options].map(o => ({ v: o.value, t: o.text })),
@@ -86,7 +89,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
         quartMultiple: document.getElementById('selQuartier').multiple,
       };
     });
-    A(base.picker, 'plannings présents : sélecteur affiché');
+    A(base.selShown && base.inviteHidden, 'plannings présents : sélecteur affiché, invite masquée');
+    A(base.planInfoInHeader && /groupe/.test(base.planInfo),
+      `badge « N groupe(s) » dans l'en-tête « Sélectionner des groupes » (got "${base.planInfo.trim()}")`);
     A(base.opts.length === 3 && base.opts[0].v === '__ALL__' && /Tout — 2/.test(base.opts[0].t),
       `option « Tout — 2 trimestres » + 2 trimestres (got ${base.opts.length}: "${base.opts.map(o => o.t).join('", "')}")`);
     // « Tout » : 3 groupes distincts (11001, 25002 dédupliqué, 62003)

@@ -327,25 +327,23 @@ select[multiple]{height:120px}
 
 <div class="main">
 
-  <!-- 1. Source : plannings déjà importés dans le Convertisseur.
-       Le sélecteur de trimestre est dans le bandeau (comme #surveySelect /
-       #sourceSelect) ; cette carte ne porte que l'invite ou le récapitulatif. -->
-  <div class="card" id="planCard">
-    <div id="planEmpty" style="display:none;font-size:13px;color:var(--ink3);line-height:1.6">
+  <!-- 1. Invite affichée uniquement quand aucun planning n'est chargé.
+       Le sélecteur de trimestre est dans le bandeau ; le récapitulatif du nombre
+       de groupes est déplacé dans l'en-tête « Sélectionner des groupes ». -->
+  <div class="card" id="planCard" style="display:none">
+    <div id="planEmpty" style="font-size:13px;color:var(--ink3);line-height:1.6">
       Aucun planning chargé. Importez vos fichiers trimestriels LFS dans le
       <a href="statbel_converter.html" style="color:var(--accent);font-weight:600;text-decoration:none">🔄 Convertisseur</a>
       (onglet « Planning ») — ils apparaîtront ici automatiquement.
     </div>
-    <div id="planPicker" style="display:none">
-      <div class="card-title" style="margin:0"><span>🗂️</span>
-        Trimestre — choisissez « Tout » dans le bandeau pour agréger tous les trimestres</div>
-      <div class="file-chips" id="planInfo" style="margin-top:10px"></div>
-    </div>
   </div>
 
-  <!-- 2. Filtres & sélection -->
+  <!-- 2. Filtres & sélection — le badge « N groupe(s) » est en haut à droite du titre. -->
   <div class="card" id="filterCard" style="display:none">
-    <div class="card-title"><span>🔍</span> Sélectionner des groupes</div>
+    <div class="card-title" style="flex-wrap:wrap">
+      <span>🔍</span> Sélectionner des groupes
+      <div class="file-chips" id="planInfo" style="margin:0 0 0 auto"></div>
+    </div>
     <div class="filters-grid">
       <div class="filter-group">
         <label>Province</label>
@@ -596,19 +594,18 @@ function chargerPlanningsConvertisseur() {
               .map(p => ({ id: p.id, nom: p.nom || p.id, rows: planningVersRows(p) }))
               .filter(p => p.rows.length);
 
-  const picker = document.getElementById('planPicker');
-  const empty  = document.getElementById('planEmpty');
-  const sel    = document.getElementById('selPlanning');
+  const card = document.getElementById('planCard');   // invite (aucun planning)
+  const sel  = document.getElementById('selPlanning');
   if (!_plans.length) {
     // Comme #sourceSelect du Convertisseur : sélecteur masqué quand vide.
     sel.style.display = 'none'; sel.innerHTML = '';
-    picker.style.display = 'none'; empty.style.display = '';
+    card.style.display = '';                           // affiche l'invite
     allRows = []; filtered = [];
     document.getElementById('filterCard').style.display = 'none';
     document.getElementById('agendaCard').style.display = 'none';
     return;
   }
-  empty.style.display = 'none'; picker.style.display = ''; sel.style.display = '';
+  card.style.display = 'none'; sel.style.display = '';  // masque l'invite
 
   const prev = sel.value;                       // préserver le choix courant si possible
   const opts = [];
@@ -1709,7 +1706,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '175';
+const APP_VERSION = '176';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
