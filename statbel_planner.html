@@ -348,14 +348,9 @@ select[multiple]{height:120px}
     <div class="card-title"><span>🔍</span> Sélectionner des groupes</div>
     <div class="filters-grid">
       <div class="filter-group">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-          <label style="margin:0">Province</label>
-          <span class="sort-btns">
-            <button class="sort-btn" onclick="sortSelect('selProvince','asc')" title="A→Z">▲</button>
-            <button class="sort-btn" onclick="sortSelect('selProvince','desc')" title="Z→A">▼</button>
-          </span>
-        </div>
-        <select id="selProvince" multiple onchange="onChangeProvince()"></select>
+        <label>Province</label>
+        <!-- Sélection unique (une ligne), défaut Bruxelles ; commune/quartier restent multiples. -->
+        <select id="selProvince" onchange="onChangeProvince()"></select>
       </div>
       <div class="filter-group">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
@@ -668,14 +663,18 @@ function getSelValues(id) {
 // Chaque select ne montre que ce qui existe dans le contexte des sélections parentes.
 
 function populateFilters() {
-  // Province : valeur = code brut (BRU…), libellé = nom complet (Bruxelles…).
+  // Province : sélection UNIQUE (liste déroulante, une ligne). Valeur = code brut
+  // (BRU…), libellé = nom complet (Bruxelles…). Défaut : Bruxelles (BRU) si présent.
   const provs = [...new Set(allRows.map(r => r.province))]
     .sort((a, b) => provLabel(a).localeCompare(provLabel(b), 'fr', { sensitivity: 'base' }));
-  const prev = getSelValues('selProvince').filter(v => provs.includes(v));
   const sel  = document.getElementById('selProvince');
+  const prev = sel.value;
   sel.innerHTML = provs.map(v =>
-    `<option value="${esc(v)}"${prev.includes(v) ? ' selected' : ''}>${esc(provLabel(v))}</option>`
+    `<option value="${esc(v)}">${esc(provLabel(v))}</option>`
   ).join('');
+  // Conserver le choix précédent s'il existe encore, sinon Bruxelles, sinon 1er.
+  if (prev && provs.includes(prev)) sel.value = prev;
+  else if (provs.includes('BRU')) sel.value = 'BRU';
   cascadeCommune();
 }
 
@@ -1710,7 +1709,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '174';
+const APP_VERSION = '175';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
