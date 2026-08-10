@@ -107,6 +107,21 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(base.commMultiple === true && base.quartMultiple === true,
       'Commune et Quartier restent en sélection multiple');
 
+    // Badge « N groupe(s) » : dépend des filtres (province…) ET de la sélection.
+    const badge = await p.evaluate(() => {
+      const txt = () => document.getElementById('planInfo').textContent.trim();
+      const r = { bru: txt() };                       // défaut BRU : 1 groupe (11001)
+      document.getElementById('selProvince').value = 'BWA'; onChangeProvince();
+      r.bwa = txt();                                  // BWA : 1 groupe (25002)
+      document.getElementById('selProvince').value = 'BRU'; onChangeProvince();
+      toggleGroup('11001');                           // sélection
+      r.withSel = txt();
+      return r;
+    });
+    A(/1 groupe/.test(badge.bru), `badge suit le filtre province (BRU → "${badge.bru}")`);
+    A(/1 groupe/.test(badge.bwa), `badge change avec la province (BWA → "${badge.bwa}")`);
+    A(/✓ 1 sélectionné/.test(badge.withSel), `badge suit la sélection (→ "${badge.withSel}")`);
+
     // Bandeau aligné sur Interviews / Convertisseur : sélecteur DANS l'en-tête,
     // navigation vers les autres apps dans le menu ⋮.
     const hdr = await p.evaluate(() => {
