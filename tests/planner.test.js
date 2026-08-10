@@ -80,6 +80,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
         opts: [...sel.options].map(o => ({ v: o.value, t: o.text })),
         allRows: allRows.length,
         provOpts: [...document.getElementById('selProvince').options].map(o => ({ v: o.value, t: o.text })),
+        provMultiple: document.getElementById('selProvince').multiple,
+        provValue: document.getElementById('selProvince').value,
+        commMultiple: document.getElementById('selCommune').multiple,
+        quartMultiple: document.getElementById('selQuartier').multiple,
       };
     });
     A(base.picker, 'plannings présents : sélecteur affiché');
@@ -91,6 +95,12 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(bru && bru.t === 'Bruxelles', `province BRU → libellé « Bruxelles » (got "${bru && bru.t}")`);
     A(base.provOpts.some(o => o.v === 'BWA' && o.t === 'Brabant wallon'), 'province BWA → « Brabant wallon »');
     A(base.provOpts.some(o => o.v === 'LIE' && o.t === 'Liège'), 'province LIE → « Liège »');
+
+    // Province = sélection unique, défaut Bruxelles ; commune/quartier restent multiples.
+    A(base.provMultiple === false, 'Province en sélection unique (liste déroulante)');
+    A(base.provValue === 'BRU', `Province par défaut = Bruxelles (BRU) → "${base.provValue}"`);
+    A(base.commMultiple === true && base.quartMultiple === true,
+      'Commune et Quartier restent en sélection multiple');
 
     // Bandeau aligné sur Interviews / Convertisseur : sélecteur DANS l'en-tête,
     // navigation vers les autres apps dans le menu ⋮.
