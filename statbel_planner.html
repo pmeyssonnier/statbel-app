@@ -629,14 +629,20 @@ function onChangePlanning() {
   selected = new Set([...selected].filter(n => map.has(n)));   // garder la sélection valide
   filtered = allRows.slice();
 
-  populateFilters();
+  populateFilters();      // → cascade filtres → applyFilters → majBadgeGroupes
   document.getElementById('filterCard').style.display = allRows.length ? '' : 'none';
   renderGroupsList();
   updateAgenda();
+}
 
+// Badge « N groupe(s) » : dépend des filtres (province/commune/quartier/recherche)
+// et de la sélection. Affiche le nb de groupes filtrés + le nb sélectionnés.
+function majBadgeGroupes() {
   const info = document.getElementById('planInfo');
-  if (info) info.innerHTML = `<div class="file-chip">📊 ${allRows.length} groupe(s)`
-    + (src.length > 1 ? ` · ${src.length} trimestres agrégés` : '') + `</div>`;
+  if (!info) return;
+  const tot = filtered.length, sel = selected.size;
+  info.innerHTML = `<div class="file-chip">📊 ${tot} groupe(s)`
+    + (sel ? ` · ✓ ${sel} sélectionné(s)` : '') + `</div>`;
 }
 
 // Menu ⋮ du bandeau (même comportement que Interviews / Convertisseur).
@@ -738,6 +744,7 @@ function applyFilters() {
   });
 
   renderGroupsList();
+  majBadgeGroupes();          // le badge dépend des filtres
 }
 
 function renderGroupsList() {
@@ -797,6 +804,7 @@ function updateAgenda() {
   const hc = document.getElementById('hdrCount');
   hc.textContent = '✓ ' + count;                       // compact dans le bandeau
   hc.title = count + ' groupe(s) sélectionné(s)';
+  majBadgeGroupes();                                   // le badge dépend de la sélection
   const card = document.getElementById('agendaCard');
   if (count === 0) {
     card.style.display = 'none';
@@ -1706,7 +1714,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '176';
+const APP_VERSION = '177';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
