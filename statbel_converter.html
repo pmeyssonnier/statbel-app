@@ -462,11 +462,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       </div>
       <!-- KPI -->
       <div class="compteurs">
-        <div class="compteur"><div class="val" id="cNbLignes">—</div><div class="label" data-i18n="lbl_source_rows">Source rows</div></div>
+        <div class="compteur"><div class="val" id="cNbLignes">—</div><div class="label" data-i18n="lbl_source_rows">Members</div></div>
         <div class="compteur"><div class="val" id="cNbMenages">—</div><div class="label" data-i18n="lbl_households">Households</div></div>
         <div class="compteur"><div class="val" id="cNbCibles">—</div><div class="label" data-i18n="lbl_targets">Targets (FL=1)</div></div>
-        <div class="compteur"><div class="val" id="cNbMembres">—</div><div class="label" data-i18n="lbl_total_members">Total members</div></div>
-
       </div>
       <div id="planningInfo"></div>
     </div>
@@ -812,7 +810,7 @@ const I18N = {
   // ── Overview ───────────────────────────────────────────────────────
   lbl_location: { fr:"📍 Localisation :", nl:"📍 Locatie:", en:"📍 Location:", de:"📍 Standort:" },
   ph_location: { fr:"ex. SCHAERBEEK", nl:"bv. SCHAARBEEK", en:"e.g. SCHAERBEEK", de:"z. B. SCHAERBEEK" },
-  lbl_source_rows: { fr:"Lignes source", nl:"Bronregels", en:"Source rows", de:"Quellzeilen" },
+  lbl_source_rows: { fr:"Membres", nl:"Leden", en:"Members", de:"Mitglieder" },
   lbl_households: { fr:"Ménages", nl:"Huishoudens", en:"Households", de:"Haushalte" },
   lbl_targets: { fr:"Cibles (FL=1)", nl:"Doelpersonen (FL=1)", en:"Targets (FL=1)", de:"Zielpersonen (FL=1)" },
   lbl_total_members: { fr:"Total des membres", nl:"Totaal aantal leden", en:"Total members", de:"Mitglieder gesamt" },
@@ -6495,7 +6493,6 @@ function majKPI() {
   document.getElementById('cNbLignes').textContent  = lignes;
   document.getElementById('cNbMenages').textContent = menages;
   document.getElementById('cNbCibles').textContent  = cibles;
-  document.getElementById('cNbMembres').textContent = membres;
 }
 function majStatsEnqUI() {
   document.querySelectorAll('#enqToggle button').forEach(b =>
@@ -7120,7 +7117,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '167';
+const APP_VERSION = '168';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
