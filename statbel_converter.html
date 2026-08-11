@@ -507,9 +507,16 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         </div>
         <span style="font-size:12px;color:var(--text2);font-weight:bold;margin-left:6px" data-i18n="lbl_population_colon">Population:</span>
         <div class="scope-toggle" id="popToggle">
-          <button data-scope="cibles"  class="actif" data-i18n="btn_targets_only" onclick="setScope('cibles')">🎯 Targets only</button>
-          <button data-scope="membres"               data-i18n="btn_full_household" onclick="setScope('membres')">👥 Full household</button>
+          <button data-scope="referent" class="actif" data-i18n="btn_reference" onclick="setScope('referent')">👤 Reference person</button>
+          <button data-scope="cible"    id="btnScopeCible" onclick="setScope('cible')">🎯 Targets</button>
+          <button data-scope="membres"  data-i18n="btn_full_household" onclick="setScope('membres')">👥 Full household</button>
         </div>
+        <label style="font-size:12px;color:var(--text2);display:inline-flex;align-items:center;gap:5px;margin-left:2px">
+          <span data-i18n="lbl_age_min">Min. target age</span>
+          <input id="inpAgeMin" type="number" min="0" max="120" step="1" value="15"
+            oninput="setAgeMinCible(this.value)" title="Âge minimum des personnes cibles interrogées"
+            style="width:54px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--text)">
+        </label>
         <span style="margin-left:auto;font-size:11px;color:var(--text2)">
           <span style="display:inline-block;width:11px;height:11px;background:var(--bar-h);border-radius:2px;vertical-align:middle"></span> <span data-i18n="legend_men">Men</span>
           &nbsp;<span style="display:inline-block;width:11px;height:11px;background:var(--bar-f);border-radius:2px;vertical-align:middle"></span> <span data-i18n="legend_women">Women</span>
@@ -812,7 +819,7 @@ const I18N = {
   ph_location: { fr:"ex. SCHAERBEEK", nl:"bv. SCHAARBEEK", en:"e.g. SCHAERBEEK", de:"z. B. SCHAERBEEK" },
   lbl_source_rows: { fr:"Membres", nl:"Leden", en:"Members", de:"Mitglieder" },
   lbl_households: { fr:"Ménages", nl:"Huishoudens", en:"Households", de:"Haushalte" },
-  lbl_targets: { fr:"Cibles (FL=1)", nl:"Doelpersonen (FL=1)", en:"Targets (FL=1)", de:"Zielpersonen (FL=1)" },
+  lbl_targets: { fr:"Référents (FL=1)", nl:"Referentiepersonen (FL=1)", en:"Reference persons (FL=1)", de:"Referenzpersonen (FL=1)" },
   lbl_total_members: { fr:"Total des membres", nl:"Totaal aantal leden", en:"Total members", de:"Mitglieder gesamt" },
   hint_click_row: { fr:"▸ cliquez sur une ligne pour déplier le ménage", nl:"▸ klik op een rij om het huishouden uit te vouwen", en:"▸ click a row to expand the household", de:"▸ Klicken Sie auf eine Zeile, um den Haushalt aufzuklappen" },
   th_contact: { fr:"Contact", nl:"Contact", en:"Contact", de:"Kontakt" },
@@ -913,8 +920,10 @@ const I18N = {
   btn_this_survey: { fr:"📋 Cette enquête", nl:"📋 Deze enquête", en:"📋 This survey", de:"📋 Diese Umfrage" },
   btn_all_surveys: { fr:"🗂️ Toutes les enquêtes", nl:"🗂️ Alle enquêtes", en:"🗂️ All surveys", de:"🗂️ Alle Umfragen" },
   lbl_population_colon: { fr:"Population :", nl:"Populatie:", en:"Population:", de:"Bevölkerung:" },
-  btn_targets_only: { fr:"🎯 Cibles uniquement", nl:"🎯 Alleen doelpersonen", en:"🎯 Targets only", de:"🎯 Nur Zielpersonen" },
+  btn_reference: { fr:"👤 Référent", nl:"👤 Referentiepersoon", en:"👤 Reference person", de:"👤 Referenzperson" },
+  btn_target_15: { fr:"🎯 Cibles", nl:"🎯 Doelpersonen", en:"🎯 Targets", de:"🎯 Zielpersonen" },
   btn_full_household: { fr:"👥 Ménage complet", nl:"👥 Volledig huishouden", en:"👥 Full household", de:"👥 Ganzer Haushalt" },
+  lbl_age_min: { fr:"Âge min. cible", nl:"Min. leeftijd doel", en:"Min. target age", de:"Mindestalter Ziel" },
   legend_men: { fr:"Hommes", nl:"Mannen", en:"Men", de:"Männer" },
   legend_women: { fr:"Femmes", nl:"Vrouwen", en:"Women", de:"Frauen" },
   kpi_pop_total: { fr:"Population totale", nl:"Totale populatie", en:"Total population", de:"Gesamtbevölkerung" },
@@ -1073,6 +1082,7 @@ function appliquerLangue() {
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
   const sel = document.getElementById('setLangConv'); if (sel) sel.value = uiLang;
+  if (typeof majLabelCible === 'function') majLabelCible();   // bouton « Cibles (N+) » (pas de data-i18n)
 }
 
 // Changement de langue : persiste dans localStorage['statbel_settings'] (fusion — partagé avec index.html)
@@ -4970,7 +4980,22 @@ const FONTS = {
   times:   '"Times New Roman", Times, serif',
   mono:    '"Courier New", monospace',
 };
-let _ui = { theme: 'auto', font: 'arial', scale: 1 };
+let _ui = { theme: 'auto', font: 'arial', scale: 1, ageMinCible: 15 };
+// Âge minimum des personnes « cibles » interrogées (LFS : 15 ans et +). Paramètre
+// persisté du module (statbel_conv_ui).
+function ageMinCible() { const n = parseInt(_ui.ageMinCible, 10); return isNaN(n) ? 15 : n; }
+function setAgeMinCible(v) {
+  let n = parseInt(v, 10); if (isNaN(n)) n = 15; n = Math.max(0, Math.min(120, n));
+  _ui.ageMinCible = n;
+  try { localStorage.setItem('statbel_conv_ui', JSON.stringify(_ui)); } catch (e) {}
+  majLabelCible();
+  if (_resultat && statsScope === 'cible') majStats(statsPourStats());
+}
+// Libellé du bouton « Cibles » = base traduite + seuil d'âge courant (≥ N).
+function majLabelCible() {
+  const b = document.getElementById('btnScopeCible');
+  if (b) b.textContent = t('btn_target_15') + ' (' + ageMinCible() + '+)';
+}
 const _mqDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
 function chargerApparence() {
@@ -4987,6 +5012,8 @@ function appliquerApparence() {
   document.querySelectorAll('#themeToggle button').forEach(b => b.classList.toggle('actif', b.dataset.theme === _ui.theme));
   document.querySelectorAll('#scaleToggle button').forEach(b => b.classList.toggle('actif', Number(b.dataset.scale) === Number(_ui.scale)));
   const fsel = document.getElementById('fontSelect'); if (fsel) fsel.value = _ui.font;
+  const am = document.getElementById('inpAgeMin'); if (am) am.value = ageMinCible();
+  majLabelCible();
 }
 function setTheme(t) { _ui.theme = t; localStorage.setItem('statbel_conv_ui', JSON.stringify(_ui)); appliquerApparence(); }
 function setFont(f) { _ui.font = f; localStorage.setItem('statbel_conv_ui', JSON.stringify(_ui)); appliquerApparence(); }
@@ -6452,7 +6479,7 @@ function zoomMenage(taille) {
 //  STATISTIQUES (bascule Cibles / Tout le ménage)
 // ════════════════════════════════════════════════════════════════════════
 
-let statsScope = 'cibles';   // 'cibles' | 'membres'
+let statsScope = 'referent';   // 'referent' (FL=1) | 'cible' (≥ âge min) | 'membres' (ménage complet)
 let statsEnq   = 'active';    // 'active' (enquête en cours) | 'all' (toutes les sources chargées)
 
 // Population utilisée pour les stats : enquête active ou agrégat de toutes les sources
@@ -6517,9 +6544,17 @@ function majScopeUI() {
     b.classList.toggle('actif', b.dataset.scope === statsScope));
 }
 
-// (Re)calcule et affiche tous les graphiques selon la portée active
+// (Re)calcule et affiche tous les graphiques selon la portée active :
+//  - 'referent' : la personne de contact (FL_MB_CNTCT=1), 1 par ménage
+//  - 'cible'    : tous les membres du ménage âgés d'au moins ageMinCible (LFS 15+)
+//  - 'membres'  : ménage complet
 function majStats(res) {
-  const pop = statsScope === 'membres' ? res.outMembres : res.outCibles;
+  let pop;
+  if (statsScope === 'membres') pop = res.outMembres;
+  else if (statsScope === 'cible') {
+    const min = ageMinCible();
+    pop = res.outMembres.filter(r => { const a = parseInt(r.age, 10); return !isNaN(a) && a >= min; });
+  } else pop = res.outCibles;   // référent (FL=1)
 
   // KPI en-tête : population totale, % hommes/femmes, âge moyen
   const kM = pop.filter(r => r.sexe === 'M').length, kF = pop.filter(r => r.sexe === 'F').length;
@@ -7117,7 +7152,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '168';
+const APP_VERSION = '169';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
