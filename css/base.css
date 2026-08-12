@@ -241,6 +241,11 @@
   }
   .s-btn:active { transform: scale(0.95); }
   .s-btn.actif  { opacity: 1; border-color: currentColor; }
+  /* Barre de statut verrouillée (carte) : les boutons n'appliquent pas le statut,
+     ils ouvrent l'édition. Seul le statut courant est mis en avant. */
+  .statut-bar-lock .s-btn:not(.actif) { opacity: 0.32; }
+  .statut-lock { cursor: pointer; opacity: 0.5; font-size: 14px; align-self: center; padding: 0 6px; }
+  .statut-lock:active { transform: scale(0.9); }
   .s-btn.sf  { color: #546e7a; border-color: #90a4ae; background: var(--badge-bg); }
   .s-btn.se  { color: #e65100; }
   .s-btn.sd  { color: #2e7d32; }

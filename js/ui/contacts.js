@@ -190,6 +190,20 @@ export function ouvrirEdit(i) {
   return el;
 }
 
+// Barre de statut d'une fiche. En mode « verrouillé » (fiche fermée), les boutons
+// N'APPLIQUENT PAS le statut : ils ouvrent le formulaire d'édition. Le statut ne se
+// change qu'en mode édition → évite les changements accidentels au toucher.
+export function statutBarHTML(i, statut, editable) {
+  return statutDefs().map((s, si) => {
+    const on = s.label === statut;
+    const style = `color:${s.color};${on ? `border-color:${s.color};background:${s.color}22;` : ''}`;
+    const act = editable ? `changerStatut(${i},statutDefs()[${si}].label)` : `ouvrirEdit(${i})`;
+    const cls = `s-btn${on ? ' actif' : ''}${editable ? '' : ' s-btn-lock'}`;
+    const ttl = editable ? '' : ` title="${esc(t('lock_status_edit'))}"`;
+    return `<button class="${cls}" style="${style}"${ttl} onclick="event.stopPropagation();${act}">${esc(s.icon)} ${esc(statutLabel(s.label))}</button>`;
+  }).join('');
+}
+
 // Génère le contenu du formulaire d'édition d'une fiche (à la demande)
 export function buildEditForm(i) {
   const c      = contacts()[i];
@@ -200,12 +214,7 @@ export function buildEditForm(i) {
         ${buildHistoriqueHTML(c, i)}
         <div class="edit-row">
           <label>${t('ed_status')}</label>
-          <div class="statut-bar">
-            ${statutDefs().map((s, si) => {
-              const on = s.label === statut;
-              return `<button class="s-btn${on?' actif':''}" style="color:${s.color};${on?`border-color:${s.color};background:${s.color}22;`:''}" onclick="changerStatut(${i},statutDefs()[${si}].label)">${s.icon} ${esc(statutLabel(s.label))}</button>`;
-            }).join('')}
-          </div>
+          <div class="statut-bar">${statutBarHTML(i, statut, true)}</div>
         </div>
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:1">
@@ -381,12 +390,8 @@ export function rendu() {
       </div>
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
       <div class="card-statut">
-        <div class="statut-bar">
-          ${statutDefs().map((s, si) => {
-            const on = s.label === statut;
-            return `<button class="s-btn${on?' actif':''}" style="color:${s.color};${on?`border-color:${s.color};background:${s.color}22;`:''}" onclick="event.stopPropagation();changerStatut(${i},statutDefs()[${si}].label)">${esc(s.icon)} ${esc(statutLabel(s.label))}</button>`;
-          }).join('')}
-        </div>
+        <div class="statut-bar statut-bar-lock">${statutBarHTML(i, statut, false)}</div>
+        <span class="statut-lock" title="${esc(t('lock_status_edit'))}" onclick="event.stopPropagation();ouvrirEdit(${i})">🔒</span>
         ${dateStatut ? `<span class="card-statut-date">${esc(dateStatut)}</span>` : ''}
       </div>
       ${!coordsCache(c.adresse) ? `<div class="no-coords">${t('no_coords')}</div>` : ''}
@@ -461,12 +466,10 @@ export function majCarteStatut(i) {
     if (el) el.textContent = dateStatut;
     else { const s = document.createElement('span'); s.className = 'card-statut-date'; s.textContent = dateStatut; card.querySelector('.card-statut') && card.querySelector('.card-statut').appendChild(s); }
   } else if (el) { el.remove(); }
-  // Barres de statut (carte + formulaire) : reflète le statut courant
+  // Barres de statut (carte + formulaire) : reflète le statut courant. La barre du
+  // formulaire (dans .edit-area) est éditable ; celle de la carte est verrouillée.
   card.querySelectorAll('.statut-bar').forEach(bar => {
-    bar.innerHTML = statutDefs().map((s, si) => {
-      const on = s.label === c.statut;
-      return `<button class="s-btn${on ? ' actif' : ''}" style="color:${s.color};${on ? `border-color:${s.color};background:${s.color}22;` : ''}" onclick="event.stopPropagation();changerStatut(${i},statutDefs()[${si}].label)">${s.icon} ${esc(statutLabel(s.label))}</button>`;
-    }).join('');
+    bar.innerHTML = statutBarHTML(i, c.statut, !!bar.closest('.edit-area'));
   });
 }
 

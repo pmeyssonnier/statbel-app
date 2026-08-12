@@ -306,6 +306,7 @@ export const I18N = {
   "menu_planner": { fr:"🗓️ Planning Statbel", nl:"🗓️ Statbel-planning", en:"🗓️ Statbel planner", de:"🗓️ Statbel-Planer" },
   "title_recenter": { fr:"Recentrer sur les contacts", nl:"Centreren op de contacten", en:"Recenter on contacts", de:"Auf Kontakte zentrieren" },
   "aria_edit": { fr:"Modifier la fiche", nl:"Fiche bewerken", en:"Edit record", de:"Eintrag bearbeiten" },
+  "lock_status_edit": { fr:"Statut verrouillé — modifier en mode édition (🖊️)", nl:"Status vergrendeld — bewerk in bewerkingsmodus (🖊️)", en:"Status locked — change in edit mode (🖊️)", de:"Status gesperrt — im Bearbeitungsmodus ändern (🖊️)" },
   "pin_backspace": { fr:"Effacer", nl:"Wissen", en:"Backspace", de:"Löschen" },
   "aria_close": { fr:"Fermer", nl:"Sluiten", en:"Close", de:"Schließen" },
 };
