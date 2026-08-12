@@ -24,6 +24,7 @@
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script src="js/pdfgrp.js"></script>
+<script src="js/charts.js"></script>
 <style>
   :root {
     --bleu:   #1a237e;
@@ -6616,12 +6617,21 @@ function majMenagesCartes() {
   const min = ageMinCible();
   let mono = 0, avecMin = 0, sansMin = 0;
   menages.forEach(h => { if (h.total === 1) mono++; else if (h.minors > 0) avecMin++; else sansMin++; });
-  renderDonut('statsCompoHH', [
+  const compoItems = [
     { label: t('lbl_hh_mono'), value: mono, color: '#0277bd' },
     { label: t('lbl_hh_with_minor') + ' (<' + min + ')', value: avecMin, color: '#f9a825' },
     { label: t('lbl_hh_no_minor') + ' (≥' + min + ')', value: sansMin, color: '#2e7d32' },
-  ].filter(d => d.value > 0));
-  if (elDetail) elDetail.textContent = nbMen + ' ' + t('kpi_households').toLowerCase();
+  ];
+  // Première utilisation de la lib partagée js/charts.js (donut à légende + total au centre).
+  if (window.Charts) {
+    elCompo.innerHTML = Charts.donut(compoItems, {
+      total: nbMen, unitLabel: t('kpi_households').toLowerCase(), ariaLabel: t('card_hh_composition'),
+    });
+    if (elDetail) elDetail.textContent = '';
+  } else {
+    renderDonut('statsCompoHH', compoItems.filter(d => d.value > 0));
+    if (elDetail) elDetail.textContent = nbMen + ' ' + t('kpi_households').toLowerCase();
+  }
 }
 
 // (Re)calcule et affiche tous les graphiques selon la portée active :
@@ -7235,7 +7245,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '170';
+const APP_VERSION = '171';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
