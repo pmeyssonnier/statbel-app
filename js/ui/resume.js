@@ -9,7 +9,7 @@
  * l'orchestration (enquetes, enqueteActive, settings, statutDefaut, XLSX,
  * setView, vueActive) sont globaux (pont).
  */
-import { renderCourbeAvancement } from './stats.js';
+import { renderCourbeAvancement, collecterVisites } from './stats.js';
 import { esc } from '../core/util.js';
 import { t, labelNbEnquetes, localeApp } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
@@ -176,11 +176,28 @@ export function renduResume() {
   const nbRdv    = rdvStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
   const pctFait  = grandTotal ? Math.round(nbFait / grandTotal * 100) : 0;
 
+  // ── Sparklines : activité quotidienne par statut (lib partagée js/charts.js) ──
+  // Série alignée sur les jours d'activité observés ; RDV futurs exclus.
+  const evtsSpark = collecterVisites(scopeActive ? enqueteActive : null).filter(e => !e.isRdv);
+  const joursSpark = [...new Set(evtsSpark.map(e => e.iso.slice(0, 10)))].sort();
+  const serieStatut = label => {
+    if (!joursSpark.length) return [];
+    const parJour = {};
+    evtsSpark.forEach(e => { if (e.statut === label) { const d = e.iso.slice(0, 10); parJour[d] = (parJour[d] || 0) + 1; } });
+    return joursSpark.map(d => parJour[d] || 0);
+  };
+  const spark = (serie, color) =>
+    (globalThis.Charts && serie.some(v => v > 0)) ? Charts.sparkline(serie, { color, h: 30 }) : '';
+
+  // Carte total : tempo global (toutes activités confondues par jour)
+  const serieTotal = joursSpark.map(d => evtsSpark.filter(e => e.iso.slice(0, 10) === d).length);
+
   let kpiHtml = `
     <div class="kpi-card" style="border-top-color:#1a237e">
       <div class="kpi-val">${grandTotal}</div>
       <div class="kpi-lbl">${t('res_total_contacts')}</div>
       <div class="kpi-pct">${labelNbEnquetes(nomEnquetes.length)}</div>
+      ${spark(serieTotal, '#1a237e')}
     </div>`;
 
   statutsCfg.forEach(s => {
@@ -191,6 +208,7 @@ export function renduResume() {
       <div class="kpi-val" style="color:${s.color}">${nb}</div>
       <div class="kpi-lbl">${esc(s.icon)} ${esc(statutLabel(s.label))}</div>
       <div class="kpi-pct">${pct}%</div>
+      ${spark(serieStatut(s.label), s.color)}
     </div>`;
   });
 
