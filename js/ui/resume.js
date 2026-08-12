@@ -217,6 +217,42 @@ export function renduResume() {
   });
   legendHtml += '</div>';
 
+  // ── Donut de répartition des statuts (lib partagée js/charts.js) ─────────
+  const donutItems = statutsCfg.map(s => ({
+    label: `${s.icon} ${statutLabel(s.label)}`,
+    value: totauxParStatut[s.label] || 0,
+    color: s.color,
+  }));
+  const donutHtml = (globalThis.Charts && grandTotal)
+    ? Charts.donut(donutItems, { total: grandTotal, ariaLabel: t('res_distribution') })
+    : legendHtml;   // repli si la lib n'est pas chargée
+
+  // ── Données pour le tableau de contacts triable (lib partagée) ───────────
+  const frToIso = d => { const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(d || '').trim()); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
+  const contactsRows = [];
+  nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
+    const st = c.statut || statutDefaut();
+    contactsRows.push({
+      contact: `${c.nom || ''} ${c.prenom || ''}`.trim() || ('#' + (c.ordre || '')),
+      enquete: nom,
+      statut: statutLabel(st),
+      _statut: st,
+      visites: (c.historique || []).length,
+      derniereIso: frToIso(c.date),
+    });
+  }));
+  const badge = st => {
+    const col = colorFor(st), ic = iconFor(st);
+    return `<span class="chart-badge" style="background:${col}22;color:${col}">${esc(ic)} ${esc(statutLabel(st))}</span>`;
+  };
+  const contactsCols = [
+    { k: 'contact',     label: t('res_col_contact') },
+    { k: 'enquete',     label: t('res_col_survey') },
+    { k: 'statut',      label: t('res_col_status'), render: (v, r) => badge(r._statut) },
+    { k: 'visites',     label: t('res_col_visits'), num: true },
+    { k: 'derniereIso', label: t('res_col_last'), render: v => v ? v.split('-').reverse().join('/') : '—' },
+  ];
+
   // ── Tableau croisé ───────────────────────────────────────────────
   let thStatuts = statutsCfg.map(s =>
     `<th style="border-bottom:3px solid ${s.color}">${esc(s.icon)}<br>${esc(statutLabel(s.label))}</th>`
@@ -318,7 +354,10 @@ export function renduResume() {
     <div>
       <div class="resume-section-title">${t('res_progress')}</div>
       ${barHtml}
-      ${legendHtml}
+    </div>
+    <div>
+      <div class="resume-section-title">${t('res_distribution')}</div>
+      ${donutHtml}
     </div>
     <div>
       <div class="resume-section-title">${t('cumul_title')}</div>
@@ -327,5 +366,12 @@ export function renduResume() {
     <div>
       <div class="resume-section-title">${t('res_table')}</div>
       ${tableHtml}
+    </div>
+    <div>
+      <div class="resume-section-title">${t('res_contacts')}</div>
+      <div id="resumeContactsTable" class="chart-scroll"></div>
     </div>`;
+
+  // Tableau de contacts triable (rendu après l'injection du HTML).
+  if (globalThis.Charts) Charts.table('resumeContactsTable', contactsCols, contactsRows, { key: 'visites', dir: -1 });
 }
