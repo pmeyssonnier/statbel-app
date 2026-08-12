@@ -97,7 +97,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.2';
+const APP_VERSION = '3.3';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
