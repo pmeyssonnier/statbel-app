@@ -45,12 +45,12 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       ];
       Object.keys(enquetes).forEach(k => delete enquetes[k]);
       enquetes.G1 = [
-        { ordre: '1', nom: 'Dupont', prenom: 'Jean', adresse: 'Rue A, 1000 Bruxelles', statut: 'Done', date: '10/08/2026', historique: [{ statut: 'RDV', date: '05/08/2026' }, { statut: 'Done', date: '10/08/2026' }] },
-        { ordre: '2', nom: 'Martin', prenom: 'Anne', adresse: 'Rue B, 1000 Bruxelles', statut: 'To do', date: '', historique: [] },
-        { ordre: '3', nom: 'Sy', prenom: 'Omar', adresse: 'Rue C, 1030 Schaerbeek', statut: 'Refus', date: '08/08/2026', historique: [{ statut: 'RDV', date: '06/08/2026' }] },
+        { ordre: '1', nom: 'Dupont', prenom: 'Jean', adresse: 'Rue A, 1000 Bruxelles', statut: 'Done', date: '10/08/2026', nb_cibles: 2, historique: [{ statut: 'RDV', date: '05/08/2026' }, { statut: 'Done', date: '10/08/2026' }] },
+        { ordre: '2', nom: 'Martin', prenom: 'Anne', adresse: 'Rue B, 1000 Bruxelles', statut: 'To do', date: '', nb_cibles: 1, historique: [] },
+        { ordre: '3', nom: 'Sy', prenom: 'Omar', adresse: 'Rue C, 1030 Schaerbeek', statut: 'Refus', date: '08/08/2026', nb_cibles: 1, historique: [{ statut: 'RDV', date: '06/08/2026' }] },
       ];
       enquetes.G2 = [
-        { ordre: '1', nom: 'Blanc', prenom: 'Eva', adresse: 'Rue D, 1030 Schaerbeek', statut: 'Done', date: '11/08/2026', historique: [{ statut: 'Done', date: '11/08/2026' }] },
+        { ordre: '1', nom: 'Blanc', prenom: 'Eva', adresse: 'Rue D, 1030 Schaerbeek', statut: 'Done', date: '11/08/2026', nb_cibles: 3, historique: [{ statut: 'Done', date: '11/08/2026' }] },
       ];
       enqueteActive = 'G1';
       if (typeof refreshSelect === 'function') refreshSelect();
@@ -62,6 +62,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       const firstBefore = tbl.querySelector('tbody tr td') ? tbl.querySelector('tbody tr td').textContent : null;
       tbl.querySelector('th').click();   // trier par 1re colonne (Contact)
       const firstAfter = tbl.querySelector('tbody tr td') ? tbl.querySelector('tbody tr td').textContent : null;
+      const interviewedCard = [...document.querySelectorAll('.kpi-grid .kpi-card')].find(c => c.textContent.includes('🎤'));
       return {
         kpiSparks: document.querySelectorAll('.kpi-grid .kpi-card svg').length,
         donutSvg: box.querySelectorAll('svg').length,
@@ -69,6 +70,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
         rows: tbl.querySelectorAll('tbody tr').length,
         badges: tbl.querySelectorAll('.chart-badge').length,
         sortable: !!tbl.querySelector('th[aria-sort]'),
+        interviewed: interviewedCard ? interviewedCard.querySelector('.kpi-val').textContent.trim() : null,
         firstBefore, firstAfter,
       };
     });
@@ -78,6 +80,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   }
 
   A(r.kpiSparks >= 2, `sparklines dans les cartes KPI (statuts avec activité datée) → ${r.kpiSparks}`);
+  A(r.interviewed === '5', `KPI « Personnes interrogées ≥15 » = Σ nb_cibles des Fait (2+3) → "${r.interviewed}"`);
   A(r.donutSvg >= 1 && r.donutLegend, `donut « Répartition des statuts » rendu avec légende (svg=${r.donutSvg})`);
   A(r.rows === 4, `tableau de contacts : 4 lignes (2 enquêtes) → ${r.rows}`);
   A(r.badges === 4, `un badge de statut par ligne → ${r.badges}`);

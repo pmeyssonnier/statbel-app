@@ -134,6 +134,8 @@ export const I18N = {
   "res_col_survey": { fr:"Enquête", nl:"Onderzoek", en:"Survey", de:"Umfrage" },
   "res_col_total": { fr:"Total", nl:"Totaal", en:"Total", de:"Gesamt" },
   "res_distribution": { fr:"Répartition des statuts", nl:"Verdeling van de statussen", en:"Status breakdown", de:"Statusverteilung" },
+  "res_interviewed": { fr:"Personnes interrogées (≥15)", nl:"Ondervraagde personen (≥15)", en:"Persons interviewed (≥15)", de:"Befragte Personen (≥15)" },
+  "res_interviewed_tip": { fr:"Membres du ménage ≥15 ans dans les ménages « Fait » (interrogés directement ou par proxy). Repli sur la taille du ménage si le détail n'est pas importé.", nl:"Gezinsleden ≥15 jaar in voltooide huishoudens (direct of via proxy). Terugval op gezinsgrootte indien niet geïmporteerd.", en:"Household members ≥15 in completed households (direct or proxy). Falls back to household size if not imported.", de:"Haushaltsmitglieder ≥15 in abgeschlossenen Haushalten (direkt oder per Proxy). Rückfall auf Haushaltsgröße, falls nicht importiert." },
   "res_contacts": { fr:"Contacts", nl:"Contacten", en:"Contacts", de:"Kontakte" },
   "res_col_contact": { fr:"Contact", nl:"Contact", en:"Contact", de:"Kontakt" },
   "res_col_status": { fr:"Statut", nl:"Status", en:"Status", de:"Status" },
