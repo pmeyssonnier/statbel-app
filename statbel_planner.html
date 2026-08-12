@@ -9,6 +9,9 @@
 <title>Statbel Planner — Agenda d'enquêtes</title>
 <meta name="theme-color" content="#1a1f2e">
 <link rel="manifest" href="manifest.webmanifest">
+<!-- Lib de composants partagée (window.Charts) + styles du tableau triable -->
+<link rel="stylesheet" href="css/charts.css">
+<script src="js/charts.js"></script>
 <script>
   // PWA : enregistre le service worker partagé (hors-ligne), comme les autres pages.
   if (location.protocol === 'https:' || location.protocol === 'http:') {
@@ -854,42 +857,58 @@ function vagueForDate(row, d) {
 // ── LISTE ────────────────────────────────────────────────────────────
 function renderListe() {
   const rows = selectedRows();
-  // Aplatir toutes les vagues
-  const items = [];
-  rows.forEach(r => r.vagues.forEach(v => {
-    items.push({ row: r, v });
-  }));
-  items.sort((a, b) => a.v.start - b.v.start);
-
-  let html = `<table class="list-table"><thead><tr>
-    <th>N° Groupe</th><th>Province</th><th>Commune</th><th>Quartier</th>
-    <th>Vague</th><th>Sem. réf.</th><th>Début</th><th>Fin</th><th>Durée</th>
-  </tr></thead><tbody>`;
-
-  let lastYear = null;
-  items.forEach(({row, v}) => {
-    const yr = v.start.getFullYear();
-    if (yr !== lastYear) {
-      html += `<tr><td colspan="9" style="background:var(--ink);color:#fff;font-weight:700;
-               font-size:12px;padding:6px 10px;letter-spacing:.5px">── ${yr} ──</td></tr>`;
-      lastYear = yr;
-    }
-    const days = Math.round((v.stop - v.start) / 86400000) + 1;
-    html += `<tr>
-      <td><strong>${row.numero}</strong></td>
-      <td>${provLabel(row.province)}</td>
-      <td style="font-size:12px">${row.commune.split('/')[0].trim()}</td>
-      <td style="font-size:12px">${row.quartier}</td>
-      <td><span class="v-badge ${VAGUE_COLORS[v.idx-1]}">V${v.idx}</span></td>
-      <td style="text-align:center;font-weight:700">S${v.sem}</td>
-      <td>${fmtDate(v.start)}</td>
-      <td>${fmtDate(v.stop)}</td>
-      <td style="text-align:center">${days}j</td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
-  document.getElementById('agendaContent').innerHTML = html;
   document.getElementById('navControls').style.display = 'none';
+
+  // Aplatir toutes les vagues en lignes de tableau
+  const items = [];
+  rows.forEach(r => r.vagues.forEach(v => items.push({ row: r, v })));
+  const isoOf = d => d ? d.toISOString().slice(0, 10) : '';
+  const data = items.map(({ row, v }) => ({
+    numero:   row.numero,
+    province: provLabel(row.province),
+    commune:  row.commune.split('/')[0].trim(),
+    quartier: row.quartier,
+    vague:    v.idx,
+    sem:      v.sem,
+    debutIso: isoOf(v.start),
+    finIso:   isoOf(v.stop),
+    duree:    Math.round((v.stop - v.start) / 86400000) + 1,
+  }));
+
+  // Tableau triable (lib partagée js/charts.js) — clic sur un en-tête pour trier.
+  if (window.Charts) {
+    const frd = s => s ? s.split('-').reverse().join('/') : '';
+    const cols = [
+      { k: 'numero',   label: 'N° Groupe', render: x => `<strong>${esc(x)}</strong>` },
+      { k: 'province', label: 'Province' },
+      { k: 'commune',  label: 'Commune' },
+      { k: 'quartier', label: 'Quartier' },
+      { k: 'vague',    label: 'Vague', num: true, render: x => `<span class="v-badge ${VAGUE_COLORS[x - 1]}">V${x}</span>` },
+      { k: 'sem',      label: 'Sem. réf.', num: true, render: x => `S${esc(x)}` },
+      { k: 'debutIso', label: 'Début', render: frd },
+      { k: 'finIso',   label: 'Fin',   render: frd },
+      { k: 'duree',    label: 'Durée', num: true, render: x => `${x} j` },
+    ];
+    Charts.table('agendaContent', cols, data, { key: 'debutIso', dir: 1 });
+    return;
+  }
+
+  // Repli si la lib est absente : tableau statique trié par date de début.
+  data.sort((a, b) => a.debutIso.localeCompare(b.debutIso));
+  const frd = s => s ? s.split('-').reverse().join('/') : '';
+  document.getElementById('agendaContent').innerHTML =
+    `<table class="list-table"><thead><tr>
+      <th>N° Groupe</th><th>Province</th><th>Commune</th><th>Quartier</th>
+      <th>Vague</th><th>Sem. réf.</th><th>Début</th><th>Fin</th><th>Durée</th>
+    </tr></thead><tbody>` +
+    data.map(d => `<tr>
+      <td><strong>${esc(d.numero)}</strong></td><td>${esc(d.province)}</td>
+      <td style="font-size:12px">${esc(d.commune)}</td><td style="font-size:12px">${esc(d.quartier)}</td>
+      <td><span class="v-badge ${VAGUE_COLORS[d.vague-1]}">V${d.vague}</span></td>
+      <td style="text-align:center;font-weight:700">S${esc(d.sem)}</td>
+      <td>${frd(d.debutIso)}</td><td>${frd(d.finIso)}</td>
+      <td style="text-align:center">${d.duree} j</td>
+    </tr>`).join('') + '</tbody></table>';
 }
 
 // ── SEMAINE ──────────────────────────────────────────────────────────
@@ -1714,7 +1733,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '177';
+const APP_VERSION = '178';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
