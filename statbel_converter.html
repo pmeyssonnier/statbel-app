@@ -573,6 +573,20 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div id="statsTailleDetail" style="margin-top:8px"></div>
         </div>
       </div>
+      <div class="stats-grid">
+        <div class="card">
+          <div class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span data-i18n="card_targets_per_hh">🎯 Targets per household</span>
+            <span id="kpiCiblesMoy" style="margin-left:auto;font-weight:normal;font-size:12px;color:var(--text2)"></span>
+          </div>
+          <div id="statsCiblesHH"></div>
+        </div>
+        <div class="card">
+          <div class="card-titre" data-i18n="card_hh_composition">🏠 Household composition</div>
+          <div id="statsCompoHH"></div>
+          <div id="statsCompoHHDetail" style="margin-top:8px;font-size:11px;color:var(--text2)"></div>
+        </div>
+      </div>
       <div class="card">
         <div class="card-titre" data-i18n="card_sankey">🔀 Flux Nationalité → Sexe → Âge</div>
         <div id="statsSankey"></div>
@@ -941,6 +955,13 @@ const I18N = {
   hint_born_be: { fr:"(nés en Belgique, toute nationalité)", nl:"(geboren in België, ongeacht nationaliteit)", en:"(born in Belgium, any nationality)", de:"(geboren in Belgien, unabhängig von der Nationalität)" },
   card_age_pyramid: { fr:"📊 Pyramide des âges", nl:"📊 Leeftijdspiramide", en:"📊 Age pyramid", de:"📊 Alterspyramide" },
   card_household_dist: { fr:"👥 Répartition par taille de ménage", nl:"👥 Verdeling naar gezinsgrootte", en:"👥 Household size distribution", de:"👥 Verteilung nach Haushaltsgröße" },
+  card_targets_per_hh: { fr:"🎯 Cibles par ménage", nl:"🎯 Doelpersonen per huishouden", en:"🎯 Targets per household", de:"🎯 Zielpersonen pro Haushalt" },
+  card_hh_composition: { fr:"🏠 Composition des ménages", nl:"🏠 Samenstelling huishoudens", en:"🏠 Household composition", de:"🏠 Haushaltszusammensetzung" },
+  word_targets_unit: { fr:"cible(s)", nl:"doelp.", en:"target(s)", de:"Ziel(e)" },
+  word_targets_per_hh_unit: { fr:"cible(s)/ménage", nl:"doelp./huishouden", en:"targets/hh", de:"Ziele/HH" },
+  lbl_hh_mono: { fr:"Mono-personne", nl:"Eenpersoons", en:"Single-person", de:"Einpersonen" },
+  lbl_hh_with_minor: { fr:"Multi, avec mineur", nl:"Multi, met minderjarige", en:"Multi, with minor", de:"Multi, mit Minderj." },
+  lbl_hh_no_minor: { fr:"Multi, sans mineur", nl:"Multi, zonder minderj.", en:"Multi, no minor", de:"Multi, ohne Minderj." },
   card_sankey: { fr:"🔀 Flux Nationalité → Sexe → Âge", nl:"🔀 Stroom Nationaliteit → Geslacht → Leeftijd", en:"🔀 Nationality → Gender → Age flow", de:"🔀 Fluss Nationalität → Geschlecht → Alter" },
 
   // ── Statistics — libellés dynamiques (graphiques) ────────────────
@@ -4989,7 +5010,8 @@ function setAgeMinCible(v) {
   _ui.ageMinCible = n;
   try { localStorage.setItem('statbel_conv_ui', JSON.stringify(_ui)); } catch (e) {}
   majLabelCible();
-  if (_resultat && statsScope === 'cible') majStats(statsPourStats());
+  // L'âge min affecte le scope « cible » ET les deux cartes ménage → toujours rafraîchir.
+  if (_resultat) majStats(statsPourStats());
 }
 // Libellé du bouton « Cibles » = base traduite + seuil d'âge courant (≥ N).
 function majLabelCible() {
@@ -6544,6 +6566,64 @@ function majScopeUI() {
     b.classList.toggle('actif', b.dataset.scope === statsScope));
 }
 
+// Composition des ménages, calculée PAR SOURCE (nr_hh est unique dans un groupe,
+// mais peut se répéter d'un groupe à l'autre → on ne fusionne jamais entre sources).
+// Respecte le périmètre (enquête active / toutes). Retourne [{total, cibles, minors}].
+function menagesComposition() {
+  const min = ageMinCible();
+  const srcs = statsEnq === 'all'
+    ? Object.values(sources).map(v => v.res).filter(Boolean)
+    : (_resultat ? [_resultat] : []);
+  const out = [];
+  srcs.forEach(res => {
+    const hh = {};
+    (res.outMembres || []).forEach(r => {
+      const h = hh[r.nr_hh] || (hh[r.nr_hh] = { total: 0, cibles: 0, minors: 0 });
+      h.total++;
+      const a = parseInt(r.age, 10);
+      if (!isNaN(a) && a >= min) h.cibles++;
+      else if (!isNaN(a)) h.minors++;
+    });
+    out.push(...Object.values(hh));
+  });
+  return out;
+}
+
+// Rendu des deux cartes ménage : cibles (≥ âge min) par ménage + composition.
+function majMenagesCartes() {
+  const menages = menagesComposition();
+  const nbMen = menages.length;
+  const elMoy = document.getElementById('kpiCiblesMoy');
+  const elDist = document.getElementById('statsCiblesHH');
+  const elCompo = document.getElementById('statsCompoHH');
+  const elDetail = document.getElementById('statsCompoHHDetail');
+  if (!nbMen) {
+    if (elMoy) elMoy.textContent = '';
+    if (elDist) elDist.innerHTML = '';
+    if (elCompo) elCompo.innerHTML = '';
+    if (elDetail) elDetail.textContent = '';
+    return;
+  }
+  // 1) Cibles par ménage : moyenne + distribution (0/1/2/3/4+)
+  const totCibles = menages.reduce((s, h) => s + h.cibles, 0);
+  if (elMoy) elMoy.textContent = 'Ø ' + (totCibles / nbMen).toFixed(1) + ' ' + t('word_targets_per_hh_unit');
+  const dist = {};
+  menages.forEach(h => { const k = h.cibles >= 4 ? '4+' : String(h.cibles); dist[k] = (dist[k] || 0) + 1; });
+  const ord = k => k === '4+' ? 4 : Number(k);
+  renderBarres('statsCiblesHH', Object.keys(dist).sort((a, b) => ord(a) - ord(b))
+    .map(k => ({ label: k + ' ' + t('word_targets_unit'), count: dist[k], color: '#3949ab' })), '#3949ab');
+  // 2) Composition : mono-personne / multi avec mineur (<min) / multi sans mineur (≥min)
+  const min = ageMinCible();
+  let mono = 0, avecMin = 0, sansMin = 0;
+  menages.forEach(h => { if (h.total === 1) mono++; else if (h.minors > 0) avecMin++; else sansMin++; });
+  renderDonut('statsCompoHH', [
+    { label: t('lbl_hh_mono'), value: mono, color: '#0277bd' },
+    { label: t('lbl_hh_with_minor') + ' (<' + min + ')', value: avecMin, color: '#f9a825' },
+    { label: t('lbl_hh_no_minor') + ' (≥' + min + ')', value: sansMin, color: '#2e7d32' },
+  ].filter(d => d.value > 0));
+  if (elDetail) elDetail.textContent = nbMen + ' ' + t('kpi_households').toLowerCase();
+}
+
 // (Re)calcule et affiche tous les graphiques selon la portée active :
 //  - 'referent' : la personne de contact (FL_MB_CNTCT=1), 1 par ménage
 //  - 'cible'    : tous les membres du ménage âgés d'au moins ageMinCible (LFS 15+)
@@ -6641,6 +6721,9 @@ function majStats(res) {
     .map(([iso, v]) => ({ label: paysNom(iso) || iso || '—', value: v.h + v.f }))
     .filter(d => d.value > 0).sort((a, b) => b.value - a.value));
   renderSankeyNSA('statsSankey', pop);
+
+  // Cartes ménage (indépendantes de la portée d'affichage, dépendent de l'âge min)
+  majMenagesCartes();
 }
 
 // Palette catégorielle stable
@@ -7152,7 +7235,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '169';
+const APP_VERSION = '170';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
