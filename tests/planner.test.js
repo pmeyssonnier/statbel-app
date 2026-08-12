@@ -157,15 +157,18 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       selectAll();
       const agenda = document.getElementById('agendaCard').style.display !== 'none';
       setView('liste');
-      const listeRows = document.querySelectorAll('.list-table tbody tr').length;
+      // La vue Liste est désormais un tableau triable Charts.table (.dt).
+      const listeRows = document.querySelectorAll('#agendaContent table.dt tbody tr').length;
+      const listeSortable = !!document.querySelector('#agendaContent table.dt th[aria-sort]');
       if (typeof updateCandidaturePreview === 'function') updateCandidaturePreview();
       const cand = document.getElementById('candGrpCount') ? document.getElementById('candGrpCount').textContent : '?';
-      return { communes, selSize: selected.size, agenda, listeRows, cand };
+      return { communes, selSize: selected.size, agenda, listeRows, listeSortable, cand };
     });
     A(flow.communes.length === 1 && flow.communes[0] === 'Bruxelles / Brussel',
       `cascade province BRU → commune « Bruxelles / Brussel » (got ${JSON.stringify(flow.communes)})`);
     A(flow.selSize === 1 && flow.agenda, `sélection filtrée → agenda affiché (${flow.selSize} groupe)`);
     A(flow.listeRows > 0, `vue liste rend des lignes (${flow.listeRows})`);
+    A(flow.listeSortable, 'vue liste = tableau triable (Charts.table)');
     A(String(flow.cand) === String(flow.selSize), `candidature reflète la sélection (${flow.cand} = ${flow.selSize})`);
 
     // Candidature : NbGroupes = nb de groupes sélectionnés (calculé, lecture seule),
