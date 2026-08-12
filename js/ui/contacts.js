@@ -160,7 +160,12 @@ export function ligneDemographie(c) {
     const aff = esc(paysAffiche(c.nationality));
     parts.push(badP ? `<span class="demo-bad" title="${t('cohr_country')}">${aff}</span>` : aff);
   }
-  if (c.taille_menage) parts.push('👥 ' + esc(c.taille_menage) + ' ' + tPlural('persons', c.taille_menage));
+  if (c.taille_menage) {
+    let m = '👥 ' + esc(c.taille_menage) + ' ' + tPlural('persons', c.taille_menage);
+    const nc = parseInt(c.nb_cibles, 10);   // membres ≥15 (cibles interrogeables) — affiché si > 1
+    if (!isNaN(nc) && nc > 1) m += ` (${nc} ≥15)`;
+    parts.push(m);
+  }
   return parts.join(' · ');
 }
 

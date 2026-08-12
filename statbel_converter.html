@@ -7028,7 +7028,7 @@ function renderCibles(rows) {
       <td style="font-size:11px;color:var(--text2)">${escHtml(r.adresse)}</td>
       <td style="white-space:nowrap">${escHtml(r.gsm) || '<span class="vide">—</span>'}</td>
       <td style="font-size:11px">${escHtml(r.email) || '<span class="vide">—</span>'}</td>
-      <td style="text-align:center">${escHtml(r.taille_menage)}</td>
+      <td style="text-align:center">${escHtml(r.taille_menage)}${parseInt(r.nb_cibles,10)>1?` <span style="color:var(--text3);font-size:11px">(${escHtml(r.nb_cibles)} ≥15)</span>`:''}</td>
     </tr>`;
 
     const sousLigne = `
@@ -7251,7 +7251,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '172';
+const APP_VERSION = '173';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

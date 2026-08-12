@@ -49,7 +49,7 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
       ordre: '1', nom: 'Dupont', prenom: 'Jean', adresse: 'Rue B 2, 1000 Bruxelles',
       statut: 'RDV', rdv: '2026-03-15 10:00',
       birth_date: '1985-04-12', sexe: 'M', marital_status: 'Married',
-      nationality: 'BEL', birth_country: 'BEL', taille_menage: 3,
+      nationality: 'BEL', birth_country: 'BEL', taille_menage: 3, nb_cibles: 2,
       gsm: '0470111222', email: 'jean@',
       historique: [{ statut: 'RDV', date: '01/03/2026', heure: '09:00', rdv: '2026-03-15 10:00' }],
     }];
@@ -61,6 +61,8 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     changerEnquete('G2');
     setView('liste');
     out.liste_rendered = document.getElementById('liste').innerHTML.length > 100;
+    // Taille ménage suivie du nb de cibles ≥15 entre parenthèses (nb_cibles=2 > 1)
+    out.menage_15 = /\(2 ≥15\)/.test(document.getElementById('liste').innerHTML);
 
     // Carte : marqueur placé depuis le cache (ligneDemographie/popup exercés)
     setView('carte');
@@ -89,6 +91,7 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
 
   const checks = [
     ['liste rendue après sélection (données démographiques)', r.liste_rendered === true],
+    ['taille ménage suivie de « (2 ≥15) »',                   r.menage_15 === true],
     ['carte : marqueur placé',                                r.markers === 1],
     ['fiche : formulaire d’édition ouvert',                   r.edit_form === true],
     ['autocomplétion e-mail (EMAIL_DOMAINES)',                r.email_suggest_ok === true],
