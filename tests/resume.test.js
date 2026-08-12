@@ -63,6 +63,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       tbl.querySelector('th').click();   // trier par 1re colonne (Contact)
       const firstAfter = tbl.querySelector('tbody tr td') ? tbl.querySelector('tbody tr td').textContent : null;
       return {
+        kpiSparks: document.querySelectorAll('.kpi-grid .kpi-card svg').length,
         donutSvg: box.querySelectorAll('svg').length,
         donutLegend: !!box.querySelector('ul li strong'),
         rows: tbl.querySelectorAll('tbody tr').length,
@@ -76,6 +77,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     await b.close(); await srv.close(); process.exit(1);
   }
 
+  A(r.kpiSparks >= 2, `sparklines dans les cartes KPI (statuts avec activité datée) → ${r.kpiSparks}`);
   A(r.donutSvg >= 1 && r.donutLegend, `donut « Répartition des statuts » rendu avec légende (svg=${r.donutSvg})`);
   A(r.rows === 4, `tableau de contacts : 4 lignes (2 enquêtes) → ${r.rows}`);
   A(r.badges === 4, `un badge de statut par ligne → ${r.badges}`);
