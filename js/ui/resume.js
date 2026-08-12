@@ -192,12 +192,28 @@ export function renduResume() {
   // Carte total : tempo global (toutes activités confondues par jour)
   const serieTotal = joursSpark.map(d => evtsSpark.filter(e => e.iso.slice(0, 10) === d).length);
 
+  // Personnes interrogées (≥ 15 ans) dans les ménages « Fait » : direct + proxy.
+  // Source exacte = colonne nb_cibles (export Convertisseur) ; repli sur la taille
+  // du ménage quand le détail n'est pas importé.
+  let nbInterroges = 0, interrogesExact = true;
+  nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
+    if (!doneStatuts.includes(c.statut || statutDefaut())) return;
+    const n15 = parseInt(c.nb_cibles, 10);
+    if (!isNaN(n15)) { nbInterroges += n15; }
+    else { const tm = parseInt(c.taille_menage, 10); nbInterroges += (!isNaN(tm) && tm > 0) ? tm : 1; interrogesExact = false; }
+  }));
+
   let kpiHtml = `
     <div class="kpi-card" style="border-top-color:#1a237e">
       <div class="kpi-val">${grandTotal}</div>
       <div class="kpi-lbl">${t('res_total_contacts')}</div>
       <div class="kpi-pct">${labelNbEnquetes(nomEnquetes.length)}</div>
       ${spark(serieTotal, '#1a237e')}
+    </div>
+    <div class="kpi-card" style="border-top-color:#00838f" title="${esc(t('res_interviewed_tip'))}">
+      <div class="kpi-val" style="color:#00838f">${nbInterroges}${interrogesExact ? '' : ' *'}</div>
+      <div class="kpi-lbl">🎤 ${esc(t('res_interviewed'))}</div>
+      <div class="kpi-pct">${nbFait} ${esc(statutLabel(doneStatuts[0] || 'Done'))}</div>
     </div>`;
 
   statutsCfg.forEach(s => {

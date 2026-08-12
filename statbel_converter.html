@@ -4288,7 +4288,7 @@ const REFNIS_COMMUNE = {
 const CSV_HEADERS = [
   'ordre','prenom','nom','adresse','statut','date_interview','rdv',
   'sexe','birth_date','age','birth_country','nationality','marital_status',
-  'taille_menage','gsm','email','notes',
+  'taille_menage','nb_cibles','gsm','email','notes',
   'planning_commune','planning_quartier','wave','ref_week','field_start','field_stop',
 ];
 const CSV_HEADERS_MEMBRES = [
@@ -4303,7 +4303,7 @@ const CSV_HEADERS_ENQUETE = [
   'ordre','prenom','nom','adresse',
   'statut','date_interview','rdv',
   'sexe','birth_date','age','birth_country','nationality','marital_status',
-  'taille_menage','gsm','email','notes',
+  'taille_menage','nb_cibles','gsm','email','notes',
   'planning_commune','planning_quartier','wave','ref_week','field_start','field_stop',
 ];
 
@@ -4331,6 +4331,7 @@ const EN_LABEL = {
   nationality:    'nationality',
   marital_status: 'marital_status',
   taille_menage:  'household_size',
+  nb_cibles:      'members_15plus',
   gsm:            'gsm',
   email:          'email',
   notes:          'notes',
@@ -4743,9 +4744,13 @@ function detecterCodesManquants(srcRows) {
 
 function convertir(srcRows) {
   const tailleHH = {};
+  const nb15HH = {};                      // membres ≥ âge min par ménage (personnes cibles interrogeables)
+  const ageMin15 = ageMinCible();
   srcRows.forEach(r => {
     const hh = (r['NR_HH']||'').trim();
     tailleHH[hh] = (tailleHH[hh]||0) + 1;
+    const a = parseInt(r['MS_MB_AGE'], 10);
+    if (!isNaN(a) && a >= ageMin15) nb15HH[hh] = (nb15HH[hh]||0) + 1;
   });
 
   const cibles = srcRows.filter(r => (r['FL_MB_CNTCT']||'').trim() === '1');
@@ -4768,6 +4773,7 @@ function convertir(srcRows) {
       birth_nuts2: birthNuts2, birth_nuts3: birthNuts3,
       nationality, marital_status: maritalStatus,
       taille_menage: String(tailleHH[hh]||1),
+      nb_cibles: String(nb15HH[hh]||0),   // personnes du ménage ≥ âge min (direct + proxy)
       gsm: r['NR_PHONE']||'', email: r['TX_EMAIL']||'', notes: '',
     };
   });
@@ -7245,7 +7251,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '171';
+const APP_VERSION = '172';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
