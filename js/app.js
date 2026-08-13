@@ -25,7 +25,7 @@ import {
   afficherMarqueurs, regionDominante, fondEffectif, rafraichirFond,
 } from './ui/map.js';
 import {
-  contactsFiltres, changerStatut, changerNotes, changerEmail, changerGsm,
+  contactsFiltres, changerStatut, changerNotes, changerEmail, changerGsm, changerMenage,
   lireRdvFields, changerRdvDH, ouvrirCalendrierRdv, majAge, formatRdv,
   ligneDemographie, toggleEdit, ouvrirEdit, buildEditForm, sauverEdit, filtrer,
   exporterVCard, renderFilters, rendu, distanceBadge, haversine, formatDist,
@@ -97,7 +97,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.8';
+const APP_VERSION = '3.9';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
@@ -893,7 +893,7 @@ Object.assign(window, {
   contactsFiltres, refreshSelect, changerEnquete, renommerEnquete, fermerRename,
   confirmerRename, supprimerEnquete, parseAdresse, composeAdresse, adresseSansBoite,
   mapsUrl, todayStr, nowHHMM, dateFrToISO, dateISOToFr, formatDateJour, changerStatut,
-  sauverBientot, flushSauver, changerNotes, changerEmail, changerGsm, formaterGsm,
+  sauverBientot, flushSauver, changerNotes, changerEmail, changerGsm, changerMenage, formaterGsm,
   formatHeureSaisie, lireRdvFields, changerRdvDH, ouvrirCalendrierRdv, majAge, formatRdv,
   calcAge, maritalCanon, etatCivilGenre, paysNom, normaliserPays, paysAffiche,
   detecterNonTraduits, renderNonTraduits, detecterIncoherences, renderCoherence,

@@ -75,6 +75,17 @@ export function changerStatut(i, val) {
 
 export function changerNotes(i, val)  { contacts()[i].notes = val;  sauverBientot(); }
 
+// Édition manuelle de la composition du ménage : taille totale (`taille_menage`)
+// et nombre de membres ≥15 ans (`nb_cibles`, cibles interrogeables). Entier ≥0,
+// ou null si le champ est vidé. On ne borne pas ≥15 à la taille : l'enquêteur
+// peut corriger l'un avant l'autre, et la valeur importée peut être erronée.
+export function changerMenage(i, champ, val) {
+  const v = String(val == null ? '' : val).trim();
+  const n = v === '' ? null : parseInt(v, 10);
+  contacts()[i][champ] = (n == null || isNaN(n) || n < 0) ? null : n;
+  sauverBientot();
+}
+
 export function changerEmail(i, val)  { contacts()[i].email = val;  sauverBientot(); }
 
 export function changerGsm(i, input) {
@@ -239,6 +250,22 @@ export function buildEditForm(i) {
         <div class="edit-row">
           <label>${t('ed_cpcity')}</label>
           <input type="text" id="edit-cpville-${i}" value="${esc(_p.cpville)}" placeholder="1030 Schaerbeek">
+        </div>
+
+        <div class="edit-row">
+          <label>${t('ed_menage')}</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input type="text" inputmode="numeric" id="edit-hhsize-${i}" value="${esc(String(c.taille_menage ?? ''))}"
+              placeholder="${t('ed_menage_total')}" maxlength="3" title="${t('ed_menage_total')}"
+              style="width:74px;text-align:center" oninput="this.value=this.value.replace(/\\D/g,'')"
+              onchange="changerMenage(${i},'taille_menage',this.value)">
+            <span style="color:#9aa0a6;">·</span>
+            <input type="text" inputmode="numeric" id="edit-hh15-${i}" value="${esc(String(c.nb_cibles ?? ''))}"
+              placeholder="≥15" maxlength="3" title="${t('ed_menage_15')}"
+              style="width:74px;text-align:center" oninput="this.value=this.value.replace(/\\D/g,'')"
+              onchange="changerMenage(${i},'nb_cibles',this.value)">
+            <span style="color:#5f6368;font-size:12px;">${t('ed_menage_15')}</span>
+          </div>
         </div>
 
 
