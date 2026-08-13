@@ -306,6 +306,8 @@ export const PAYS_ALIAS = {
   SPA: 'ESP',   // Espagne
   POR: 'PRT',   // Portugal
   BUL: 'BGR',   // Bulgarie
+  RDC: 'COD',   // République Démocratique du Congo → RD Congo
+  DRC: 'COD',   // idem, acronyme anglais (Democratic Republic of the Congo)
 };
 
 // Normalise un code pays en ISO-3 : ISO-3 connu → tel quel ; ISO-2 connu → ISO-3 ;
