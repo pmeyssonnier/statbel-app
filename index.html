@@ -28,8 +28,29 @@
     ai.rel = 'apple-touch-icon'; ai.href = 'icon-192.png';
     document.head.appendChild(ai);
     if ('serviceWorker' in navigator) {
+      // Auto-mise à jour de la PWA installée. Sans ça, le raccourci écran d'accueil
+      // continue de servir l'ancienne version depuis le cache (« le lien installé ne
+      // se rafraîchit pas ») : il faut relancer deux fois, et sur mobile la PWA ne
+      // vérifie quasi jamais les mises à jour toute seule.
+      const avaitControleur = !!navigator.serviceWorker.controller;   // false au 1er install
+      let rechargement = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // Le nouveau SW (install → skipWaiting → activate → clients.claim) prend la
+        // main : on recharge UNE fois pour servir les nouveaux fichiers. Pas de
+        // rechargement au tout premier install (aucun contrôleur au départ).
+        if (rechargement || !avaitControleur) return;
+        rechargement = true;
+        window.location.reload();
+      });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          reg.update();                                   // check au démarrage
+          setInterval(() => reg.update(), 60 * 60 * 1000); // + check horaire si l'app reste ouverte
+          // PWA relancée depuis le cache : revérifier dès qu'elle revient au 1er plan.
+          document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) reg.update();
+          });
+        }).catch(() => {});
       });
     }
   }
