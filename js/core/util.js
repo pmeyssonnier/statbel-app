@@ -113,20 +113,42 @@ export function dateISOToFr(iso) {
 /**
  * Normalise une date vers l'ISO AAAA-MM-JJ. Tolère les formats qu'Excel
  * réinjecte quand on ouvre/édite/ré-enregistre un export (JJ/MM/AAAA, JJ-MM-AA,
- * JJ.MM.AAAA), en plus de l'ISO déjà correct. Convention JOUR d'abord (Europe),
- * cohérente avec le reste de l'app. Retourne '' si non reconnu (l'appelant
- * décide alors de conserver la valeur brute pour que le contrôle la signale).
+ * M/D/YY…), en plus de l'ISO déjà correct. `moisDabord` = true interprète les
+ * dates numériques comme MOIS/JOUR (format US mm/jj/aaaa), sinon JOUR/MOIS
+ * (défaut Europe). Retourne '' si non reconnu (l'appelant conserve alors la
+ * valeur brute pour que le contrôle la signale).
  */
-export function toISODate(v) {
+export function toISODate(v, moisDabord) {
   const s = (v == null ? '' : v).toString().trim();
   if (!s) return '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;                       // déjà ISO
-  const m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);   // jj/mm/aaaa & variantes
+  const m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);   // jj/mm/aaaa, mm/jj/aa & variantes
   if (!m) return '';
-  let [, d, mo, y] = m; d = +d; mo = +mo; y = +y;
+  let a = +m[1], b = +m[2], y = +m[3];
+  const d  = moisDabord ? b : a;                                     // jour
+  const mo = moisDabord ? a : b;                                     // mois
   if (y < 100) { y = 2000 + y; if (y > new Date().getFullYear()) y -= 100; } // pivot de siècle
   if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
   return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+/**
+ * Devine si une colonne de dates numériques est au format MOIS d'abord
+ * (mm/jj/aaaa — typiquement réécrit par un Excel en locale US) plutôt que JOUR
+ * d'abord (jj/mm). Preuve par l'absurde sur l'ensemble de la colonne : un 1er
+ * composant > 12 quelque part ⇒ jour d'abord ; un 2e composant > 12 ⇒ mois
+ * d'abord. Sans preuve (tout ≤ 12), on garde le défaut Europe (jour d'abord).
+ * Une seule date « désambiguïsante » (ex. 4/14/05) fixe l'ordre de toute la colonne.
+ */
+export function colonneMoisDabord(values) {
+  let jourSur = false, moisSur = false;
+  for (const v of (values || [])) {
+    const m = (v == null ? '' : v).toString().trim().match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-]\d{2,4}$/);
+    if (!m) continue;
+    if (+m[1] > 12) jourSur = true;   // 1er composant impossible en mois → jour d'abord
+    if (+m[2] > 12) moisSur = true;   // 2e composant impossible en mois → mois d'abord
+  }
+  return moisSur && !jourSur;         // mois d'abord seulement si preuve claire et non contredite
 }
 
 /**

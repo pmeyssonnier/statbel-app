@@ -66,6 +66,19 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // — Une vraie date invalide reste signalée (on n'a pas relâché le contrôle)
     out.bad_still_flagged = valeurIncoherente('birth_date', '31/02/2026'); // 31 février → true
 
+    // — Colonne au format US M/D/YY (Excel en locale US) : « 4/14/05 » a son 2e
+    //   nombre (14) > 12 → toute la colonne est interprétée « mois d'abord ».
+    const csvUS =
+      'order,first_name,last_name,address,birth_date\n' +
+      '1,Furkan,Kilic,"Rue A, 1000 Bruxelles",4/14/05\n' +      // 14 avr. 2005
+      '2,Sophie,Michel,"Rue B, 1000 Bruxelles",7/25/83\n' +      // 25 juil. 1983
+      '3,Nathalie,Kizonde,"Rue C, 1000 Bruxelles",1/31/68\n';    // 31 janv. 1968
+    const us = parseCSV(csvUS).rows;
+    out.us1 = us[0].birth_date;   // attendu 2005-04-14
+    out.us2 = us[1].birth_date;   // attendu 1983-07-25
+    out.us3 = us[2].birth_date;   // attendu 1968-01-31
+    out.us_all_coherent = us.every(c => !valeurIncoherente('birth_date', c.birth_date));
+
     return out;
   });
 
@@ -79,6 +92,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.rt_bd === '1990-08-10', `round-trip natif : birth_date ISO inchangé « ${r.rt_bd} »`);
   A(r.rt_date === '10/08/2026', `round-trip natif : date FR inchangée « ${r.rt_date} »`);
   A(r.bad_still_flagged, 'une date calendairement invalide (31/02) reste signalée');
+  A(r.us1 === '2005-04-14', `colonne US « 4/14/05 » → ISO « ${r.us1} » (mois d'abord)`);
+  A(r.us2 === '1983-07-25', `colonne US « 7/25/83 » → ISO « ${r.us2} »`);
+  A(r.us3 === '1968-01-31', `colonne US « 1/31/68 » → ISO « ${r.us3} »`);
+  A(r.us_all_coherent, 'toutes les dates US normalisées passent le contrôle');
   A(perr.length === 0, 'aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
 
   await b.close();
