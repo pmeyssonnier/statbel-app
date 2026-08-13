@@ -87,6 +87,10 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     setView('liste'); rendu();
     out.menage_15_edit = /\(4 ≥15\)/.test(document.getElementById('liste').innerHTML);
 
+    // Alias pays : « RDC » (RD Congo) reconnu et rendu cohérent à l'import
+    out.rdc_norm = normaliserPays('RDC');                                   // attendu COD
+    out.rdc_coherent = !valeurIncoherente('nationality', normaliserPays('RDC'));
+
     // Les autres vues fonctionnent aussi
     setView('rdv');    out.rdv_ok    = document.getElementById('rdvContainer').innerHTML.length > 0;
     setView('resume'); out.resume_ok = document.getElementById('resumeContainer').innerHTML.length > 0;
@@ -110,6 +114,8 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['édition ménage : taille=6 et ≥15=5 persistés',          r.hh_set === true],
     ['édition ménage : champ vidé → null',                    r.hh_clear === true],
     ['liste reflète le ≥15 édité « (4 ≥15) »',                r.menage_15_edit === true],
+    ['alias pays RDC → COD (RD Congo)',                       r.rdc_norm === 'COD'],
+    ['nationalité RDC normalisée est cohérente',              r.rdc_coherent === true],
     ['vue Suivi fonctionnelle',                               r.rdv_ok === true],
     ['vue Résumé fonctionnelle',                              r.resume_ok === true],
   ];
