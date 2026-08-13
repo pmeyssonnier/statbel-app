@@ -7,7 +7,7 @@
  * de canonicalisation (statutCanon, normaliserPays, maritalCanon) et
  * contacts()/statutDefaut() sont des globaux (pont de compatibilité).
  */
-import { csvGuard, csvDeguard } from '../core/util.js';
+import { csvGuard, csvDeguard, toISODate, toFrDateTime } from '../core/util.js';
 import { coordsCache } from './idb.js';
 import { statutCanon, normaliserPays, maritalCanon } from './canon.js';
 
@@ -119,22 +119,28 @@ export function parseCSV(text) {
     // Historique « statut@date@heure@rdv » → {statut,date,heure?,rdv?} (rétro-compatible « statut@date »)
     const histArr = g(cols, map.history).split('|').map(p => p.trim()).filter(Boolean).map(p => {
       const seg = p.split('@');
-      const e = { statut: statutCanon((seg[0] || '').trim()), date: (seg[1] || '').trim() };
+      const e = { statut: statutCanon((seg[0] || '').trim()), date: toFrDateTime((seg[1] || '').trim()) };
       const heure = (seg[2] || '').trim();
-      const rdv   = (seg[3] || '').trim();
+      const rdv   = toFrDateTime((seg[3] || '').trim());
       if (heure) e.heure = heure;
       if (rdv)   e.rdv = rdv;
       return e;
     });
+    // Dates : re-normalisées à l'import. Un aller-retour par Excel réécrit
+    // silencieusement l'ISO en format local (JJ/MM/AAAA) ; on ré-canonicalise
+    // birth_date en ISO (contrôle de cohérence + calcul d'âge) et date/rdv en
+    // « JJ/MM/AAAA[ HH:mm] » (format interne d'affichage).
+    const bdRaw = g(cols, map.birth_date);
+    const bdIso = toISODate(bdRaw);
     rows.push({
       ordre:          ordreVal,   // vide si absent : ne PAS inventer un numéro (collision + faux appariement) — l'appariement se fait alors par nom/naissance/adresse
       prenom, nom, adresse,
       statut:         statutCanon(g(cols,map.statut)) || 'To do',
-      date:           g(cols,map.date),
+      date:           toFrDateTime(g(cols,map.date)),
       notes:          g(cols,map.notes),
-      rdv:            g(cols,map.rdv),
+      rdv:            toFrDateTime(g(cols,map.rdv)),
       sexe:           g(cols,map.sexe)   || null,
-      birth_date:     g(cols,map.birth_date) || null,
+      birth_date:     (bdIso || bdRaw) || null,
       age:            map.age>=0 ? parseInt(cols[map.age])||null : null,
       birth_country:  normaliserPays(g(cols,map.birth_country)) || null,
       nationality:    normaliserPays(g(cols,map.nationality))  || null,

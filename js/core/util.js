@@ -110,6 +110,42 @@ export function dateISOToFr(iso) {
   return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : '';
 }
 
+/**
+ * Normalise une date vers l'ISO AAAA-MM-JJ. Tolère les formats qu'Excel
+ * réinjecte quand on ouvre/édite/ré-enregistre un export (JJ/MM/AAAA, JJ-MM-AA,
+ * JJ.MM.AAAA), en plus de l'ISO déjà correct. Convention JOUR d'abord (Europe),
+ * cohérente avec le reste de l'app. Retourne '' si non reconnu (l'appelant
+ * décide alors de conserver la valeur brute pour que le contrôle la signale).
+ */
+export function toISODate(v) {
+  const s = (v == null ? '' : v).toString().trim();
+  if (!s) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;                       // déjà ISO
+  const m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);   // jj/mm/aaaa & variantes
+  if (!m) return '';
+  let [, d, mo, y] = m; d = +d; mo = +mo; y = +y;
+  if (y < 100) { y = 2000 + y; if (y > new Date().getFullYear()) y -= 100; } // pivot de siècle
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+  return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+/**
+ * Normalise une date (+ heure éventuelle) vers « JJ/MM/AAAA[ HH:mm] », le format
+ * interne des champs date d'interview / RDV. Détache une heure finale « HH:mm »
+ * (ou « HHhMM »), normalise la partie date (jour d'abord), puis recompose. Si la
+ * date n'est pas reconnue, la valeur brute est renvoyée telle quelle.
+ */
+export function toFrDateTime(v) {
+  const s = (v == null ? '' : v).toString().trim();
+  if (!s) return '';
+  const mt = s.match(/^(.*?)[\sT]+(\d{1,2}[:h]\d{2})\s*$/);          // partie heure finale ?
+  const datePart = mt ? mt[1].trim() : s;
+  const timePart = mt ? mt[2].replace('h', ':') : '';
+  const iso = toISODate(datePart);
+  const fr = iso ? dateISOToFr(iso) : datePart;                     // non reconnu → tel quel
+  return timePart ? `${fr} ${timePart}` : fr;
+}
+
 export function formaterGsm(val) {
   let d = val.replace(/[^\d]/g, '');
   if (d.startsWith('0')) d = '32' + d.slice(1);
