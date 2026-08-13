@@ -3,6 +3,7 @@
 !.gitignore
 !.nojekyll
 !README.md
+!CLAUDE.md
 !index.html
 !statbel_converter.html
 !statbel_planner.html
