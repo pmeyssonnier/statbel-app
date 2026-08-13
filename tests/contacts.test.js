@@ -76,6 +76,17 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     const inp = { value: 'jean@gm', id: 'x' };
     try { emailSuggest(inp, 'sug-test'); out.email_suggest_ok = true; } catch (e) { out.email_suggest_ok = false; }
 
+    // Édition manuelle de la composition du ménage (taille + membres ≥15)
+    out.hh_inputs = !!document.getElementById('edit-hhsize-0') && !!document.getElementById('edit-hh15-0');
+    changerMenage(0, 'nb_cibles', '5');
+    changerMenage(0, 'taille_menage', '6');
+    out.hh_set = contacts()[0].nb_cibles === 5 && contacts()[0].taille_menage === 6;
+    changerMenage(0, 'nb_cibles', '');           // vider → null
+    out.hh_clear = contacts()[0].nb_cibles === null;
+    changerMenage(0, 'nb_cibles', '4');          // valeur finale pour l'affichage
+    setView('liste'); rendu();
+    out.menage_15_edit = /\(4 ≥15\)/.test(document.getElementById('liste').innerHTML);
+
     // Les autres vues fonctionnent aussi
     setView('rdv');    out.rdv_ok    = document.getElementById('rdvContainer').innerHTML.length > 0;
     setView('resume'); out.resume_ok = document.getElementById('resumeContainer').innerHTML.length > 0;
@@ -95,6 +106,10 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['carte : marqueur placé',                                r.markers === 1],
     ['fiche : formulaire d’édition ouvert',                   r.edit_form === true],
     ['autocomplétion e-mail (EMAIL_DOMAINES)',                r.email_suggest_ok === true],
+    ['fiche : champs d’édition du ménage présents',           r.hh_inputs === true],
+    ['édition ménage : taille=6 et ≥15=5 persistés',          r.hh_set === true],
+    ['édition ménage : champ vidé → null',                    r.hh_clear === true],
+    ['liste reflète le ≥15 édité « (4 ≥15) »',                r.menage_15_edit === true],
     ['vue Suivi fonctionnelle',                               r.rdv_ok === true],
     ['vue Résumé fonctionnelle',                              r.resume_ok === true],
   ];
