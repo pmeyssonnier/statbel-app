@@ -7,7 +7,7 @@
  * de canonicalisation (statutCanon, normaliserPays, maritalCanon) et
  * contacts()/statutDefaut() sont des globaux (pont de compatibilité).
  */
-import { csvGuard, csvDeguard, toISODate, toFrDateTime } from '../core/util.js';
+import { csvGuard, csvDeguard, toISODate, toFrDateTime, colonneMoisDabord } from '../core/util.js';
 import { coordsCache } from './idb.js';
 import { statutCanon, normaliserPays, maritalCanon } from './canon.js';
 
@@ -95,6 +95,10 @@ export function parseCSV(text) {
 
   const g = (cols, i) => i >= 0 ? csvDeguard((cols[i]||'').trim()) : '';
   const bodyRows = nonEmpty.slice(1);
+  // Ordre des dates de la colonne birth_date : Excel peut réécrire l'ISO en
+  // format US mm/jj/aaaa (ex. « 4/14/05 »). On déduit l'ordre sur toute la
+  // colonne (une seule date où le 2e nombre > 12 suffit à trancher « mois d'abord »).
+  const bdMoisDabord = colonneMoisDabord(bodyRows.map(cols => g(cols, map.birth_date)));
   const rows = [];
   const motifs = { sansIdentite: 0, adresseVide: 0, doublonOrdre: 0 };
   const rejets = [];              // détail des lignes ignorées : { ligne, ordre, motif }
@@ -131,7 +135,7 @@ export function parseCSV(text) {
     // birth_date en ISO (contrôle de cohérence + calcul d'âge) et date/rdv en
     // « JJ/MM/AAAA[ HH:mm] » (format interne d'affichage).
     const bdRaw = g(cols, map.birth_date);
-    const bdIso = toISODate(bdRaw);
+    const bdIso = toISODate(bdRaw, bdMoisDabord);
     rows.push({
       ordre:          ordreVal,   // vide si absent : ne PAS inventer un numéro (collision + faux appariement) — l'appariement se fait alors par nom/naissance/adresse
       prenom, nom, adresse,
