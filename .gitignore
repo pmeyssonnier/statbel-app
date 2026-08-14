@@ -25,6 +25,10 @@
 # Tests de non-régression (dev)
 !tests/
 !tests/*.js
+# CI GitHub Actions (dev) — déploiement Pages + tests headless
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml
 
 # Données personnelles : jamais (sécurité renforcée)
 *.csv
