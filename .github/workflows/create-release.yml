@@ -56,6 +56,9 @@ jobs:
           }
 
           if [ -n "$TAG" ]; then
+            # Normalise la saisie manuelle : « V3.8 » ou « 3.8 » → « v3.8 »
+            # (les tags git sont sensibles à la casse).
+            TAG="v${TAG#[vV]}"
             make_release "$TAG"
           else
             echo "Backfill des releases pour les tags v3.*"
