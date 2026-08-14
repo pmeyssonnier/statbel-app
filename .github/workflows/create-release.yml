@@ -2,15 +2,16 @@ name: Créer une release
 
 # Crée une release GitHub pour un tag existant, avec les notes tirées du
 # CHANGELOG.md (section de la version). Déclenchement MANUEL : onglet Actions →
-# « Créer une release » → Run workflow → indiquer le tag (défaut v3.13).
-# Idempotent : si la release existe déjà, ses notes sont mises à jour.
+# « Créer une release » → Run workflow.
+#   - avec « tag »  : crée/met à jour la release de ce tag (ex. v3.14).
+#   - sans « tag »  : backfill de TOUTES les releases manquantes (tags v3.*).
+# Idempotent : une release existante voit seulement ses notes rafraîchies.
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag de la release (doit déjà exister, ex. v3.13)."
-        required: true
-        default: v3.13
+        description: "Tag unique (ex. v3.14). Vide = backfill de toutes les releases v3.* manquantes."
+        required: false
 
 permissions:
   contents: write   # créer/éditer une release via GITHUB_TOKEN
@@ -23,31 +24,38 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Créer / mettre à jour la release depuis le CHANGELOG
+      - name: Créer / mettre à jour la (les) release(s) depuis le CHANGELOG
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
         run: |
           set -e
-          # Le tag doit exister
-          if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            echo "::error::Le tag $TAG n'existe pas. Créez-le d'abord (workflow « Créer un tag de version »)."
-            exit 1
-          fi
 
-          # Extrait la section « ## [X.Y] … » du CHANGELOG jusqu'au prochain titre « ## »
-          ver="${TAG#v}"
-          awk -v h="## [$ver]" 'index($0,h)==1{f=1;next} f&&/^## /{exit} f{print}' CHANGELOG.md > /tmp/notes.md || true
-          echo "----- notes extraites -----"; cat /tmp/notes.md; echo "---------------------------"
+          # Notes = section « ## [X.Y] … » du CHANGELOG jusqu'au prochain titre « ## »
+          notes_for() {
+            local ver="${1#v}"
+            awk -v h="## [$ver]" 'index($0,h)==1{f=1;next} f&&/^## /{exit} f{print}' CHANGELOG.md
+          }
 
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG existante → mise à jour des notes"
-            if [ -s /tmp/notes.md ]; then gh release edit "$TAG" --title "$TAG" --notes-file /tmp/notes.md; fi
-          else
-            if [ -s /tmp/notes.md ]; then
-              gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md
-            else
-              gh release create "$TAG" --title "$TAG" --generate-notes
+          make_release() {
+            local t="$1"
+            if ! git rev-parse -q --verify "refs/tags/$t" >/dev/null; then
+              echo "::warning::tag $t absent → ignoré"; return
             fi
+            notes_for "$t" > /tmp/notes.md || true
+            if gh release view "$t" >/dev/null 2>&1; then
+              if [ -s /tmp/notes.md ]; then gh release edit "$t" --title "$t" --notes-file /tmp/notes.md; fi
+              echo "↻ mise à jour de la release $t"
+            elif [ -s /tmp/notes.md ]; then
+              gh release create "$t" --title "$t" --notes-file /tmp/notes.md; echo "✓ créé $t"
+            else
+              gh release create "$t" --title "$t" --generate-notes;    echo "✓ créé $t (notes auto)"
+            fi
+          }
+
+          if [ -n "$TAG" ]; then
+            make_release "$TAG"
+          else
+            echo "Backfill des releases pour les tags v3.*"
+            for t in $(git tag -l 'v3.*' | sort -V); do make_release "$t"; done
           fi
-          echo "----- release -----"; gh release view "$TAG"
