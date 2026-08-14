@@ -34,7 +34,9 @@ jobs:
           # Notes = section « ## [X.Y] … » du CHANGELOG jusqu'au prochain titre « ## »
           notes_for() {
             local ver="${1#v}"
-            awk -v h="## [$ver]" 'index($0,h)==1{f=1;next} f&&/^## /{exit} f{print}' CHANGELOG.md
+            # S'arrête au prochain titre « ## » OU à une règle horizontale « --- »
+            # (évite d'embarquer le séparateur qui suit la dernière version).
+            awk -v h="## [$ver]" 'index($0,h)==1{f=1;next} f && (/^## / || /^---[[:space:]]*$/){exit} f{print}' CHANGELOG.md
           }
 
           make_release() {
