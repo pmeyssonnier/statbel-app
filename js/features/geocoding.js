@@ -52,6 +52,7 @@ export const GEO_PROVIDERS = {
       const variantes = [...new Set([
         q,
         sansAccent(q),
+        // eslint-disable-next-line no-control-regex -- retrait volontaire des caractères non-ASCII
         q.replace(/[^\x00-\x7F]/g, '')
       ])];
       function essai(i) {

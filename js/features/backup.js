@@ -52,15 +52,6 @@ export function fermerBackupBanner() {
 export function buildBackupDetailHTML(src, meta) {
   const statutsCfg = settings.statuts;
 
-  function colorFor(label) {
-    const s = statutsCfg.find(s => s.label === label);
-    return s ? s.color : '#90a4ae';
-  }
-  function iconFor(label) {
-    const s = statutsCfg.find(s => s.label === label);
-    return s ? s.icon : '•';
-  }
-
   const noms = Object.keys(src);
   let grandTotal = 0;
   let html = '';

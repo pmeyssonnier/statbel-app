@@ -10,6 +10,21 @@ on:
   pull_request:
 
 jobs:
+  # Lint « prudent » : bugs uniquement (vars/imports inutilisés, no-undef via le
+  # pont window déclaré, clés dupliquées, code mort). Pas de style, pas de Prettier.
+  # --max-warnings 0 : la base est propre, on empêche toute nouvelle dérive.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Installer ESLint
+        run: npm install --no-save eslint @eslint/js globals
+      - name: ESLint (0 erreur, 0 avertissement)
+        run: npx --no-install eslint js tests --max-warnings 0
+
   headless:
     runs-on: ubuntu-latest
     steps:

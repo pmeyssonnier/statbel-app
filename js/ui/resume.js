@@ -169,12 +169,8 @@ export function renduResume() {
   // ── KPI cards ────────────────────────────────────────────────────
   // Trouver "Fait" et "À faire" dynamiquement
   const doneStatuts  = statutsCfg.filter(s => s.done).map(s => s.label);
-  const rdvStatuts   = statutsCfg.filter(s => s.rdv).map(s => s.label);
 
   const nbFait   = doneStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
-  const nbAfaire = (totauxParStatut[statutDefaut()] || 0);
-  const nbRdv    = rdvStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
-  const pctFait  = grandTotal ? Math.round(nbFait / grandTotal * 100) : 0;
 
   // ── Sparklines : activité quotidienne par statut (lib partagée js/charts.js) ──
   // Série alignée sur les jours d'activité observés ; RDV futurs exclus.

@@ -86,8 +86,6 @@ export function renduRdv() {
 
   const enqAct = enqueteActive;
   const q      = (document.getElementById('rdvSearch')?.value||'').toLowerCase().trim();
-  const defaut = statutDefaut();
-  const today  = new Date().toISOString().slice(0, 10);
 
   // ── Graphe d'activité en premier ─────────────────────────────────
   const grapheEl = document.createElement('div');
