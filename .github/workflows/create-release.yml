@@ -1,0 +1,53 @@
+name: Créer une release
+
+# Crée une release GitHub pour un tag existant, avec les notes tirées du
+# CHANGELOG.md (section de la version). Déclenchement MANUEL : onglet Actions →
+# « Créer une release » → Run workflow → indiquer le tag (défaut v3.13).
+# Idempotent : si la release existe déjà, ses notes sont mises à jour.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag de la release (doit déjà exister, ex. v3.13)."
+        required: true
+        default: v3.13
+
+permissions:
+  contents: write   # créer/éditer une release via GITHUB_TOKEN
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Créer / mettre à jour la release depuis le CHANGELOG
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -e
+          # Le tag doit exister
+          if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Le tag $TAG n'existe pas. Créez-le d'abord (workflow « Créer un tag de version »)."
+            exit 1
+          fi
+
+          # Extrait la section « ## [X.Y] … » du CHANGELOG jusqu'au prochain titre « ## »
+          ver="${TAG#v}"
+          awk -v h="## [$ver]" 'index($0,h)==1{f=1;next} f&&/^## /{exit} f{print}' CHANGELOG.md > /tmp/notes.md || true
+          echo "----- notes extraites -----"; cat /tmp/notes.md; echo "---------------------------"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG existante → mise à jour des notes"
+            if [ -s /tmp/notes.md ]; then gh release edit "$TAG" --title "$TAG" --notes-file /tmp/notes.md; fi
+          else
+            if [ -s /tmp/notes.md ]; then
+              gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md
+            else
+              gh release create "$TAG" --title "$TAG" --generate-notes
+            fi
+          fi
+          echo "----- release -----"; gh release view "$TAG"
