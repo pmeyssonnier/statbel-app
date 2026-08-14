@@ -114,7 +114,6 @@ export function renderActiviteQuotidienne(enqFilter, statutFilter) {
     const tot = totalJour(iso);
     const segs = statutsOrdre.filter(s => cpt[s.label]).map(s => {
       const hPct = (cpt[s.label] / maxTot) * 100;
-      const d = statutDef(s.label);
       return `<div class="activite-seg" style="height:${hPct}%;background:${s.color}" title="${esc(statutLabel(s.label))} : ${cpt[s.label]}">${cpt[s.label]}</div>`;
     }).join('');
     const [y, m, dd] = iso.split('-');

@@ -29,6 +29,8 @@
 !.github/
 !.github/workflows/
 !.github/workflows/*.yml
+# Config ESLint (dev) — lint « prudent », bugs uniquement
+!eslint.config.js
 
 # Données personnelles : jamais (sécurité renforcée)
 *.csv

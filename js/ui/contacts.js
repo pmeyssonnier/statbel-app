@@ -12,14 +12,15 @@
  * formatDateJour, formatDateFrSaisie, afficherMarqueurs, vueActive,
  * markersLayer, maPosition, filtreActif, refreshSelect) sont globaux (pont).
  */
-import { esc, formaterGsm, formatHeureSaisie, calcAge, todayStr, nowHHMM,
+import { esc, formaterGsm, calcAge, todayStr, nowHHMM,
          dateFrToISO, dateISOToFr, composeAdresse, parseAdresse, adresseSansBoite,
          correspondRecherche } from '../core/util.js';
 import { t, tPlural, nomJourCourt } from '../core/i18n.js';
 import { statutLabel, paysAffiche, etatCivilGenre, maritalCanon,
          MARITAL_I18N, PAYS_I18N } from '../data/canon.js';
 import { coordsCache } from '../data/idb.js';
-import { ajouterHistorique } from '../features/history.js';
+// Note : formatHeureSaisie / ajouterHistorique sont appelés depuis des handlers
+// inline (oninput/onclick) → résolus via le pont window, pas besoin de les importer ici.
 
 // Domaines e-mail fréquents (autocomplétion de la saisie e-mail dans la fiche).
 const EMAIL_DOMAINES = ['gmail.com','skynet.be','yahoo.com','hotmail.com','outlook.com','live.be','telenet.be','proximus.be','icloud.com'];

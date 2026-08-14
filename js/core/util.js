@@ -122,7 +122,7 @@ export function toISODate(v, moisDabord) {
   const s = (v == null ? '' : v).toString().trim();
   if (!s) return '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;                       // déjà ISO
-  const m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);   // jj/mm/aaaa, mm/jj/aa & variantes
+  const m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})$/);   // jj/mm/aaaa, mm/jj/aa & variantes
   if (!m) return '';
   let a = +m[1], b = +m[2], y = +m[3];
   const d  = moisDabord ? b : a;                                     // jour
@@ -143,7 +143,7 @@ export function toISODate(v, moisDabord) {
 export function colonneMoisDabord(values) {
   let jourSur = false, moisSur = false;
   for (const v of (values || [])) {
-    const m = (v == null ? '' : v).toString().trim().match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-]\d{2,4}$/);
+    const m = (v == null ? '' : v).toString().trim().match(/^(\d{1,2})[/.-](\d{1,2})[/.-]\d{2,4}$/);
     if (!m) continue;
     if (+m[1] > 12) jourSur = true;   // 1er composant impossible en mois → jour d'abord
     if (+m[2] > 12) moisSur = true;   // 2e composant impossible en mois → mois d'abord
