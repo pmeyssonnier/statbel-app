@@ -1,0 +1,40 @@
+name: Tests headless
+
+# Lance le harnais de non-régression (tests/*.test.js) sur chaque push et PR.
+# Le dépôt n'a PAS de package.json ni de build : les tests sont des scripts node
+# autonomes qui servent le dépôt sur un port éphémère (tests/_serve.js) et
+# pilotent l'app dans un vrai Chromium via playwright-core.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  headless:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # playwright fournit playwright-core (requis par les tests) + la CLI qui
+      # télécharge Chromium. On installe le navigateur et ses dépendances système.
+      - name: Installer Playwright + Chromium
+        run: |
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Lancer la suite headless
+        run: |
+          # Chemin du Chromium installé par Playwright (attendu par les tests via CHROMIUM_PATH)
+          export CHROMIUM_PATH="$(node -e "console.log(require('playwright-core').chromium.executablePath())")"
+          echo "Chromium : $CHROMIUM_PATH"
+          fail=0
+          for f in tests/*.test.js; do
+            echo "::group::$f"
+            node "$f" || fail=1
+            echo "::endgroup::"
+          done
+          exit $fail
