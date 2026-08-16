@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v216';
+const CACHE = 'statbel-v217';
 
 // Ressources CRITIQUES : indispensables au fonctionnement hors-ligne. Si l'une
 // manque, l'installation doit ÉCHOUER (ne pas activer un cache incomplet qui
@@ -45,8 +45,13 @@ const APP_CRITICAL = [
 // Leur absence ne doit pas faire échouer l'installation.
 const APP_OPTIONAL = [
   './manifest.webmanifest',
+  './favicon.ico',
+  './favicon-32.png',
+  './apple-touch-icon.png',
   './icon-192.png',
   './icon-512.png',
+  './icon-192-mask.png',
+  './icon-512-mask.png',
   './vendor/leaflet/images/marker-icon-2x.png',
   './vendor/leaflet/images/layers.png',
   './vendor/leaflet/images/layers-2x.png',
