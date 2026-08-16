@@ -15,6 +15,13 @@
 !icon-192.png
 !icon-512.png
 !icon-512-mask.png
+!icon-192-mask.png
+!apple-touch-icon.png
+!favicon.ico
+!favicon-32.png
+# Générateur d'icônes (source de vérité, dev)
+!tools/
+!tools/*.py
 # CSS + JS externalisés (PR découpage)
 !css/
 !css/*.css

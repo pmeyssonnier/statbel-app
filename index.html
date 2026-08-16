@@ -12,7 +12,9 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.irisnet.be https://*.wallonie.be https://*.vlaanderen.be https://*.ngi.be https://*.openstreetmap.org">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Statbel – Interviews</title>
-<link rel="icon" href="data:,">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#1a237e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,9 +26,7 @@
     const m = document.createElement('link');
     m.rel = 'manifest'; m.href = 'manifest.webmanifest';
     document.head.appendChild(m);
-    const ai = document.createElement('link');
-    ai.rel = 'apple-touch-icon'; ai.href = 'icon-192.png';
-    document.head.appendChild(ai);
+    // (apple-touch-icon est désormais déclaré en statique dans le <head>)
     if ('serviceWorker' in navigator) {
       // Auto-mise à jour de la PWA installée. Sans ça, le raccourci écran d'accueil
       // continue de servir l'ancienne version depuis le cache (« le lien installé ne
