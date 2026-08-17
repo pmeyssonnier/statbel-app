@@ -97,7 +97,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.19';
+const APP_VERSION = '3.20';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
@@ -546,37 +546,11 @@ function afficherToast(msg, duree) {
   t._hide = setTimeout(() => { t.style.transition='opacity 0.5s'; t.style.opacity='0'; setTimeout(()=>{t.style.display='none';t.style.transition='';},500); }, duree||3000);
 }
 
-// ── Popup « Mise à jour disponible » (opt-in) ─────────────────────────
-// Appelé par le script de service worker (index.html) quand un nouveau SW est
-// installé et en attente. L'utilisateur choisit de poser la maj (rechargement)
-// ou de la reporter — aucune interruption automatique de la saisie en cours.
-function signalerMajDispo() {
-  if (!window.__swWaiting) return;                 // rien en attente
-  if (document.getElementById('majDispo')) return; // déjà affiché
-  const d = document.createElement('div');
-  d.id = 'majDispo';
-  d.className = 'maj-popup';
-  d.setAttribute('role', 'status');
-  d.innerHTML =
-    `<span class="maj-ico" aria-hidden="true">⬆️</span>` +
-    `<span class="maj-msg">${esc(t('maj_dispo'))}</span>` +
-    `<button class="maj-poser" onclick="poserMaj()">${esc(t('maj_poser'))}</button>` +
-    `<button class="maj-later" aria-label="${esc(t('maj_plus_tard'))}" title="${esc(t('maj_plus_tard'))}" onclick="fermerMajDispo()"><span aria-hidden="true">✕</span></button>`;
-  document.body.appendChild(d);
-}
-function poserMaj() {
-  const w = window.__swWaiting;
-  const btn = document.querySelector('#majDispo .maj-poser');
-  if (btn) { btn.disabled = true; btn.textContent = t('maj_en_cours'); }
-  // Demande au SW en attente de prendre la main ; controllerchange (index.html)
-  // rechargera la page une fois qu'il contrôle les clients.
-  if (w) w.postMessage({ type: 'SKIP_WAITING' });
-}
-function fermerMajDispo() {
-  const d = document.getElementById('majDispo');
-  if (d) d.remove();
-  // On garde __swWaiting : la maj sera reproposée au prochain lancement.
-}
+// ── Popup « Mise à jour disponible » ──────────────────────────────────
+// Le popup vit désormais dans le script INLINE de index.html (toujours frais),
+// et non ici : js/app.js est servi « cache d'abord » par le service worker, donc
+// un app.js périmé ne pourrait pas afficher le popup — ce qui bloquerait la mise
+// à jour (le SW en attente ne serait jamais activé). Voir index.html.
 
 
 // ════════════════════════════════════════════════════════════════════
@@ -978,10 +952,6 @@ async function init() {
   setupA11y();
   document.querySelectorAll('.app-version').forEach(el => el.textContent = APP_VERSION);
 
-  // Mise à jour PWA détectée avant que le pont soit prêt (course de chargement) :
-  // le script SW a posé le drapeau, on affiche le popup maintenant.
-  if (window.__majDispo) signalerMajDispo();
-
   pinSurveillerInactivite();
 }
 
@@ -1010,8 +980,7 @@ Object.assign(window, {
   ouvrirModalImport, preparerImport, renderExclus, majComparaisonImport,
   renderImportApercu, confirmerImport, fermerModal, csvGuard, csvDeguard, csvCell,
   sepRegionalAuto, sepCSVexport, genererCSV, exporterCSV, exporterVCard, renderFilters,
-  rendu, haversine, formatDist, distanceBadge, afficherToast,
-  signalerMajDispo, poserMaj, fermerMajDispo, toggleMaPosition,
+  rendu, haversine, formatDist, distanceBadge, afficherToast, toggleMaPosition,
   demanderPosition, placerMarqueurMoi, recentrerCarte, changerStatutCarte,
   ouvrirFicheDepuisCarte, renderLegend, initCarte, redessinerCourbeApresLayout,
   afficherMarqueurs, filtrerActiviteJour, ouvrirFicheEvtIdx, rdvTitreStatut,

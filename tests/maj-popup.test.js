@@ -27,7 +27,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
 
   const r = await p.evaluate(async () => {
     const out = {};
-    settings.lang = 'fr';
+    // Le popup (autonome dans index.html) lit la langue depuis localStorage,
+    // pas depuis le global `settings` : on la fixe là où il la lit.
+    localStorage.setItem('statbel_settings', JSON.stringify({ lang: 'fr' }));
 
     // Worker en attente simulé : on capture les messages postés.
     const posted = [];

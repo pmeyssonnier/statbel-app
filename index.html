@@ -43,14 +43,69 @@
         rechargement = true;
         window.location.reload();
       });
-      // Signale à l'app qu'une mise à jour est prête à poser. Robuste à l'ordre de
-      // chargement : si le pont (app.js) n'est pas encore prêt, un drapeau global
-      // sera relu à la fin de l'init.
+      // Popup « Mise à jour disponible » AUTONOME (ne dépend PAS de js/app.js).
+      // Crucial : les sous-ressources JS/CSS sont servies « cache d'abord » par le
+      // service worker → un app.js/base.css périmé resterait en cache. Si le popup
+      // vivait dans app.js, un utilisateur bloqué sur une vieille version ne le
+      // verrait jamais (app.js en cache sans le code du popup) → il ne cliquerait
+      // jamais « Poser » → le SW ne s'activerait jamais → blocage. index.html est
+      // rechargé frais (navigation réseau) : en y logeant le popup + ses styles
+      // inline, il fonctionne quel que soit l'âge du cache.
+      const MAJ_I18N = {
+        fr:{d:'Mise à jour disponible',p:'Poser',b:'Pose en cours…',l:'Plus tard'},
+        nl:{d:'Update beschikbaar',p:'Toepassen',b:'Bezig…',l:'Later'},
+        en:{d:'Update available',p:'Apply',b:'Applying…',l:'Later'},
+        de:{d:'Update verfügbar',p:'Anwenden',b:'Wird angewendet…',l:'Später'}
+      };
+      function majTxt() {
+        let lang = 'fr';
+        try { lang = (JSON.parse(localStorage.getItem('statbel_settings') || '{}').lang) || 'fr'; } catch (e) {}
+        return MAJ_I18N[Object.prototype.hasOwnProperty.call(MAJ_I18N, lang) ? lang : 'fr'];
+      }
+      function poserMaj() {
+        const b = document.querySelector('#majDispo .maj-poser');
+        if (b) { b.disabled = true; b.textContent = majTxt().b; b.style.opacity = '0.7'; b.style.cursor = 'default'; }
+        if (window.__swWaiting) window.__swWaiting.postMessage({ type: 'SKIP_WAITING' });
+        // controllerchange (plus haut) rechargera la page une fois le SW actif.
+      }
+      function fermerMajDispo() {
+        const d = document.getElementById('majDispo');
+        if (d) d.remove();   // on garde __swWaiting : reproposé au prochain lancement
+      }
+      function signalerMajDispo() {
+        if (!window.__swWaiting || document.getElementById('majDispo')) return;
+        const T = majTxt();
+        const sombre = document.body.classList.contains('dark');
+        const d = document.createElement('div');
+        d.id = 'majDispo'; d.setAttribute('role', 'status');
+        d.style.cssText = 'position:fixed;left:50%;bottom:84px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:min(92vw,420px);padding:10px 12px;background:' + (sombre ? '#123a72' : '#0d47a1') + ';color:#fff;border-radius:12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,0.35);z-index:10000;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,sans-serif';
+        const ico = document.createElement('span');
+        ico.className = 'maj-ico'; ico.setAttribute('aria-hidden', 'true'); ico.textContent = '⬆️';
+        ico.style.cssText = 'font-size:16px;flex-shrink:0';
+        const msg = document.createElement('span');
+        msg.className = 'maj-msg'; msg.textContent = T.d; msg.style.cssText = 'flex:1;min-width:0;font-weight:600';
+        const poser = document.createElement('button');
+        poser.className = 'maj-poser'; poser.type = 'button'; poser.textContent = T.p;
+        poser.style.cssText = 'background:#fff;color:#0d47a1;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;min-height:40px;flex-shrink:0';
+        poser.addEventListener('click', poserMaj);
+        const later = document.createElement('button');
+        later.className = 'maj-later'; later.type = 'button'; later.textContent = '✕';
+        later.setAttribute('aria-label', T.l); later.title = T.l;
+        later.style.cssText = 'background:transparent;border:none;color:#cfe0ff;cursor:pointer;font-size:14px;width:32px;height:32px;border-radius:6px;flex-shrink:0';
+        later.addEventListener('click', fermerMajDispo);
+        d.append(ico, msg, poser, later);
+        document.body.appendChild(d);
+      }
+      // Exposé pour les tests headless (mêmes noms qu'avant, désormais autonomes).
+      window.signalerMajDispo = signalerMajDispo;
+      window.poserMaj = poserMaj;
+      window.fermerMajDispo = fermerMajDispo;
+
+      // Signale qu'une mise à jour est prête à poser → affiche le popup autonome.
       function majPrete(worker) {
         if (!worker) return;
         window.__swWaiting = worker;
-        window.__majDispo = true;
-        if (typeof window.signalerMajDispo === 'function') window.signalerMajDispo();
+        signalerMajDispo();
       }
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
