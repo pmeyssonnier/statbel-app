@@ -54,7 +54,7 @@ export default [
   // eslint.config.js lui-même est un module ESM à la racine — hors du périmètre
   // « app » (js/**) et « node » (tests/**), on ne le lint pas pour éviter une
   // mauvaise classification de sourceType.
-  { ignores: ['vendor/**', '**/*.min.js', 'node_modules/**', 'eslint.config.js'] },
+  { ignores: ['vendor/**', '**/*.min.js', 'node_modules/**', 'eslint.config.mjs'] },
 
   js.configs.recommended,
 

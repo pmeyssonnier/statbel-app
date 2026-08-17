@@ -1,9 +1,10 @@
 name: Tests headless
 
 # Lance le harnais de non-régression (tests/*.test.js) sur chaque push et PR.
-# Le dépôt n'a PAS de package.json ni de build : les tests sont des scripts node
-# autonomes qui servent le dépôt sur un port éphémère (tests/_serve.js) et
-# pilotent l'app dans un vrai Chromium via playwright-core.
+# L'APP reste 100% statique sans build ; le package.json ne porte QUE l'outillage
+# de dev (playwright + eslint). Les tests sont des scripts node autonomes qui
+# servent le dépôt sur un port éphémère (tests/_serve.js) et pilotent l'app dans
+# un vrai Chromium.
 on:
   push:
     branches: [main]
@@ -20,36 +21,37 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 20
-      - name: Installer ESLint
-        run: npm install --no-save eslint @eslint/js globals
+      - name: Installer les devDependencies
+        run: npm install
       - name: ESLint (0 erreur, 0 avertissement)
-        run: npx --no-install eslint js tests --max-warnings 0
+        run: npm run lint
 
   headless:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-node@v5
         with:
           node-version: 20
-
-      # playwright fournit playwright-core (requis par les tests) + la CLI qui
-      # télécharge Chromium. On installe le navigateur et ses dépendances système.
-      - name: Installer Playwright + Chromium
-        run: |
-          npm install playwright
-          npx playwright install --with-deps chromium
-
+      - name: Installer les devDependencies
+        run: npm install
+      # Le navigateur + ses dépendances système (le pretest de npm ne pose que le
+      # navigateur ; ici on ajoute --with-deps pour le runner CI).
+      - name: Installer Chromium (Playwright)
+        run: npx playwright install --with-deps chromium
       - name: Lancer la suite headless
-        run: |
-          # Chemin du Chromium installé par Playwright (attendu par les tests via CHROMIUM_PATH)
-          export CHROMIUM_PATH="$(node -e "console.log(require('playwright-core').chromium.executablePath())")"
-          echo "Chromium : $CHROMIUM_PATH"
-          fail=0
-          for f in tests/*.test.js; do
-            echo "::group::$f"
-            node "$f" || fail=1
-            echo "::endgroup::"
-          done
-          exit $fail
+        run: npm test
+
+  # Garde du rituel de version : sur une PR, si un fichier servi change sans bump
+  # de CACHE (sw.js), ou si un nouveau fichier servi manque dans sw.js → échec.
+  version-guard:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Vérifier CACHE + APP_CRITICAL
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node tools/check-version-bump.js "$BASE_SHA"
