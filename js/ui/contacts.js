@@ -212,7 +212,10 @@ export function statutBarHTML(i, statut, editable) {
     const act = editable ? `changerStatut(${i},statutDefs()[${si}].label)` : `ouvrirEdit(${i})`;
     const cls = `s-btn${on ? ' actif' : ''}${editable ? '' : ' s-btn-lock'}`;
     const ttl = editable ? '' : ` title="${esc(t('lock_status_edit'))}"`;
-    return `<button class="${cls}" style="${style}"${ttl} onclick="event.stopPropagation();${act}">${esc(s.icon)} ${esc(statutLabel(s.label))}</button>`;
+    // a11y : l'emoji est décoratif (le libellé texte porte le sens) ; l'état actif
+    // d'un bouton éditable est exposé via aria-pressed.
+    const press = editable ? ` aria-pressed="${on}"` : '';
+    return `<button class="${cls}" style="${style}"${ttl}${press} onclick="event.stopPropagation();${act}"><span aria-hidden="true">${esc(s.icon)}</span> ${esc(statutLabel(s.label))}</button>`;
   }).join('');
 }
 
@@ -302,7 +305,7 @@ export function buildEditForm(i) {
             <input type="text" inputmode="numeric" id="edit-rdv-date-${i}" value="${dateISOToFr((c.rdv||'').split(' ')[0]||'')}"
               placeholder="jj/mm/aaaa" maxlength="10" oninput="this.value=formatDateFrSaisie(this.value)" onchange="changerRdvDH(${i})"
               style="flex:1;border-color:#90caf9;background:#fff;">
-            <button type="button" class="historique-cal" title="Ouvrir le calendrier" onclick="ouvrirCalendrierRdv(${i})" style="font-size:16px;">📅</button>
+            <button type="button" class="historique-cal" title="Ouvrir le calendrier" aria-label="Ouvrir le calendrier" onclick="ouvrirCalendrierRdv(${i})" style="font-size:16px;">📅</button>
             <input type="text" inputmode="numeric" id="edit-rdv-heure-${i}" value="${(c.rdv||'').split(' ')[1]||''}"
               placeholder="hh:mm" maxlength="5" oninput="this.value=formatHeureSaisie(this.value)" onchange="changerRdvDH(${i})"
               style="width:70px;border-color:#90caf9;background:#fff;text-align:center;">
@@ -310,7 +313,7 @@ export function buildEditForm(i) {
         </div>` : ''}
         <div class="edit-btns">
           <button class="btn-cancel-edit" onclick="toggleEdit(${i})">${t('btn_close')}</button>
-          <button class="btn-vcard" onclick="exporterVCard(${i})" title="Exporter contact">📇 vCard</button>
+          <button class="btn-vcard" onclick="exporterVCard(${i})" title="Exporter contact" aria-label="Exporter la fiche (vCard)">📇 vCard</button>
           <button class="btn-save-edit" onclick="sauverEdit(${i})">${t('ed_save')}</button>
         </div>
   `;
@@ -460,15 +463,15 @@ export function buildHistoriqueHTML(c, i) {
     if (def.rdv) {
       const p = (h.rdv ? h.rdv + ' ' : ' ').split(' ');
       const rdvFr = h.rdv ? (dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : '')) : '';
-      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" onchange="modifierRdvHistorique(${i},${idx},this.value)" title="Date/heure du RDV"><button class="historique-cal" title="Calendrier RDV" onclick="ouvrirCalendrierRdvHist(${i},${idx},'${esc(h.rdv || '')}')">📅</button>`;
+      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" onchange="modifierRdvHistorique(${i},${idx},this.value)" title="Date/heure du RDV"><button class="historique-cal" title="Calendrier RDV" aria-label="Calendrier du rendez-vous" onclick="ouvrirCalendrierRdvHist(${i},${idx},'${esc(h.rdv || '')}')">📅</button>`;
     }
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
       <select class="hist-statut" onchange="modifierStatutHistorique(${i},${idx},this.value)">${opts}</select>
       <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1" title="Cliquez sur 📅 pour modifier la date">
-      <button class="historique-cal" title="Modifier la date" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
+      <button class="historique-cal" title="Modifier la date" aria-label="Modifier la date" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
       ${rdvField}
-      <button class="historique-del" title="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
+      <button class="historique-del" title="Supprimer cette entrée" aria-label="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
     </div>`;
   }).join('');
   return `<div class="historique-wrap" id="hist-${i}">
@@ -573,6 +576,8 @@ export function toggleKebab() {
   const m = document.getElementById('kebabMenu');
   const ouverture = !m.classList.contains('open');
   m.classList.toggle('open');
+  const btn = document.getElementById('btnKebab');
+  if (btn) btn.setAttribute('aria-expanded', ouverture ? 'true' : 'false');   // a11y : état du menu
   // À l'ouverture, rafraîchir la ligne d'état de sauvegarde (dernière sauvegarde /
   // modifications non sauvegardées) — réexposée via le pont window.
   if (ouverture && typeof majKebabBackupInfo === 'function') majKebabBackupInfo();

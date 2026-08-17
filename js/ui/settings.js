@@ -117,7 +117,7 @@ export function renderStatutsEditor() {
       <input type="text" class="se-label" value="${esc(statutLabel(s.label))}" onchange="modifierStatut(${i},'label',this.value)" title="${t('ed_label')}">
       <label class="se-flag" title="${esc(t('flag_done_title'))}"><input type="checkbox" ${s.done?'checked':''} onchange="modifierStatut(${i},'done',this.checked)"> ✓</label>
       <label class="se-flag" title="${esc(t('flag_rdv_title'))}"><input type="checkbox" ${s.rdv?'checked':''} onchange="modifierStatut(${i},'rdv',this.checked)"> 📅</label>
-      <button class="se-del" onclick="supprimerStatut(${i})" title="${t('del_status_title')}"${settings.statuts.length<=1?' disabled':''}>🗑️</button>
+      <button class="se-del" onclick="supprimerStatut(${i})" title="${t('del_status_title')}" aria-label="${esc(t('del_status_title'))}"${settings.statuts.length<=1?' disabled':''}>🗑️</button>
     </div>`).join('');
 }
 
