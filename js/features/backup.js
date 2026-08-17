@@ -19,8 +19,10 @@ import { GEO_PROVIDERS } from './geocoding.js';
 
 
 // ── Bandeau de rappel de sauvegarde (non-modal, dans la liste) ───────
-// S'affiche quand il y a des données et qu'aucune sauvegarde n'a été faite,
-// ou que la dernière remonte à plus de BACKUP_RAPPEL_JOURS jours.
+// RAPPEL BASÉ SUR LE RISQUE (pas seulement le temps) : on ne rappelle que s'il
+// y a un vrai enjeu — jamais sauvegardé avec des données, OU des modifications
+// non sauvegardées (drapeau « dirty ») depuis plus de BACKUP_RAPPEL_JOURS jours.
+// Un état « propre » (rien changé depuis la dernière sauvegarde) ne harcèle pas.
 const BACKUP_RAPPEL_JOURS = 7;
 export function majBackupBanner() {
   const el = document.getElementById('backupBanner');
@@ -32,12 +34,13 @@ export function majBackupBanner() {
     return;
   }
   const iso = localStorage.getItem('statbel_last_backup');
+  const dirty = !!localStorage.getItem('statbel_backup_dirty');
   let msg = null;
   if (!iso) {
-    msg = t('bkbanner_never');
-  } else {
+    msg = t('bkbanner_never');                       // données mais jamais sauvegardé
+  } else if (dirty) {                                // modifications non sauvegardées
     const jours = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-    if (jours >= BACKUP_RAPPEL_JOURS) msg = tf('bkbanner_old', { n: jours });
+    if (jours >= BACKUP_RAPPEL_JOURS) msg = tf('bkbanner_dirty', { n: jours });
   }
   el.classList.toggle('hidden', !msg);
   if (msg) el.querySelector('.bk-msg').textContent = msg;
@@ -163,7 +166,10 @@ export function exporterBackup() {
     const a = Object.assign(document.createElement('a'), { href: url, download: fname });
     a.click();
     localStorage.setItem('statbel_last_backup', isoNow);
+    localStorage.removeItem('statbel_backup_dirty');   // sauvegardé → plus de modifs en attente
     majLastBackupInfo();
+    majKebabBackupInfo();
+    majBackupBanner();
     fermerBackupDetail();
   };
 
@@ -173,21 +179,35 @@ export function exporterBackup() {
   document.getElementById('modalBackupDetail').classList.add('open');
 }
 
+// État de sauvegarde partagé (Paramètres + menu ⋮). warn=true si à risque
+// (jamais sauvegardé, ou modifications non sauvegardées depuis la dernière).
+function backupStatus() {
+  const iso = localStorage.getItem('statbel_last_backup');
+  const dirty = !!localStorage.getItem('statbel_backup_dirty');
+  if (!iso) return { text: t('backup_none'), warn: true };
+  const d = new Date(iso);
+  const quand = d.toLocaleDateString(localeApp(), { day:'2-digit', month:'long', year:'numeric' })
+    + ' ' + t('backup_at') + ' ' + d.toLocaleTimeString(localeApp(), { hour:'2-digit', minute:'2-digit' });
+  const text = t('backup_last') + ' ' + quand + (dirty ? ' · ' + t('backup_unsaved') : '');
+  return { text, warn: dirty };
+}
+
 // Affiche « Dernière sauvegarde : … » dans la section Données des Paramètres
 export function majLastBackupInfo() {
   const el = document.getElementById('lastBackupInfo');
   if (!el) return;
-  const iso = localStorage.getItem('statbel_last_backup');
-  if (!iso) {
-    el.textContent = t('backup_none');
-    el.style.color = '#e65100';
-    return;
-  }
-  const d = new Date(iso);
-  el.textContent = t('backup_last') + ' ' + d.toLocaleDateString(localeApp(),
-      { day:'2-digit', month:'long', year:'numeric' })
-    + ' ' + t('backup_at') + ' ' + d.toLocaleTimeString(localeApp(), { hour:'2-digit', minute:'2-digit' });
-  el.style.color = '';
+  const { text, warn } = backupStatus();
+  el.textContent = text;
+  el.style.color = warn ? '#e65100' : '';
+}
+
+// Même info, rendue visible dans le menu ⋮ (rafraîchie à l'ouverture du menu).
+export function majKebabBackupInfo() {
+  const el = document.getElementById('kebabBackupInfo');
+  if (!el) return;
+  const { text, warn } = backupStatus();
+  el.textContent = text;
+  el.classList.toggle('warn', warn);
 }
 
 // Stockage temporaire pour la restauration (entre l'aperçu et la confirmation)
