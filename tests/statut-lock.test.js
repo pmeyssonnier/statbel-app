@@ -34,6 +34,11 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     Object.keys(enquetes).forEach(k => delete enquetes[k]);
     enquetes.G1 = [{ ordre: '1', nom: 'A', prenom: 'a', adresse: 'Rue A, 1000 Bruxelles', statut: 'To do', historique: [] }];
     enqueteActive = 'G1';
+    // Force le FR : l'UI rend le libellé traduit (« Done » → « Fait »). On cible le
+    // statut CANONIQUE par index (ci-dessous), donc le test reste valable en toute
+    // langue ET garde activement le cas multilingue (une régression vers un match
+    // par texte visible échouerait ici, alors que le CI tourne en anglais).
+    settings.lang = 'fr';
     if (typeof refreshSelect === 'function') refreshSelect();
     setView('liste'); rendu();
     await new Promise(res => setTimeout(res, 100));
