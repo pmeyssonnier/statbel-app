@@ -97,7 +97,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.17';
+const APP_VERSION = '3.18';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
@@ -244,16 +244,88 @@ function restaurerIndicateur() {
 
 // ── Accessibilité : rôle dialog sur les modales + fermeture par Échap ─
 function setupA11y() {
-  document.querySelectorAll('.modal-overlay').forEach(m => {
+  const overlays = [...document.querySelectorAll('.modal-overlay')];
+  overlays.forEach(m => {
     m.setAttribute('role', 'dialog');
     m.setAttribute('aria-modal', 'true');
   });
+
+  // Éléments de premier niveau formant l'arrière-plan (tout sauf les modales) :
+  // on les neutralise avec `inert` dès qu'une modale est ouverte (ni focus ni
+  // clic ni lecture par les technologies d'assistance).
+  const fond = () => [...document.body.children].filter(el => !el.classList.contains('modal-overlay'));
+  const modalesOuvertes = () => [...document.querySelectorAll('.modal-overlay.open')];
+
+  // Éléments réellement focusables et visibles dans un conteneur donné.
+  const focusables = (root) => [...root.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]),' +
+    ' select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )].filter(el => el.offsetParent !== null || el.getClientRects().length);
+
+  // Neutralise/réactive l'arrière-plan et les modales sous la pile selon la
+  // modale active (celle du dessus). Empilement rare mais géré proprement.
+  function majArrierePlan() {
+    const ouverts = modalesOuvertes();
+    const actif = ouverts[ouverts.length - 1] || null;
+    fond().forEach(el => { if (actif) el.setAttribute('inert', ''); else el.removeAttribute('inert'); });
+    overlays.forEach(m => { if (actif && m !== actif) m.setAttribute('inert', ''); else m.removeAttribute('inert'); });
+  }
+
+  function ouverture(m) {
+    if (!m._restoreFocus) m._restoreFocus = document.activeElement;   // à restaurer à la fermeture
+    majArrierePlan();
+    // Amène le focus dans la modale si rien d'utile ne l'a déjà (un focus
+    // explicite d'ouverture — ex. sélection d'un champ — reste prioritaire).
+    if (!m.contains(document.activeElement)) {
+      const f = focusables(m);
+      if (f[0] && typeof f[0].focus === 'function') f[0].focus();
+    }
+  }
+  function fermeture(m) {
+    majArrierePlan();
+    const cible = m._restoreFocus;
+    m._restoreFocus = null;
+    // Restaure le focus sur l'élément déclencheur s'il est encore là.
+    if (cible && document.contains(cible) && typeof cible.focus === 'function') cible.focus();
+  }
+
+  // Observe la bascule de la classe `.open` sur chaque modale — couvre TOUS les
+  // points d'ouverture/fermeture sans les modifier un par un.
+  const obs = new MutationObserver(muts => {
+    muts.forEach(mu => {
+      if (mu.attributeName !== 'class') return;
+      const m = mu.target;
+      const estOuvert = m.classList.contains('open');
+      if (estOuvert === (m._a11yOpen === true)) return;   // pas de vrai changement
+      m._a11yOpen = estOuvert;
+      estOuvert ? ouverture(m) : fermeture(m);
+    });
+  });
+  overlays.forEach(m => {
+    m._a11yOpen = m.classList.contains('open');
+    obs.observe(m, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  // Piège de focus : Tab / Maj+Tab bouclent à l'intérieur de la modale du dessus.
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const ouverts = modalesOuvertes();
+    if (!ouverts.length) return;
+    const m = ouverts[ouverts.length - 1];
+    const f = focusables(m);
+    if (!f.length) { e.preventDefault(); return; }
+    const premier = f[0], dernier = f[f.length - 1], actif = document.activeElement;
+    if (e.shiftKey && (actif === premier || !m.contains(actif))) { e.preventDefault(); dernier.focus(); }
+    else if (!e.shiftKey && (actif === dernier || !m.contains(actif))) { e.preventDefault(); premier.focus(); }
+  });
+
+  // Fermeture par Échap (comportement historique conservé).
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    const ouverts = [...document.querySelectorAll('.modal-overlay.open')];
+    const ouverts = modalesOuvertes();
     if (!ouverts.length) return;
     const top = ouverts[ouverts.length - 1];
-    // Fermeture propre de l'import (réinitialise csvEnAttente) sinon fermeture générique
+    // Fermeture propre de l'import (réinitialise csvEnAttente) sinon générique.
     if (top.id === 'modalNom' && typeof fermerModal === 'function') fermerModal();
     else top.classList.remove('open');
   });
