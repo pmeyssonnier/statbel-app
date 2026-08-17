@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v219';
+const CACHE = 'statbel-v220';
 
 // Ressources CRITIQUES : indispensables au fonctionnement hors-ligne. Si l'une
 // manque, l'installation doit ÉCHOUER (ne pas activer un cache incomplet qui
@@ -68,8 +68,19 @@ self.addEventListener('install', e => {
     const c = await caches.open(CACHE);
     await c.addAll(APP_CRITICAL);
     await Promise.all(APP_OPTIONAL.map(u => c.add(u).catch(() => {})));
-    self.skipWaiting();
+    // Pas de skipWaiting() automatique : le nouveau SW reste en attente
+    // (« waiting ») et ne prend la main QUE lorsque l'utilisateur choisit de
+    // poser la mise à jour via le popup (message SKIP_WAITING ci-dessous).
+    // Au tout premier install (aucun SW actif), l'activation est immédiate de
+    // toute façon — l'app fonctionne hors-ligne dès le départ.
   })());
+});
+
+// Pose de la mise à jour à la demande : la page envoie SKIP_WAITING quand
+// l'utilisateur clique « Poser » → le SW en attente s'active, purge les vieux
+// caches, prend le contrôle (clients.claim) → la page se recharge une fois.
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // Activation : purge des anciens caches

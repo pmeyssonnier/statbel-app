@@ -28,22 +28,44 @@
     document.head.appendChild(m);
     // (apple-touch-icon est désormais déclaré en statique dans le <head>)
     if ('serviceWorker' in navigator) {
-      // Auto-mise à jour de la PWA installée. Sans ça, le raccourci écran d'accueil
-      // continue de servir l'ancienne version depuis le cache (« le lien installé ne
-      // se rafraîchit pas ») : il faut relancer deux fois, et sur mobile la PWA ne
-      // vérifie quasi jamais les mises à jour toute seule.
+      // Mise à jour de la PWA installée en OPT-IN : quand une nouvelle version est
+      // publiée, le nouveau SW s'installe mais reste « en attente » ; on affiche un
+      // petit popup « Mise à jour disponible — Poser » et l'utilisateur choisit le
+      // moment (pas de rechargement surprise en pleine saisie). Sans ce mécanisme,
+      // le raccourci écran d'accueil continuerait de servir l'ancienne version.
       const avaitControleur = !!navigator.serviceWorker.controller;   // false au 1er install
       let rechargement = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // Le nouveau SW (install → skipWaiting → activate → clients.claim) prend la
-        // main : on recharge UNE fois pour servir les nouveaux fichiers. Pas de
-        // rechargement au tout premier install (aucun contrôleur au départ).
+        // Le SW en attente a pris la main (après « Poser » → SKIP_WAITING →
+        // activate → clients.claim) : on recharge UNE fois pour servir les nouveaux
+        // fichiers. Pas de rechargement au tout premier install (aucun contrôleur).
         if (rechargement || !avaitControleur) return;
         rechargement = true;
         window.location.reload();
       });
+      // Signale à l'app qu'une mise à jour est prête à poser. Robuste à l'ordre de
+      // chargement : si le pont (app.js) n'est pas encore prêt, un drapeau global
+      // sera relu à la fin de l'init.
+      function majPrete(worker) {
+        if (!worker) return;
+        window.__swWaiting = worker;
+        window.__majDispo = true;
+        if (typeof window.signalerMajDispo === 'function') window.signalerMajDispo();
+      }
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
+          // Un SW déjà en attente au chargement (mise à jour vue lors d'une visite
+          // précédente et « Plus tard ») → reproposer le popup.
+          if (reg.waiting && navigator.serviceWorker.controller) majPrete(reg.waiting);
+          reg.addEventListener('updatefound', () => {
+            const nv = reg.installing;
+            if (!nv) return;
+            nv.addEventListener('statechange', () => {
+              // installé + un contrôleur existe déjà = vraie mise à jour (pas le
+              // premier install) → prête à poser.
+              if (nv.state === 'installed' && navigator.serviceWorker.controller) majPrete(nv);
+            });
+          });
           reg.update();                                   // check au démarrage
           setInterval(() => reg.update(), 60 * 60 * 1000); // + check horaire si l'app reste ouverte
           // PWA relancée depuis le cache : revérifier dès qu'elle revient au 1er plan.
