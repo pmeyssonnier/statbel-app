@@ -22,6 +22,7 @@
     --legend-bg: #ffffff;
     --app-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     --app-font-size: 14px;
+    --focus-ring: #0b57d0;
   }
   body.dark {
     --bg:       #121212;
@@ -45,6 +46,7 @@
     --header-bg: #0d1257;
     --modal-bg: #1e1e2e;
     --legend-bg: #1e1e2e;
+    --focus-ring: #8ab4f8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--app-font); font-size: var(--app-font-size); background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
@@ -453,3 +455,25 @@
   }
   .maj-popup .maj-later:hover { background:rgba(255,255,255,0.15); }
   body.dark .maj-popup { background:#123a72; }
+
+  /* ── Accessibilité (a11y-3) : lien d'évitement + focus clavier visible ── */
+  /* Lien d'évitement : caché hors écran, révélé au focus clavier. */
+  .skip-link {
+    position:fixed; top:8px; left:8px; z-index:10001;
+    background:#0b57d0; color:#fff; padding:10px 16px; border-radius:8px;
+    font-size:14px; font-weight:600; text-decoration:none;
+    transform:translateY(-160%); transition:transform .15s ease;
+  }
+  .skip-link:focus { transform:translateY(0); outline:2px solid #fff; outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce) { .skip-link { transition:none; } }
+
+  /* Anneau de focus visible UNIQUEMENT au clavier (:focus-visible), pas à la
+     souris. Contraste vérifié ≥ 3:1 (non-texte, WCAG 1.4.11). */
+  :focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+  /* Contrôles de l'en-tête (fond marine) : anneau blanc, plus lisible. */
+  header button:focus-visible, header select:focus-visible { outline-color:#fff; }
+  /* Champs qui neutralisaient l'outline au focus : le restaurer au clavier. */
+  .search-bar input:focus-visible, .rdv-search input:focus-visible,
+  .edit-row input:focus-visible { outline:2px solid var(--focus-ring); outline-offset:1px; }
+  /* Cible du lien d'évitement : pas d'anneau (ce n'est pas un contrôle). */
+  #contenu:focus-visible { outline:none; }

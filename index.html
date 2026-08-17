@@ -90,6 +90,9 @@
 </head>
 <body>
 
+<!-- Lien d'évitement : premier élément focusable, saute l'en-tête vers le contenu -->
+<a class="skip-link" href="#contenu" data-i18n="skip_link">Aller au contenu</a>
+
 <!-- Écran de verrouillage PIN -->
 <div id="lockScreen">
   <div class="lock-icon">🔒</div>
@@ -158,6 +161,8 @@
     onchange="importerFichier(event)">
 </header>
 
+<!-- Contenu principal (landmark main + cible du lien d'évitement) -->
+<main id="contenu" tabindex="-1">
 <div class="search-bar">
   <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" oninput="debounce(rendu)" autocomplete="off">
 </div>
@@ -192,6 +197,7 @@
 </div>
 
 <div id="resumeContainer"></div>
+</main>
 
 <div class="modal-overlay" id="modalNom">
   <div class="modal" style="max-width:500px;max-height:85vh;display:flex;flex-direction:column;">

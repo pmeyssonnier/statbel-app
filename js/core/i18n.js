@@ -174,6 +174,7 @@ export const I18N = {
   "geo_err_2": { fr:"Position indisponible.", nl:"Locatie niet beschikbaar.", en:"Location unavailable.", de:"Position nicht verfügbar." },
   "geo_err_3": { fr:"Délai dépassé.", nl:"Time-out.", en:"Timed out.", de:"Zeitüberschreitung." },
   "geo_err": { fr:"Erreur ", nl:"Fout ", en:"Error ", de:"Fehler " },
+  "skip_link": { fr:"Aller au contenu", nl:"Naar de inhoud", en:"Skip to content", de:"Zum Inhalt springen" },
   "maj_dispo": { fr:"Mise à jour disponible", nl:"Update beschikbaar", en:"Update available", de:"Update verfügbar" },
   "maj_poser": { fr:"Poser", nl:"Toepassen", en:"Apply", de:"Anwenden" },
   "maj_en_cours": { fr:"Pose en cours…", nl:"Bezig…", en:"Applying…", de:"Wird angewendet…" },
