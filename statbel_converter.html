@@ -160,14 +160,18 @@
     font-weight: bold; color: var(--accent); font-size: 14px; margin-bottom: 12px;
   }
 
-  /* ── Compteurs ── */
+  /* ── Compteurs (tuiles KPI — style repris du Résumé d'Interviews :
+        carte blanche, ombre légère, bordure haute colorée, gros chiffre) ── */
   .compteurs { display: flex; gap: 10px; flex-wrap: wrap; }
   .compteur {
-    background: var(--card2); border-radius: 8px; padding: 10px 16px;
-    text-align: center; flex: 1; min-width: 90px;
+    background: var(--blanc); border-radius: 10px; padding: 12px 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    border-top: 4px solid var(--accent);
+    text-align: center; flex: 1; min-width: 104px;
   }
-  .compteur .val   { font-size: 22px; font-weight: bold; color: var(--accent); }
-  .compteur .label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .compteur .val   { font-size: 28px; font-weight: bold; color: var(--accent); line-height: 1.1; }
+  .compteur .label { font-size: 11px; color: var(--text2); margin-top: 4px;
+                     text-transform: uppercase; letter-spacing: 0.5px; }
 
   /* ── Bloc planning LFS du groupe ── */
   .plan-box { margin: 10px 0 2px; padding: 8px 12px; background: var(--card2); border-radius: 8px; font-size: 12px; }
@@ -467,8 +471,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <!-- KPI -->
       <div class="compteurs">
         <div class="compteur"><div class="val" id="cNbLignes">—</div><div class="label" data-i18n="lbl_source_rows">Members</div></div>
-        <div class="compteur"><div class="val" id="cNbMenages">—</div><div class="label" data-i18n="lbl_households">Households</div></div>
-        <div class="compteur"><div class="val" id="cNbCibles">—</div><div class="label" data-i18n="lbl_targets">Targets (FL=1)</div></div>
+        <div class="compteur" style="border-top-color:var(--bleuC)"><div class="val" id="cNbMenages">—</div><div class="label" data-i18n="lbl_households">Households</div></div>
+        <div class="compteur" style="border-top-color:var(--vert)"><div class="val" id="cNbCibles">—</div><div class="label" data-i18n="lbl_targets">Targets (FL=1)</div></div>
       </div>
       <div id="planningInfo"></div>
     </div>
@@ -528,10 +532,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       </div>
       <div class="compteurs" style="margin:0 0 14px">
         <div class="compteur"><div class="val" id="kpiPop">—</div><div class="label" data-i18n="kpi_pop_total">Population totale</div></div>
-        <div class="compteur"><div class="val" id="kpiMen">—</div><div class="label" data-i18n="kpi_households">Ménages</div></div>
-        <div class="compteur"><div class="val" id="kpiH" style="color:var(--bar-h)">—</div><div class="label" data-i18n="kpi_pct_men">% Hommes</div></div>
-        <div class="compteur"><div class="val" id="kpiF" style="color:var(--bar-f)">—</div><div class="label" data-i18n="kpi_pct_women">% Femmes</div></div>
-        <div class="compteur"><div class="val" id="kpiAge">—</div><div class="label" data-i18n="kpi_avg_age">Âge moyen</div></div>
+        <div class="compteur" style="border-top-color:var(--bleuC)"><div class="val" id="kpiMen">—</div><div class="label" data-i18n="kpi_households">Ménages</div></div>
+        <div class="compteur" style="border-top-color:var(--bar-h)"><div class="val" id="kpiH" style="color:var(--bar-h)">—</div><div class="label" data-i18n="kpi_pct_men">% Hommes</div></div>
+        <div class="compteur" style="border-top-color:var(--bar-f)"><div class="val" id="kpiF" style="color:var(--bar-f)">—</div><div class="label" data-i18n="kpi_pct_women">% Femmes</div></div>
+        <div class="compteur" style="border-top-color:var(--gold)"><div class="val" id="kpiAge">—</div><div class="label" data-i18n="kpi_avg_age">Âge moyen</div></div>
       </div>
       <div class="card">
         <div class="card-titre"><span data-i18n="card_nationalities">🌍 Nationalities</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_area_headcount">(surface ∝ effectif)</span></div>
@@ -7254,7 +7258,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '173';
+const APP_VERSION = '174';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
