@@ -152,6 +152,8 @@
   .kebab-item:hover { background: var(--badge-bg); }
   .kebab-item.danger { color: white; background: #c62828; }
   .kebab-sep { border:none; border-top:1px solid var(--border); margin:4px 0; }
+  .kebab-info { padding: 6px 16px 2px; font-size: 12px; color: var(--text3); line-height: 1.35; }
+  .kebab-info.warn { color: #e65100; }
 
   .search-bar {
     padding: 6px 12px;

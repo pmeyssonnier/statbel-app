@@ -569,7 +569,14 @@ export function allerAFiche(enq, idx) {
   }, 250);
 }
 
-export function toggleKebab() { document.getElementById('kebabMenu').classList.toggle('open'); }
+export function toggleKebab() {
+  const m = document.getElementById('kebabMenu');
+  const ouverture = !m.classList.contains('open');
+  m.classList.toggle('open');
+  // À l'ouverture, rafraîchir la ligne d'état de sauvegarde (dernière sauvegarde /
+  // modifications non sauvegardées) — réexposée via le pont window.
+  if (ouverture && typeof majKebabBackupInfo === 'function') majKebabBackupInfo();
+}
 
 export function emailSuggest(input, sugId) {
   const val=input.value, at=val.indexOf('@'), box=document.getElementById(sugId);

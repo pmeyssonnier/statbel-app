@@ -42,7 +42,7 @@ import {
 import {
   majBackupBanner, fermerBackupBanner, buildBackupDetailHTML, fermerBackupDetail,
   renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
-  exporterBackup, majLastBackupInfo, majComparaisonRestore, importerBackup,
+  exporterBackup, majLastBackupInfo, majKebabBackupInfo, majComparaisonRestore, importerBackup,
 } from './features/backup.js';
 
 import {
@@ -97,7 +97,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.14';
+const APP_VERSION = '3.15';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
@@ -917,7 +917,7 @@ Object.assign(window, {
   _contactKey, apparieurAnciens, jourValide, valeurIncoherente, diffHistorique,
   recordEnErreur, raisonsErreur, _diffContacts, buildCompareHTML, fermerBackupDetail,
   renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
-  exporterBackup, majLastBackupInfo, majComparaisonRestore, importerBackup,
+  exporterBackup, majLastBackupInfo, majKebabBackupInfo, majComparaisonRestore, importerBackup,
   viderCacheCoords, listerNonGeocodees, renderNonGeo, allerAFiche, renderStatutsEditor,
   rafraichirStatutsVues, modifierStatut, ajouterStatut, supprimerStatut, toggleKebab,
   emailSuggest, choisirSuggestion, fermerSuggestions, emailKeydown, exporterResumeXLSX,

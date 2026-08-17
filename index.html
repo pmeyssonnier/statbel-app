@@ -118,6 +118,10 @@
           <button class="kebab-item" data-i18n="menu_import" onclick="document.getElementById('importFile').click();toggleKebab()">⬆️ Importer CSV / Excel</button>
           <button class="kebab-item" data-i18n="menu_export" onclick="exporterCSV();toggleKebab()">⬇️ Exporter CSV</button>
           <hr class="kebab-sep">
+          <div class="kebab-info" id="kebabBackupInfo"></div>
+          <button class="kebab-item" data-i18n="menu_backup" onclick="exporterBackup();toggleKebab()">💾 Sauvegarder tout (JSON)</button>
+          <button class="kebab-item" data-i18n="menu_restore" onclick="document.getElementById('restoreFile').click();toggleKebab()">⬆️ Restaurer une sauvegarde</button>
+          <hr class="kebab-sep">
           <button class="kebab-item" data-i18n="menu_converter" onclick="location.href='statbel_converter.html'">🔄 Convertisseur d'enquête</button>
           <button class="kebab-item" data-i18n="menu_planner" onclick="location.href='statbel_planner.html'">🗓️ Planning Statbel</button>
           <hr class="kebab-sep">

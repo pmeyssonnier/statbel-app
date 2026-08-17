@@ -104,6 +104,9 @@ export async function sauver() {
     // échec ferait « oublier » une écriture non faite (= perte silencieuse).
     aEcrire.forEach(([nom, snap]) => { _lastSaved[nom] = snap; });
     aSupprimer.forEach(nom => { delete _lastSaved[nom]; });
+    // Garde-fou backup : une écriture réelle = modifications non sauvegardées
+    // depuis la dernière sauvegarde (drapeau levé jusqu'au prochain export).
+    if (aEcrire.length || aSupprimer.length) localStorage.setItem('statbel_backup_dirty', '1');
     localStorage.setItem('statbel_active', enqueteActive);
     majEtatSauvegarde('ok');
     _saveErrAlerted = false;
@@ -135,6 +138,11 @@ export async function charger() {
   const items = await idbReq(db.transaction('enquetes','readonly').objectStore('enquetes').getAll());
   enquetes = {};
   items.forEach(item => { enquetes[item.nom] = item.contacts; });
+  // Amorce _lastSaved à l'état persisté : évite une réécriture inutile au 1er
+  // save ET fiabilise la détection des modifications non sauvegardées (backup) —
+  // sinon le 1er sauver() après chargement réécrirait tout et lèverait un faux « dirty ».
+  _lastSaved = {};
+  Object.entries(enquetes).forEach(([nom, cts]) => { _lastSaved[nom] = JSON.stringify(cts); });
   enqueteActive = localStorage.getItem('statbel_active') || Object.keys(enquetes)[0] || '';
 }
 
