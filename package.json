@@ -1,0 +1,19 @@
+{
+  "name": "statbel-app",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Outillage de développement (tests headless + lint). L'APPLICATION elle-même est 100% statique, sans build ni dépendance runtime : ces devDependencies ne servent QU'aux tests et au lint, jamais à l'app livrée.",
+  "scripts": {
+    "test": "node tools/run-tests.js",
+    "test:one": "node tools/run-tests.js",
+    "lint": "eslint js tests --max-warnings 0",
+    "version:check": "node tools/check-version-bump.js",
+    "pretest": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "eslint": "^10.8.0",
+    "globals": "^17.0.0",
+    "playwright": "^1.62.0"
+  }
+}
