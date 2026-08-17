@@ -427,3 +427,29 @@
   .backup-banner .bk-close:hover { background:rgba(230,81,0,0.12); }
   body.dark .backup-banner { background:#3a2a12; border-color:#a35a1a; color:#ffb74d; }
   body.dark .backup-banner .bk-close { color:#ffb74d; }
+
+  /* Popup « Mise à jour disponible » (opt-in) — fixé en bas, au-dessus de tout */
+  .maj-popup {
+    position:fixed; left:50%; bottom:84px; transform:translateX(-50%);
+    display:flex; align-items:center; gap:10px;
+    max-width:min(92vw, 420px); padding:10px 12px;
+    background:#0d47a1; color:#fff; border-radius:12px;
+    font-size:13px; box-shadow:0 6px 20px rgba(0,0,0,0.35);
+    z-index:10000; animation:majSlideUp .28s ease-out;
+  }
+  @keyframes majSlideUp { from { opacity:0; transform:translate(-50%,10px); } to { opacity:1; transform:translate(-50%,0); } }
+  @media (prefers-reduced-motion: reduce) { .maj-popup { animation:none; } }
+  .maj-popup .maj-ico { font-size:16px; flex-shrink:0; }
+  .maj-popup .maj-msg { flex:1; min-width:0; font-weight:600; }
+  .maj-popup .maj-poser {
+    background:#fff; color:#0d47a1; border:none; border-radius:8px;
+    padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer;
+    min-height:40px; flex-shrink:0;
+  }
+  .maj-popup .maj-poser:disabled { opacity:0.7; cursor:default; }
+  .maj-popup .maj-later {
+    background:transparent; border:none; color:#cfe0ff; cursor:pointer;
+    font-size:14px; width:32px; height:32px; border-radius:6px; flex-shrink:0;
+  }
+  .maj-popup .maj-later:hover { background:rgba(255,255,255,0.15); }
+  body.dark .maj-popup { background:#123a72; }
