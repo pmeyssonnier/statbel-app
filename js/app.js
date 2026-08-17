@@ -97,7 +97,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.15';
+const APP_VERSION = '3.16';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
@@ -538,7 +538,7 @@ function setView(v) {
   vueActive = v;
   ['liste','carte','rdv','resume'].forEach(id => {
     const btn = document.getElementById('btn'+id.charAt(0).toUpperCase()+id.slice(1));
-    if (btn) btn.classList.toggle('active', v===id);
+    if (btn) { const on = v===id; btn.classList.toggle('active', on); btn.setAttribute('aria-pressed', on); }  // a11y : vue active exposée
   });
   document.querySelector('.filters').style.display         = v==='liste'  ? '' : 'none';
   document.getElementById('liste').style.display           = v==='liste'  ? '' : 'none';

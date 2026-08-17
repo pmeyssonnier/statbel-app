@@ -94,7 +94,7 @@
 <header>
   <div class="header-row">
     <div class="header-col1">
-      <h1>📋</h1>
+      <h1 aria-label="Statbel Interviews"><span aria-hidden="true">📋</span></h1>
     </div>
     <div class="header-mid">
       <select id="surveySelect" onchange="changerEnquete(this.value)"></select>
@@ -110,7 +110,7 @@
       </div>
       <button class="btn-ico" id="btnGeo" onclick="toggleMaPosition()" title="Ma position" data-i18n-title="title_mypos" data-i18n-aria="title_mypos">🎯</button>
       <div class="kebab-wrap">
-        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" data-i18n-title="title_more" data-i18n-aria="title_more">⋮</button>
+        <button class="btn-ico" id="btnKebab" onclick="toggleKebab()" title="Plus d'options" data-i18n-title="title_more" data-i18n-aria="title_more" aria-haspopup="menu" aria-expanded="false">⋮</button>
         <div class="kebab-menu" id="kebabMenu">
           <button class="kebab-item" data-i18n="menu_settings" onclick="ouvrirSettings();toggleKebab()">⚙️ Paramètres</button>
           <button class="kebab-item" data-i18n="menu_help" onclick="ouvrirAide();toggleKebab()">❓ Aide</button>
@@ -153,7 +153,7 @@
 
 <div id="mapContainer">
   <div id="map"></div>
-  <button onclick="recentrerCarte()" title="Recentrer sur les contacts" data-i18n-title="title_recenter"
+  <button onclick="recentrerCarte()" title="Recentrer sur les contacts" data-i18n-title="title_recenter" data-i18n-aria="title_recenter"
     class="btn-view" style="position:absolute;top:10px;right:10px;z-index:500;background:white;color:#1a237e;box-shadow:0 2px 6px rgba(0,0,0,0.2);">⊙</button>
   <div id="geocodeProgress">⏳ Géocodage <span id="geocodeCount"></span></div>
   <div class="map-legend" id="mapLegend"></div>
