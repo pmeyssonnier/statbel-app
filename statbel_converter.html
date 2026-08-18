@@ -7515,6 +7515,18 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 (async function init() {
   chargerApparence();
   appliquerLangue();            // applique la langue courante au chargement (sinon UI figée en anglais)
+
+  // Stockage persistant : demande au navigateur de NE PAS purger le localStorage.
+  // Sans ça, iOS/Safari (ITP) peut l'effacer après ~7 jours d'inactivité — on
+  // perdrait les réglages de présentation (KPI/blocs/colonnes), la localisation,
+  // l'âge min et la langue. Best-effort, silencieux si l'API est indisponible.
+  try {
+    if (navigator.storage && navigator.storage.persist) {
+      const deja = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+      if (!deja) await navigator.storage.persist();
+    }
+  } catch (e) { /* API indisponible : on continue */ }
+
   chargerRegistrePlannings();   // charge les plannings importés (enrichit l'annexe dès l'overview)
   majBadgePlanning();           // badge « (N) » sur l'onglet Planning dès le démarrage
   try {
@@ -7529,7 +7541,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '182';
+const APP_VERSION = '183';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
