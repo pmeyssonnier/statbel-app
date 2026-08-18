@@ -447,6 +447,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <button class="menu-item" data-i18n="menu_export" onclick="ouvrirExport();toggleMenu()">⬇️ Export converted data</button>
         <button class="menu-item" data-i18n="menu_remove" onclick="supprimerSource();toggleMenu()">🗑️ Remove this source file</button>
         <hr>
+        <button class="menu-item" data-i18n="menu_customize" onclick="ouvrirPerso();toggleMenu()">🎛️ Personnaliser l'affichage</button>
         <button class="menu-item" data-i18n="menu_appearance" onclick="ouvrirApparence();toggleMenu()">🎨 Appearance</button>
         <button class="menu-item" data-i18n="menu_lookup" onclick="ouvrirParametres();toggleMenu()">⚙️ Lookup tables</button>
         <hr>
@@ -1031,6 +1032,7 @@ const I18N = {
   perso_hint_cols: { fr:"Cochez et réordonnez les colonnes du tableau de l'Aperçu.", nl:"Vink aan en herschik de kolommen van de Overzicht-tabel.", en:"Toggle and reorder the columns of the Overview table.", de:"Spalten der Übersicht-Tabelle aus-/einblenden und neu ordnen." },
   col_num: { fr:"N° (ordre)", nl:"Nr. (volgorde)", en:"# (order)", de:"Nr. (Reihenfolge)" },
   btn_customize: { fr:"Personnaliser", nl:"Aanpassen", en:"Customize", de:"Anpassen" },
+  menu_customize: { fr:"🎛️ Personnaliser l'affichage", nl:"🎛️ Weergave aanpassen", en:"🎛️ Customize display", de:"🎛️ Anzeige anpassen" },
   card_nationalities: { fr:"🌍 Nationalités", nl:"🌍 Nationaliteiten", en:"🌍 Nationalities", de:"🌍 Nationalitäten" },
   hint_area_headcount: { fr:"(surface ∝ effectif)", nl:"(oppervlakte ∝ aantal)", en:"(area ∝ headcount)", de:"(Fläche ∝ Anzahl)" },
   card_by_continent: { fr:"🌐 Par continent", nl:"🌐 Per continent", en:"🌐 By continent", de:"🌐 Nach Kontinent" },
@@ -7563,7 +7565,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '185';
+const APP_VERSION = '186';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
