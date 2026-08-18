@@ -6817,22 +6817,77 @@ const KPI_ON_DEFAUT = ['men', 'pop', 'size', 'age', 'h', 'f'];   // affichés pa
 
 // Registre des blocs d'analyse (cartes de la vue Stats) — tous affichés par défaut.
 const BLOC_DEFS = {
-  nat:    { i18n: 'card_nationalities' },
-  cont:   { i18n: 'card_by_continent' },
-  eu:     { i18n: 'card_eu_noneu' },
-  mrtl:   { i18n: 'card_marital' },
-  sexe:   { i18n: 'card_gender' },
-  birth:  { i18n: 'card_birthplace' },
-  age:    { i18n: 'card_age_pyramid' },
-  size:   { i18n: 'card_household_dist' },
-  chh:    { i18n: 'card_targets_per_hh' },
-  compo:  { i18n: 'card_hh_composition' },
-  ageLFS: { i18n: 'card_age_lfs' },
-  depend: { i18n: 'card_dependency' },
-  contact:{ i18n: 'card_contactability' },
-  sankey: { i18n: 'card_sankey' },
+  // Blocs déclaratifs : data(ctx)=>items + type de graphe (chart) + drill/detailEl éventuels.
+  nat:    { i18n: 'card_nationalities', el: 'statsTreemap', chart: 'treemap',
+            data: ctx => { const nlty = {}; ctx.pop.forEach(r => { const s = ctx.sx(r); (nlty[r.nationality] = nlty[r.nationality] || { h: 0, f: 0 }); if (s) nlty[r.nationality][s]++; });
+              return Object.entries(nlty).map(([iso, v]) => ({ label: paysNom(iso) || iso || '—', value: v.h + v.f })).filter(d => d.value > 0).sort((a, b) => b.value - a.value); } },
+  cont:   { i18n: 'card_by_continent', el: 'statsCont', chart: 'barStack',
+            data: ctx => { const cont = {}; ctx.pop.forEach(r => { const s = ctx.sx(r); const ck = ctx.contOf(r.nationality); (cont[ck] = cont[ck] || { h: 0, f: 0 }); if (s) cont[ck][s]++; });
+              return Object.entries(cont).sort((a, b) => (b[1].h + b[1].f) - (a[1].h + a[1].f)).map(([c, v]) => ({ label: continentLabel(c), h: v.h, f: v.f })); } },
+  eu:     { i18n: 'card_eu_noneu', el: 'statsEU', chart: 'donut',
+            data: ctx => { const eu = {}; ctx.pop.forEach(r => { const s = ctx.sx(r); const ek = ctx.euOf(r.nationality); (eu[ek] = eu[ek] || { h: 0, f: 0 }); if (s) eu[ek][s]++; });
+              const ord = { 'EU': 0, 'Non-EU': 1, 'Unknown': 2 }, coul = { 'EU': '#1a237e', 'Non-EU': '#f9a825', 'Unknown': '#9e9e9e' }, lbl = { 'EU': t('lbl_eu_short'), 'Non-EU': t('lbl_noneu_short'), 'Unknown': t('lbl_unknown') };
+              return Object.entries(eu).sort((a, b) => (ord[a[0]] ?? 9) - (ord[b[0]] ?? 9)).map(([k, v]) => ({ label: lbl[k] || k, value: v.h + v.f, color: coul[k] })); } },
+  mrtl:   { i18n: 'card_marital', el: 'statsMrtl', chart: 'bar100', drill: 'zoomMarital', detailEl: 'statsMrtlDetail',
+            data: ctx => { _maritalPop = ctx.pop; const mrtl = {}; ctx.pop.forEach(r => { const s = ctx.sx(r); (mrtl[r.marital_status] = mrtl[r.marital_status] || { h: 0, f: 0 }); if (s) mrtl[r.marital_status][s]++; });
+              return Object.entries(mrtl).sort((a, b) => (b[1].h + b[1].f) - (a[1].h + a[1].f)).map(([lib, v]) => ({ key: lib, label: lib ? mrtlLabel(lib) : '—', value: v.h + v.f })); } },
+  sexe:   { i18n: 'card_gender', el: 'statsSexe', chart: 'donut', drill: 'zoomGender', detailEl: 'statsSexeDetail',
+            data: ctx => { _genderPop = ctx.pop; const nbM = ctx.pop.filter(m => m.sexe === 'M').length, nbF = ctx.pop.filter(m => m.sexe === 'F').length, nbX = ctx.pop.length - nbM - nbF;
+              const items = [{ key: 'M', label: t('gender_men'), value: nbM, color: 'var(--bar-h)' }, { key: 'F', label: t('gender_women'), value: nbF, color: 'var(--bar-f)' }];
+              if (nbX) items.push({ key: 'X', label: '—', value: nbX, color: '#9e9e9e' }); return items; } },
+  birth:  { i18n: 'card_birthplace',
+            render: ctx => { _birthPopBE = ctx.pop.filter(r => r.birth_country === 'BEL' && r.birth_region); _birthDrill = { level: 'region', region: '', province: '', district: '' }; renderBirthDrill(); } },
+  age:    { i18n: 'card_age_pyramid',
+            render: ctx => { _pyrPop = ctx.pop; const selPyr = document.getElementById('pyrNlty'); const cur = selPyr ? selPyr.value : '';
+              const natCnt = {}; ctx.pop.forEach(r => { if (r.nationality) natCnt[r.nationality] = (natCnt[r.nationality] || 0) + 1; });
+              const opts = '<option value="">Toutes nationalités (' + ctx.pop.length + ')</option>' + Object.entries(natCnt).sort((a, b) => b[1] - a[1]).map(([iso, n]) => `<option value="${iso}"${iso === cur ? ' selected' : ''}>${escHtml(paysNom(iso) || iso)} (${n})</option>`).join('');
+              if (selPyr) selPyr.innerHTML = opts; majPyramide(); } },
+  size:   { i18n: 'card_household_dist', el: 'statsTaille', chart: 'barStack', drill: 'zoomMenage', detailEl: 'statsTailleDetail',
+            data: ctx => { _menagePop = ctx.res.outCibles; const taille = {}; ctx.res.outCibles.forEach(r => { const s = ctx.sx(r); (taille[r.taille_menage] = taille[r.taille_menage] || { h: 0, f: 0 }); if (s) taille[r.taille_menage][s]++; });
+              return Object.entries(taille).sort((a, b) => Number(a[0]) - Number(b[0])).map(([sz, v]) => ({ key: sz, label: `${sz} membre${sz > 1 ? 's' : ''}`, h: v.h, f: v.f })); } },
+  chh:    { i18n: 'card_targets_per_hh' },   // rendu hors boucle (majMenagesCartes : chh + compo en une passe)
+  compo:  { i18n: 'card_hh_composition' },   // idem chh
+  ageLFS: { i18n: 'card_age_lfs', el: 'statsAgeLFS', chart: 'barStack', drill: 'zoomAgeLFS',
+            data: ctx => { const brLFS = [[0, 14, '0–14'], [15, 24, '15–24'], [25, 54, '25–54'], [55, 64, '55–64'], [65, 999, '65+']];
+              const ageLFS = brLFS.map(([lo, hi, lbl]) => ({ label: lbl, h: 0, f: 0, key: lo + '_' + hi }));
+              ctx.pop.forEach(r => { const a = parseInt(r.age, 10); if (isNaN(a)) return; const bi = brLFS.findIndex(([lo, hi]) => a >= lo && a <= hi); if (bi < 0) return; if (r.sexe === 'M') ageLFS[bi].h++; else if (r.sexe === 'F') ageLFS[bi].f++; });
+              _ageLFSPop = ctx.pop; return ageLFS; } },
+  depend: { i18n: 'card_dependency',
+            render: ctx => { const memD = ctx.res.outMembres; const inBr = (r, lo, hi) => { const a = parseInt(r.age, 10); return !isNaN(a) && a >= lo && a <= hi; };
+              const dJeune = memD.filter(r => inBr(r, 0, 14)).length, dActif = memD.filter(r => inBr(r, 15, 64)).length, dAge = memD.filter(r => inBr(r, 65, 999)).length;
+              const dRatio = dActif ? Math.round((dJeune + dAge) / dActif * 100) : null;
+              const depItems = [{ label: t('lbl_dep_young'), value: dJeune, color: '#f9a825' }, { label: t('lbl_dep_active'), value: dActif, color: '#2e7d32' }, { label: t('lbl_dep_old'), value: dAge, color: '#8d6e63' }];
+              const elDep = document.getElementById('statsDepend');
+              if (window.Charts) elDep.innerHTML = Charts.donut(depItems, { total: dRatio != null ? dRatio : '—', unitLabel: t('lbl_dep_ratio'), ariaLabel: t('card_dependency') });
+              else renderDonut('statsDepend', depItems.filter(d => d.value > 0));
+              const elDepD = document.getElementById('statsDependDetail'); if (elDepD) elDepD.textContent = dRatio != null ? tf('txt_dep_ratio', { n: dRatio }) : ''; } },
+  contact:{ i18n: 'card_contactability', el: 'statsContact', chart: 'bar',
+            data: ctx => { const hhc = ctx.res.outCibles || []; const nHHc = hhc.length || 1; const aTel = r => r.gsm && String(r.gsm).trim(), aMail = r => r.email && String(r.email).trim();
+              const cTel = hhc.filter(aTel).length, cMail = hhc.filter(aMail).length, cJoin = hhc.filter(r => aTel(r) || aMail(r)).length; const pctL = (key, n) => `${t(key)} — ${Math.round(n / nHHc * 100)} %`;
+              return [{ label: pctL('lbl_has_phone', cTel), count: cTel, color: '#2e7d32' }, { label: pctL('lbl_has_email', cMail), count: cMail, color: '#0277bd' }, { label: pctL('lbl_reachable', cJoin), count: cJoin, color: '#1a237e' }]; } },
+  sankey: { i18n: 'card_sankey', render: ctx => renderSankeyNSA('statsSankey', ctx.pop) },
 };
 const BLOC_ALL = ['nat', 'cont', 'eu', 'mrtl', 'sexe', 'birth', 'age', 'ageLFS', 'depend', 'size', 'chh', 'compo', 'contact', 'sankey'];
+
+// Aiguilleur de rendu : type de graphe → primitive, sur la forme d'item native du graphe.
+const RENDERERS = {
+  treemap:  (el, items) => renderTreemapNlty(el, items),
+  barStack: (el, items, drill) => renderBarresStack(el, items, drill),
+  bar:      (el, items, drill) => renderBarres(el, items, '#1a237e', drill),
+  bar100:   (el, items, drill) => renderBarres100(el, items, drill),
+  donut:    (el, items, drill) => renderDonut(el, items, drill),
+};
+
+// Rend un bloc d'analyse depuis son descripteur : render() sur-mesure, ou
+// data()→graphe déclaratif (avec reset du détail de drill éventuel).
+function renderBloc(id, ctx) {
+  const def = BLOC_DEFS[id];
+  if (!def) return;
+  if (def.render) { def.render(ctx); return; }
+  if (!def.data) return;   // chh/compo : rendus hors boucle par majMenagesCartes()
+  if (def.detailEl) { const d = document.getElementById(def.detailEl); if (d) d.innerHTML = ''; }
+  const fn = RENDERERS[def.chart]; if (fn) fn(def.el, def.data(ctx), def.drill);
+}
 
 // Colonnes du tableau de contacts de l'Aperçu — {libellé i18n, <th>, cellule(r)}.
 // La colonne d'expansion (▸) est structurelle : toujours présente, hors config.
@@ -7011,125 +7066,19 @@ function majStats(res) {
   renderKPIs(_kpiCtx);
   renderBlocsOrder();   // applique l'ordre + la visibilité des blocs d'analyse
 
-  // Nationalité (pays), continent, UE et état civil — ventilés par sexe (H/F)
-  const sx = r => r.sexe === 'M' ? 'h' : r.sexe === 'F' ? 'f' : null;
-  const contOf = iso => continentNIS((PAYS_I18N[iso] || {}).nis || '') || 'Unknown';
-  const euOf   = iso => !iso ? 'Unknown' : (EU_MEMBERS.has(iso) ? 'EU' : 'Non-EU');
-  const nlty = {}, mrtl = {}, cont = {}, eu = {};
-  pop.forEach(r => {
-    const s = sx(r);
-    const ck = contOf(r.nationality), ek = euOf(r.nationality);
-    (nlty[r.nationality]    = nlty[r.nationality]    || { h: 0, f: 0 });
-    (mrtl[r.marital_status] = mrtl[r.marital_status] || { h: 0, f: 0 });
-    (cont[ck] = cont[ck] || { h: 0, f: 0 });
-    (eu[ek]   = eu[ek]   || { h: 0, f: 0 });
-    if (s) { nlty[r.nationality][s]++; mrtl[r.marital_status][s]++; cont[ck][s]++; eu[ek][s]++; }
-  });
-  renderBarresStack('statsCont', Object.entries(cont).sort((a, b) => (b[1].h + b[1].f) - (a[1].h + a[1].f))
-    .map(([c, v]) => ({ label: continentLabel(c), h: v.h, f: v.f })));
-  const euOrdre = { 'EU': 0, 'Non-EU': 1, 'Unknown': 2 };
-  const euCoul = { 'EU': '#1a237e', 'Non-EU': '#f9a825', 'Unknown': '#9e9e9e' };
-  const euLbl = { 'EU': t('lbl_eu_short'), 'Non-EU': t('lbl_noneu_short'), 'Unknown': t('lbl_unknown') };
-  renderDonut('statsEU', Object.entries(eu).sort((a, b) => (euOrdre[a[0]] ?? 9) - (euOrdre[b[0]] ?? 9))
-    .map(([k, v]) => ({ label: euLbl[k] || k, value: v.h + v.f, color: euCoul[k] })));
-  _maritalPop = pop;
-  document.getElementById('statsMrtlDetail').innerHTML = '';   // reset détail
-  renderBarres100('statsMrtl', Object.entries(mrtl).sort((a, b) => (b[1].h + b[1].f) - (a[1].h + a[1].f))
-    .map(([lib, v]) => ({ key: lib, label: lib ? mrtlLabel(lib) : '—', value: v.h + v.f })), 'zoomMarital');
-  // Lieu de naissance en Belgique (toute nationalité) — drill-down Région → Province → Arr. → Commune.
-  // On exige une région déduite d'un vrai REFNIS : exclut les « BEL » issus seulement de la
-  // nationalité (REFNIS de naissance vide → pas de localisation).
-  _birthPopBE = pop.filter(r => r.birth_country === 'BEL' && r.birth_region);
-  _birthDrill = { level: 'region', region: '', province: '', district: '' };
-  renderBirthDrill();
+  // Blocs d'analyse : chaque bloc se décrit dans BLOC_DEFS (data+chart+drill, ou
+  // render sur-mesure) et renderBloc aiguille vers la bonne primitive. Le contexte
+  // partagé (population du périmètre + agrégateurs) est calculé une seule fois.
+  const ctxBloc = {
+    res, pop,
+    sx: r => r.sexe === 'M' ? 'h' : r.sexe === 'F' ? 'f' : null,
+    contOf: iso => continentNIS((PAYS_I18N[iso] || {}).nis || '') || 'Unknown',
+    euOf: iso => !iso ? 'Unknown' : (EU_MEMBERS.has(iso) ? 'EU' : 'Non-EU'),
+  };
+  BLOC_ALL.forEach(id => renderBloc(id, ctxBloc));
 
-  // Sexe
-  const nbM = pop.filter(m => m.sexe === 'M').length;
-  const nbF = pop.filter(m => m.sexe === 'F').length;
-  const nbX = pop.length - nbM - nbF;
-  const sexeItems = [
-    { key: 'M', label: t('gender_men'), count: nbM, color: 'var(--bar-h)' },
-    { key: 'F', label: t('gender_women'),  count: nbF, color: 'var(--bar-f)' },
-  ];
-  if (nbX) sexeItems.push({ key: 'X', label: '—', count: nbX, color: '#9e9e9e' });
-  _genderPop = pop;
-  document.getElementById('statsSexeDetail').innerHTML = '';   // reset détail
-  renderDonut('statsSexe', sexeItems.map(s => ({ key: s.key, label: s.label, value: s.count, color: s.color })), 'zoomGender');
-
-  // Pyramide des âges — filtrable par nationalité
-  _pyrPop = pop;
-  const selPyr = document.getElementById('pyrNlty');
-  const cur = selPyr ? selPyr.value : '';
-  const natCnt = {};
-  pop.forEach(r => { if (r.nationality) natCnt[r.nationality] = (natCnt[r.nationality] || 0) + 1; });
-  const opts = '<option value="">Toutes nationalités (' + pop.length + ')</option>' +
-    Object.entries(natCnt).sort((a, b) => b[1] - a[1])
-      .map(([iso, n]) => `<option value="${iso}"${iso === cur ? ' selected' : ''}>${escHtml(paysNom(iso) || iso)} (${n})</option>`).join('');
-  if (selPyr) selPyr.innerHTML = opts;
-  majPyramide();
-
-  // Taille des ménages : par ménage (cibles), ventilée par sexe de la cible
-  _menagePop = res.outCibles;
-  const taille = {};
-  res.outCibles.forEach(r => {
-    const s = sx(r);
-    (taille[r.taille_menage] = taille[r.taille_menage] || { h: 0, f: 0 });
-    if (s) taille[r.taille_menage][s]++;
-  });
-  document.getElementById('statsTailleDetail').innerHTML = '';   // reset détail
-  renderBarresStack('statsTaille', Object.entries(taille).sort((a, b) => Number(a[0]) - Number(b[0]))
-    .map(([t, v]) => ({ key: t, label: `${t} membre${t > 1 ? 's' : ''}`, h: v.h, f: v.f })), 'zoomMenage');
-
-  // Treemap des nationalités (surface ∝ effectif) + Sankey Nationalité → Sexe → Âge
-  renderTreemapNlty('statsTreemap', Object.entries(nlty)
-    .map(([iso, v]) => ({ label: paysNom(iso) || iso || '—', value: v.h + v.f }))
-    .filter(d => d.value > 0).sort((a, b) => b.value - a.value));
-  renderSankeyNSA('statsSankey', pop);
-
-  // ── Tranches d'âge LFS (H/F) sur la population du périmètre ──────────
-  const brLFS = [[0, 14, '0–14'], [15, 24, '15–24'], [25, 54, '25–54'], [55, 64, '55–64'], [65, 999, '65+']];
-  const ageLFS = brLFS.map(([lo, hi, lbl]) => ({ label: lbl, h: 0, f: 0, key: lo + '_' + hi }));
-  pop.forEach(r => {
-    const a = parseInt(r.age, 10); if (isNaN(a)) return;
-    const bi = brLFS.findIndex(([lo, hi]) => a >= lo && a <= hi); if (bi < 0) return;
-    if (r.sexe === 'M') ageLFS[bi].h++; else if (r.sexe === 'F') ageLFS[bi].f++;
-  });
-  _ageLFSPop = pop;   // population de la tranche pour le drill-down nationalités
-  renderBarresStack('statsAgeLFS', ageLFS, 'zoomAgeLFS');
-
-  // ── Ratio de dépendance sur le ménage complet : (<15 + 65+) / (15–64) ─
-  const memD = res.outMembres;
-  const inBr = (r, lo, hi) => { const a = parseInt(r.age, 10); return !isNaN(a) && a >= lo && a <= hi; };
-  const dJeune = memD.filter(r => inBr(r, 0, 14)).length;
-  const dActif = memD.filter(r => inBr(r, 15, 64)).length;
-  const dAge   = memD.filter(r => inBr(r, 65, 999)).length;
-  const dRatio = dActif ? Math.round((dJeune + dAge) / dActif * 100) : null;
-  const depItems = [
-    { label: t('lbl_dep_young'),  value: dJeune, color: '#f9a825' },
-    { label: t('lbl_dep_active'), value: dActif, color: '#2e7d32' },
-    { label: t('lbl_dep_old'),    value: dAge,   color: '#8d6e63' },
-  ];
-  const elDep = document.getElementById('statsDepend');
-  if (window.Charts) elDep.innerHTML = Charts.donut(depItems, { total: dRatio != null ? dRatio : '—', unitLabel: t('lbl_dep_ratio'), ariaLabel: t('card_dependency') });
-  else renderDonut('statsDepend', depItems.filter(d => d.value > 0));
-  const elDepD = document.getElementById('statsDependDetail');
-  if (elDepD) elDepD.textContent = dRatio != null ? tf('txt_dep_ratio', { n: dRatio }) : '';
-
-  // ── Complétude des contacts (par ménage, référents FL=1) ────────────
-  const hhc = res.outCibles || [];
-  const nHHc = hhc.length || 1;
-  const aTel = r => r.gsm && String(r.gsm).trim();
-  const aMail = r => r.email && String(r.email).trim();
-  const cTel = hhc.filter(aTel).length, cMail = hhc.filter(aMail).length;
-  const cJoin = hhc.filter(r => aTel(r) || aMail(r)).length;
-  const pctL = (key, n) => `${t(key)} — ${Math.round(n / nHHc * 100)} %`;
-  renderBarres('statsContact', [
-    { label: pctL('lbl_has_phone', cTel),  count: cTel,  color: '#2e7d32' },
-    { label: pctL('lbl_has_email', cMail), count: cMail, color: '#0277bd' },
-    { label: pctL('lbl_reachable', cJoin), count: cJoin, color: '#1a237e' },
-  ], '#1a237e');
-
-  // Cartes ménage (indépendantes de la portée d'affichage, dépendent de l'âge min)
+  // « Personnes à interroger par ménage » + « Composition » : une seule passe
+  // (dépend de l'âge min, indépendante de la portée d'affichage).
   majMenagesCartes();
 }
 
@@ -7633,7 +7582,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '191';
+const APP_VERSION = '192';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
