@@ -78,6 +78,23 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     const domOrder = [...document.querySelectorAll('#statsBlocks [data-block]')].map(el => el.getAttribute('data-block'));
     const cfgOrder = getCfg('blocs').map(x => x.id);
     out.blocDomMatchesCfg = JSON.stringify(domOrder) === JSON.stringify(cfgOrder);
+
+    // ── Colonnes du tableau (Aperçu) ─────────────────────────────────
+    localStorage.removeItem('statbel_conv_cols');
+    persoTab('cols');
+    out.colDefaut = getCfg('cols').length + '/' + getCfg('cols').filter(x => x.on).length;   // 6/6
+    renderCiblesHead();
+    out.headDefault = document.querySelectorAll('#tableCibles thead th').length;   // 1 expansion + 6
+    // Masquer la colonne Téléphone (gsm) → th absent + persiste
+    const idxGsm = getCfg('cols').findIndex(x => x.id === 'gsm');
+    persoToggle(idxGsm);   // apply → rerenderCibles → renderCiblesHead
+    out.headAfterHide = document.querySelectorAll('#tableCibles thead th').length;   // 6
+    out.gsmGone = !document.querySelector('#tableCibles thead th[data-i18n="th_phone"]');
+    out.colPersisted = (JSON.parse(localStorage.getItem('statbel_conv_cols')).find(x => x.id === 'gsm') || {}).on === false;
+    // Réordonner : monter la 2e colonne (Contact) → 1re colonne de données du thead
+    persoMove(1, -1);
+    const firstDataTh = document.querySelectorAll('#tableCibles thead th')[1];
+    out.firstColAfterReorder = firstDataTh ? firstDataTh.getAttribute('data-col') : null;   // 'prenom'
     return out;
   });
 
@@ -93,6 +110,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.blocDefaut === '11/11', `blocs : 11 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
   A(r.sankeyHidden && r.blocPersisted, 'masquer un bloc cache la carte (DOM) et persiste');
   A(r.blocDomMatchesCfg, 'réordonner un bloc réordonne les cartes dans le DOM');
+  A(r.colDefaut === '6/6', `colonnes : 6, toutes affichées par défaut → ${r.colDefaut}`);
+  A(r.headDefault === 7, `en-tête par défaut = 1 (expansion) + 6 colonnes → ${r.headDefault} th`);
+  A(r.headAfterHide === 6 && r.gsmGone && r.colPersisted, 'masquer une colonne retire le th et persiste');
+  A(r.firstColAfterReorder === 'prenom', `réordonner met Contact en 1re colonne → data-col="${r.firstColAfterReorder}"`);
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
