@@ -72,7 +72,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.role === 'status', 'popup annoncé aux lecteurs d\'écran (role="status")');
   A(r.msg === 'Mise à jour disponible', `message traduit → « ${r.msg} »`);
   A(r.iconHidden, 'icône décorative marquée aria-hidden');
-  A(r.poserLabel === 'Poser', `bouton d'action nommé → « ${r.poserLabel} »`);
+  A(r.poserLabel === 'OK', `bouton d'action nommé → « ${r.poserLabel} »`);
   A(r.laterLabel === 'Plus tard', `bouton report nommé → « ${r.laterLabel} »`);
   A(r.single === 1, 'appel idempotent : pas de popup en double');
   A(/"type":"SKIP_WAITING"/.test(r.posted), `« Poser » envoie SKIP_WAITING au worker → ${r.posted}`);

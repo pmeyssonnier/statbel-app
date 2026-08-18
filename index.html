@@ -52,10 +52,10 @@
       // rechargé frais (navigation réseau) : en y logeant le popup + ses styles
       // inline, il fonctionne quel que soit l'âge du cache.
       const MAJ_I18N = {
-        fr:{d:'Mise à jour disponible',p:'Poser',b:'Pose en cours…',l:'Plus tard'},
-        nl:{d:'Update beschikbaar',p:'Toepassen',b:'Bezig…',l:'Later'},
-        en:{d:'Update available',p:'Apply',b:'Applying…',l:'Later'},
-        de:{d:'Update verfügbar',p:'Anwenden',b:'Wird angewendet…',l:'Später'}
+        fr:{d:'Mise à jour disponible',p:'OK',b:'…',l:'Plus tard'},
+        nl:{d:'Update beschikbaar',p:'OK',b:'…',l:'Later'},
+        en:{d:'Update available',p:'OK',b:'…',l:'Later'},
+        de:{d:'Update verfügbar',p:'OK',b:'…',l:'Später'}
       };
       function majTxt() {
         let lang = 'fr';
@@ -78,7 +78,7 @@
         const sombre = document.body.classList.contains('dark');
         const d = document.createElement('div');
         d.id = 'majDispo'; d.setAttribute('role', 'status');
-        d.style.cssText = 'position:fixed;left:50%;bottom:84px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:min(92vw,420px);padding:10px 12px;background:' + (sombre ? '#123a72' : '#0d47a1') + ';color:#fff;border-radius:12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,0.35);z-index:10000;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,sans-serif';
+        d.style.cssText = 'position:fixed;left:50%;bottom:12px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;max-width:min(94vw,360px);padding:5px 6px 5px 12px;background:' + (sombre ? '#123a72' : '#0d47a1') + ';color:#fff;border-radius:9px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,0.3);z-index:10000;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,sans-serif';
         const ico = document.createElement('span');
         ico.className = 'maj-ico'; ico.setAttribute('aria-hidden', 'true'); ico.textContent = '⬆️';
         ico.style.cssText = 'font-size:16px;flex-shrink:0';
@@ -86,12 +86,12 @@
         msg.className = 'maj-msg'; msg.textContent = T.d; msg.style.cssText = 'flex:1;min-width:0;font-weight:600';
         const poser = document.createElement('button');
         poser.className = 'maj-poser'; poser.type = 'button'; poser.textContent = T.p;
-        poser.style.cssText = 'background:#fff;color:#0d47a1;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;min-height:40px;flex-shrink:0';
+        poser.style.cssText = 'background:#fff;color:#0d47a1;border:none;border-radius:7px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;min-height:30px;flex-shrink:0';
         poser.addEventListener('click', poserMaj);
         const later = document.createElement('button');
         later.className = 'maj-later'; later.type = 'button'; later.textContent = '✕';
         later.setAttribute('aria-label', T.l); later.title = T.l;
-        later.style.cssText = 'background:transparent;border:none;color:#cfe0ff;cursor:pointer;font-size:14px;width:32px;height:32px;border-radius:6px;flex-shrink:0';
+        later.style.cssText = 'background:transparent;border:none;color:#cfe0ff;cursor:pointer;font-size:13px;width:26px;height:26px;border-radius:6px;flex-shrink:0';
         later.addEventListener('click', fermerMajDispo);
         d.append(ico, msg, poser, later);
         document.body.appendChild(d);
