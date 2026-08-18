@@ -7295,6 +7295,8 @@ function renderTreemapNlty(elId, items) {
 }
 
 // Sankey Nationalité → Sexe → Âge (SVG). pop : enregistrements { nationality, sexe, age }
+// Hauteur commune (viewBox) des deux diagrammes de Sankey, pour un rendu de même taille.
+const SANKEY_H = 55;
 function renderSankeyNSA(elId, pop) {
   const el = document.getElementById(elId);
   const sexLbl = s => s === 'M' ? 'Hommes' : s === 'F' ? 'Femmes' : 'Autre';
@@ -7317,7 +7319,7 @@ function renderSankeyNSA(elId, pop) {
   const ordreNat = Object.keys(colA).sort((a, b) => (a === 'Autres') - (b === 'Autres') || colA[b] - colA[a]);
   const ordreSex = ['Hommes', 'Femmes', 'Autre'].filter(s => colB[s]);
   const ordreAge = TRANCHES_AGE.map(t => t[2]).filter(a => colC[a]);
-  const W = 100, H = Math.max(40, Object.keys(colA).length * 5 + 10), GAP = 1.4, NW = 3.2;
+  const W = 100, H = SANKEY_H, GAP = 1.4, NW = 3.2;
   const colX = [2, W / 2 - NW / 2, W - 2 - NW];
   // positions Y des nœuds d'une colonne (empilés, proportionnels)
   const layout = (ordre, counts, totalPop) => {
@@ -7397,7 +7399,7 @@ function renderSankeyMenage(elId, res) {
   const ordreA = ['1', '2', '3', '4', '5+'].map(n => n + ' p.').filter(k => colA[k]);
   const ordreB = ['0', '1', '2', '3+'].map(n => n + ' ≥' + min).filter(k => colB[k]);
   const ordreC = BR.map(b => b[2]).filter(k => colC[k]);
-  const W = 100, H = Math.max(40, Math.max(ordreA.length, ordreB.length, ordreC.length) * 6 + 10), GAP = 1.4, NW = 3.2;
+  const W = 100, H = SANKEY_H, GAP = 1.4, NW = 3.2;
   const colX = [2, W / 2 - NW / 2, W - 2 - NW];
   const layout = (ordre, counts) => {
     const tot = ordre.reduce((s, k) => s + counts[k], 0) || 1;
@@ -7764,7 +7766,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '202';
+const APP_VERSION = '203';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
