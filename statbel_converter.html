@@ -471,12 +471,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <input id="locInput" type="text" placeholder="e.g. SCHAERBEEK" data-i18n-ph="ph_location" oninput="majLocalisation(this.value)"
           style="flex:1;min-width:160px;max-width:360px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
       </div>
-      <!-- KPI -->
-      <div class="compteurs">
-        <div class="compteur"><div class="val" id="cNbLignes">—</div><div class="label" data-i18n="lbl_source_rows">Members</div></div>
-        <div class="compteur" style="border-top-color:var(--bleuC)"><div class="val" id="cNbMenages">—</div><div class="label" data-i18n="lbl_households">Households</div></div>
-        <div class="compteur" style="border-top-color:var(--vert)"><div class="val" id="cNbCibles">—</div><div class="label" data-i18n="lbl_targets">Targets (FL=1)</div></div>
-      </div>
       <div id="planningInfo"></div>
     </div>
 
@@ -5173,7 +5167,6 @@ function afficher(res) {
     elSW.classList.add('hidden'); elSW.innerHTML = '';
   }
   document.getElementById('locInput').value = res.localisation || '';
-  majKPI();
 
 
   // Graphiques statistiques (selon la portée Cibles / Ménage)
@@ -6539,31 +6532,9 @@ function setStatsEnq(s) {
   if (s === statsEnq) return;
   statsEnq = s;
   majStatsEnqUI();
-  majKPI();
   if (_resultat) majStats(statsPourStats());
 }
 
-// KPI (lignes / ménages / cibles / membres) selon le périmètre (enquête active ou toutes)
-function majKPI() {
-  let lignes = 0, menages = 0, cibles = 0, membres = 0;
-  if (statsEnq === 'all') {
-    Object.values(sources).forEach(v => {
-      const r = v.res;
-      lignes  += r.srcRows.length;
-      menages += Object.keys(r.tailleHH).length;
-      cibles  += r.outCibles.length;
-      membres += r.outMembres.length;
-    });
-  } else if (_resultat) {
-    lignes  = _resultat.srcRows.length;
-    menages = Object.keys(_resultat.tailleHH).length;
-    cibles  = _resultat.outCibles.length;
-    membres = _resultat.outMembres.length;
-  }
-  document.getElementById('cNbLignes').textContent  = lignes;
-  document.getElementById('cNbMenages').textContent = menages;
-  document.getElementById('cNbCibles').textContent  = cibles;
-}
 function majStatsEnqUI() {
   document.querySelectorAll('#enqToggle button').forEach(b =>
     b.classList.toggle('actif', b.dataset.enq === statsEnq));
@@ -7271,7 +7242,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '176';
+const APP_VERSION = '177';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
