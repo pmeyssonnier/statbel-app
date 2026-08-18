@@ -70,6 +70,11 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // Ratio de dépendance : 2 dépendants (10, 70) / 2 actifs (40, 30) = 100 %
     out.dependRatio = document.getElementById('statsDependDetail').textContent;
     out.dependDonut = document.getElementById('statsDepend').innerHTML.length > 0;
+    // Hauteur régulée : le donut de la lib partagée (Charts.donut) reste compact
+    // (≤ 160 px) et ne prend pas toute la largeur/hauteur sur mobile.
+    const depSvg = document.querySelector('#statsDepend svg');
+    const depW = depSvg && (depSvg.getAttribute('style') || '').match(/width:\s*(\d+)px/);
+    out.dependDonutW = depW ? parseInt(depW[1], 10) : 0;
     // Complétude : 3 barres
     out.contactBars = document.querySelectorAll('#statsContact .bar-row').length;
     // « Personnes à interroger (≥N) par ménage » : titre dynamique + drill-down
@@ -121,6 +126,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.drillTreemap, 'clic sur une tranche → treemap des nationalités');
   A(r.drillClosed, 'fermeture du drill-down (✕) vide le détail');
   A(/100/.test(r.dependRatio || '') && r.dependDonut, `ratio de dépendance = 100 % → « ${r.dependRatio} »`);
+  A(r.dependDonutW > 0 && r.dependDonutW <= 160, `donut de dépendance à hauteur régulée (compact ≤ 160 px) → ${r.dependDonutW} px`);
   A(r.contactBars === 3, `complétude des contacts : 3 barres → ${r.contactBars}`);
   A(/≥15/.test(r.chhTitle || '') && /interroger|survey|ondervragen|befragende/i.test(r.chhTitle || ''), `titre « à interroger » avec seuil dynamique → « ${r.chhTitle} »`);
   A(r.chhClickable && r.chhDrill, 'barres « à interroger » cliquables → treemap des nationalités');

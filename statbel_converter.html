@@ -6772,6 +6772,7 @@ function majMenagesCartes() {
   if (window.Charts) {
     elCompo.innerHTML = Charts.donut(compoItems, {
       total: nbMen, unitLabel: t('kpi_households').toLowerCase(), ariaLabel: t('card_hh_composition'),
+      size: DONUT_SIZE, thick: DONUT_THICK,
     });
     if (elDetail) elDetail.textContent = '';
   } else {
@@ -6851,7 +6852,7 @@ const BLOC_DEFS = {
               const dRatio = dActif ? Math.round((dJeune + dAge) / dActif * 100) : null;
               const depItems = [{ label: t('lbl_dep_young'), value: dJeune, color: '#f9a825' }, { label: t('lbl_dep_active'), value: dActif, color: '#2e7d32' }, { label: t('lbl_dep_old'), value: dAge, color: '#8d6e63' }];
               const elDep = document.getElementById('statsDepend');
-              if (window.Charts) elDep.innerHTML = Charts.donut(depItems, { total: dRatio != null ? dRatio : '—', unitLabel: t('lbl_dep_ratio'), ariaLabel: t('card_dependency') });
+              if (window.Charts) elDep.innerHTML = Charts.donut(depItems, { total: dRatio != null ? dRatio : '—', unitLabel: t('lbl_dep_ratio'), ariaLabel: t('card_dependency'), size: DONUT_SIZE, thick: DONUT_THICK });
               else renderDonut('statsDepend', depItems.filter(d => d.value > 0));
               const elDepD = document.getElementById('statsDependDetail'); if (elDepD) elDepD.textContent = dRatio != null ? tf('txt_dep_ratio', { n: dRatio }) : ''; } },
   contact:{ i18n: 'card_contactability', el: 'statsContact', chart: 'bar',
@@ -7123,6 +7124,11 @@ function majStats(res) {
 //  barres · barres empilées · pyramide · donut · 100 % · treemap · Sankey
 //  Ne recalculent pas de données métier : ANALYTICS prépare, CHARTS dessine.
 // ════════════════════════════════════════════════════════════════════════
+
+// Gabarit commun des donuts de la lib partagée (Charts.donut) sur cette page :
+// taille compacte et homogène avec les donuts locaux (renderDonut), pour éviter
+// qu'un anneau ne prenne toute la largeur — donc toute la hauteur — sur mobile.
+const DONUT_SIZE = 132, DONUT_THICK = 18;
 
 // items : [{ label, count, title?, color? }]
 function renderBarres(elId, items, defaultColor, clickFn) {
@@ -7766,7 +7772,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '204';
+const APP_VERSION = '205';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
