@@ -76,14 +76,21 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     const inp = { value: 'jean@gm', id: 'x' };
     try { emailSuggest(inp, 'sug-test'); out.email_suggest_ok = true; } catch (e) { out.email_suggest_ok = false; }
 
-    // Édition manuelle de la composition du ménage (taille + membres ≥15)
-    out.hh_inputs = !!document.getElementById('edit-hhsize-0') && !!document.getElementById('edit-hh15-0');
-    changerMenage(0, 'nb_cibles', '5');
-    changerMenage(0, 'taille_menage', '6');
-    out.hh_set = contacts()[0].nb_cibles === 5 && contacts()[0].taille_menage === 6;
-    changerMenage(0, 'nb_cibles', '');           // vider → null
-    out.hh_clear = contacts()[0].nb_cibles === null;
-    changerMenage(0, 'nb_cibles', '4');          // valeur finale pour l'affichage
+    // Édition volontairement limitée : le formulaire ne re-liste PAS les champs
+    // démographiques (nom, adresse, ménage) — ils sont affichés en tête de fiche.
+    const ef = document.getElementById('edit-0').innerHTML;
+    out.no_demo_fields = !/edit-prenom-0|edit-nom-0|edit-rue-0|edit-cpville-0|edit-hhsize-0|edit-hh15-0/.test(ef);
+    out.edit_essentials = /class="statut-bar"/.test(ef) && /changerGsm\(0/.test(ef)
+      && /changerEmail\(0/.test(ef) && /changerNotes\(0/.test(ef) && /historique/i.test(ef);
+    // Statut non dupliqué : en édition, la barre verrouillée de la carte est masquée
+    out.editingHidesTop = (() => {
+      const card = document.getElementById('edit-0').closest('.card');
+      if (!card || !card.classList.contains('editing')) return false;
+      const bar = card.querySelector('.card-statut');
+      return !!bar && getComputedStyle(bar).display === 'none';
+    })();
+    // Le ménage reste affiché en tête de fiche (donnée d'import), non éditable ici
+    changerMenage(0, 'nb_cibles', '4');
     setView('liste'); rendu();
     out.menage_15_edit = /\(4 ≥15\)/.test(document.getElementById('liste').innerHTML);
 
@@ -110,10 +117,10 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['carte : marqueur placé',                                r.markers === 1],
     ['fiche : formulaire d’édition ouvert',                   r.edit_form === true],
     ['autocomplétion e-mail (EMAIL_DOMAINES)',                r.email_suggest_ok === true],
-    ['fiche : champs d’édition du ménage présents',           r.hh_inputs === true],
-    ['édition ménage : taille=6 et ≥15=5 persistés',          r.hh_set === true],
-    ['édition ménage : champ vidé → null',                    r.hh_clear === true],
-    ['liste reflète le ≥15 édité « (4 ≥15) »',                r.menage_15_edit === true],
+    ['édition limitée : pas de champs démographiques dans le formulaire', r.no_demo_fields === true],
+    ['édition : statut + gsm + e-mail + notes + historique présents',     r.edit_essentials === true],
+    ['statut non dupliqué : barre verrouillée masquée en édition',        r.editingHidesTop === true],
+    ['ménage affiché en tête de fiche « (4 ≥15) »',                       r.menage_15_edit === true],
     ['alias pays RDC → COD (RD Congo)',                       r.rdc_norm === 'COD'],
     ['nationalité RDC normalisée est cohérente',              r.rdc_coherent === true],
     ['vue Suivi fonctionnelle',                               r.rdv_ok === true],

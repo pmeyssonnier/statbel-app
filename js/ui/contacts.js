@@ -13,7 +13,7 @@
  * markersLayer, maPosition, filtreActif, refreshSelect) sont globaux (pont).
  */
 import { esc, formaterGsm, calcAge, todayStr, nowHHMM,
-         dateFrToISO, dateISOToFr, composeAdresse, parseAdresse, adresseSansBoite,
+         dateFrToISO, dateISOToFr, composeAdresse, parseAdresse,
          correspondRecherche } from '../core/util.js';
 import { t, tPlural, nomJourCourt } from '../core/i18n.js';
 import { statutLabel, paysAffiche, etatCivilGenre, maritalCanon,
@@ -190,7 +190,9 @@ export function toggleEdit(i) {
     el.dataset.built = '1';
   }
   el.classList.toggle('open');
-  if (el.classList.contains('open')) document.getElementById('edit-prenom-'+i).focus();
+  const ouvert = el.classList.contains('open');
+  el.closest('.card')?.classList.toggle('editing', ouvert);   // masque la barre de statut verrouillée
+  if (ouvert) el.querySelector('.statut-bar .s-btn')?.focus();
 }
 
 // Ouvre (et construit si besoin) le formulaire d'édition d'une fiche
@@ -199,6 +201,7 @@ export function ouvrirEdit(i) {
   if (!el) return null;
   if (!el.dataset.built) { el.innerHTML = buildEditForm(i); el.dataset.built = '1'; }
   el.classList.add('open');
+  el.closest('.card')?.classList.add('editing');
   return el;
 }
 
@@ -222,57 +225,17 @@ export function statutBarHTML(i, statut, editable) {
 // Génère le contenu du formulaire d'édition d'une fiche (à la demande)
 export function buildEditForm(i) {
   const c      = contacts()[i];
-  const _p     = parseAdresse(c.adresse);
   const statut = c.statut || statutDefaut();
   const def    = statutDef(statut);
+  // Édition volontairement limitée : statut, téléphone, e-mail, note et historique.
+  // Les données démographiques (nom, adresse, ménage, âge…) sont affichées en tête
+  // de fiche et ne sont pas ré-éditables ici → pas de doublon, pas de saisie à risque.
   return `
         ${buildHistoriqueHTML(c, i)}
         <div class="edit-row">
           <label>${t('ed_status')}</label>
           <div class="statut-bar">${statutBarHTML(i, statut, true)}</div>
         </div>
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <div class="edit-row" style="flex:1">
-            <label>${t('ed_firstname')}</label>
-            <input type="text" id="edit-prenom-${i}" value="${esc(c.prenom)}">
-          </div>
-          <div class="edit-row" style="flex:2">
-            <label>${t('ed_lastname')}</label>
-            <input type="text" id="edit-nom-${i}" value="${esc(c.nom)}">
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <div class="edit-row" style="flex:1">
-            <label>${t('ed_street')}</label>
-            <input type="text" id="edit-rue-${i}" value="${esc(_p.rue)}" placeholder="Rue des Chardons 18">
-          </div>
-          <div class="edit-row" style="width:140px;min-width:0;flex-shrink:0">
-            <label>${t('ed_box')}</label>
-            <input type="text" id="edit-boite-${i}" value="${esc(_p.boite)}" placeholder="bte 2" style="width:100%">
-          </div>
-        </div>
-        <div class="edit-row">
-          <label>${t('ed_cpcity')}</label>
-          <input type="text" id="edit-cpville-${i}" value="${esc(_p.cpville)}" placeholder="1030 Schaerbeek">
-        </div>
-
-        <div class="edit-row">
-          <label>${t('ed_menage')}</label>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <input type="text" inputmode="numeric" id="edit-hhsize-${i}" value="${esc(String(c.taille_menage ?? ''))}"
-              placeholder="${t('ed_menage_total')}" maxlength="3" title="${t('ed_menage_total')}"
-              style="width:74px;text-align:center" oninput="this.value=this.value.replace(/\\D/g,'')"
-              onchange="changerMenage(${i},'taille_menage',this.value)">
-            <span style="color:#9aa0a6;">·</span>
-            <input type="text" inputmode="numeric" id="edit-hh15-${i}" value="${esc(String(c.nb_cibles ?? ''))}"
-              placeholder="≥15" maxlength="3" title="${t('ed_menage_15')}"
-              style="width:74px;text-align:center" oninput="this.value=this.value.replace(/\\D/g,'')"
-              onchange="changerMenage(${i},'nb_cibles',this.value)">
-            <span style="color:#5f6368;font-size:12px;">${t('ed_menage_15')}</span>
-          </div>
-        </div>
-
-
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:0.45">
             <label>${t('ed_gsm')}</label>
@@ -320,16 +283,10 @@ export function buildEditForm(i) {
 }
 
 export function sauverEdit(i) {
+  // Édition limitée : statut / gsm / e-mail / notes sont déjà persistés à la volée
+  // (oninput → sauverBientot). Ici on fige le RDV puis on referme et on rafraîchit.
   const c = contacts()[i];
-  const ancAdresse = c.adresse;
-  c.prenom  = document.getElementById('edit-prenom-'+i).value.trim();
-  c.nom     = document.getElementById('edit-nom-'+i).value.trim();
   c.rdv = lireRdvFields(i);
-  const rue    = document.getElementById('edit-rue-'+i).value.trim();
-  const boite  = document.getElementById('edit-boite-'+i).value.trim();
-  const cpville= document.getElementById('edit-cpville-'+i).value.trim();
-  c.adresse = composeAdresse(rue, boite, cpville);
-  if (c.adresse !== ancAdresse) localStorage.removeItem('coords_'+adresseSansBoite(ancAdresse));
   sauver();
   rendu();
   if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
