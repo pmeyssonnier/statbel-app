@@ -188,6 +188,37 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(cand.nbRO && cand.dRO, 'NbGroupes et Date en lecture seule (champs calculés)');
     A(cand.nbAfter === String(cand.selAfter), `NbGroupes suit la sélection en direct (${cand.selAfter}) → "${cand.nbAfter}"`);
 
+    // Génération .docx : titre centré + case à cocher choisie transmise. Le ZIP
+    // est en méthode STORE → le document.xml est présent verbatim dans les octets.
+    const docx = await p.evaluate(() => {
+      const base = { nom: 'Test', prenom: 'U', adresse: '', cp: '', commune: '',
+        telPrive: '', heuresPrive: '', telPort: '', heuresPort: '', telBur: '', heuresBur: '',
+        emailPrive: '', emailBur: '', nbGroupes: '2', date: '01/01/2026',
+        groupes: [{ numero: '12305', commune: 'Schaerbeek' }],
+        title: 'Enquête sur les Forces de Travail 2026-T4', abbrev: 'EFT', period: '2026-T4' };
+      const dec = b => new TextDecoder('utf-8', { fatal: false }).decode(b);
+      const boxOk = (xml, label) => {
+        const fe = xml.indexOf('F0FE'), lb = xml.indexOf(label);
+        return (xml.match(/F0FE/g) || []).length === 1 && fe > -1 && fe < lb
+          && !xml.slice(fe, lb).includes('F0A8');   // aucune case vide entre la cochée et son libellé
+      };
+      const g = dec(candGenerateDocxBytes({ ...base, choix: 'groupes' }));
+      const pl = dec(candGenerateDocxBytes({ ...base, choix: 'plus' }));
+      const pa = dec(candGenerateDocxBytes({ ...base, choix: 'pas' }));
+      return {
+        center: g.includes('<w:pStyle w:val="Title"/><w:jc w:val="center"/>'),
+        oneBox: (g.match(/F0FE/g) || []).length === 1 && (g.match(/F0A8/g) || []).length === 2,
+        gOk: boxOk(g, 'Nombre de groupes souhaités'),
+        paOk: boxOk(pa, 'pas intéressé'),
+        plOk: boxOk(pl, 'plus intéressé'),
+      };
+    });
+    A(docx.center, 'candidature .docx : titre centré (w:jc center sur le paragraphe Title)');
+    A(docx.oneBox, 'candidature .docx : exactement une case cochée (2 vides)');
+    A(docx.gOk, 'candidature .docx : choix « groupes » coche « Nombre de groupes souhaités »');
+    A(docx.paOk, 'candidature .docx : choix « pas » coche « pas intéressé(e) »');
+    A(docx.plOk, 'candidature .docx : choix « plus » coche « n\'est plus intéressé(e) »');
+
     A(perr.length === 0, 'plannings présents : aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
     await p.close();
   }
