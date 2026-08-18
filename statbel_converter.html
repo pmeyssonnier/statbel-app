@@ -611,8 +611,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div id="statsCompoHHDetail" style="margin-top:8px;font-size:11px;color:var(--text2)"></div>
         </div>
         <div class="card" data-block="ageLFS">
-          <div class="card-titre" data-i18n="card_age_lfs">📊 Tranches d'âge (LFS)</div>
+          <div class="card-titre" data-i18n="card_age_lfs">📊 Tranches d'âge</div>
           <div id="statsAgeLFS"></div>
+          <div id="statsAgeLFSDetail" style="margin-top:8px"></div>
         </div>
         <div class="card" data-block="depend">
           <div class="card-titre" data-i18n="card_dependency">⚖️ Ratio de dépendance</div>
@@ -1003,7 +1004,7 @@ const I18N = {
   kpi_avg_hh_size: { fr:"Taille moy. ménage", nl:"Gem. gezinsgrootte", en:"Avg. household size", de:"Ø Haushaltsgröße" },
   kpi_targets15: { fr:"Cibles ≥15 ans", nl:"Doelen ≥15 jaar", en:"Targets ≥15", de:"Zielpers. ≥15" },
   kpi_targets_min: { fr:"Cibles ≥{n} ans", nl:"Doelen ≥{n} jaar", en:"Targets ≥{n}", de:"Zielpers. ≥{n}" },
-  card_age_lfs: { fr:"📊 Tranches d'âge (LFS)", nl:"📊 Leeftijdsgroepen (LFS)", en:"📊 Age brackets (LFS)", de:"📊 Altersgruppen (LFS)" },
+  card_age_lfs: { fr:"📊 Tranches d'âge", nl:"📊 Leeftijdsgroepen", en:"📊 Age brackets", de:"📊 Altersgruppen" },
   card_dependency: { fr:"⚖️ Ratio de dépendance", nl:"⚖️ Afhankelijkheidsratio", en:"⚖️ Dependency ratio", de:"⚖️ Abhängigkeitsquote" },
   card_contactability: { fr:"📞 Complétude des contacts", nl:"📞 Contactgegevens", en:"📞 Contact completeness", de:"📞 Kontaktvollständigkeit" },
   lbl_has_phone: { fr:"Téléphone", nl:"Telefoon", en:"Phone", de:"Telefon" },
@@ -6587,6 +6588,25 @@ function zoomMenage(taille) {
   renderTreemapNlty('statsTailleTM', items);
 }
 
+// Drill-down des tranches d'âge : au clic, treemap des nationalités de la tranche
+// (même principe que la répartition par taille de ménage).
+let _ageLFSPop = [];
+function zoomAgeLFS(key) {
+  const det = document.getElementById('statsAgeLFSDetail'); if (!det) return;
+  const p = String(key).split('_').map(Number), lo = p[0], hi = p[1];
+  const sub = (_ageLFSPop || []).filter(r => { const a = parseInt(r.age, 10); return !isNaN(a) && a >= lo && a <= hi; });
+  if (!sub.length) { det.innerHTML = ''; return; }
+  const cnt = {};
+  sub.forEach(r => { const n = paysNom(r.nationality) || r.nationality || '—'; cnt[n] = (cnt[n] || 0) + 1; });
+  const items = Object.entries(cnt).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  const brLabel = hi >= 999 ? (lo + '+') : (lo + '–' + hi);
+  det.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
+      <b style="color:var(--text)">${escHtml(brLabel)}</b> — ${sub.length}${escHtml(t('txt_by_nationality'))}
+      <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('statsAgeLFSDetail').innerHTML=''">✕</button>
+    </div><div id="statsAgeLFSTM"></div>`;
+  renderTreemapNlty('statsAgeLFSTM', items);
+}
+
 // ════════════════════════════════════════════════════════════════════════
 //  STATISTIQUES (bascule Cibles / Tout le ménage)
 // ════════════════════════════════════════════════════════════════════════
@@ -6975,13 +6995,14 @@ function majStats(res) {
 
   // ── Tranches d'âge LFS (H/F) sur la population du périmètre ──────────
   const brLFS = [[0, 14, '0–14'], [15, 24, '15–24'], [25, 54, '25–54'], [55, 64, '55–64'], [65, 999, '65+']];
-  const ageLFS = brLFS.map(([, , lbl]) => ({ label: lbl, h: 0, f: 0 }));
+  const ageLFS = brLFS.map(([lo, hi, lbl]) => ({ label: lbl, h: 0, f: 0, key: lo + '_' + hi }));
   pop.forEach(r => {
     const a = parseInt(r.age, 10); if (isNaN(a)) return;
     const bi = brLFS.findIndex(([lo, hi]) => a >= lo && a <= hi); if (bi < 0) return;
     if (r.sexe === 'M') ageLFS[bi].h++; else if (r.sexe === 'F') ageLFS[bi].f++;
   });
-  renderBarresStack('statsAgeLFS', ageLFS);
+  _ageLFSPop = pop;   // population de la tranche pour le drill-down nationalités
+  renderBarresStack('statsAgeLFS', ageLFS, 'zoomAgeLFS');
 
   // ── Ratio de dépendance sur le ménage complet : (<15 + 65+) / (15–64) ─
   const memD = res.outMembres;
@@ -7542,7 +7563,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '184';
+const APP_VERSION = '185';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
