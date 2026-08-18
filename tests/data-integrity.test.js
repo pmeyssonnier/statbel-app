@@ -82,6 +82,31 @@ const EXEC = process.env.CHROMIUM_PATH
     return { statut: result[0].statut || '(vide)', hist: (result[0].historique || []).length };
   });
 
+  // ── #1d : MÊME n° d'ordre mais identité totalement différente (n° réattribué ?) →
+  //          suivi NON transféré + signalé « incertain » (sécurité anti-fausse fusion) ──
+  results.reimport_incertain = await p.evaluate(() => {
+    __setup(JSON.parse(JSON.stringify(__ST)), { E: [
+      { ordre: '0005', nom: 'Dupont', prenom: 'Jean', adresse: 'Rue A 1', birth_date: '1980-01-01',
+        statut: 'Fait', date: '01/08/2026', historique: [{ statut: 'Fait', date: '01/08/2026' }] }
+    ]});
+    const neu = [{ ordre: '0005', nom: 'Martin', prenom: 'Marie', adresse: 'Rue Z 9', birth_date: '1995-06-06' }];
+    const { result, incertains } = preparerImport(neu, 'E');
+    return { statut: result[0].statut || '(vide)', hist: (result[0].historique || []).length,
+             nom: result[0].nom, incertains: incertains.length };
+  });
+
+  // ── #1e : même n° d'ordre, nom différent MAIS naissance identique → apparié (1 signal) ──
+  results.reimport_1signal = await p.evaluate(() => {
+    __setup(JSON.parse(JSON.stringify(__ST)), { E: [
+      { ordre: '0007', nom: 'Dupont', prenom: 'Jean', adresse: 'Rue A 1', birth_date: '1980-01-01',
+        statut: 'Fait', date: '01/08/2026', historique: [{ statut: 'Fait', date: '01/08/2026' }] }
+    ]});
+    // nom marié différent + adresse différente, mais date de naissance identique → concordance
+    const neu = [{ ordre: '0007', nom: 'Lefevre', prenom: 'Jean', adresse: 'Rue B 2', birth_date: '1980-01-01' }];
+    const { result, incertains } = preparerImport(neu, 'E');
+    return { statut: result[0].statut || '(vide)', hist: (result[0].historique || []).length, incertains: incertains.length };
+  });
+
   // ── #2a : renommer un statut → historique migré ──
   results.rename_statut = await p.evaluate(() => {
     __setup(JSON.parse(JSON.stringify(__ST)), { E: [
@@ -126,6 +151,12 @@ const EXEC = process.env.CHROMIUM_PATH
       results.reimport_ordre_change.statut === 'Fait' && results.reimport_ordre_change.hist === 1],
     ['#1c personne différente → nouveau (pas de fausse préservation)',
       results.reimport_different.statut === '(vide)' && results.reimport_different.hist === 0],
+    ['#1d même n° d\'ordre mais identité divergente → suivi NON transféré + signalé',
+      results.reimport_incertain.statut === '(vide)' && results.reimport_incertain.hist === 0
+      && results.reimport_incertain.nom === 'Martin' && results.reimport_incertain.incertains === 1],
+    ['#1e même n° d\'ordre + naissance concordante → apparié (aucun signalement)',
+      results.reimport_1signal.statut === 'Fait' && results.reimport_1signal.hist === 1
+      && results.reimport_1signal.incertains === 0],
     ['#2a renommer un statut → historique migré',
       results.rename_statut.statut === 'Pas rencontré' && results.rename_statut.hist.every(s => s === 'Pas rencontré')],
     ['#2b supprimer un statut → historique migré vers le repli',

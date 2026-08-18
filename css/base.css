@@ -222,6 +222,11 @@
   .demo-bad { color: #c62828; font-weight: 600; }
   .excl-row { font-size: 11px; color: #b71c1c; background:#ffebee; border-radius:6px; padding:4px 8px; margin-top:4px; }
   .excl-row .excl-state { color: var(--text3); }
+  /* Correspondances incertaines au réimport (n° d'ordre concordant, identité divergente) */
+  .import-incertains { border:1px solid #f0c36d; background:#fff8e1; border-radius:8px; padding:8px 10px; margin-top:10px; }
+  .import-incertains-tt { font-size:12px; font-weight:700; color:#8a6d00; margin-bottom:4px; }
+  .import-incertains .excl-row { color:#8a6d00; background:#fff3cd; }
+  .import-incertains-note { font-size:11px; color:var(--text3); margin-top:6px; }
   .card-statut { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 14px; }
   .card-statut-date { color: var(--text3); font-size: 13px; }
   /* En édition, le statut se règle dans le formulaire → on masque la barre verrouillée
