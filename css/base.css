@@ -224,6 +224,9 @@
   .excl-row .excl-state { color: var(--text3); }
   .card-statut { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 14px; }
   .card-statut-date { color: var(--text3); font-size: 13px; }
+  /* En édition, le statut se règle dans le formulaire → on masque la barre verrouillée
+     de la carte pour ne pas afficher le statut deux fois. */
+  .card.editing .card-statut { display: none; }
   .card-adresse-row { display:block; margin: 6px 0 8px 0; }
   .card-adresse { font-size: 13px; color: var(--text2); line-height: 1.4; text-decoration: none; }
   .card-adresse:hover { color: #1a73e8; text-decoration: underline; }
