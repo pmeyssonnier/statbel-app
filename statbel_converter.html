@@ -6693,7 +6693,7 @@ const KPI_DEFS = {
   f:    { i18n: 'kpi_pct_women',   color: 'var(--bar-f)', tint: 'var(--bar-f)', val: c => c.popN ? Math.round(c.kF / c.popN * 100) + ' %' : '—' },
   cib:  { i18n: 'kpi_targets15',   color: '#5e35b1',      val: c => c.nbCibles15 },
   etr:  { i18n: 'kpi_pct_foreign', color: '#00838f',      val: c => c.popN ? Math.round(c.nEtr / c.popN * 100) + ' %' : '—' },
-  min:  { i18n: 'kpi_pct_minors',  color: '#8d6e63',      val: c => c.popN ? Math.round(c.nMin / c.popN * 100) + ' %' : '—' },
+  min:  { i18n: 'kpi_pct_minors',  color: '#8d6e63',      val: c => c.membres ? Math.round(c.nMin / c.membres * 100) + ' %' : '—' },
   med:  { i18n: 'kpi_age_median',  color: '#ef6c00',      val: c => c.ageMed != null ? c.ageMed + ' ans' : '—' },
 };
 const KPI_ALL = ['men', 'pop', 'size', 'age', 'h', 'f', 'cib', 'etr', 'min', 'med'];
@@ -6811,7 +6811,9 @@ function majStats(res) {
     ageMoy:     ages.length ? Math.round(ages.reduce((s, a) => s + a, 0) / ages.length) : null,
     ageMed:     median(ages),
     nEtr:       pop.filter(r => r.birth_country && r.birth_country !== 'BEL').length,
-    nMin:       pop.filter(r => { const a = parseInt(r.age, 10); return !isNaN(a) && a < 15; }).length,
+    // % mineurs : calculé sur le MÉNAGE COMPLET (propriété du ménage), donc
+    // stable quel que soit le périmètre (sinon ~0 en périmètre « Référent »).
+    nMin:       res.outMembres.filter(r => { const a = parseInt(r.age, 10); return !isNaN(a) && a < 15; }).length,
     nbHH:       (res.outCibles || []).length,
     membres:    res.outMembres.length,
     nbCibles15: res.outMembres.filter(r => { const a = parseInt(r.age, 10); return !isNaN(a) && a >= min; }).length,
@@ -7407,7 +7409,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '179';
+const APP_VERSION = '180';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

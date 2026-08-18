@@ -39,6 +39,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     renderKPIs(_kpiCtx);
     out.vals = [...document.querySelectorAll('#kpiGrid .compteur .val')].map(e => e.textContent).join('|');
     out.nTiles = document.querySelectorAll('#kpiGrid .compteur').length;
+    // % mineurs = sur le ménage complet (nMin / membres), pas sur pop : 8/66 ≈ 12 %
+    out.minFormula = KPI_DEFS.min.val(_kpiCtx);
 
     // Activer « % né·es à l'étranger » (etr) → apparaît + persiste
     ouvrirPerso();
@@ -82,6 +84,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.def === 'men,pop,size,age,h,f', `défaut = 6 KPI ordonnés → ${r.def}`);
   A(r.total === 10, `registre complet (10 KPI, dont 4 nouveaux) → ${r.total}`);
   A(r.nTiles === 6 && r.vals === '26|66|2.5|46 ans|50 %|50 %', `rendu des valeurs depuis le contexte → ${r.vals}`);
+  A(r.minFormula === '12 %', `% mineurs calculé sur le ménage complet (8/66) → ${r.minFormula}`);
   A(r.modalOpen, 'panneau « Personnaliser » s\'ouvre');
   A(r.etrShown && r.etrPersisted, 'activer un KPI l\'affiche et le persiste (localStorage)');
   A(/%$/.test((r.etrValue || '').trim()), `KPI % né·es à l'étranger calculé → ${r.etrValue}`);
