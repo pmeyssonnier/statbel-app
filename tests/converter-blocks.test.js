@@ -82,11 +82,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.hhSexeM = hhHtml.includes('♂');
     out.hhSexeF = hhHtml.includes('♀');
     out.hhMrtl = hhHtml.includes('💍') && hhHtml.includes('🕊');
-    // Table de correspondance Pays (Lookup) : drapeau devant le nom
-    if (typeof initPays === 'function') {
+    // Tables de correspondance (Lookup) : drapeau pays + icônes sexe/état civil
+    if (typeof ouvrirParametres === 'function') {
       try {
-        initPays();
+        ouvrirParametres();
         out.lookupFlag = /\uD83C[\uDDE6-\uDDFF]/.test((document.getElementById('refNlty') || {}).innerHTML || '');
+        const sexeHtml = (document.getElementById('refSexe') || {}).innerHTML || '';
+        out.lookupSexe = sexeHtml.includes('♂') && sexeHtml.includes('♀');
+        const mrtlHtml = (document.getElementById('refMrtl') || {}).innerHTML || '';
+        out.lookupMrtl = mrtlHtml.includes('💍') && mrtlHtml.includes('🕊');
       } catch (e) { out.lookupErr = String(e && e.message || e); }
     }
     return out;
@@ -107,6 +111,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.hhSexeM && r.hhSexeF, 'table ménage : icônes de sexe ♂ / ♀');
   A(r.hhMrtl, 'table ménage : emoji d\'état civil (💍 / 🕊)');
   A(r.lookupFlag && !r.lookupErr, 'table de correspondance Pays : drapeau devant le nom' + (r.lookupErr ? ' → ' + r.lookupErr : ''));
+  A(r.lookupSexe, 'table de correspondance Sexe : icônes ♂ / ♀');
+  A(r.lookupMrtl, 'table de correspondance État civil : emoji (💍 / 🕊)');
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
