@@ -734,6 +734,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="perso-tabs">
       <button class="perso-tab actif" data-ptab="kpi" onclick="persoTab('kpi')" data-i18n="perso_tab_kpi">KPI</button>
       <button class="perso-tab" data-ptab="blocs" onclick="persoTab('blocs')" data-i18n="perso_tab_blocs">Blocs d'analyse</button>
+      <button class="perso-tab" data-ptab="cols" onclick="persoTab('cols')" data-i18n="perso_tab_cols">Colonnes</button>
     </div>
     <p style="font-size:12px;color:var(--text2);margin:10px 0" id="persoHint"></p>
     <ul id="persoList" class="perso-list"></ul>
@@ -999,6 +1000,9 @@ const I18N = {
   perso_tab_kpi: { fr:"KPI", nl:"KPI", en:"KPIs", de:"KPIs" },
   perso_tab_blocs: { fr:"Blocs d'analyse", nl:"Analyseblokken", en:"Analysis blocks", de:"Analyseblöcke" },
   perso_hint_blocs: { fr:"Cochez et réordonnez les graphiques & tableaux de la vue Statistiques.", nl:"Vink aan en herschik de grafieken & tabellen van de Statistiek-weergave.", en:"Toggle and reorder the charts & tables of the Statistics view.", de:"Diagramme & Tabellen der Statistik-Ansicht aus-/einblenden und neu ordnen." },
+  perso_tab_cols: { fr:"Colonnes", nl:"Kolommen", en:"Columns", de:"Spalten" },
+  perso_hint_cols: { fr:"Cochez et réordonnez les colonnes du tableau de l'Aperçu.", nl:"Vink aan en herschik de kolommen van de Overzicht-tabel.", en:"Toggle and reorder the columns of the Overview table.", de:"Spalten der Übersicht-Tabelle aus-/einblenden und neu ordnen." },
+  col_num: { fr:"N° (ordre)", nl:"Nr. (volgorde)", en:"# (order)", de:"Nr. (Reihenfolge)" },
   btn_customize: { fr:"Personnaliser", nl:"Aanpassen", en:"Customize", de:"Anpassen" },
   card_nationalities: { fr:"🌍 Nationalités", nl:"🌍 Nationaliteiten", en:"🌍 Nationalities", de:"🌍 Nationalitäten" },
   hint_area_headcount: { fr:"(surface ∝ effectif)", nl:"(oppervlakte ∝ aantal)", en:"(area ∝ headcount)", de:"(Fläche ∝ Anzahl)" },
@@ -6715,10 +6719,29 @@ const BLOC_DEFS = {
 };
 const BLOC_ALL = ['nat', 'cont', 'eu', 'mrtl', 'sexe', 'birth', 'age', 'size', 'chh', 'compo', 'sankey'];
 
+// Colonnes du tableau de contacts de l'Aperçu — {libellé i18n, <th>, cellule(r)}.
+// La colonne d'expansion (▸) est structurelle : toujours présente, hors config.
+const COL_DEFS = {
+  ordre:   { i18n: 'col_num',      th: '<th class="sortable" data-col="ordre" data-table="cibles">#</th>',
+             cell: r => `<td class="ordre">${escHtml(r.ordre)}</td>` },
+  contact: { i18n: 'th_contact',   th: '<th class="sortable" data-col="prenom" data-table="cibles" data-i18n="th_contact">Contact</th>',
+             cell: r => `<td>${escHtml(r.prenom)} ${escHtml(r.nom)}</td>` },
+  adresse: { i18n: 'th_address',   th: '<th class="sortable" data-col="adresse" data-table="cibles" data-i18n="th_address">Address</th>',
+             cell: r => `<td style="font-size:11px;color:var(--text2)">${escHtml(r.adresse)}</td>` },
+  gsm:     { i18n: 'th_phone',     th: '<th data-i18n="th_phone">📞 Phone</th>',
+             cell: r => `<td style="white-space:nowrap">${escHtml(r.gsm) || '<span class="vide">—</span>'}</td>` },
+  email:   { i18n: 'th_email',     th: '<th data-i18n="th_email">✉️ Email</th>',
+             cell: r => `<td style="font-size:11px">${escHtml(r.email) || '<span class="vide">—</span>'}</td>` },
+  menage:  { i18n: 'th_household', th: '<th class="sortable" data-col="taille_menage" data-table="cibles" data-i18n="th_household">Household</th>',
+             cell: r => `<td style="text-align:center">${escHtml(r.taille_menage)}${parseInt(r.nb_cibles, 10) > 1 ? ` <span style="color:var(--text3);font-size:11px">(${escHtml(r.nb_cibles)} ≥15)</span>` : ''}</td>` },
+};
+const COL_ALL = ['ordre', 'contact', 'adresse', 'gsm', 'email', 'menage'];
+
 // Registres exposés au panneau générique (config = liste ordonnée {id, on}).
 const PERSO = {
   kpi:   { defs: KPI_DEFS,  all: KPI_ALL,  onDef: KPI_ON_DEFAUT, key: 'statbel_conv_kpi',   hint: 'perso_hint',       apply: () => renderKPIs(_kpiCtx) },
   blocs: { defs: BLOC_DEFS, all: BLOC_ALL, onDef: BLOC_ALL,      key: 'statbel_conv_blocs', hint: 'perso_hint_blocs', apply: () => renderBlocsOrder() },
+  cols:  { defs: COL_DEFS,  all: COL_ALL,  onDef: COL_ALL,       key: 'statbel_conv_cols',  hint: 'perso_hint_cols',  apply: () => rerenderCibles() },
 };
 
 // Config générique (afficher/masquer + ordre), persistée par appareil.
@@ -6759,6 +6782,26 @@ function renderBlocsOrder() {
     card.style.display = on ? '' : 'none';
     cont.appendChild(card);   // appendChild déplace en fin → réordonne dans l'ordre de la config
   });
+}
+
+// En-tête du tableau de contacts : colonne d'expansion (fixe) + colonnes activées,
+// dans l'ordre configuré. Réapplique l'indicateur de tri courant.
+function renderCiblesHead() {
+  const tr = document.querySelector('#tableCibles thead tr');
+  if (!tr) return;
+  const ths = getCfg('cols').filter(x => x.on).map(({ id }) => COL_DEFS[id].th).join('');
+  tr.innerHTML = '<th style="width:22px"></th>' + ths;
+  const st = _sortState.cibles;
+  if (st && st.col) {
+    const t = tr.querySelector(`th.sortable[data-col="${st.col}"]`);
+    if (t) t.classList.add(st.dir === 1 ? 'asc' : 'desc');
+  }
+}
+// Re-rend le tableau de contacts avec le tri courant (après changement de colonnes).
+function rerenderCibles() {
+  if (!_resultat) { renderCiblesHead(); return; }
+  const st = _sortState.cibles;
+  renderCibles(st && st.col ? sortRows(_resultat.outCibles, st.col, st.dir) : _resultat.outCibles);
 }
 
 // Panneau « Personnaliser l'affichage » (onglets KPI / Blocs) — générique.
@@ -7167,31 +7210,33 @@ function sortRows(rows, col, dir) {
 }
 
 function renderCibles(rows) {
+  renderCiblesHead();   // colonnes activées + ordre + indicateur de tri
+
   // Membres regroupés par ménage (pour l'accordéon)
   const parHh = {};
   (_resultat && _resultat.outMembres || []).forEach(m => {
     (parHh[m.nr_hh] = parHh[m.nr_hh] || []).push(m);
   });
 
+  // Colonnes activées, dans l'ordre choisi (colonne d'expansion ▸ en plus → +1)
+  const colsOn = getCfg('cols').filter(x => x.on).map(x => x.id);
+  const colspan = 1 + colsOn.length;
+
   document.getElementById('bodyCibles').innerHTML = rows.map((r, i) => {
     // Tout le ménage (cible incluse), trié par numéro de membre
     const menage = (parHh[r.ordre] || []).slice()
       .sort((a, b) => Number(a.nr_membre) - Number(b.nr_membre));
 
+    const cellules = colsOn.map(id => COL_DEFS[id].cell(r)).join('');
     const ligne = `
     <tr class="cible-row" onclick="toggleMenage(${i})" style="cursor:pointer">
       <td style="text-align:center;color:var(--accent);font-weight:bold"><span id="tg-${i}">▸</span></td>
-      <td class="ordre">${escHtml(r.ordre)}</td>
-      <td>${escHtml(r.prenom)} ${escHtml(r.nom)}</td>
-      <td style="font-size:11px;color:var(--text2)">${escHtml(r.adresse)}</td>
-      <td style="white-space:nowrap">${escHtml(r.gsm) || '<span class="vide">—</span>'}</td>
-      <td style="font-size:11px">${escHtml(r.email) || '<span class="vide">—</span>'}</td>
-      <td style="text-align:center">${escHtml(r.taille_menage)}${parseInt(r.nb_cibles,10)>1?` <span style="color:var(--text3);font-size:11px">(${escHtml(r.nb_cibles)} ≥15)</span>`:''}</td>
+      ${cellules}
     </tr>`;
 
     const sousLigne = `
     <tr id="men-${i}" style="display:none">
-      <td colspan="7" style="padding:0;background:var(--card2)">
+      <td colspan="${colspan}" style="padding:0;background:var(--card2)">
         <div style="padding:8px 12px">
           <div style="font-size:11px;color:var(--text2);margin-bottom:5px">👥 Household (${menage.length})</div>
           <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -7409,7 +7454,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '180';
+const APP_VERSION = '181';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
