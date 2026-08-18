@@ -245,6 +245,9 @@
 
   /* ── Stats grid ── */
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  /* Légende H/F sous le treemap (couleurs des barres empilées des blocs d'analyse) */
+  .hf-legende { display: flex; justify-content: flex-end; gap: 14px; margin-top: 8px; font-size: 11px; color: var(--text2); }
+  .hf-pastille { display: inline-block; width: 11px; height: 11px; border-radius: 2px; vertical-align: middle; }
   .stat-row {
     display: flex; justify-content: space-between; align-items: center;
     font-size: 12px; padding: 3px 0; border-bottom: 1px solid var(--line);
@@ -563,10 +566,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
             oninput="setAgeMinCible(this.value)" title="Âge minimum des personnes cibles interrogées"
             style="width:54px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--card);color:var(--text)">
         </label>
-        <span style="margin-left:auto;font-size:11px;color:var(--text2)">
-          <span style="display:inline-block;width:11px;height:11px;background:var(--bar-h);border-radius:2px;vertical-align:middle"></span> <span data-i18n="legend_men">Men</span>
-          &nbsp;<span style="display:inline-block;width:11px;height:11px;background:var(--bar-f);border-radius:2px;vertical-align:middle"></span> <span data-i18n="legend_women">Women</span>
-        </span>
       </div>
       <div style="display:flex;justify-content:flex-end;margin:0 0 8px">
         <button type="button" class="btn-perso" id="btnPerso" onclick="ouvrirPerso()">🎛️ <span data-i18n="btn_customize">Personnaliser</span></button>
@@ -579,6 +578,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <div class="card blk-wide" data-block="nat">
           <div class="card-titre"><span data-i18n="card_nationalities">🌍 Nationalities</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_area_headcount">(surface ∝ effectif)</span></div>
           <div id="statsTreemap"></div>
+          <!-- Légende H/F : s'applique aux blocs d'analyse à barres empilées situés sous le treemap -->
+          <div class="hf-legende">
+            <span><span class="hf-pastille" style="background:var(--bar-h)"></span> <span data-i18n="legend_men">Men</span></span>
+            <span><span class="hf-pastille" style="background:var(--bar-f)"></span> <span data-i18n="legend_women">Women</span></span>
+          </div>
         </div>
         <div class="card" data-block="cont">
           <div class="card-titre" data-i18n="card_by_continent">🌐 By continent</div>
@@ -7643,7 +7647,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '194';
+const APP_VERSION = '195';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
