@@ -191,6 +191,15 @@
   .perso-list .pl-mv { display: flex; gap: 3px; flex: 0 0 auto; }
   .perso-list .pl-mv button { width: 28px; height: 28px; border: 1px solid var(--border); background: var(--card2); border-radius: 6px; cursor: pointer; color: var(--text); font-size: 12px; }
   .perso-list .pl-mv button:disabled { opacity: .35; cursor: default; }
+  /* Blocs d'analyse : visualisations larges sur toute la largeur de la grille */
+  #statsBlocks .card { margin-bottom: 0; }
+  .blk-wide { grid-column: 1 / -1; }
+  /* Onglets du panneau Personnaliser */
+  .perso-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+  .perso-tab { flex: 1; border: 0; background: transparent; color: var(--text2); font: inherit;
+    font-size: 12.5px; font-weight: bold; padding: 8px 6px; border-radius: 8px 8px 0 0;
+    cursor: pointer; border-bottom: 2px solid transparent; }
+  .perso-tab.actif { color: var(--accent); border-bottom-color: var(--accent); background: var(--card2); }
 
   /* ── Bloc planning LFS du groupe ── */
   .plan-box { margin: 10px 0 2px; padding: 8px 12px; background: var(--card2); border-radius: 8px; font-size: 12px; }
@@ -544,71 +553,67 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         </span>
       </div>
       <div style="display:flex;justify-content:flex-end;margin:0 0 8px">
-        <button type="button" class="btn-perso" id="btnPersoKpi" onclick="ouvrirPersoKpi()">🎛️ <span data-i18n="btn_customize_kpi">Personnaliser les KPI</span></button>
+        <button type="button" class="btn-perso" id="btnPerso" onclick="ouvrirPerso()">🎛️ <span data-i18n="btn_customize">Personnaliser</span></button>
       </div>
       <!-- Tuiles KPI rendues dynamiquement depuis le registre + config perso (renderKPIs) -->
       <div class="compteurs compteurs-3" id="kpiGrid" style="margin:0 0 14px"></div>
-      <div class="card">
-        <div class="card-titre"><span data-i18n="card_nationalities">🌍 Nationalities</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_area_headcount">(surface ∝ effectif)</span></div>
-        <div id="statsTreemap"></div>
-      </div>
-      <div class="stats-grid">
-        <div class="card">
+      <!-- Blocs d'analyse : une seule grille, réordonnables/masquables (data-block).
+           Les visualisations larges (treemap, Sankey) occupent toute la largeur. -->
+      <div class="stats-grid" id="statsBlocks">
+        <div class="card blk-wide" data-block="nat">
+          <div class="card-titre"><span data-i18n="card_nationalities">🌍 Nationalities</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_area_headcount">(surface ∝ effectif)</span></div>
+          <div id="statsTreemap"></div>
+        </div>
+        <div class="card" data-block="cont">
           <div class="card-titre" data-i18n="card_by_continent">🌐 By continent</div>
           <div id="statsCont"></div>
         </div>
-        <div class="card">
+        <div class="card" data-block="eu">
           <div class="card-titre" data-i18n="card_eu_noneu">🇪🇺 EU / non-EU</div>
           <div id="statsEU"></div>
         </div>
-      </div>
-      <div class="stats-grid">
-        <div class="card">
+        <div class="card" data-block="mrtl">
           <div class="card-titre" data-i18n="card_marital">💍 Marital status</div>
           <div id="statsMrtl"></div>
           <div id="statsMrtlDetail" style="margin-top:8px"></div>
         </div>
-        <div class="card">
+        <div class="card" data-block="sexe">
           <div class="card-titre" data-i18n="card_gender">⚧ Gender</div>
           <div id="statsSexe"></div>
           <div id="statsSexeDetail" style="margin-top:8px"></div>
         </div>
-        <div class="card">
+        <div class="card" data-block="birth">
           <div class="card-titre"><span data-i18n="card_birthplace">🏙️ Place of birth</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_born_be">(born in Belgium, any nationality)</span></div>
           <div id="statsCommune"></div>
         </div>
-      </div>
-      <div class="stats-grid">
-        <div class="card">
+        <div class="card" data-block="age">
           <div class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span data-i18n="card_age_pyramid">📊 Age pyramid</span>
             <select id="pyrNlty" onchange="majPyramide()" style="margin-left:auto;font-weight:normal;padding:3px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
           </div>
           <div id="statsAge"></div>
           <div id="statsAgeDetail" style="margin-top:8px"></div>
         </div>
-        <div class="card">
+        <div class="card" data-block="size">
           <div class="card-titre" data-i18n="card_household_dist">👥 Household size distribution</div>
           <div id="statsTaille"></div>
           <div id="statsTailleDetail" style="margin-top:8px"></div>
         </div>
-      </div>
-      <div class="stats-grid">
-        <div class="card">
+        <div class="card" data-block="chh">
           <div class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span data-i18n="card_targets_per_hh">🎯 Targets per household</span>
             <span id="kpiCiblesMoy" style="margin-left:auto;font-weight:normal;font-size:12px;color:var(--text2)"></span>
           </div>
           <div id="statsCiblesHH"></div>
         </div>
-        <div class="card">
+        <div class="card" data-block="compo">
           <div class="card-titre" data-i18n="card_hh_composition">🏠 Household composition</div>
           <div id="statsCompoHH"></div>
           <div id="statsCompoHHDetail" style="margin-top:8px;font-size:11px;color:var(--text2)"></div>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-titre" data-i18n="card_sankey">🔀 Flux Nationalité → Sexe → Âge</div>
-        <div id="statsSankey"></div>
+        <div class="card blk-wide" data-block="sankey">
+          <div class="card-titre" data-i18n="card_sankey">🔀 Flux Nationalité → Sexe → Âge</div>
+          <div id="statsSankey"></div>
+        </div>
       </div>
     </div>
 
@@ -722,15 +727,19 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
 </div>
 
-<!-- Modale : personnaliser les KPI (afficher/masquer + réordonner) -->
-<div class="modal-overlay" id="modalPerso" onclick="if(event.target===this)fermerPersoKpi()">
-  <div class="modal" style="max-width:420px">
-    <h2>🎛️ <span data-i18n="perso_title">Personnaliser les KPI</span></h2>
-    <p style="font-size:12px;color:var(--text2);margin:0 0 10px" data-i18n="perso_hint">Cochez et réordonnez les indicateurs de la vue Statistiques.</p>
-    <ul id="persoKpiList" class="perso-list"></ul>
+<!-- Modale : personnaliser l'affichage (KPI + blocs) — afficher/masquer + réordonner -->
+<div class="modal-overlay" id="modalPerso" onclick="if(event.target===this)fermerPerso()">
+  <div class="modal" style="max-width:440px">
+    <h2>🎛️ <span data-i18n="perso_title2">Personnaliser l'affichage</span></h2>
+    <div class="perso-tabs">
+      <button class="perso-tab actif" data-ptab="kpi" onclick="persoTab('kpi')" data-i18n="perso_tab_kpi">KPI</button>
+      <button class="perso-tab" data-ptab="blocs" onclick="persoTab('blocs')" data-i18n="perso_tab_blocs">Blocs d'analyse</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin:10px 0" id="persoHint"></p>
+    <ul id="persoList" class="perso-list"></ul>
     <div style="display:flex;justify-content:space-between;gap:8px;margin-top:14px">
-      <button class="lk-tab" onclick="resetPersoKpi()"><span data-i18n="perso_reset">↺ Réinitialiser</span></button>
-      <button class="lk-tab" onclick="fermerPersoKpi()"><span data-i18n="btn_close">Fermer</span></button>
+      <button class="lk-tab" onclick="resetPerso()"><span data-i18n="perso_reset">↺ Réinitialiser</span></button>
+      <button class="lk-tab" onclick="fermerPerso()"><span data-i18n="btn_close">Fermer</span></button>
     </div>
   </div>
 </div>
@@ -986,6 +995,11 @@ const I18N = {
   perso_title: { fr:"Personnaliser les KPI", nl:"KPI aanpassen", en:"Customize KPIs", de:"KPIs anpassen" },
   perso_hint: { fr:"Cochez et réordonnez les indicateurs de la vue Statistiques.", nl:"Vink aan en herschik de indicatoren van de Statistiek-weergave.", en:"Toggle and reorder the indicators of the Statistics view.", de:"Indikatoren der Statistik-Ansicht aus-/einblenden und neu ordnen." },
   perso_reset: { fr:"↺ Réinitialiser", nl:"↺ Herstellen", en:"↺ Reset", de:"↺ Zurücksetzen" },
+  perso_title2: { fr:"Personnaliser l'affichage", nl:"Weergave aanpassen", en:"Customize display", de:"Anzeige anpassen" },
+  perso_tab_kpi: { fr:"KPI", nl:"KPI", en:"KPIs", de:"KPIs" },
+  perso_tab_blocs: { fr:"Blocs d'analyse", nl:"Analyseblokken", en:"Analysis blocks", de:"Analyseblöcke" },
+  perso_hint_blocs: { fr:"Cochez et réordonnez les graphiques & tableaux de la vue Statistiques.", nl:"Vink aan en herschik de grafieken & tabellen van de Statistiek-weergave.", en:"Toggle and reorder the charts & tables of the Statistics view.", de:"Diagramme & Tabellen der Statistik-Ansicht aus-/einblenden und neu ordnen." },
+  btn_customize: { fr:"Personnaliser", nl:"Aanpassen", en:"Customize", de:"Anpassen" },
   card_nationalities: { fr:"🌍 Nationalités", nl:"🌍 Nationaliteiten", en:"🌍 Nationalities", de:"🌍 Nationalitäten" },
   hint_area_headcount: { fr:"(surface ∝ effectif)", nl:"(oppervlakte ∝ aantal)", en:"(area ∝ headcount)", de:"(Fläche ∝ Anzahl)" },
   card_by_continent: { fr:"🌐 Par continent", nl:"🌐 Per continent", en:"🌐 By continent", de:"🌐 Nach Kontinent" },
@@ -6685,24 +6699,47 @@ const KPI_DEFS = {
 const KPI_ALL = ['men', 'pop', 'size', 'age', 'h', 'f', 'cib', 'etr', 'min', 'med'];
 const KPI_ON_DEFAUT = ['men', 'pop', 'size', 'age', 'h', 'f'];   // affichés par défaut, dans cet ordre
 
-function getKpiCfg() {
+// Registre des blocs d'analyse (cartes de la vue Stats) — tous affichés par défaut.
+const BLOC_DEFS = {
+  nat:    { i18n: 'card_nationalities' },
+  cont:   { i18n: 'card_by_continent' },
+  eu:     { i18n: 'card_eu_noneu' },
+  mrtl:   { i18n: 'card_marital' },
+  sexe:   { i18n: 'card_gender' },
+  birth:  { i18n: 'card_birthplace' },
+  age:    { i18n: 'card_age_pyramid' },
+  size:   { i18n: 'card_household_dist' },
+  chh:    { i18n: 'card_targets_per_hh' },
+  compo:  { i18n: 'card_hh_composition' },
+  sankey: { i18n: 'card_sankey' },
+};
+const BLOC_ALL = ['nat', 'cont', 'eu', 'mrtl', 'sexe', 'birth', 'age', 'size', 'chh', 'compo', 'sankey'];
+
+// Registres exposés au panneau générique (config = liste ordonnée {id, on}).
+const PERSO = {
+  kpi:   { defs: KPI_DEFS,  all: KPI_ALL,  onDef: KPI_ON_DEFAUT, key: 'statbel_conv_kpi',   hint: 'perso_hint',       apply: () => renderKPIs(_kpiCtx) },
+  blocs: { defs: BLOC_DEFS, all: BLOC_ALL, onDef: BLOC_ALL,      key: 'statbel_conv_blocs', hint: 'perso_hint_blocs', apply: () => renderBlocsOrder() },
+};
+
+// Config générique (afficher/masquer + ordre), persistée par appareil.
+function getCfg(kind) {
+  const P = PERSO[kind];
   let saved = null;
-  try { saved = JSON.parse(localStorage.getItem('statbel_conv_kpi') || 'null'); } catch (e) { /* ignore */ }
-  if (!Array.isArray(saved) || !saved.length) {
-    return KPI_ALL.map(id => ({ id, on: KPI_ON_DEFAUT.includes(id) }));
-  }
-  const known = saved.filter(x => x && KPI_DEFS[x.id]).map(x => ({ id: x.id, on: !!x.on }));
+  try { saved = JSON.parse(localStorage.getItem(P.key) || 'null'); } catch (e) { /* ignore */ }
+  if (!Array.isArray(saved) || !saved.length) return P.all.map(id => ({ id, on: P.onDef.includes(id) }));
+  const known = saved.filter(x => x && P.defs[x.id]).map(x => ({ id: x.id, on: !!x.on }));
   const seen = new Set(known.map(x => x.id));
-  KPI_ALL.forEach(id => { if (!seen.has(id)) known.push({ id, on: false }); });   // nouveaux KPI → masqués
+  P.all.forEach(id => { if (!seen.has(id)) known.push({ id, on: P.onDef.includes(id) }); });   // futurs éléments → suivent le défaut
   return known;
 }
-function saveKpiCfg(cfg) { try { localStorage.setItem('statbel_conv_kpi', JSON.stringify(cfg)); } catch (e) { /* ignore */ } }
+function saveCfg(kind, cfg) { try { localStorage.setItem(PERSO[kind].key, JSON.stringify(cfg)); } catch (e) { /* ignore */ } }
+function getKpiCfg() { return getCfg('kpi'); }   // conservé pour les tests
 
 // Rend les tuiles KPI activées, dans l'ordre configuré, depuis le contexte c.
 function renderKPIs(c) {
   const grid = document.getElementById('kpiGrid');
   if (!grid) return;
-  grid.innerHTML = getKpiCfg().filter(x => x.on).map(({ id }) => {
+  grid.innerHTML = getCfg('kpi').filter(x => x.on).map(({ id }) => {
     const d = KPI_DEFS[id];
     const v = c ? d.val(c) : '—';
     const tint = d.tint ? ` style="color:${d.tint}"` : '';
@@ -6712,14 +6749,32 @@ function renderKPIs(c) {
   }).join('');
 }
 
-// Panneau « Personnaliser les KPI »
-function ouvrirPersoKpi() { renderPersoList(); document.getElementById('modalPerso').classList.add('open'); }
-function fermerPersoKpi() { document.getElementById('modalPerso').classList.remove('open'); }
+// Applique ordre + visibilité des blocs : réordonne les cartes, masque les autres.
+function renderBlocsOrder() {
+  const cont = document.getElementById('statsBlocks');
+  if (!cont) return;
+  getCfg('blocs').forEach(({ id, on }) => {
+    const card = cont.querySelector(`[data-block="${id}"]`);
+    if (!card) return;
+    card.style.display = on ? '' : 'none';
+    cont.appendChild(card);   // appendChild déplace en fin → réordonne dans l'ordre de la config
+  });
+}
+
+// Panneau « Personnaliser l'affichage » (onglets KPI / Blocs) — générique.
+let _persoKind = 'kpi';
+function ouvrirPerso() { persoTab(_persoKind); document.getElementById('modalPerso').classList.add('open'); }
+function fermerPerso() { document.getElementById('modalPerso').classList.remove('open'); }
+function persoTab(kind) {
+  _persoKind = kind;
+  document.querySelectorAll('.perso-tab').forEach(b => b.classList.toggle('actif', b.dataset.ptab === kind));
+  const h = document.getElementById('persoHint'); if (h) h.textContent = t(PERSO[kind].hint);
+  renderPersoList();
+}
 function renderPersoList() {
-  const ul = document.getElementById('persoKpiList');
-  const cfg = getKpiCfg();
-  ul.innerHTML = cfg.map((x, i) => {
-    const lb = escHtml(t(KPI_DEFS[x.id].i18n));
+  const P = PERSO[_persoKind], cfg = getCfg(_persoKind);
+  document.getElementById('persoList').innerHTML = cfg.map((x, i) => {
+    const lb = escHtml(t(P.defs[x.id].i18n));
     return `<li class="${x.on ? '' : 'off'}">`
       + `<input type="checkbox" ${x.on ? 'checked' : ''} onchange="persoToggle(${i})" aria-label="${lb}">`
       + `<span class="pl-lb">${lb}</span>`
@@ -6727,9 +6782,9 @@ function renderPersoList() {
       + `<button onclick="persoMove(${i},1)" ${i === cfg.length - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button></span></li>`;
   }).join('');
 }
-function persoToggle(i) { const cfg = getKpiCfg(); if (!cfg[i]) return; cfg[i].on = !cfg[i].on; saveKpiCfg(cfg); renderPersoList(); renderKPIs(_kpiCtx); }
-function persoMove(i, d) { const cfg = getKpiCfg(); const j = i + d; if (j < 0 || j >= cfg.length) return; [cfg[i], cfg[j]] = [cfg[j], cfg[i]]; saveKpiCfg(cfg); renderPersoList(); renderKPIs(_kpiCtx); }
-function resetPersoKpi() { saveKpiCfg(KPI_ALL.map(id => ({ id, on: KPI_ON_DEFAUT.includes(id) }))); renderPersoList(); renderKPIs(_kpiCtx); }
+function persoToggle(i) { const k = _persoKind, cfg = getCfg(k); if (!cfg[i]) return; cfg[i].on = !cfg[i].on; saveCfg(k, cfg); renderPersoList(); PERSO[k].apply(); }
+function persoMove(i, d) { const k = _persoKind, cfg = getCfg(k); const j = i + d; if (j < 0 || j >= cfg.length) return; [cfg[i], cfg[j]] = [cfg[j], cfg[i]]; saveCfg(k, cfg); renderPersoList(); PERSO[k].apply(); }
+function resetPerso() { const k = _persoKind, P = PERSO[k]; saveCfg(k, P.all.map(id => ({ id, on: P.onDef.includes(id) }))); renderPersoList(); P.apply(); }
 
 // (Re)calcule et affiche tous les graphiques selon la portée active :
 //  - 'referent' : la personne de contact (FL_MB_CNTCT=1), 1 par ménage
@@ -6762,6 +6817,7 @@ function majStats(res) {
     nbCibles15: res.outMembres.filter(r => { const a = parseInt(r.age, 10); return !isNaN(a) && a >= min; }).length,
   };
   renderKPIs(_kpiCtx);
+  renderBlocsOrder();   // applique l'ordre + la visibilité des blocs d'analyse
 
   // Nationalité (pays), continent, UE et état civil — ventilés par sexe (H/F)
   const sx = r => r.sexe === 'M' ? 'h' : r.sexe === 'F' ? 'f' : null;
@@ -7351,7 +7407,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '178';
+const APP_VERSION = '179';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

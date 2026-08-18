@@ -1,5 +1,5 @@
 /*
- * Test de non-régression — personnalisation des KPI du Convertisseur (PR a11y/perso A).
+ * Test de non-régression — personnalisation du Convertisseur (KPI + blocs d'analyse).
  *
  * Vérifie le registre KPI + la config perso (afficher/masquer + réordonner) :
  *  - rendu par défaut = 6 KPI dans l'ordre attendu ;
@@ -41,7 +41,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.nTiles = document.querySelectorAll('#kpiGrid .compteur').length;
 
     // Activer « % né·es à l'étranger » (etr) → apparaît + persiste
-    ouvrirPersoKpi();
+    ouvrirPerso();
     out.modalOpen = document.getElementById('modalPerso').classList.contains('open');
     const idxEtr = getKpiCfg().findIndex(x => x.id === 'etr');
     persoToggle(idxEtr);
@@ -58,8 +58,24 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.reordered = before[0] === after[1] && before[1] === after[0];
 
     // Réinitialiser → défaut
-    resetPersoKpi();
+    resetPerso();
     out.reset = getKpiCfg().filter(x => x.on).map(x => x.id).join(',');
+
+    // ── Blocs d'analyse ───────────────────────────────────────────────
+    localStorage.removeItem('statbel_conv_blocs');
+    persoTab('blocs');
+    out.blocDefaut = getCfg('blocs').length + '/' + getCfg('blocs').filter(x => x.on).length;   // 11/11 par défaut
+    // Masquer le bloc Sankey → carte cachée dans le DOM + persistée
+    const idxSankey = getCfg('blocs').findIndex(x => x.id === 'sankey');
+    persoToggle(idxSankey);
+    const sankeyCard = document.querySelector('#statsBlocks [data-block="sankey"]');
+    out.sankeyHidden = sankeyCard && sankeyCard.style.display === 'none';
+    out.blocPersisted = (JSON.parse(localStorage.getItem('statbel_conv_blocs')).find(x => x.id === 'sankey') || {}).on === false;
+    // Réordonner : monter le 2e bloc → l'ordre DOM suit
+    persoMove(1, -1);
+    const domOrder = [...document.querySelectorAll('#statsBlocks [data-block]')].map(el => el.getAttribute('data-block'));
+    const cfgOrder = getCfg('blocs').map(x => x.id);
+    out.blocDomMatchesCfg = JSON.stringify(domOrder) === JSON.stringify(cfgOrder);
     return out;
   });
 
@@ -71,6 +87,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(/%$/.test((r.etrValue || '').trim()), `KPI % né·es à l'étranger calculé → ${r.etrValue}`);
   A(r.reordered, 'réordonner (↑) échange bien les deux premiers KPI');
   A(r.reset === 'men,pop,size,age,h,f', 'Réinitialiser rétablit le défaut');
+  A(r.blocDefaut === '11/11', `blocs : 11 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
+  A(r.sankeyHidden && r.blocPersisted, 'masquer un bloc cache la carte (DOM) et persiste');
+  A(r.blocDomMatchesCfg, 'réordonner un bloc réordonne les cartes dans le DOM');
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
