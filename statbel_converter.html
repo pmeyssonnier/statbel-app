@@ -751,6 +751,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <button class="perso-tab actif" data-ptab="kpi" onclick="persoTab('kpi')" data-i18n="perso_tab_kpi">KPI</button>
       <button class="perso-tab" data-ptab="blocs" onclick="persoTab('blocs')" data-i18n="perso_tab_blocs">Blocs d'analyse</button>
       <button class="perso-tab" data-ptab="cols" onclick="persoTab('cols')" data-i18n="perso_tab_cols">Colonnes</button>
+      <button class="perso-tab" data-ptab="hh" onclick="persoTab('hh')" data-i18n="perso_tab_hh">Ménage</button>
     </div>
     <p style="font-size:12px;color:var(--text2);margin:10px 0" id="persoHint"></p>
     <ul id="persoList" class="perso-list"></ul>
@@ -1031,6 +1032,17 @@ const I18N = {
   perso_hint_blocs: { fr:"Cochez et réordonnez les graphiques & tableaux de la vue Statistiques.", nl:"Vink aan en herschik de grafieken & tabellen van de Statistiek-weergave.", en:"Toggle and reorder the charts & tables of the Statistics view.", de:"Diagramme & Tabellen der Statistik-Ansicht aus-/einblenden und neu ordnen." },
   perso_tab_cols: { fr:"Colonnes", nl:"Kolommen", en:"Columns", de:"Spalten" },
   perso_hint_cols: { fr:"Cochez et réordonnez les colonnes du tableau de l'Aperçu.", nl:"Vink aan en herschik de kolommen van de Overzicht-tabel.", en:"Toggle and reorder the columns of the Overview table.", de:"Spalten der Übersicht-Tabelle aus-/einblenden und neu ordnen." },
+  perso_tab_hh: { fr:"Ménage", nl:"Huishouden", en:"Household", de:"Haushalt" },
+  perso_hint_hh: { fr:"Cochez et réordonnez les colonnes du détail du ménage (accordéon).", nl:"Vink aan en herschik de kolommen van het huishouddetail (accordeon).", en:"Toggle and reorder the columns of the household detail (accordion).", de:"Spalten des Haushaltsdetails (Akkordeon) aus-/einblenden und neu ordnen." },
+  hh_firstname: { fr:"Prénom", nl:"Voornaam", en:"First name", de:"Vorname" },
+  hh_lastname: { fr:"Nom", nl:"Naam", en:"Last name", de:"Name" },
+  hh_age: { fr:"Âge", nl:"Leeftijd", en:"Age", de:"Alter" },
+  hh_birthdate: { fr:"Date de naissance", nl:"Geboortedatum", en:"Birth date", de:"Geburtsdatum" },
+  hh_gender: { fr:"Sexe", nl:"Geslacht", en:"Gender", de:"Geschlecht" },
+  hh_country_birth: { fr:"Pays de naissance", nl:"Geboorteland", en:"Country birth", de:"Geburtsland" },
+  hh_municipality_birth: { fr:"Commune de naissance", nl:"Geboortegemeente", en:"Municipality birth", de:"Geburtsgemeinde" },
+  hh_nationality: { fr:"Nationalité", nl:"Nationaliteit", en:"Nationality", de:"Staatsangehörigkeit" },
+  hh_marital: { fr:"État civil", nl:"Burgerlijke staat", en:"Marital status", de:"Familienstand" },
   col_num: { fr:"N° (ordre)", nl:"Nr. (volgorde)", en:"# (order)", de:"Nr. (Reihenfolge)" },
   btn_customize: { fr:"Personnaliser", nl:"Aanpassen", en:"Customize", de:"Anpassen" },
   menu_customize: { fr:"🎛️ Personnaliser l'affichage", nl:"🎛️ Weergave aanpassen", en:"🎛️ Customize display", de:"🎛️ Anzeige anpassen" },
@@ -6840,11 +6852,38 @@ const COL_DEFS = {
 };
 const COL_ALL = ['ordre', 'contact', 'adresse', 'gsm', 'email', 'menage'];
 
+// Colonnes du détail du ménage (accordéon déplié). Chaque cellule reçoit un
+// membre `m` ; drapeaux/icônes réutilisent paysDrapeau/sexeIcone/mrtlIcone.
+const HH_COL_DEFS = {
+  num:           { i18n: 'col_num',               th: '<th style="padding:3px 6px" data-i18n="col_num">#</th>',
+                   cell: m => `<td style="padding:3px 6px;text-align:center">${escHtml(m.nr_membre)}${m.fl_cntct === '1' ? ' ★' : ''}</td>` },
+  prenom:        { i18n: 'hh_firstname',           th: '<th style="text-align:left;padding:3px 6px" data-i18n="hh_firstname">First name</th>',
+                   cell: m => `<td style="padding:3px 6px">${escHtml(m.prenom)}</td>` },
+  nom:           { i18n: 'hh_lastname',            th: '<th style="text-align:left;padding:3px 6px" data-i18n="hh_lastname">Last name</th>',
+                   cell: m => `<td style="padding:3px 6px">${escHtml(m.nom)}</td>` },
+  age:           { i18n: 'hh_age',                 th: '<th style="padding:3px 6px" data-i18n="hh_age">Age</th>',
+                   cell: m => `<td style="padding:3px 6px;text-align:center">${escHtml(m.age)}</td>` },
+  birth_date:    { i18n: 'hh_birthdate',           th: '<th style="padding:3px 6px" data-i18n="hh_birthdate">Birth date</th>',
+                   cell: m => `<td style="padding:3px 6px;text-align:center;white-space:nowrap">${escHtml(m.birth_date) || '—'}</td>` },
+  sexe:          { i18n: 'hh_gender',              th: '<th style="padding:3px 6px" data-i18n="hh_gender">Gender</th>',
+                   cell: m => `<td style="padding:3px 6px;text-align:center">${sexeIcone(m.sexe)} ${escHtml(SEXE_LBL[m.sexe] || m.sexe)}</td>` },
+  birth_country: { i18n: 'hh_country_birth',       th: '<th style="padding:3px 6px" data-i18n="hh_country_birth">Country birth</th>',
+                   cell: m => `<td style="padding:3px 6px">${paysDrapeau(m.birth_country)}</td>` },
+  birth_commune: { i18n: 'hh_municipality_birth',  th: '<th style="text-align:left;padding:3px 6px" data-i18n="hh_municipality_birth">Municipality birth</th>',
+                   cell: m => `<td style="padding:3px 6px">${escHtml(m.birth_commune) || '—'}</td>` },
+  nationality:   { i18n: 'hh_nationality',         th: '<th style="padding:3px 6px" data-i18n="hh_nationality">Nationality</th>',
+                   cell: m => `<td style="padding:3px 6px">${paysDrapeau(m.nationality)}</td>` },
+  marital_status:{ i18n: 'hh_marital',             th: '<th style="text-align:left;padding:3px 6px" data-i18n="hh_marital">Marital status</th>',
+                   cell: m => `<td style="padding:3px 6px">${m.marital_status ? (mrtlIcone(m.marital_status) + ' ' + escHtml(m.marital_status)) : '—'}</td>` },
+};
+const HH_COL_ALL = ['num', 'prenom', 'nom', 'age', 'birth_date', 'sexe', 'birth_country', 'birth_commune', 'nationality', 'marital_status'];
+
 // Registres exposés au panneau générique (config = liste ordonnée {id, on}).
 const PERSO = {
-  kpi:   { defs: KPI_DEFS,  all: KPI_ALL,  onDef: KPI_ON_DEFAUT, key: 'statbel_conv_kpi',   hint: 'perso_hint',       apply: () => renderKPIs(_kpiCtx) },
-  blocs: { defs: BLOC_DEFS, all: BLOC_ALL, onDef: BLOC_ALL,      key: 'statbel_conv_blocs', hint: 'perso_hint_blocs', apply: () => renderBlocsOrder() },
-  cols:  { defs: COL_DEFS,  all: COL_ALL,  onDef: COL_ALL,       key: 'statbel_conv_cols',  hint: 'perso_hint_cols',  apply: () => rerenderCibles() },
+  kpi:   { defs: KPI_DEFS,     all: KPI_ALL,     onDef: KPI_ON_DEFAUT, key: 'statbel_conv_kpi',    hint: 'perso_hint',       apply: () => renderKPIs(_kpiCtx) },
+  blocs: { defs: BLOC_DEFS,    all: BLOC_ALL,    onDef: BLOC_ALL,      key: 'statbel_conv_blocs',  hint: 'perso_hint_blocs', apply: () => renderBlocsOrder() },
+  cols:  { defs: COL_DEFS,     all: COL_ALL,     onDef: COL_ALL,       key: 'statbel_conv_cols',   hint: 'perso_hint_cols',  apply: () => rerenderCibles() },
+  hh:    { defs: HH_COL_DEFS,  all: HH_COL_ALL,  onDef: HH_COL_ALL,    key: 'statbel_conv_hhcols', hint: 'perso_hint_hh',    apply: () => rerenderCibles() },
 };
 
 // Config générique (afficher/masquer + ordre), persistée par appareil.
@@ -7385,40 +7424,17 @@ function renderCibles(rows) {
       ${cellules}
     </tr>`;
 
+    const hhCols = getCfg('hh').filter(x => x.on).map(x => x.id);
+    const hhHead = hhCols.map(id => HH_COL_DEFS[id].th).join('');
     const sousLigne = `
     <tr id="men-${i}" style="display:none">
       <td colspan="${colspan}" style="padding:0;background:var(--card2)">
         <div style="padding:8px 12px">
           <div style="font-size:11px;color:var(--text2);margin-bottom:5px">👥 Household (${menage.length})</div>
           <table style="width:100%;border-collapse:collapse;font-size:11px">
-            <thead><tr style="color:var(--accent)">
-              <th style="padding:3px 6px">#</th>
-              <th style="text-align:left;padding:3px 6px">First name</th>
-              <th style="text-align:left;padding:3px 6px">Last name</th>
-              <th style="padding:3px 6px">Age</th>
-              <th style="padding:3px 6px">Birth date</th>
-              <th style="padding:3px 6px">Gender</th>
-              <th style="padding:3px 6px">Country birth</th>
-              <th style="text-align:left;padding:3px 6px">Municipality birth</th>
-              <th style="padding:3px 6px">Nationality</th>
-              <th style="text-align:left;padding:3px 6px">Marital status</th>
-            </tr></thead>
+            <thead><tr style="color:var(--accent)">${hhHead}</tr></thead>
             <tbody>
-              ${menage.map(m => {
-                const cible = m.fl_cntct === '1';
-                return `<tr${cible ? ' style="font-weight:bold;background:var(--hover)"' : ''}>
-                <td style="padding:3px 6px;text-align:center">${escHtml(m.nr_membre)}${cible ? ' ★' : ''}</td>
-                <td style="padding:3px 6px">${escHtml(m.prenom)}</td>
-                <td style="padding:3px 6px">${escHtml(m.nom)}</td>
-                <td style="padding:3px 6px;text-align:center">${escHtml(m.age)}</td>
-                <td style="padding:3px 6px;text-align:center;white-space:nowrap">${escHtml(m.birth_date) || '—'}</td>
-                <td style="padding:3px 6px;text-align:center">${sexeIcone(m.sexe)} ${escHtml(SEXE_LBL[m.sexe] || m.sexe)}</td>
-                <td style="padding:3px 6px">${paysDrapeau(m.birth_country)}</td>
-                <td style="padding:3px 6px">${escHtml(m.birth_commune) || '—'}</td>
-                <td style="padding:3px 6px">${paysDrapeau(m.nationality)}</td>
-                <td style="padding:3px 6px">${m.marital_status ? (mrtlIcone(m.marital_status) + ' ' + escHtml(m.marital_status)) : '—'}</td>
-              </tr>`;
-              }).join('')}
+              ${menage.map(m => `<tr${m.fl_cntct === '1' ? ' style="font-weight:bold;background:var(--hover)"' : ''}>${hhCols.map(id => HH_COL_DEFS[id].cell(m)).join('')}</tr>`).join('')}
             </tbody>
           </table>
         </div>
@@ -7617,7 +7633,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '190';
+const APP_VERSION = '191';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

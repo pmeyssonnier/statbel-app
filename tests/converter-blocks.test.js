@@ -82,6 +82,13 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.hhSexeM = hhHtml.includes('♂');
     out.hhSexeF = hhHtml.includes('♀');
     out.hhMrtl = hhHtml.includes('💍') && hhHtml.includes('🕊');
+    // Colonnes du ménage pilotées par la config : 10 par défaut, puis masquer en retire une
+    const hhHeadRow = () => document.querySelector('#bodyCibles tr[id^="men-"] thead tr');
+    out.hhColsDef = hhHeadRow() ? hhHeadRow().children.length : 0;
+    const cfgHh = getCfg('hh'); const mi = cfgHh.findIndex(x => x.id === 'marital_status');
+    cfgHh[mi].on = false; saveCfg('hh', cfgHh); rerenderCibles();
+    out.hhColsHidden = hhHeadRow() ? hhHeadRow().children.length : 0;
+    cfgHh[mi].on = true; saveCfg('hh', cfgHh); rerenderCibles();   // restaure
     // Tables de correspondance (Lookup) : drapeau pays + icônes sexe/état civil
     if (typeof ouvrirParametres === 'function') {
       try {
@@ -110,6 +117,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.hhFlagBE && r.hhFlagTR, 'table ménage : drapeaux pays (🇧🇪 / 🇹🇷) devant naissance/nationalité');
   A(r.hhSexeM && r.hhSexeF, 'table ménage : icônes de sexe ♂ / ♀');
   A(r.hhMrtl, 'table ménage : emoji d\'état civil (💍 / 🕊)');
+  A(r.hhColsDef === 10 && r.hhColsHidden === 9, `colonnes du ménage pilotées par la config (10 → 9 après masquage) → ${r.hhColsDef}/${r.hhColsHidden}`);
   A(r.lookupFlag && !r.lookupErr, 'table de correspondance Pays : drapeau devant le nom' + (r.lookupErr ? ' → ' + r.lookupErr : ''));
   A(r.lookupSexe, 'table de correspondance Sexe : icônes ♂ / ♀');
   A(r.lookupMrtl, 'table de correspondance État civil : emoji (💍 / 🕊)');

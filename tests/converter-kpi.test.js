@@ -99,6 +99,22 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     persoMove(1, -1);
     const firstDataTh = document.querySelectorAll('#tableCibles thead th')[1];
     out.firstColAfterReorder = firstDataTh ? firstDataTh.getAttribute('data-col') : null;   // 'prenom'
+
+    // ── Colonnes du détail du ménage (accordéon) ─────────────────────
+    localStorage.removeItem('statbel_conv_hhcols');
+    persoTab('hh');
+    out.hhDefaut = getCfg('hh').length + '/' + getCfg('hh').filter(x => x.on).length;   // 10/10
+    // Masquer « État civil » → persiste
+    const idxMrtl = getCfg('hh').findIndex(x => x.id === 'marital_status');
+    persoToggle(idxMrtl);
+    out.hhPersisted = (JSON.parse(localStorage.getItem('statbel_conv_hhcols')).find(x => x.id === 'marital_status') || {}).on === false;
+    // Réordonner : monter la 2e colonne (prénom) devant le # → l'ordre config suit
+    const hhBefore = getCfg('hh').map(x => x.id);
+    persoMove(1, -1);
+    const hhAfter = getCfg('hh').map(x => x.id);
+    out.hhReordered = hhBefore[0] === hhAfter[1] && hhBefore[1] === hhAfter[0];
+    resetPerso();
+    out.hhReset = getCfg('hh').length + '/' + getCfg('hh').filter(x => x.on).length;   // 10/10
     return out;
   });
 
@@ -120,6 +136,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.headDefault === 7, `en-tête par défaut = 1 (expansion) + 6 colonnes → ${r.headDefault} th`);
   A(r.headAfterHide === 6 && r.gsmGone && r.colPersisted, 'masquer une colonne retire le th et persiste');
   A(r.firstColAfterReorder === 'prenom', `réordonner met Contact en 1re colonne → data-col="${r.firstColAfterReorder}"`);
+  A(r.hhDefaut === '10/10', `colonnes ménage : 10, toutes affichées par défaut → ${r.hhDefaut}`);
+  A(r.hhPersisted, 'masquer une colonne du ménage persiste (localStorage)');
+  A(r.hhReordered, 'réordonner (↑) échange les deux premières colonnes du ménage');
+  A(r.hhReset === '10/10', `Réinitialiser rétablit les 10 colonnes du ménage → ${r.hhReset}`);
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
