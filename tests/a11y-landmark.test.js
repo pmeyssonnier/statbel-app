@@ -50,8 +50,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // Caché hors écran par défaut, révélé au focus
     const avant = skip.getBoundingClientRect();
     out.hiddenByDefault = avant.bottom <= 0;   // translaté vers le haut hors écran
+    // On vérifie l'ÉTAT révélé (transform final appliqué par `.skip-link:focus`),
+    // pas la progression de l'animation. La transition `.15s` est pilotée par le
+    // compositeur : en headless (page souvent `visibilityState:'hidden'`) elle
+    // peut être throttlée alors que setTimeout continue de tirer à l'heure — une
+    // mesure à délai fixe lit alors le rect avant la fin de la transition (faux
+    // négatif intermittent en CI). On neutralise la transition → mesure du seul
+    // état de repos `:focus`, déterministe.
+    skip.style.transition = 'none';
     skip.focus();
-    await new Promise(res => setTimeout(res, 300)); // laisse la transition (.15s) finir
     const apres = skip.getBoundingClientRect();
     out.visibleOnFocus = apres.top >= 0 && apres.bottom > 0;
 
