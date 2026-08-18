@@ -1047,8 +1047,8 @@ const I18N = {
   card_targets_per_hh: { fr:"🎯 Personnes à interroger par ménage", nl:"🎯 Te ondervragen personen per huishouden", en:"🎯 Persons to survey per household", de:"🎯 Zu befragende Personen pro Haushalt" },
   card_targets_per_hh_dyn: { fr:"🎯 Personnes à interroger (≥{n}) par ménage", nl:"🎯 Te ondervragen personen (≥{n}) per huishouden", en:"🎯 Persons to survey (≥{n}) per household", de:"🎯 Zu befragende Personen (≥{n}) pro Haushalt" },
   card_hh_composition: { fr:"🏠 Composition des ménages", nl:"🏠 Samenstelling huishoudens", en:"🏠 Household composition", de:"🏠 Haushaltszusammensetzung" },
-  word_targets_unit: { fr:"cible(s)", nl:"doelp.", en:"target(s)", de:"Ziel(e)" },
-  word_targets_per_hh_unit: { fr:"cible(s)/ménage", nl:"doelp./huishouden", en:"targets/hh", de:"Ziele/HH" },
+  word_targets_unit: { fr:"personne(s) à interroger", nl:"te ondervragen pers.", en:"person(s) to survey", de:"zu befragende Pers." },
+  word_targets_per_hh_unit: { fr:"à interroger/ménage", nl:"te ondervragen/huish.", en:"to survey/hh", de:"zu befragen/HH" },
   lbl_hh_mono: { fr:"Mono-personne", nl:"Eenpersoons", en:"Single-person", de:"Einpersonen" },
   lbl_hh_with_minor: { fr:"Multi, avec mineur", nl:"Multi, met minderjarige", en:"Multi, with minor", de:"Multi, mit Minderj." },
   lbl_hh_no_minor: { fr:"Multi, sans mineur", nl:"Multi, zonder minderj.", en:"Multi, no minor", de:"Multi, ohne Minderj." },
@@ -7591,7 +7591,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '187';
+const APP_VERSION = '188';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
