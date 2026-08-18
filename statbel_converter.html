@@ -896,7 +896,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 //   NORMALISATION   dates, adresses, décodage REFNIS/pays/état civil      → « RÉGION — NORMALISATION »
 //   CONVERSION      GRP → cibles/membres                   → « CONVERSION PRINCIPALE »
 //   AFFICHAGE/UI    onglets, sources, apparence, rapport   → « AFFICHAGE » / « ONGLETS »
-//   TABLES          tables triables + tableau Aperçu/ménage → « TABLES DE CORRESPONDANCE » / « TRI »
+//   TABLES          tables triables + tableau Aperçu/ménage → « RÉGION — TABLES »
 //   CHARTS          barres / donut / treemap / pyramide / Sankey → « RÉGION — CHARTS »
 //   ANALYTICS       majStats + BLOC_DEFS + renderers        → « STATISTIQUES »
 //   PERSONNALISATION registres PERSO (KPI/blocs/colonnes)   → « KPI — registre »
@@ -5406,7 +5406,7 @@ function afficher(res) {
 // ════════════════════════════════════════════════════════════════════════
 
 // ════════════════════════════════════════════════════════════════════════
-//  TABLES DE CORRESPONDANCE (écran paramètres)
+//  RÉGION — TABLES · tables de correspondance (lookup Pays/Communes, écran paramètres)
 // ════════════════════════════════════════════════════════════════════════
 
 // ── Tables de correspondance triables ───────────────────────────────────
@@ -7012,26 +7012,6 @@ function masquerBloc(id) {
   if (document.getElementById('modalPerso').classList.contains('open') && _persoTab === 'blocs') renderPersoList();
 }
 
-// En-tête du tableau de contacts : colonne d'expansion (fixe) + colonnes activées,
-// dans l'ordre configuré. Réapplique l'indicateur de tri courant.
-function renderCiblesHead() {
-  const tr = document.querySelector('#tableCibles thead tr');
-  if (!tr) return;
-  const ths = getCfg('cols').filter(x => x.on).map(({ id }) => COL_DEFS[id].th).join('');
-  tr.innerHTML = '<th style="width:22px"></th>' + ths;
-  const st = _sortState.cibles;
-  if (st && st.col) {
-    const t = tr.querySelector(`th.sortable[data-col="${st.col}"]`);
-    if (t) t.classList.add(st.dir === 1 ? 'asc' : 'desc');
-  }
-}
-// Re-rend le tableau de contacts avec le tri courant (après changement de colonnes).
-function rerenderCibles() {
-  if (!_resultat) { renderCiblesHead(); return; }
-  const st = _sortState.cibles;
-  renderCibles(st && st.col ? sortRows(_resultat.outCibles, st.col, st.dir) : _resultat.outCibles);
-}
-
 // Panneau « Personnaliser l'affichage » — onglets KPI / Blocs / Colonnes.
 // Un onglet regroupe un ou plusieurs registres (« kinds ») ; l'onglet Colonnes
 // réunit les colonnes de l'Aperçu et celles du détail du ménage en sous-groupes.
@@ -7522,10 +7502,31 @@ function renderBirthDrill() {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-//  TRI
+//  RÉGION — TABLES · table Aperçu / ménage (rendu, tri, accordéon ménage)
+//  Registres de colonnes COL_DEFS/HH_COL_DEFS : voir PERSONNALISATION (PERSO s'en sert).
 // ════════════════════════════════════════════════════════════════════════
 
 let _sortState = { cibles: { col: null, dir: 1 }, membres: { col: null, dir: 1 } };
+
+// En-tête du tableau de contacts : colonne d'expansion (fixe) + colonnes activées,
+// dans l'ordre configuré. Réapplique l'indicateur de tri courant.
+function renderCiblesHead() {
+  const tr = document.querySelector('#tableCibles thead tr');
+  if (!tr) return;
+  const ths = getCfg('cols').filter(x => x.on).map(({ id }) => COL_DEFS[id].th).join('');
+  tr.innerHTML = '<th style="width:22px"></th>' + ths;
+  const st = _sortState.cibles;
+  if (st && st.col) {
+    const t = tr.querySelector(`th.sortable[data-col="${st.col}"]`);
+    if (t) t.classList.add(st.dir === 1 ? 'asc' : 'desc');
+  }
+}
+// Re-rend le tableau de contacts avec le tri courant (après changement de colonnes).
+function rerenderCibles() {
+  if (!_resultat) { renderCiblesHead(); return; }
+  const st = _sortState.cibles;
+  renderCibles(st && st.col ? sortRows(_resultat.outCibles, st.col, st.dir) : _resultat.outCibles);
+}
 
 function sortRows(rows, col, dir) {
   return [...rows].sort((a, b) => {
@@ -7772,7 +7773,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '205';
+const APP_VERSION = '206';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
