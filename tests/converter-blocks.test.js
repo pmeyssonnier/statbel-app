@@ -68,6 +68,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // « Personnes à interroger (≥N) par ménage » : titre dynamique + drill-down
     out.chhTitle = document.getElementById('titreCiblesHH').textContent;
     out.chhClickable = !!document.querySelector('#statsCiblesHH .bar-row[onclick]');
+    out.chhBarLabel = (document.querySelector('#statsCiblesHH .bar-lbl') || {}).textContent || '';
     zoomCibles('1');
     out.chhDrill = !!document.getElementById('statsCiblesHHTM')
       && document.getElementById('statsCiblesHHDetail').innerHTML.length > 0;
@@ -84,6 +85,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.contactBars === 3, `complétude des contacts : 3 barres → ${r.contactBars}`);
   A(/≥15/.test(r.chhTitle || '') && /interroger|survey|ondervragen|befragende/i.test(r.chhTitle || ''), `titre « à interroger » avec seuil dynamique → « ${r.chhTitle} »`);
   A(r.chhClickable && r.chhDrill, 'barres « à interroger » cliquables → treemap des nationalités');
+  A(/interroger|survey|ondervragen|befragende/i.test(r.chhBarLabel) && !/cible|target/i.test(r.chhBarLabel), `libellé de barre « à interroger » (plus « cible ») → « ${r.chhBarLabel} »`);
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
