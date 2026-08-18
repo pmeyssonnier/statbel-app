@@ -1,0 +1,85 @@
+/*
+ * Test de non-régression — blocs d'analyse pilotés par majStats (Convertisseur).
+ *
+ * On construit un petit résultat SYNTHÉTIQUE (données factices, aucune donnée
+ * réelle) et on appelle majStats() pour exercer le rendu réel des blocs récents :
+ *  - Tranches d'âge : 5 barres, cliquables → drill-down treemap des nationalités ;
+ *  - Ratio de dépendance : donut + ligne « ratio » ;
+ *  - Complétude des contacts : barres téléphone/email/joignable ;
+ *  - titre « Tranches d'âge » sans « LFS ».
+ *
+ * Lancer :  CHROMIUM_PATH=… node tests/converter-blocks.test.js
+ */
+const { chromium } = require('playwright-core');
+const { serve } = require('./_serve');
+
+const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/usr/bin/chromium';
+let fails = 0;
+const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg); } else console.log('✓ ' + msg); };
+
+(async () => {
+  const srv = await serve();
+  const b = await chromium.launch({ executablePath: EXEC, args: ['--no-sandbox'] });
+  const p = await b.newPage();
+  const errs = [];
+  p.on('pageerror', e => errs.push(e.message));
+  await p.goto(srv.url + '/statbel_converter.html', { waitUntil: 'load' });
+  await p.waitForTimeout(250);
+
+  const r = await p.evaluate(() => {
+    const out = {};
+    const mk = (hh, mb, cn, sexe, age, nat, gsm, email) => ({
+      nr_hh: hh, nr_membre: mb, fl_cntct: cn, ordre: hh, prenom: 'T', nom: 'X', adresse: 'R 1, 1000',
+      sexe, age: String(age), nationality: nat, birth_country: 'BEL', birth_commune: 'BXL', birth_region: 'BRU',
+      marital_status: '1', gsm: gsm || '', email: email || '', taille_menage: '2', nb_cibles: '1',
+    });
+    // 2 ménages : 2 mineurs (10, 12), 1 âgé implicite non → adultes 40/30 ; 1 tél, 1 mail
+    const membres = [
+      mk('1', '1', '1', 'M', 10, 'BEL', '+32470', ''),
+      mk('1', '2', '0', 'F', 40, 'FRA', '', ''),
+      mk('2', '1', '1', 'F', 70, 'TUR', '', 'a@b.be'),
+      mk('2', '2', '0', 'M', 30, 'BEL', '', ''),
+    ];
+    const res = {
+      outMembres: membres, outCibles: membres.filter(m => m.fl_cntct === '1'),
+      tailleHH: { '1': 2, '2': 2 }, srcRows: membres,
+      adminCols: { NR_YEAR: '2026', NR_WAVE: '1', NR_SEQ: '1', NR_REF_WK: '36', NR_GRP: '12305' },
+      grpId: '2026-12305', localisation: 'TEST',
+    };
+    window._resultat = res;
+    if (typeof statsScope !== 'undefined') statsScope = 'membres';
+    try { majStats(res); } catch (e) { out.threw = String((e && e.message) || e); return out; }
+
+    out.ageBars = document.querySelectorAll('#statsAgeLFS .bar-row').length;
+    out.ageClickable = !!document.querySelector('#statsAgeLFS .bar-row[onclick]');
+    out.titreSansLFS = !/LFS/.test(document.querySelector('[data-block="ageLFS"] .card-titre').textContent);
+    // Drill-down : clic sur la tranche 0–14 → treemap nationalités
+    zoomAgeLFS('0_14');
+    out.drillTreemap = !!document.getElementById('statsAgeLFSTM')
+      && document.getElementById('statsAgeLFSDetail').innerHTML.length > 0;
+    // Fermeture du drill
+    document.getElementById('statsAgeLFSDetail').innerHTML = '';
+    out.drillClosed = document.getElementById('statsAgeLFSDetail').innerHTML === '';
+    // Ratio de dépendance : 2 dépendants (10, 70) / 2 actifs (40, 30) = 100 %
+    out.dependRatio = document.getElementById('statsDependDetail').textContent;
+    out.dependDonut = document.getElementById('statsDepend').innerHTML.length > 0;
+    // Complétude : 3 barres
+    out.contactBars = document.querySelectorAll('#statsContact .bar-row').length;
+    return out;
+  });
+
+  A(!r.threw, 'majStats() ne lève pas d\'erreur' + (r.threw ? ' → ' + r.threw : ''));
+  A(r.ageBars === 5, `tranches d'âge : 5 barres → ${r.ageBars}`);
+  A(r.ageClickable, 'barres de tranches d\'âge cliquables (drill-down)');
+  A(r.titreSansLFS, 'titre « Tranches d\'âge » sans « LFS »');
+  A(r.drillTreemap, 'clic sur une tranche → treemap des nationalités');
+  A(r.drillClosed, 'fermeture du drill-down (✕) vide le détail');
+  A(/100/.test(r.dependRatio || '') && r.dependDonut, `ratio de dépendance = 100 % → « ${r.dependRatio} »`);
+  A(r.contactBars === 3, `complétude des contacts : 3 barres → ${r.contactBars}`);
+  A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
+
+  await b.close();
+  await srv.close();
+  console.log(fails ? `\nÉCHEC (${fails})` : '\nTOUS LES TESTS PASSENT');
+  process.exit(fails ? 1 : 0);
+})();
