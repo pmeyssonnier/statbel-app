@@ -198,6 +198,9 @@
   .perso-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 52vh; overflow-y: auto; }
   .perso-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; }
   .perso-list li.off { opacity: .55; }
+  .perso-list li.perso-sub { border: none; padding: 8px 2px 2px; font-size: 11px; font-weight: bold;
+    text-transform: uppercase; letter-spacing: .5px; color: var(--text2); opacity: 1; }
+  .perso-list li.perso-sub:first-child { padding-top: 0; }
   .perso-list input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--bleu); flex: 0 0 auto; }
   .perso-list .pl-lb { flex: 1; font-size: 13px; min-width: 0; }
   .perso-list .pl-mv { display: flex; gap: 3px; flex: 0 0 auto; }
@@ -763,7 +766,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <button class="perso-tab actif" data-ptab="kpi" onclick="persoTab('kpi')" data-i18n="perso_tab_kpi">KPI</button>
       <button class="perso-tab" data-ptab="blocs" onclick="persoTab('blocs')" data-i18n="perso_tab_blocs">Blocs d'analyse</button>
       <button class="perso-tab" data-ptab="cols" onclick="persoTab('cols')" data-i18n="perso_tab_cols">Colonnes</button>
-      <button class="perso-tab" data-ptab="hh" onclick="persoTab('hh')" data-i18n="perso_tab_hh">Ménage</button>
     </div>
     <p style="font-size:12px;color:var(--text2);margin:10px 0" id="persoHint"></p>
     <ul id="persoList" class="perso-list"></ul>
@@ -1046,6 +1048,9 @@ const I18N = {
   perso_hint_cols: { fr:"Cochez et réordonnez les colonnes du tableau de l'Aperçu.", nl:"Vink aan en herschik de kolommen van de Overzicht-tabel.", en:"Toggle and reorder the columns of the Overview table.", de:"Spalten der Übersicht-Tabelle aus-/einblenden und neu ordnen." },
   perso_tab_hh: { fr:"Ménage", nl:"Huishouden", en:"Household", de:"Haushalt" },
   perso_hint_hh: { fr:"Cochez et réordonnez les colonnes du détail du ménage (accordéon).", nl:"Vink aan en herschik de kolommen van het huishouddetail (accordeon).", en:"Toggle and reorder the columns of the household detail (accordion).", de:"Spalten des Haushaltsdetails (Akkordeon) aus-/einblenden und neu ordnen." },
+  perso_hint_cols_group: { fr:"Cochez et réordonnez les colonnes du tableau de l'Aperçu et du détail du ménage (accordéon).", nl:"Vink aan en herschik de kolommen van de Overzicht-tabel en van het huishouddetail (accordeon).", en:"Toggle and reorder the columns of the Overview table and of the household detail (accordion).", de:"Spalten der Übersicht-Tabelle und des Haushaltsdetails (Akkordeon) aus-/einblenden und neu ordnen." },
+  perso_sub_apercu: { fr:"Tableau (Aperçu)", nl:"Tabel (Overzicht)", en:"Table (Overview)", de:"Tabelle (Übersicht)" },
+  perso_sub_menage: { fr:"Détail du ménage (accordéon)", nl:"Huishouddetail (accordeon)", en:"Household detail (accordion)", de:"Haushaltsdetail (Akkordeon)" },
   hh_firstname: { fr:"Prénom", nl:"Voornaam", en:"First name", de:"Vorname" },
   hh_lastname: { fr:"Nom", nl:"Naam", en:"Last name", de:"Name" },
   hh_age: { fr:"Âge", nl:"Leeftijd", en:"Age", de:"Alter" },
@@ -6950,8 +6955,8 @@ const HH_COL_ALL = ['num', 'prenom', 'nom', 'age', 'birth_date', 'sexe', 'birth_
 const PERSO = {
   kpi:   { defs: KPI_DEFS,     all: KPI_ALL,     onDef: KPI_ON_DEFAUT, key: 'statbel_conv_kpi',    hint: 'perso_hint',       apply: () => renderKPIs(_kpiCtx) },
   blocs: { defs: BLOC_DEFS,    all: BLOC_ALL,    onDef: BLOC_ALL,      key: 'statbel_conv_blocs',  hint: 'perso_hint_blocs', apply: () => renderBlocsOrder() },
-  cols:  { defs: COL_DEFS,     all: COL_ALL,     onDef: COL_ALL,       key: 'statbel_conv_cols',   hint: 'perso_hint_cols',  apply: () => rerenderCibles() },
-  hh:    { defs: HH_COL_DEFS,  all: HH_COL_ALL,  onDef: HH_COL_ALL,    key: 'statbel_conv_hhcols', hint: 'perso_hint_hh',    apply: () => rerenderCibles() },
+  cols:  { defs: COL_DEFS,     all: COL_ALL,     onDef: COL_ALL,       key: 'statbel_conv_cols',   hint: 'perso_hint_cols',  sub: 'perso_sub_apercu',  apply: () => rerenderCibles() },
+  hh:    { defs: HH_COL_DEFS,  all: HH_COL_ALL,  onDef: HH_COL_ALL,    key: 'statbel_conv_hhcols', hint: 'perso_hint_hh',    sub: 'perso_sub_menage',  apply: () => rerenderCibles() },
 };
 
 // Config générique (afficher/masquer + ordre), persistée par appareil.
@@ -7027,7 +7032,7 @@ function masquerBloc(id) {
   it.on = false;
   saveCfg('blocs', cfg);
   renderBlocsOrder();
-  if (document.getElementById('modalPerso').classList.contains('open') && _persoKind === 'blocs') renderPersoList();
+  if (document.getElementById('modalPerso').classList.contains('open') && _persoTab === 'blocs') renderPersoList();
 }
 
 // En-tête du tableau de contacts : colonne d'expansion (fixe) + colonnes activées,
@@ -7050,30 +7055,41 @@ function rerenderCibles() {
   renderCibles(st && st.col ? sortRows(_resultat.outCibles, st.col, st.dir) : _resultat.outCibles);
 }
 
-// Panneau « Personnaliser l'affichage » (onglets KPI / Blocs) — générique.
-let _persoKind = 'kpi';
-function ouvrirPerso() { persoTab(_persoKind); document.getElementById('modalPerso').classList.add('open'); }
+// Panneau « Personnaliser l'affichage » — onglets KPI / Blocs / Colonnes.
+// Un onglet regroupe un ou plusieurs registres (« kinds ») ; l'onglet Colonnes
+// réunit les colonnes de l'Aperçu et celles du détail du ménage en sous-groupes.
+const PERSO_GROUPS = { kpi: ['kpi'], blocs: ['blocs'], cols: ['cols', 'hh'] };
+const PERSO_HINT   = { kpi: 'perso_hint', blocs: 'perso_hint_blocs', cols: 'perso_hint_cols_group' };
+let _persoTab = 'kpi';
+function ouvrirPerso() { persoTab(_persoTab); document.getElementById('modalPerso').classList.add('open'); }
 function fermerPerso() { document.getElementById('modalPerso').classList.remove('open'); }
-function persoTab(kind) {
-  _persoKind = kind;
-  document.querySelectorAll('.perso-tab').forEach(b => b.classList.toggle('actif', b.dataset.ptab === kind));
-  const h = document.getElementById('persoHint'); if (h) h.textContent = t(PERSO[kind].hint);
+function persoTab(tab) {
+  if (!PERSO_GROUPS[tab]) tab = 'kpi';
+  _persoTab = tab;
+  document.querySelectorAll('.perso-tab').forEach(b => b.classList.toggle('actif', b.dataset.ptab === tab));
+  const h = document.getElementById('persoHint'); if (h) h.textContent = t(PERSO_HINT[tab]);
   renderPersoList();
 }
 function renderPersoList() {
-  const P = PERSO[_persoKind], cfg = getCfg(_persoKind);
-  document.getElementById('persoList').innerHTML = cfg.map((x, i) => {
-    const lb = escHtml(persoLabel(P.defs[x.id]));
-    return `<li class="${x.on ? '' : 'off'}">`
-      + `<input type="checkbox" ${x.on ? 'checked' : ''} onchange="persoToggle(${i})" aria-label="${lb}">`
-      + `<span class="pl-lb">${lb}</span>`
-      + `<span class="pl-mv"><button onclick="persoMove(${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>`
-      + `<button onclick="persoMove(${i},1)" ${i === cfg.length - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button></span></li>`;
+  const kinds = PERSO_GROUPS[_persoTab] || [_persoTab];
+  const grouped = kinds.length > 1;   // affiche un sous-titre par registre si l'onglet en regroupe plusieurs
+  document.getElementById('persoList').innerHTML = kinds.map(kind => {
+    const P = PERSO[kind], cfg = getCfg(kind);
+    const rows = cfg.map((x, i) => {
+      const lb = escHtml(persoLabel(P.defs[x.id]));
+      return `<li class="${x.on ? '' : 'off'}">`
+        + `<input type="checkbox" ${x.on ? 'checked' : ''} onchange="persoToggle('${kind}',${i})" aria-label="${lb}">`
+        + `<span class="pl-lb">${lb}</span>`
+        + `<span class="pl-mv"><button onclick="persoMove('${kind}',${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>`
+        + `<button onclick="persoMove('${kind}',${i},1)" ${i === cfg.length - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button></span></li>`;
+    }).join('');
+    return (grouped && P.sub ? `<li class="perso-sub">${escHtml(t(P.sub))}</li>` : '') + rows;
   }).join('');
 }
-function persoToggle(i) { const k = _persoKind, cfg = getCfg(k); if (!cfg[i]) return; cfg[i].on = !cfg[i].on; saveCfg(k, cfg); renderPersoList(); PERSO[k].apply(); }
-function persoMove(i, d) { const k = _persoKind, cfg = getCfg(k); const j = i + d; if (j < 0 || j >= cfg.length) return; [cfg[i], cfg[j]] = [cfg[j], cfg[i]]; saveCfg(k, cfg); renderPersoList(); PERSO[k].apply(); }
-function resetPerso() { const k = _persoKind, P = PERSO[k]; saveCfg(k, P.all.map(id => ({ id, on: P.onDef.includes(id) }))); renderPersoList(); P.apply(); }
+function persoToggle(kind, i) { const cfg = getCfg(kind); if (!cfg[i]) return; cfg[i].on = !cfg[i].on; saveCfg(kind, cfg); renderPersoList(); PERSO[kind].apply(); }
+function persoMove(kind, i, d) { const cfg = getCfg(kind); const j = i + d; if (j < 0 || j >= cfg.length) return; [cfg[i], cfg[j]] = [cfg[j], cfg[i]]; saveCfg(kind, cfg); renderPersoList(); PERSO[kind].apply(); }
+// Réinitialise tous les registres de l'onglet courant (l'onglet Colonnes réinitialise Aperçu + Ménage).
+function resetPerso() { (PERSO_GROUPS[_persoTab] || [_persoTab]).forEach(kind => { const P = PERSO[kind]; saveCfg(kind, P.all.map(id => ({ id, on: P.onDef.includes(id) }))); PERSO[kind].apply(); }); renderPersoList(); }
 
 // (Re)calcule et affiche tous les graphiques selon la portée active :
 //  - 'referent' : la personne de contact (FL_MB_CNTCT=1), 1 par ménage
@@ -7627,7 +7643,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '193';
+const APP_VERSION = '194';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

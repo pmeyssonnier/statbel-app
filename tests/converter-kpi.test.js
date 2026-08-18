@@ -46,7 +46,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     ouvrirPerso();
     out.modalOpen = document.getElementById('modalPerso').classList.contains('open');
     const idxEtr = getKpiCfg().findIndex(x => x.id === 'etr');
-    persoToggle(idxEtr);
+    persoToggle('kpi', idxEtr);
     out.etrShown = [...document.querySelectorAll('#kpiGrid .label')].some(e => e.getAttribute('data-i18n') === 'kpi_pct_foreign');
     out.etrPersisted = (JSON.parse(localStorage.getItem('statbel_conv_kpi')).find(x => x.id === 'etr') || {}).on === true;
     out.etrValue = [...document.querySelectorAll('#kpiGrid .compteur')]
@@ -55,7 +55,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
 
     // Réordonner : monter le 2e KPI en 1re position
     const before = getKpiCfg().map(x => x.id);
-    persoMove(1, -1);
+    persoMove('kpi', 1, -1);
     const after = getKpiCfg().map(x => x.id);
     out.reordered = before[0] === after[1] && before[1] === after[0];
 
@@ -73,12 +73,12 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.minLabel16 = KPI_DEFS.min.dyn();   // « % mineurs (<16) » — suit aussi l'âge cible
     // Masquer le bloc Sankey → carte cachée dans le DOM + persistée
     const idxSankey = getCfg('blocs').findIndex(x => x.id === 'sankey');
-    persoToggle(idxSankey);
+    persoToggle('blocs', idxSankey);
     const sankeyCard = document.querySelector('#statsBlocks [data-block="sankey"]');
     out.sankeyHidden = sankeyCard && sankeyCard.style.display === 'none';
     out.blocPersisted = (JSON.parse(localStorage.getItem('statbel_conv_blocs')).find(x => x.id === 'sankey') || {}).on === false;
     // Réordonner : monter le 2e bloc → l'ordre DOM suit
-    persoMove(1, -1);
+    persoMove('blocs', 1, -1);
     const domOrder = [...document.querySelectorAll('#statsBlocks [data-block]')].map(el => el.getAttribute('data-block'));
     const cfgOrder = getCfg('blocs').map(x => x.id);
     out.blocDomMatchesCfg = JSON.stringify(domOrder) === JSON.stringify(cfgOrder);
@@ -98,26 +98,28 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.headDefault = document.querySelectorAll('#tableCibles thead th').length;   // 1 expansion + 6
     // Masquer la colonne Téléphone (gsm) → th absent + persiste
     const idxGsm = getCfg('cols').findIndex(x => x.id === 'gsm');
-    persoToggle(idxGsm);   // apply → rerenderCibles → renderCiblesHead
+    persoToggle('cols', idxGsm);   // apply → rerenderCibles → renderCiblesHead
     out.headAfterHide = document.querySelectorAll('#tableCibles thead th').length;   // 6
     out.gsmGone = !document.querySelector('#tableCibles thead th[data-i18n="th_phone"]');
     out.colPersisted = (JSON.parse(localStorage.getItem('statbel_conv_cols')).find(x => x.id === 'gsm') || {}).on === false;
     // Réordonner : monter la 2e colonne (Contact) → 1re colonne de données du thead
-    persoMove(1, -1);
+    persoMove('cols', 1, -1);
     const firstDataTh = document.querySelectorAll('#tableCibles thead th')[1];
     out.firstColAfterReorder = firstDataTh ? firstDataTh.getAttribute('data-col') : null;   // 'prenom'
 
-    // ── Colonnes du détail du ménage (accordéon) ─────────────────────
+    // ── Colonnes du détail du ménage (accordéon) — sous-groupe de l'onglet Colonnes ──
     localStorage.removeItem('statbel_conv_hhcols');
-    persoTab('hh');
+    persoTab('cols');   // 'hh' est désormais un sous-groupe de l'onglet Colonnes
+    out.hhTabGrouped = /perso-sub/.test(document.getElementById('persoList').innerHTML)
+      && document.querySelectorAll('#persoList li.perso-sub').length === 2;
     out.hhDefaut = getCfg('hh').length + '/' + getCfg('hh').filter(x => x.on).length;   // 10/10
     // Masquer « État civil » → persiste
     const idxMrtl = getCfg('hh').findIndex(x => x.id === 'marital_status');
-    persoToggle(idxMrtl);
+    persoToggle('hh', idxMrtl);
     out.hhPersisted = (JSON.parse(localStorage.getItem('statbel_conv_hhcols')).find(x => x.id === 'marital_status') || {}).on === false;
     // Réordonner : monter la 2e colonne (prénom) devant le # → l'ordre config suit
     const hhBefore = getCfg('hh').map(x => x.id);
-    persoMove(1, -1);
+    persoMove('hh', 1, -1);
     const hhAfter = getCfg('hh').map(x => x.id);
     out.hhReordered = hhBefore[0] === hhAfter[1] && hhBefore[1] === hhAfter[0];
     resetPerso();
@@ -145,6 +147,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.headDefault === 7, `en-tête par défaut = 1 (expansion) + 6 colonnes → ${r.headDefault} th`);
   A(r.headAfterHide === 6 && r.gsmGone && r.colPersisted, 'masquer une colonne retire le th et persiste');
   A(r.firstColAfterReorder === 'prenom', `réordonner met Contact en 1re colonne → data-col="${r.firstColAfterReorder}"`);
+  A(r.hhTabGrouped, 'onglet Colonnes : 2 sous-groupes (Aperçu + Ménage)');
   A(r.hhDefaut === '10/10', `colonnes ménage : 10, toutes affichées par défaut → ${r.hhDefaut}`);
   A(r.hhPersisted, 'masquer une colonne du ménage persiste (localStorage)');
   A(r.hhReordered, 'réordonner (↑) échange les deux premières colonnes du ménage');
