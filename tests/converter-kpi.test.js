@@ -66,7 +66,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // ── Blocs d'analyse ───────────────────────────────────────────────
     localStorage.removeItem('statbel_conv_blocs');
     persoTab('blocs');
-    out.blocDefaut = getCfg('blocs').length + '/' + getCfg('blocs').filter(x => x.on).length;   // 14/14 par défaut
+    out.blocDefaut = getCfg('blocs').length + '/' + getCfg('blocs').filter(x => x.on).length;   // 15/15 par défaut
     // Libellé dynamique du KPI « Cibles ≥N » selon l'âge min courant
     _ui.ageMinCible = 16;
     out.cibLabel16 = KPI_DEFS.cib.dyn();   // « Cibles ≥16 ans »
@@ -84,7 +84,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.blocDomMatchesCfg = JSON.stringify(domOrder) === JSON.stringify(cfgOrder);
     // Croix ✕ : injectée dans chaque carte, masque le bloc (config off + carte cachée)
     initBlocClose();
-    out.blocXCount = document.querySelectorAll('#statsBlocks .card[data-block] .blk-x').length;   // 14
+    out.blocXCount = document.querySelectorAll('#statsBlocks .card[data-block] .blk-x').length;   // 15
     masquerBloc('cont');
     const contCard = document.querySelector('#statsBlocks [data-block="cont"]');
     out.blocXHidden = !!contCard && contCard.style.display === 'none';
@@ -139,12 +139,12 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(/%$/.test((r.etrValue || '').trim()), `KPI % né·es à l'étranger calculé → ${r.etrValue}`);
   A(r.reordered, 'réordonner (↑) échange bien les deux premiers KPI');
   A(r.reset === 'men,pop,size,age,h,f', 'Réinitialiser rétablit le défaut');
-  A(r.blocDefaut === '14/14', `blocs : 14 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
+  A(r.blocDefaut === '15/15', `blocs : 15 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
   A(/16/.test(r.cibLabel16 || ''), `KPI « Cibles » suit l'âge min (≥16) → « ${r.cibLabel16} »`);
   A(/16/.test(r.minLabel16 || ''), `KPI « % mineurs » suit l'âge min (<16) → « ${r.minLabel16} »`);
   A(r.sankeyHidden && r.blocPersisted, 'masquer un bloc cache la carte (DOM) et persiste');
   A(r.blocDomMatchesCfg, 'réordonner un bloc réordonne les cartes dans le DOM');
-  A(r.blocXCount === 14, `croix ✕ injectée dans les 14 blocs → ${r.blocXCount}`);
+  A(r.blocXCount === 15, `croix ✕ injectée dans les 15 blocs → ${r.blocXCount}`);
   A(r.blocXHidden && r.blocXPersisted, 'croix ✕ masque le bloc (carte cachée + config persistée)');
   A(r.colDefaut === '6/6', `colonnes : 6, toutes affichées par défaut → ${r.colDefaut}`);
   A(r.headDefault === 7, `en-tête par défaut = 1 (expansion) + 6 colonnes → ${r.headDefault} th`);

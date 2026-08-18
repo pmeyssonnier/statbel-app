@@ -651,6 +651,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div class="card-titre" data-i18n="card_sankey">🔀 Flux Nationalité → Sexe → Âge</div>
           <div id="statsSankey"></div>
         </div>
+        <div class="card blk-wide" data-block="sankeyHH">
+          <div class="card-titre" data-i18n="card_sankey_hh">🔀 Ménages : taille → à interroger → âge dominant</div>
+          <div id="statsSankeyHH"></div>
+        </div>
       </div>
     </div>
 
@@ -1109,6 +1113,7 @@ const I18N = {
   lbl_hh_with_minor: { fr:"Multi, avec mineur", nl:"Multi, met minderjarige", en:"Multi, with minor", de:"Multi, mit Minderj." },
   lbl_hh_no_minor: { fr:"Multi, sans mineur", nl:"Multi, zonder minderj.", en:"Multi, no minor", de:"Multi, ohne Minderj." },
   card_sankey: { fr:"🔀 Flux Nationalité → Sexe → Âge", nl:"🔀 Stroom Nationaliteit → Geslacht → Leeftijd", en:"🔀 Nationality → Gender → Age flow", de:"🔀 Fluss Nationalität → Geschlecht → Alter" },
+  card_sankey_hh: { fr:"🔀 Ménages : taille → à interroger → âge dominant", nl:"🔀 Huishoudens: grootte → te ondervragen → dominante leeftijd", en:"🔀 Households: size → to survey → dominant age", de:"🔀 Haushalte: Größe → zu befragen → dominantes Alter" },
 
   // ── Statistics — libellés dynamiques (graphiques) ────────────────
   gender_men: { fr:"Hommes", nl:"Mannen", en:"Men", de:"Männer" },
@@ -6923,8 +6928,9 @@ const BLOC_DEFS = {
               const cTel = hhc.filter(aTel).length, cMail = hhc.filter(aMail).length, cJoin = hhc.filter(r => aTel(r) || aMail(r)).length; const pctL = (key, n) => `${t(key)} — ${Math.round(n / nHHc * 100)} %`;
               return [{ label: pctL('lbl_has_phone', cTel), count: cTel, color: '#2e7d32' }, { label: pctL('lbl_has_email', cMail), count: cMail, color: '#0277bd' }, { label: pctL('lbl_reachable', cJoin), count: cJoin, color: '#1a237e' }]; } },
   sankey: { i18n: 'card_sankey', render: ctx => renderSankeyNSA('statsSankey', ctx.pop) },
+  sankeyHH: { i18n: 'card_sankey_hh', render: ctx => renderSankeyMenage('statsSankeyHH', ctx.res) },
 };
-const BLOC_ALL = ['nat', 'cont', 'eu', 'mrtl', 'sexe', 'birth', 'age', 'ageLFS', 'depend', 'size', 'chh', 'compo', 'contact', 'sankey'];
+const BLOC_ALL = ['nat', 'cont', 'eu', 'mrtl', 'sexe', 'birth', 'age', 'ageLFS', 'depend', 'size', 'chh', 'compo', 'contact', 'sankey', 'sankeyHH'];
 
 // Aiguilleur de rendu : type de graphe → primitive, sur la forme d'item native du graphe.
 const RENDERERS = {
@@ -7361,6 +7367,82 @@ function renderSankeyNSA(elId, pop) {
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" font-family="inherit">${flows}${nodesA}${nodesB}${nodesC}</svg>`;
 }
 
+// Sankey ménages : taille du ménage → nombre de personnes à interroger (≥ âge min)
+// → tranche d'âge dominante du ménage. Une unité de flux = un ménage.
+function renderSankeyMenage(elId, res) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const min = ageMinCible();
+  const BR = [[0, 14, '0–14'], [15, 24, '15–24'], [25, 54, '25–54'], [55, 64, '55–64'], [65, 999, '65+']];
+  const brOf = a => { const t = BR.find(([lo, hi]) => a >= lo && a <= hi); return t ? t[2] : null; };
+  const hh = {};
+  (res.outMembres || []).forEach(r => {
+    const h = hh[r.nr_hh] || (hh[r.nr_hh] = { total: 0, cibles: 0, br: {} });
+    h.total++;
+    const a = parseInt(r.age, 10);
+    if (!isNaN(a)) { if (a >= min) h.cibles++; const b = brOf(a); if (b) h.br[b] = (h.br[b] || 0) + 1; }
+  });
+  const menages = Object.values(hh).filter(h => h.total > 0);
+  if (!menages.length) { el.innerHTML = '<div style="color:var(--text2);font-size:12px">—</div>'; return; }
+  const sizeLbl = n => (n >= 5 ? '5+' : String(n)) + ' p.';
+  const cibLbl  = n => (n >= 3 ? '3+' : String(n)) + ' ≥' + min;
+  const domBr = h => { let best = '?', bv = 0; BR.forEach(([, , lbl]) => { const v = h.br[lbl] || 0; if (v > bv) { bv = v; best = lbl; } }); return best; };
+  const f1 = {}, f2 = {}, colA = {}, colB = {}, colC = {};
+  menages.forEach(h => {
+    const A = sizeLbl(h.total), B = cibLbl(h.cibles), C = domBr(h);
+    f1[A + '|' + B] = (f1[A + '|' + B] || 0) + 1;
+    f2[B + '|' + C] = (f2[B + '|' + C] || 0) + 1;
+    colA[A] = (colA[A] || 0) + 1; colB[B] = (colB[B] || 0) + 1; colC[C] = (colC[C] || 0) + 1;
+  });
+  const ordreA = ['1', '2', '3', '4', '5+'].map(n => n + ' p.').filter(k => colA[k]);
+  const ordreB = ['0', '1', '2', '3+'].map(n => n + ' ≥' + min).filter(k => colB[k]);
+  const ordreC = BR.map(b => b[2]).filter(k => colC[k]);
+  const W = 100, H = Math.max(40, Math.max(ordreA.length, ordreB.length, ordreC.length) * 6 + 10), GAP = 1.4, NW = 3.2;
+  const colX = [2, W / 2 - NW / 2, W - 2 - NW];
+  const layout = (ordre, counts) => {
+    const tot = ordre.reduce((s, k) => s + counts[k], 0) || 1;
+    const usable = H - (ordre.length - 1) * GAP;
+    let y = 0; const pos = {};
+    ordre.forEach(k => { const ht = counts[k] / tot * usable; pos[k] = { y, h: ht, count: counts[k] }; y += ht + GAP; });
+    return pos;
+  };
+  const pa = layout(ordreA, colA), pb = layout(ordreB, colB), pc = layout(ordreC, colC);
+  const idxA = {}; ordreA.forEach((k, i) => idxA[k] = i);
+  const idxB = {}; ordreB.forEach((k, i) => idxB[k] = i);
+  const usedA = {}, usedBin = {}, usedBout = {}, usedC = {};
+  const ruban = (x1, y1, x2, y2, ht, col) => {
+    const xm = (x1 + x2) / 2;
+    return `<path d="M${x1},${y1} C${xm},${y1} ${xm},${y2} ${x2},${y2} L${x2},${y2 + ht} C${xm},${y2 + ht} ${xm},${y1 + ht} ${x1},${y1 + ht} Z" fill="${col}" fill-opacity="0.35"/>`;
+  };
+  let flows = '';
+  ordreA.forEach(A => ordreB.forEach(B => {
+    const v = f1[A + '|' + B]; if (!v) return;
+    const ht = v / (pa[A].count || 1) * pa[A].h;
+    const y1 = pa[A].y + (usedA[A] || 0); usedA[A] = (usedA[A] || 0) + ht;
+    const ht2 = v / (pb[B].count || 1) * pb[B].h;
+    const y2 = pb[B].y + (usedBin[B] || 0); usedBin[B] = (usedBin[B] || 0) + ht2;
+    flows += ruban(colX[0] + NW, y1, colX[1], y2, ht, PALETTE[idxA[A] % PALETTE.length]);
+  }));
+  ordreB.forEach(B => ordreC.forEach(C => {
+    const v = f2[B + '|' + C]; if (!v) return;
+    const ht = v / (pb[B].count || 1) * pb[B].h;
+    const y1 = pb[B].y + (usedBout[B] || 0); usedBout[B] = (usedBout[B] || 0) + ht;
+    const ht2 = v / (pc[C].count || 1) * pc[C].h;
+    const y2 = pc[C].y + (usedC[C] || 0); usedC[C] = (usedC[C] || 0) + ht2;
+    flows += ruban(colX[1] + NW, y1, colX[2], y2, ht, PALETTE[idxB[B] % PALETTE.length]);
+  }));
+  const noeuds = (ordre, pos, x, ancre, coul) => ordre.map((k, i) => {
+    const p = pos[k]; const c = coul(k, i);
+    const tx = ancre === 'end' ? x - 0.6 : (ancre === 'start' ? x + NW + 0.6 : x + NW / 2);
+    return `<rect x="${x}" y="${p.y.toFixed(2)}" width="${NW}" height="${Math.max(0.4, p.h).toFixed(2)}" fill="${c}"><title>${escHtml(k)} : ${p.count}</title></rect>`
+      + `<text x="${tx.toFixed(2)}" y="${(p.y + p.h / 2).toFixed(2)}" text-anchor="${ancre}" dominant-baseline="middle" font-size="2.1" fill="var(--text)">${escHtml(k)}</text>`;
+  }).join('');
+  const nodesA = noeuds(ordreA, pa, colX[0], 'start', (k, i) => PALETTE[i % PALETTE.length]);
+  const nodesB = noeuds(ordreB, pb, colX[1], 'middle', (k, i) => PALETTE[i % PALETTE.length]);
+  const nodesC = noeuds(ordreC, pc, colX[2], 'end', () => '#90a4ae');
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" font-family="inherit">${flows}${nodesA}${nodesB}${nodesC}</svg>`;
+}
+
 // ── Drill-down commune de naissance (Belges) : Région → Province → Arr. → Commune ──
 let _birthPopBE = [];
 let _birthDrill = { level: 'region', region: '', province: '', district: '' };
@@ -7682,7 +7764,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '201';
+const APP_VERSION = '202';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
