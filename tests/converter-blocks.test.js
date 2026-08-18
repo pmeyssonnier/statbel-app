@@ -50,6 +50,11 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     if (typeof statsScope !== 'undefined') statsScope = 'membres';
     try { majStats(res); } catch (e) { out.threw = String((e && e.message) || e); return out; }
 
+    // Squelette commun : chaque bloc du registre a peuplé son conteneur (non vide).
+    const BLOC_ELS = ['statsTreemap', 'statsCont', 'statsEU', 'statsMrtl', 'statsSexe', 'statsCommune',
+      'statsAge', 'statsAgeLFS', 'statsDepend', 'statsTaille', 'statsCiblesHH', 'statsCompoHH', 'statsContact', 'statsSankey'];
+    out.blocsVides = BLOC_ELS.filter(id => !((document.getElementById(id) || {}).innerHTML || '').trim().length);
+
     out.ageBars = document.querySelectorAll('#statsAgeLFS .bar-row').length;
     out.ageClickable = !!document.querySelector('#statsAgeLFS .bar-row[onclick]');
     out.titreSansLFS = !/LFS/.test(document.querySelector('[data-block="ageLFS"] .card-titre').textContent);
@@ -104,6 +109,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   });
 
   A(!r.threw, 'majStats() ne lève pas d\'erreur' + (r.threw ? ' → ' + r.threw : ''));
+  A(r.blocsVides && r.blocsVides.length === 0, 'squelette commun : les 14 blocs rendent leur conteneur' + (r.blocsVides && r.blocsVides.length ? ' → vides : ' + r.blocsVides.join(', ') : ''));
   A(r.ageBars === 5, `tranches d'âge : 5 barres → ${r.ageBars}`);
   A(r.ageClickable, 'barres de tranches d\'âge cliquables (drill-down)');
   A(r.titreSansLFS, 'titre « Tranches d\'âge » sans « LFS »');
