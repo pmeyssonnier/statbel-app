@@ -4881,6 +4881,42 @@ function telecharger(contenu, nom, bom = false) {
   URL.revokeObjectURL(url);
 }
 
+// Ouvre la fenêtre d'export (boutons CSV/rapport de la source active)
+function ouvrirExport() {
+  if (!_resultat) { alert(t('al_no_source_file')); return; }
+  document.getElementById('expNom').textContent = nomEnquete(_resultat);
+  majLabels(_resultat);
+  document.getElementById('modalExport').classList.add('open');
+}
+function fermerExport() {
+  document.getElementById('modalExport').classList.remove('open');
+}
+
+// Rapport texte de synthèse (nationalités, état civil, taille des ménages)
+function genererRapport(grpId, outCibles, outMembres) {
+  const nltyC = {}, mrtlC = {}, tailleC = {};
+  outCibles.forEach(r => {
+    nltyC[r.nationality]    = (nltyC[r.nationality]   ||0)+1;
+    mrtlC[r.marital_status] = (mrtlC[r.marital_status]||0)+1;
+    tailleC[r.taille_menage]= (tailleC[r.taille_menage]||0)+1;
+  });
+  const ligne = s => s;
+  return [
+    '='.repeat(60), '  STATBEL SURVEY EXTRACTION REPORT', '='.repeat(60), '',
+    `Group   : ${grpId}`,
+    `Date    : ${new Date().toLocaleString('en-GB')}`,
+    `Targets : ${outCibles.length}`,
+    `Members : ${outMembres.length}`, '',
+    'NATIONALITIES (ISO):',
+    ...Object.entries(nltyC).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`  ${(k||'—').padEnd(12)} : ${v}`),
+    '', 'MARITAL STATUS:',
+    ...Object.entries(mrtlC).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`  ${(k||'—').padEnd(35)} : ${v}`),
+    '', 'HOUSEHOLD SIZE DISTRIBUTION:',
+    ...Object.entries(tailleC).sort((a,b)=>Number(a[0])-Number(b[0])).map(([t,c])=>`  ${t} member(s) : ${c}`),
+    '', '='.repeat(60),
+  ].join('\n');
+}
+
 // ════════════════════════════════════════════════════════════════════════
 //  CONVERSION PRINCIPALE
 // ════════════════════════════════════════════════════════════════════════
@@ -5237,17 +5273,6 @@ document.addEventListener('click', e => {
   if (w && !w.contains(e.target)) document.getElementById('menu').classList.remove('open');
 });
 
-// Ouvre la fenêtre d'export (boutons CSV/rapport de la source active)
-function ouvrirExport() {
-  if (!_resultat) { alert(t('al_no_source_file')); return; }
-  document.getElementById('expNom').textContent = nomEnquete(_resultat);
-  majLabels(_resultat);
-  document.getElementById('modalExport').classList.add('open');
-}
-function fermerExport() {
-  document.getElementById('modalExport').classList.remove('open');
-}
-
 // Affiche les infos de planification LFS du groupe (commune, quartier, 4 interrogations)
 // à partir du NR_GRP (clé = forme vague-1 « 1·sem·groupe », derniers 5 chiffres).
 function afficherPlanning(adminCols, res) {
@@ -5369,30 +5394,6 @@ function afficher(res) {
   document.getElementById('ong-planning').classList.remove('actif');
   document.getElementById('ong-apercu').classList.add('actif');
   document.getElementById('pan-apercu').classList.add('actif');
-}
-
-function genererRapport(grpId, outCibles, outMembres) {
-  const nltyC = {}, mrtlC = {}, tailleC = {};
-  outCibles.forEach(r => {
-    nltyC[r.nationality]    = (nltyC[r.nationality]   ||0)+1;
-    mrtlC[r.marital_status] = (mrtlC[r.marital_status]||0)+1;
-    tailleC[r.taille_menage]= (tailleC[r.taille_menage]||0)+1;
-  });
-  const ligne = s => s;
-  return [
-    '='.repeat(60), '  STATBEL SURVEY EXTRACTION REPORT', '='.repeat(60), '',
-    `Group   : ${grpId}`,
-    `Date    : ${new Date().toLocaleString('en-GB')}`,
-    `Targets : ${outCibles.length}`,
-    `Members : ${outMembres.length}`, '',
-    'NATIONALITIES (ISO):',
-    ...Object.entries(nltyC).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`  ${(k||'—').padEnd(12)} : ${v}`),
-    '', 'MARITAL STATUS:',
-    ...Object.entries(mrtlC).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`  ${(k||'—').padEnd(35)} : ${v}`),
-    '', 'HOUSEHOLD SIZE DISTRIBUTION:',
-    ...Object.entries(tailleC).sort((a,b)=>Number(a[0])-Number(b[0])).map(([t,c])=>`  ${t} member(s) : ${c}`),
-    '', '='.repeat(60),
-  ].join('\n');
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -7681,7 +7682,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '199';
+const APP_VERSION = '200';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
