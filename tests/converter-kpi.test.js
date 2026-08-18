@@ -70,6 +70,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // Libellé dynamique du KPI « Cibles ≥N » selon l'âge min courant
     _ui.ageMinCible = 16;
     out.cibLabel16 = KPI_DEFS.cib.dyn();   // « Cibles ≥16 ans »
+    out.minLabel16 = KPI_DEFS.min.dyn();   // « % mineurs (<16) » — suit aussi l'âge cible
     // Masquer le bloc Sankey → carte cachée dans le DOM + persistée
     const idxSankey = getCfg('blocs').findIndex(x => x.id === 'sankey');
     persoToggle(idxSankey);
@@ -112,6 +113,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.reset === 'men,pop,size,age,h,f', 'Réinitialiser rétablit le défaut');
   A(r.blocDefaut === '14/14', `blocs : 14 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
   A(/16/.test(r.cibLabel16 || ''), `KPI « Cibles » suit l'âge min (≥16) → « ${r.cibLabel16} »`);
+  A(/16/.test(r.minLabel16 || ''), `KPI « % mineurs » suit l'âge min (<16) → « ${r.minLabel16} »`);
   A(r.sankeyHidden && r.blocPersisted, 'masquer un bloc cache la carte (DOM) et persiste');
   A(r.blocDomMatchesCfg, 'réordonner un bloc réordonne les cartes dans le DOM');
   A(r.colDefaut === '6/6', `colonnes : 6, toutes affichées par défaut → ${r.colDefaut}`);
