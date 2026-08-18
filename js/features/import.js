@@ -88,7 +88,7 @@ export function preparerImport(rawRows, nom) {
     if (Array.isArray(o.historique) && o.historique.length) m.historique = o.historique;
     result.push(m);
   });
-  return { result, exclus };
+  return { result, exclus, incertains: match.incertains() };
 }
 
 // Affiche le compteur + le détail des enregistrements exclus pour erreur (avec raison)
@@ -105,6 +105,25 @@ export function renderExclus(exclus) {
   }).join('') : '';
 }
 
+// Affiche les correspondances INCERTAINES : même n° d'ordre côté ancien/nouveau
+// mais identité divergente → le suivi N'A PAS été transféré (validation humaine
+// requise). Sécurité contre un éventuel n° d'ordre réutilisé pour une autre personne.
+export function renderIncertains(incertains) {
+  const el = document.getElementById('importIncertains');
+  if (!el) return;
+  if (!incertains || !incertains.length) { el.innerHTML = ''; return; }
+  const nomAff = c => esc(((c.prenom || '') + ' ' + (c.nom || '')).trim()) || t('ip_unknown');
+  const lignes = incertains.map(x => {
+    const ordre = esc(String(x.neu.ordre || x.old.ordre || '—'));
+    return `<div class="excl-row">⚠️ ${tf('ip_uncertain_row', { ordre, ancien: nomAff(x.old), nouveau: nomAff(x.neu) })}</div>`;
+  }).join('');
+  el.innerHTML = `<div class="import-incertains">
+      <div class="import-incertains-tt">⚠️ ${tf('ip_uncertain_title', { n: incertains.length })}</div>
+      ${lignes}
+      <div class="import-incertains-note">${t('ip_uncertain_note')}</div>
+    </div>`;
+}
+
 // Met à jour la comparaison "csvEnAttente" vs l'enquête existante portant
 // le même nom que celui actuellement saisi dans le champ. N'affiche rien
 // si aucune enquête de ce nom n'existe (cas d'une création).
@@ -114,8 +133,9 @@ export function majComparaisonImport() {
   if (!csvEnAttente) { wrap.classList.add('hidden'); wrap.innerHTML = ''; return; }
 
   const nom = document.getElementById('inputNomEnquete').value.trim();
-  const { result, exclus } = preparerImport(csvEnAttente, nom);
+  const { result, exclus, incertains } = preparerImport(csvEnAttente, nom);
   renderExclus(exclus);   // compteur + détail (raisons) — affiché quel que soit le cas
+  renderIncertains(incertains);   // ⚠️ n° d'ordre concordant mais identité divergente
   const suffixExcl = exclus.length ? ' · ' + tf('ip_btn_excl', { n: exclus.length }) : '';
 
   const existante = nom ? enquetes[nom] : null;
@@ -224,6 +244,7 @@ export function _contactKey(c) {
 // Retourne une fonction match(neu) → ancien|null, dotée de .restants().
 export function apparieurAnciens(oldArr) {
   const used = new Set();
+  const incertains = [];   // { neu, old } : n° d'ordre concordant mais identité divergente
   const norm    = s => (s == null ? '' : String(s)).trim().toLowerCase();
   const normAdr = s => norm(s).replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim();
   const byOrdre = new Map(), byNPB = new Map(), byNPA = new Map(), byAdr = new Map();
@@ -241,9 +262,26 @@ export function apparieurAnciens(oldArr) {
   });
   const firstFree = l => { if (l) for (const c of l) if (!used.has(c)) return c; return null; };
   const take = c => { if (c) used.add(c); return c; };
+  // Signal de cohérence d'un champ : +1 concordant, -1 conflit, 0 indeterminé (vide d'un côté).
+  const sig = (a, b, f = norm) => { const x = f(a), y = f(b); if (!x || !y) return 0; return x === y ? 1 : -1; };
   const match = function (neu) {
     const ord = norm(neu.ordre), nom = norm(neu.nom), pre = norm(neu.prenom);
-    if (ord) { const l = byOrdre.get(ord); if (l && l.length === 1 && !used.has(l[0])) return take(l[0]); }
+    if (ord) {
+      const l = byOrdre.get(ord);
+      if (l && l.length === 1 && !used.has(l[0])) {
+        const o = l[0];
+        // Le n° d'ordre seul ne suffit plus : on exige qu'AU MOINS un autre identifiant
+        // concorde (nom, prénom, naissance ou adresse). Si l'ordre concorde mais que tout
+        // le reste diffère (n° peut-être réutilisé pour une autre personne), on N'apparie
+        // PAS -> pas de transfert de suivi ; on signale pour validation humaine.
+        const signaux = [sig(o.nom, neu.nom), sig(o.prenom, neu.prenom),
+                         sig(o.birth_date, neu.birth_date), sig(o.adresse, neu.adresse, normAdr)];
+        const positifs = signaux.filter(s => s > 0).length;
+        const conflits = signaux.filter(s => s < 0).length;
+        if (positifs >= 1 || conflits === 0) return take(o);
+        incertains.push({ neu, old: o });
+      }
+    }
     if (nom || pre) {
       const np = nom + '' + pre;
       const bd = norm(neu.birth_date);
@@ -258,6 +296,7 @@ export function apparieurAnciens(oldArr) {
     return null;
   };
   match.restants = () => (oldArr || []).filter(c => !used.has(c));
+  match.incertains = () => incertains;
   return match;
 }
 
