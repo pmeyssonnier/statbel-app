@@ -99,6 +99,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       try {
         ouvrirParametres();
         out.lookupFlag = /\uD83C[\uDDE6-\uDDFF]/.test((document.getElementById('refNlty') || {}).innerHTML || '');
+        const paysTh = document.querySelector('#refNlty thead th');
+        out.lookupWidth = !!paysTh && /min-width/.test(paysTh.getAttribute('style') || '');
         const sexeHtml = (document.getElementById('refSexe') || {}).innerHTML || '';
         out.lookupSexe = sexeHtml.includes('♂') && sexeHtml.includes('♀');
         const mrtlHtml = (document.getElementById('refMrtl') || {}).innerHTML || '';
@@ -125,6 +127,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.hhMrtl, 'table ménage : emoji d\'état civil (💍 / 🕊)');
   A(r.hhColsDef === 10 && r.hhColsHidden === 9, `colonnes du ménage pilotées par la config (10 → 9 après masquage) → ${r.hhColsDef}/${r.hhColsHidden}`);
   A(r.lookupFlag && !r.lookupErr, 'table de correspondance Pays : drapeau devant le nom' + (r.lookupErr ? ' → ' + r.lookupErr : ''));
+  A(r.lookupWidth, 'table de correspondance Pays : largeur prédéfinie sur les colonnes (min-width)');
   A(r.lookupSexe, 'table de correspondance Sexe : icônes ♂ / ♀');
   A(r.lookupMrtl, 'table de correspondance État civil : emoji (💍 / 🕊)');
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));

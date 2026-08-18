@@ -96,6 +96,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.colDefaut = getCfg('cols').length + '/' + getCfg('cols').filter(x => x.on).length;   // 6/6
     renderCiblesHead();
     out.headDefault = document.querySelectorAll('#tableCibles thead th').length;   // 1 expansion + 6
+    // Largeurs de colonne prédéfinies (version légère « façon Excel ») → min-width sur les th
+    const adrTh = document.querySelector('#tableCibles thead th[data-col="adresse"]');
+    out.colWidth = !!adrTh && /min-width/.test(adrTh.getAttribute('style') || '');
     // Masquer la colonne Téléphone (gsm) → th absent + persiste
     const idxGsm = getCfg('cols').findIndex(x => x.id === 'gsm');
     persoToggle('cols', idxGsm);   // apply → rerenderCibles → renderCiblesHead
@@ -145,6 +148,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.blocXHidden && r.blocXPersisted, 'croix ✕ masque le bloc (carte cachée + config persistée)');
   A(r.colDefaut === '6/6', `colonnes : 6, toutes affichées par défaut → ${r.colDefaut}`);
   A(r.headDefault === 7, `en-tête par défaut = 1 (expansion) + 6 colonnes → ${r.headDefault} th`);
+  A(r.colWidth, 'largeur prédéfinie sur les colonnes du tableau (min-width sur les th)');
   A(r.headAfterHide === 6 && r.gsmGone && r.colPersisted, 'masquer une colonne retire le th et persiste');
   A(r.firstColAfterReorder === 'prenom', `réordonner met Contact en 1re colonne → data-col="${r.firstColAfterReorder}"`);
   A(r.hhTabGrouped, 'onglet Colonnes : 2 sous-groupes (Aperçu + Ménage)');

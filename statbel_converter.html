@@ -5392,7 +5392,7 @@ function rendreRef(elId) {
     return st.dir * String(va).localeCompare(String(vb), 'fr', { sensitivity: 'base' });
   });
   const thead = '<thead><tr>' + colonnes.map((c, i) =>
-    `<th class="ref-sort${st.col === i ? (st.dir === 1 ? ' asc' : ' desc') : ''}" data-el="${elId}" data-i="${i}">${escHtml(c.label)}</th>`
+    `<th class="ref-sort${st.col === i ? (st.dir === 1 ? ' asc' : ' desc') : ''}" data-el="${elId}" data-i="${i}"${c.w ? ` style="min-width:${c.w}px"` : ''}>${escHtml(c.label)}</th>`
   ).join('') + '</tr></thead>';
   const tbody = '<tbody>' + tri.map(r =>
     '<tr>' + r.map((c, i) => `<td>${colonnes[i].render ? colonnes[i].render(c, r) : escHtml(c)}</td>`).join('') + '</tr>'
@@ -5412,11 +5412,11 @@ document.addEventListener('click', e => {
 
 function ouvrirParametres() {
   tableTriable('refSexe',
-    [{ label: t('col_code'), num: true }, { label: t('col_abbr'), render: (v) => (sexeIcone(v) ? sexeIcone(v) + ' ' : '') + escHtml(v) }, { label: t('col_label') }],
+    [{ label: t('col_code'), num: true, w: 56 }, { label: t('col_abbr'), w: 70, render: (v) => (sexeIcone(v) ? sexeIcone(v) + ' ' : '') + escHtml(v) }, { label: t('col_label'), w: 120 }],
     Object.entries(SEX_MAP).map(([c, a]) => [c, a, sexeLabel(a) || '']));
 
   tableTriable('refMrtl',
-    [{ label: t('col_code'), num: true }, { label: t('col_label') }],
+    [{ label: t('col_code'), num: true, w: 56 }, { label: t('col_label'), w: 180 }],
     Object.entries(MRTL_FR).map(([c, l]) => [c, l ? ((mrtlIcone(l) ? mrtlIcone(l) + ' ' : '') + mrtlLabel(l)) : '—']));
 
   initPays();
@@ -5459,7 +5459,7 @@ function nuts0Code(iso3, iso2) {
   return NUTS0_OVERRIDE[iso3] || iso2 || '';
 }
 
-function PAYS_COLS() { return [{ label: t('col_nis'), num: true }, { label: t('col_iso3') }, { label: t('col_iso2') }, { label: t('col_nuts0') }, { label: t('col_country'), render: (v, r) => (flagFromIso2(r[2]) ? '<span style="margin-right:4px">' + flagFromIso2(r[2]) + '</span>' : '') + escHtml(v) }, { label: t('col_continent') }, { label: t('col_eu') }]; }
+function PAYS_COLS() { return [{ label: t('col_nis'), num: true, w: 60 }, { label: t('col_iso3'), w: 56 }, { label: t('col_iso2'), w: 52 }, { label: t('col_nuts0'), w: 64 }, { label: t('col_country'), w: 180, render: (v, r) => (flagFromIso2(r[2]) ? '<span style="margin-right:4px">' + flagFromIso2(r[2]) + '</span>' : '') + escHtml(v) }, { label: t('col_continent'), w: 130 }, { label: t('col_eu'), w: 54 }]; }
 let _paysAll = [];
 
 function initPays() {
@@ -5508,7 +5508,7 @@ function lookupTab(k) {
 // ── Filtrage des communes belges par région / province / recherche ──────
 // Colonnes : [REFNIS, Municipality, District, Province, Region, NUTS2, NUTS3]
 // Colonnes : [REFNIS, FR, NL, District, Province, Region, NUTS2, NUTS3]
-function COMMUNE_COLS() { return [{ label: t('col_refnis'), num: true }, { label: t('col_muni_fr') }, { label: t('col_muni_nl') }, { label: t('col_district') }, { label: t('col_province') }, { label: t('col_region') }, { label: t('col_nuts2') }, { label: t('col_nuts3') }]; }
+function COMMUNE_COLS() { return [{ label: t('col_refnis'), num: true, w: 72 }, { label: t('col_muni_fr'), w: 150 }, { label: t('col_muni_nl'), w: 150 }, { label: t('col_district'), w: 120 }, { label: t('col_province'), w: 120 }, { label: t('col_region'), w: 110 }, { label: t('col_nuts2'), w: 78 }, { label: t('col_nuts3'), w: 78 }]; }
 let _communesAll = [];
 
 function initCommunes() {
@@ -6916,17 +6916,17 @@ function renderBloc(id, ctx) {
 // Colonnes du tableau de contacts de l'Aperçu — {libellé i18n, <th>, cellule(r)}.
 // La colonne d'expansion (▸) est structurelle : toujours présente, hors config.
 const COL_DEFS = {
-  ordre:   { i18n: 'col_num',      th: '<th class="sortable" data-col="ordre" data-table="cibles">#</th>',
+  ordre:   { i18n: 'col_num',      th: '<th class="sortable" data-col="ordre" data-table="cibles" style="min-width:36px">#</th>',
              cell: r => `<td class="ordre">${escHtml(r.ordre)}</td>` },
-  contact: { i18n: 'th_contact',   th: '<th class="sortable" data-col="prenom" data-table="cibles" data-i18n="th_contact">Contact</th>',
+  contact: { i18n: 'th_contact',   th: '<th class="sortable" data-col="prenom" data-table="cibles" style="min-width:150px" data-i18n="th_contact">Contact</th>',
              cell: r => `<td>${escHtml(r.prenom)} ${escHtml(r.nom)}</td>` },
-  adresse: { i18n: 'th_address',   th: '<th class="sortable" data-col="adresse" data-table="cibles" data-i18n="th_address">Address</th>',
+  adresse: { i18n: 'th_address',   th: '<th class="sortable" data-col="adresse" data-table="cibles" style="min-width:240px" data-i18n="th_address">Address</th>',
              cell: r => `<td style="font-size:11px;color:var(--text2)">${escHtml(r.adresse)}</td>` },
-  gsm:     { i18n: 'th_phone',     th: '<th data-i18n="th_phone">📞 Phone</th>',
+  gsm:     { i18n: 'th_phone',     th: '<th style="min-width:120px" data-i18n="th_phone">📞 Phone</th>',
              cell: r => `<td style="white-space:nowrap">${escHtml(r.gsm) || '<span class="vide">—</span>'}</td>` },
-  email:   { i18n: 'th_email',     th: '<th data-i18n="th_email">✉️ Email</th>',
+  email:   { i18n: 'th_email',     th: '<th style="min-width:160px" data-i18n="th_email">✉️ Email</th>',
              cell: r => `<td style="font-size:11px">${escHtml(r.email) || '<span class="vide">—</span>'}</td>` },
-  menage:  { i18n: 'th_household', th: '<th class="sortable" data-col="taille_menage" data-table="cibles" data-i18n="th_household">Household</th>',
+  menage:  { i18n: 'th_household', th: '<th class="sortable" data-col="taille_menage" data-table="cibles" style="min-width:96px" data-i18n="th_household">Household</th>',
              cell: r => `<td style="text-align:center">${escHtml(r.taille_menage)}${parseInt(r.nb_cibles, 10) > 1 ? ` <span style="color:var(--text3);font-size:11px">(${escHtml(r.nb_cibles)} ≥15)</span>` : ''}</td>` },
 };
 const COL_ALL = ['ordre', 'contact', 'adresse', 'gsm', 'email', 'menage'];
@@ -6934,25 +6934,25 @@ const COL_ALL = ['ordre', 'contact', 'adresse', 'gsm', 'email', 'menage'];
 // Colonnes du détail du ménage (accordéon déplié). Chaque cellule reçoit un
 // membre `m` ; drapeaux/icônes réutilisent paysDrapeau/sexeIcone/mrtlIcone.
 const HH_COL_DEFS = {
-  num:           { i18n: 'col_num',               th: '<th style="padding:3px 6px" data-i18n="col_num">#</th>',
+  num:           { i18n: 'col_num',               th: '<th style="min-width:34px;padding:3px 6px" data-i18n="col_num">#</th>',
                    cell: m => `<td style="padding:3px 6px;text-align:center">${escHtml(m.nr_membre)}${m.fl_cntct === '1' ? ' ★' : ''}</td>` },
-  prenom:        { i18n: 'hh_firstname',           th: '<th style="text-align:left;padding:3px 6px" data-i18n="hh_firstname">First name</th>',
+  prenom:        { i18n: 'hh_firstname',           th: '<th style="min-width:90px;text-align:left;padding:3px 6px" data-i18n="hh_firstname">First name</th>',
                    cell: m => `<td style="padding:3px 6px">${escHtml(m.prenom)}</td>` },
-  nom:           { i18n: 'hh_lastname',            th: '<th style="text-align:left;padding:3px 6px" data-i18n="hh_lastname">Last name</th>',
+  nom:           { i18n: 'hh_lastname',            th: '<th style="min-width:90px;text-align:left;padding:3px 6px" data-i18n="hh_lastname">Last name</th>',
                    cell: m => `<td style="padding:3px 6px">${escHtml(m.nom)}</td>` },
-  age:           { i18n: 'hh_age',                 th: '<th style="padding:3px 6px" data-i18n="hh_age">Age</th>',
+  age:           { i18n: 'hh_age',                 th: '<th style="min-width:44px;padding:3px 6px" data-i18n="hh_age">Age</th>',
                    cell: m => `<td style="padding:3px 6px;text-align:center">${escHtml(m.age)}</td>` },
-  birth_date:    { i18n: 'hh_birthdate',           th: '<th style="padding:3px 6px" data-i18n="hh_birthdate">Birth date</th>',
+  birth_date:    { i18n: 'hh_birthdate',           th: '<th style="min-width:76px;padding:3px 6px" data-i18n="hh_birthdate">Birth date</th>',
                    cell: m => `<td style="padding:3px 6px;text-align:center;white-space:nowrap">${escHtml(m.birth_date) || '—'}</td>` },
-  sexe:          { i18n: 'hh_gender',              th: '<th style="padding:3px 6px" data-i18n="hh_gender">Gender</th>',
+  sexe:          { i18n: 'hh_gender',              th: '<th style="min-width:82px;padding:3px 6px" data-i18n="hh_gender">Gender</th>',
                    cell: m => `<td style="padding:3px 6px;text-align:center">${sexeIcone(m.sexe)} ${escHtml(SEXE_LBL[m.sexe] || m.sexe)}</td>` },
-  birth_country: { i18n: 'hh_country_birth',       th: '<th style="padding:3px 6px" data-i18n="hh_country_birth">Country birth</th>',
+  birth_country: { i18n: 'hh_country_birth',       th: '<th style="min-width:110px;padding:3px 6px" data-i18n="hh_country_birth">Country birth</th>',
                    cell: m => `<td style="padding:3px 6px">${paysDrapeau(m.birth_country)}</td>` },
-  birth_commune: { i18n: 'hh_municipality_birth',  th: '<th style="text-align:left;padding:3px 6px" data-i18n="hh_municipality_birth">Municipality birth</th>',
+  birth_commune: { i18n: 'hh_municipality_birth',  th: '<th style="min-width:120px;text-align:left;padding:3px 6px" data-i18n="hh_municipality_birth">Municipality birth</th>',
                    cell: m => `<td style="padding:3px 6px">${escHtml(m.birth_commune) || '—'}</td>` },
-  nationality:   { i18n: 'hh_nationality',         th: '<th style="padding:3px 6px" data-i18n="hh_nationality">Nationality</th>',
+  nationality:   { i18n: 'hh_nationality',         th: '<th style="min-width:110px;padding:3px 6px" data-i18n="hh_nationality">Nationality</th>',
                    cell: m => `<td style="padding:3px 6px">${paysDrapeau(m.nationality)}</td>` },
-  marital_status:{ i18n: 'hh_marital',             th: '<th style="text-align:left;padding:3px 6px" data-i18n="hh_marital">Marital status</th>',
+  marital_status:{ i18n: 'hh_marital',             th: '<th style="min-width:130px;text-align:left;padding:3px 6px" data-i18n="hh_marital">Marital status</th>',
                    cell: m => `<td style="padding:3px 6px">${m.marital_status ? (mrtlIcone(m.marital_status) + ' ' + escHtml(m.marital_status)) : '—'}</td>` },
 };
 const HH_COL_ALL = ['num', 'prenom', 'nom', 'age', 'birth_date', 'sexe', 'birth_country', 'birth_commune', 'nationality', 'marital_status'];
@@ -7649,7 +7649,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '197';
+const APP_VERSION = '198';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
