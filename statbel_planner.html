@@ -473,6 +473,15 @@ select[multiple]{height:120px}
     </div>
 
     <div style="margin-top:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px">Case à cocher du formulaire</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink2)">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="groupes" checked> Nombre de groupes souhaités</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="pas"> Pas intéressé(e) pour effectuer les enquêtes de cette vague</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="plus"> N'est plus intéressé(e) pour effectuer des enquêtes</label>
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
       <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px">Signature</div>
       <canvas id="candSigCanvas" width="480" height="100"
         style="border:1px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:480px;height:100px;cursor:crosshair;display:block"></canvas>
@@ -1546,6 +1555,17 @@ function candSignatureDrawing(cx, cy, relId) {
     + '</a:graphicData></a:graphic></wp:inline></w:drawing>';
 }
 
+/* Case à cocher Wingdings : F0A8 (vide) → F0FE (cochée) pour l'option retenue.
+   Les 3 cases du formulaire sont des symboles identiques ; on cible celle qui
+   précède immédiatement le libellé d'ancrage (aucune autre case entre les deux),
+   ce qui reste robuste à l'ordre des options. */
+const CAND_CHOIX_ANCRE = { groupes: 'Nombre de groupes souhaités', pas: 'pas intéressé', plus: 'plus intéressé' };
+function candCocherCase(doc, ancre) {
+  const esc = String(ancre).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('<w:sym w:font="Wingdings" w:char="F0A8"/>(?=(?:(?!<w:sym).)*?' + esc + ')', 's');
+  return doc.replace(re, '<w:sym w:font="Wingdings" w:char="F0FE"/>');
+}
+
 function candGenerateDocxBytes(data) {
   const rowTpl = candBytesToStr(candB64ToBytes(CAND_DOCX.rowtpl));
   const rowsXml = (data.groupes || []).map(g =>
@@ -1553,6 +1573,10 @@ function candGenerateDocxBytes(data) {
   ).join('');
 
   let doc = candBytesToStr(candB64ToBytes(CAND_DOCX.parts['word/document.xml']));
+  // Titre centré de façon déterministe : le paragraphe de style "Title" n'a pas
+  // de <w:jc>, son alignement dépend donc du rendu du style (gauche chez certains
+  // lecteurs, centré chez d'autres). On force le centrage, cohérent avec l'encadré.
+  doc = doc.replace('<w:pStyle w:val="Title"/><w:rPr>', '<w:pStyle w:val="Title"/><w:jc w:val="center"/><w:rPr>');
   doc = doc.replace('@@ROWS@@', rowsXml);
   const map = {
     '@@NOM@@': data.nom, '@@PRENOM@@': data.prenom, '@@ADRESSE@@': data.adresse,
@@ -1572,6 +1596,9 @@ function candGenerateDocxBytes(data) {
   doc = doc.split('@@TITLE@@').join(candXmlEsc(String(data.title != null ? data.title : '')));
   doc = doc.split('@@ABBR@@').join(candXmlEsc(String(data.abbrev != null ? data.abbrev : '')));
   doc = doc.split('@@PERIOD@@').join(candXmlEsc(String(data.period != null ? data.period : '')));
+
+  // ── Case à cocher : une seule des trois options est cochée (data.choix) ──
+  doc = candCocherCase(doc, CAND_CHOIX_ANCRE[data.choix] || CAND_CHOIX_ANCRE.groupes);
 
   // ── Signature (image PNG optionnelle) ──
   const SIG_RUN = '<w:r><w:t>@@SIGNATURE@@</w:t></w:r>';
@@ -1685,6 +1712,9 @@ function genererCandidature(){
     groupes:candSelectedGroups(),
     signaturePng:candSigData,
   };
+  // Case à cocher retenue (une seule) → transmise au .docx comme les autres champs.
+  const choixEl=document.querySelector('input[name="candChoix"]:checked');
+  data.choix=choixEl?choixEl.value:'groupes';
   // Une seule variable "EFT 2026-Q4" : le 1er mot = sigle, le reste = période.
   // Le sigle est développé (dictionnaire) pour le TITRE ; il est conservé tel
   // quel dans l'intro, l'en-tête du tableau et la case à cocher.
@@ -1765,7 +1795,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '179';
+const APP_VERSION = '180';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
