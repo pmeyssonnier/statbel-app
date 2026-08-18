@@ -1260,6 +1260,32 @@ const MRTL_I18N = {
 };
 function mrtlLabel(v) { const e = MRTL_I18N[v]; return e ? (e[uiLang] || e.en) : (v || ''); }
 
+// ── Petites icônes Unicode (hors-ligne, aucune image) ─────────────────
+// Drapeau depuis un code ISO2 (regional indicators). Vide si code invalide.
+// NB : ne s'affiche pas sur Windows (→ 2 lettres) ; OK sur iOS/Android/Mac.
+function flagFromIso2(iso2) {
+  if (!iso2 || !/^[A-Za-z]{2}$/.test(iso2)) return '';
+  return String.fromCodePoint(...[...iso2.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
+function flagEmoji(iso3) { return flagFromIso2((PAYS_I18N[iso3] || {}).iso2 || ''); }
+// « Drapeau + nom » (HTML échappé) pour une valeur pays (code ISO3 ou 'BEL').
+function paysDrapeau(iso3) {
+  const f = flagEmoji(iso3);
+  return (f ? '<span style="margin-right:4px">' + f + '</span>' : '') + escHtml(paysNom(iso3) || iso3 || '—');
+}
+// Icône de sexe colorée (♂ bleu / ♀ rose) — s'affiche partout.
+function sexeIcone(s) {
+  if (s === 'M') return '<span style="color:var(--bar-h);font-weight:700">♂</span>';
+  if (s === 'F') return '<span style="color:var(--bar-f);font-weight:700">♀</span>';
+  return '';
+}
+// Emoji d'état civil (clé = valeur MRTL_FR pivot EN).
+const MRTL_ICONE = {
+  'Single': '🙋', 'Married': '💍', 'Married or Legal cohabitant': '💍',
+  'Divorced / Separated': '💔', 'Divorced, de facto separated': '💔', 'Widowed': '🕊️',
+};
+function mrtlIcone(v) { return MRTL_ICONE[v] || ''; }
+
 const PAYS_I18N = {
   "AFG": { nis:"251", iso2:"AF", fr:"Afghanistan", nl:"Afghanistan", en:"Afghanistan", de:"Afghanistan" },
   "AGO": { nis:"341", iso2:"AO", fr:"Angola", nl:"Angola", en:"Angola", de:"Angola" },
@@ -5333,7 +5359,7 @@ function rendreRef(elId) {
     `<th class="ref-sort${st.col === i ? (st.dir === 1 ? ' asc' : ' desc') : ''}" data-el="${elId}" data-i="${i}">${escHtml(c.label)}</th>`
   ).join('') + '</tr></thead>';
   const tbody = '<tbody>' + tri.map(r =>
-    '<tr>' + r.map(c => `<td>${escHtml(c)}</td>`).join('') + '</tr>'
+    '<tr>' + r.map((c, i) => `<td>${colonnes[i].render ? colonnes[i].render(c, r) : escHtml(c)}</td>`).join('') + '</tr>'
   ).join('') + '</tbody>';
   el.innerHTML = thead + tbody;
 }
@@ -5397,7 +5423,7 @@ function nuts0Code(iso3, iso2) {
   return NUTS0_OVERRIDE[iso3] || iso2 || '';
 }
 
-function PAYS_COLS() { return [{ label: t('col_nis'), num: true }, { label: t('col_iso3') }, { label: t('col_iso2') }, { label: t('col_nuts0') }, { label: t('col_country') }, { label: t('col_continent') }, { label: t('col_eu') }]; }
+function PAYS_COLS() { return [{ label: t('col_nis'), num: true }, { label: t('col_iso3') }, { label: t('col_iso2') }, { label: t('col_nuts0') }, { label: t('col_country'), render: (v, r) => (flagFromIso2(r[2]) ? '<span style="margin-right:4px">' + flagFromIso2(r[2]) + '</span>' : '') + escHtml(v) }, { label: t('col_continent') }, { label: t('col_eu') }]; }
 let _paysAll = [];
 
 function initPays() {
@@ -7386,11 +7412,11 @@ function renderCibles(rows) {
                 <td style="padding:3px 6px">${escHtml(m.nom)}</td>
                 <td style="padding:3px 6px;text-align:center">${escHtml(m.age)}</td>
                 <td style="padding:3px 6px;text-align:center;white-space:nowrap">${escHtml(m.birth_date) || '—'}</td>
-                <td style="padding:3px 6px;text-align:center">${escHtml(SEXE_LBL[m.sexe] || m.sexe)}</td>
-                <td style="padding:3px 6px;text-align:center">${escHtml(paysNom(m.birth_country) || m.birth_country)}</td>
+                <td style="padding:3px 6px;text-align:center">${sexeIcone(m.sexe)} ${escHtml(SEXE_LBL[m.sexe] || m.sexe)}</td>
+                <td style="padding:3px 6px">${paysDrapeau(m.birth_country)}</td>
                 <td style="padding:3px 6px">${escHtml(m.birth_commune) || '—'}</td>
-                <td style="padding:3px 6px;text-align:center">${escHtml(paysNom(m.nationality) || m.nationality)}</td>
-                <td style="padding:3px 6px">${escHtml(m.marital_status) || '—'}</td>
+                <td style="padding:3px 6px">${paysDrapeau(m.nationality)}</td>
+                <td style="padding:3px 6px">${m.marital_status ? (mrtlIcone(m.marital_status) + ' ' + escHtml(m.marital_status)) : '—'}</td>
               </tr>`;
               }).join('')}
             </tbody>
@@ -7591,7 +7617,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '188';
+const APP_VERSION = '189';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

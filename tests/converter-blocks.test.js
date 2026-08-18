@@ -28,17 +28,17 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
 
   const r = await p.evaluate(() => {
     const out = {};
-    const mk = (hh, mb, cn, sexe, age, nat, gsm, email) => ({
+    const mk = (hh, mb, cn, sexe, age, nat, gsm, email, mrtl) => ({
       nr_hh: hh, nr_membre: mb, fl_cntct: cn, ordre: hh, prenom: 'T', nom: 'X', adresse: 'R 1, 1000',
       sexe, age: String(age), nationality: nat, birth_country: 'BEL', birth_commune: 'BXL', birth_region: 'BRU',
-      marital_status: '1', gsm: gsm || '', email: email || '', taille_menage: '2', nb_cibles: '1',
+      marital_status: mrtl || 'Single', gsm: gsm || '', email: email || '', taille_menage: '2', nb_cibles: '1',
     });
     // 2 ménages : 2 mineurs (10, 12), 1 âgé implicite non → adultes 40/30 ; 1 tél, 1 mail
     const membres = [
-      mk('1', '1', '1', 'M', 10, 'BEL', '+32470', ''),
-      mk('1', '2', '0', 'F', 40, 'FRA', '', ''),
-      mk('2', '1', '1', 'F', 70, 'TUR', '', 'a@b.be'),
-      mk('2', '2', '0', 'M', 30, 'BEL', '', ''),
+      mk('1', '1', '1', 'M', 10, 'BEL', '+32470', '', 'Single'),
+      mk('1', '2', '0', 'F', 40, 'FRA', '', '', 'Married'),
+      mk('2', '1', '1', 'F', 70, 'TUR', '', 'a@b.be', 'Widowed'),
+      mk('2', '2', '0', 'M', 30, 'BEL', '', '', 'Single'),
     ];
     const res = {
       outMembres: membres, outCibles: membres.filter(m => m.fl_cntct === '1'),
@@ -72,6 +72,23 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     zoomCibles('1');
     out.chhDrill = !!document.getElementById('statsCiblesHHTM')
       && document.getElementById('statsCiblesHHDetail').innerHTML.length > 0;
+    // Table ménage (accordéon) : drapeaux pays + icônes sexe/état civil (Unicode, hors-ligne)
+    renderCibles(res.outCibles);
+    const hhHtml = document.getElementById('bodyCibles').innerHTML;
+    const flagBE = String.fromCodePoint(0x1F1E7, 0x1F1EA);   // 🇧🇪
+    const flagTR = String.fromCodePoint(0x1F1F9, 0x1F1F7);   // 🇹🇷
+    out.hhFlagBE = hhHtml.includes(flagBE);
+    out.hhFlagTR = hhHtml.includes(flagTR);
+    out.hhSexeM = hhHtml.includes('♂');
+    out.hhSexeF = hhHtml.includes('♀');
+    out.hhMrtl = hhHtml.includes('💍') && hhHtml.includes('🕊');
+    // Table de correspondance Pays (Lookup) : drapeau devant le nom
+    if (typeof initPays === 'function') {
+      try {
+        initPays();
+        out.lookupFlag = /\uD83C[\uDDE6-\uDDFF]/.test((document.getElementById('refNlty') || {}).innerHTML || '');
+      } catch (e) { out.lookupErr = String(e && e.message || e); }
+    }
     return out;
   });
 
@@ -86,6 +103,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(/≥15/.test(r.chhTitle || '') && /interroger|survey|ondervragen|befragende/i.test(r.chhTitle || ''), `titre « à interroger » avec seuil dynamique → « ${r.chhTitle} »`);
   A(r.chhClickable && r.chhDrill, 'barres « à interroger » cliquables → treemap des nationalités');
   A(/interroger|survey|ondervragen|befragende/i.test(r.chhBarLabel) && !/cible|target/i.test(r.chhBarLabel), `libellé de barre « à interroger » (plus « cible ») → « ${r.chhBarLabel} »`);
+  A(r.hhFlagBE && r.hhFlagTR, 'table ménage : drapeaux pays (🇧🇪 / 🇹🇷) devant naissance/nationalité');
+  A(r.hhSexeM && r.hhSexeF, 'table ménage : icônes de sexe ♂ / ♀');
+  A(r.hhMrtl, 'table ménage : emoji d\'état civil (💍 / 🕊)');
+  A(r.lookupFlag && !r.lookupErr, 'table de correspondance Pays : drapeau devant le nom' + (r.lookupErr ? ' → ' + r.lookupErr : ''));
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
