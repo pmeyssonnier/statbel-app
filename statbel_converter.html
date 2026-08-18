@@ -897,7 +897,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 //   CONVERSION      GRP → cibles/membres                   → « CONVERSION PRINCIPALE »
 //   AFFICHAGE/UI    onglets, sources, apparence, rapport   → « AFFICHAGE » / « ONGLETS »
 //   TABLES          tables triables + tableau Aperçu/ménage → « TABLES DE CORRESPONDANCE » / « TRI »
-//   CHARTS          barres / donut / treemap / pyramide / Sankey → « GRAPHIQUES » / « PYRAMIDE »
+//   CHARTS          barres / donut / treemap / pyramide / Sankey → « RÉGION — CHARTS »
 //   ANALYTICS       majStats + BLOC_DEFS + renderers        → « STATISTIQUES »
 //   PERSONNALISATION registres PERSO (KPI/blocs/colonnes)   → « KPI — registre »
 //   EXPORT          CSV (toCsv/telecharger) + rapport       → « RÉGION — EXPORT »
@@ -6547,75 +6547,6 @@ async function geocodeQuartier(g) {
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════
-//  GRAPHIQUES À BARRES HORIZONTALES
-// ════════════════════════════════════════════════════════════════════════
-// items : [{ label, count, title?, color? }]
-function renderBarres(elId, items, defaultColor, clickFn) {
-  const max = Math.max(1, ...items.map(i => i.count));
-  document.getElementById(elId).innerHTML = items.map(i => {
-    const clic = clickFn ? ` style="cursor:pointer" onclick="${clickFn}('${String(i.key != null ? i.key : i.label).replace(/['\\]/g, '')}')"` : '';
-    return `
-    <div class="bar-row"${clic} title="${escHtml((i.title || i.label) + ' : ' + i.count)}">
-      <div class="bar-lbl">${escHtml(i.label)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(i.count / max * 100).toFixed(1)}%;background:${i.color || defaultColor}"></div></div>
-      <div class="bar-val">${i.count}</div>
-    </div>`;
-  }).join('');
-}
-
-// Barres empilées par sexe — items : [{ label, h, f, title? }]
-const COUL_H = 'var(--bar-h)';   // hommes (bleu)
-const COUL_F = 'var(--bar-f)';   // femmes (rouge)
-function renderBarresStack(elId, items, clickFn) {
-  const max = Math.max(1, ...items.map(i => i.h + i.f));
-  document.getElementById(elId).innerHTML = items.map(i => {
-    const tot = i.h + i.f;
-    const clic = clickFn ? ` style="cursor:pointer" onclick="${clickFn}('${String(i.key != null ? i.key : i.label).replace(/['\\]/g, '')}')"` : '';
-    return `
-    <div class="bar-row"${clic} title="${escHtml((i.title || i.label) + ' : ' + tot + ' (H ' + i.h + ' / F ' + i.f + ')')}">
-      <div class="bar-lbl">${escHtml(i.label)}</div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width:${(i.h / max * 100).toFixed(1)}%;background:${COUL_H};border-radius:0"></div>
-        <div class="bar-fill" style="width:${(i.f / max * 100).toFixed(1)}%;background:${COUL_F};border-radius:0"></div>
-      </div>
-      <div class="bar-val">${tot}</div>
-    </div>`;
-  }).join('');
-}
-
-// ════════════════════════════════════════════════════════════════════════
-//  PYRAMIDE DES ÂGES
-// ════════════════════════════════════════════════════════════════════════
-
-function renderPyramide(elId, data) {
-  const max  = Math.max(1, ...data.map(d => Math.max(d.h, d.f)));
-  const totH = data.reduce((s, d) => s + d.h, 0);
-  const totF = data.reduce((s, d) => s + d.f, 0);
-  // De la tranche la plus âgée (haut) à la plus jeune (bas)
-  const rows = data.slice().reverse().map(d => {
-    const wh = (d.h / max * 100).toFixed(1);
-    const wf = (d.f / max * 100).toFixed(1);
-    const lblJS = String(d.lbl).replace(/['\\]/g, '');
-    return `<div class="pyr-row" style="cursor:pointer" title="${escHtml(t('title_zoom_bracket'))}" onclick="zoomTranche(${d.min},${d.max},'${lblJS}')">
-      <div class="pyr-left">
-        <span class="pyr-cnt" style="text-align:right">${d.h || ''}</span>
-        <div class="pyr-bar pyr-bar-h" style="width:${wh}%" title="${d.h} ${escHtml(tPlural('word_men_unit', d.h))}"></div>
-      </div>
-      <div class="pyr-lbl">${escHtml(d.lbl)}</div>
-      <div class="pyr-right">
-        <div class="pyr-bar pyr-bar-f" style="width:${wf}%" title="${d.f} ${escHtml(tPlural('word_women_unit', d.f))}"></div>
-        <span class="pyr-cnt">${d.f || ''}</span>
-      </div>
-    </div>`;
-  }).join('');
-  document.getElementById(elId).innerHTML =
-    `<div class="pyramide">
-       <div class="pyr-head"><span class="h">${escHtml(tf('pyr_men_tpl', { n: totH }))}</span><span class="f">${escHtml(tf('pyr_women_tpl', { n: totF }))}</span></div>
-       ${rows}
-     </div>`;
-}
-
 // Pyramide filtrée par nationalité (sélecteur #pyrNlty)
 let _pyrPop = [];
 function majPyramide() {
@@ -7185,6 +7116,75 @@ function majStats(res) {
   // « Personnes à interroger par ménage » + « Composition » : une seule passe
   // (dépend de l'âge min, indépendante de la portée d'affichage).
   majMenagesCartes();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  RÉGION — CHARTS · primitives de rendu (données préparées → SVG/HTML)
+//  barres · barres empilées · pyramide · donut · 100 % · treemap · Sankey
+//  Ne recalculent pas de données métier : ANALYTICS prépare, CHARTS dessine.
+// ════════════════════════════════════════════════════════════════════════
+
+// items : [{ label, count, title?, color? }]
+function renderBarres(elId, items, defaultColor, clickFn) {
+  const max = Math.max(1, ...items.map(i => i.count));
+  document.getElementById(elId).innerHTML = items.map(i => {
+    const clic = clickFn ? ` style="cursor:pointer" onclick="${clickFn}('${String(i.key != null ? i.key : i.label).replace(/['\\]/g, '')}')"` : '';
+    return `
+    <div class="bar-row"${clic} title="${escHtml((i.title || i.label) + ' : ' + i.count)}">
+      <div class="bar-lbl">${escHtml(i.label)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(i.count / max * 100).toFixed(1)}%;background:${i.color || defaultColor}"></div></div>
+      <div class="bar-val">${i.count}</div>
+    </div>`;
+  }).join('');
+}
+
+// Barres empilées par sexe — items : [{ label, h, f, title? }]
+const COUL_H = 'var(--bar-h)';   // hommes (bleu)
+const COUL_F = 'var(--bar-f)';   // femmes (rouge)
+function renderBarresStack(elId, items, clickFn) {
+  const max = Math.max(1, ...items.map(i => i.h + i.f));
+  document.getElementById(elId).innerHTML = items.map(i => {
+    const tot = i.h + i.f;
+    const clic = clickFn ? ` style="cursor:pointer" onclick="${clickFn}('${String(i.key != null ? i.key : i.label).replace(/['\\]/g, '')}')"` : '';
+    return `
+    <div class="bar-row"${clic} title="${escHtml((i.title || i.label) + ' : ' + tot + ' (H ' + i.h + ' / F ' + i.f + ')')}">
+      <div class="bar-lbl">${escHtml(i.label)}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(i.h / max * 100).toFixed(1)}%;background:${COUL_H};border-radius:0"></div>
+        <div class="bar-fill" style="width:${(i.f / max * 100).toFixed(1)}%;background:${COUL_F};border-radius:0"></div>
+      </div>
+      <div class="bar-val">${tot}</div>
+    </div>`;
+  }).join('');
+}
+
+// Pyramide des âges
+function renderPyramide(elId, data) {
+  const max  = Math.max(1, ...data.map(d => Math.max(d.h, d.f)));
+  const totH = data.reduce((s, d) => s + d.h, 0);
+  const totF = data.reduce((s, d) => s + d.f, 0);
+  // De la tranche la plus âgée (haut) à la plus jeune (bas)
+  const rows = data.slice().reverse().map(d => {
+    const wh = (d.h / max * 100).toFixed(1);
+    const wf = (d.f / max * 100).toFixed(1);
+    const lblJS = String(d.lbl).replace(/['\\]/g, '');
+    return `<div class="pyr-row" style="cursor:pointer" title="${escHtml(t('title_zoom_bracket'))}" onclick="zoomTranche(${d.min},${d.max},'${lblJS}')">
+      <div class="pyr-left">
+        <span class="pyr-cnt" style="text-align:right">${d.h || ''}</span>
+        <div class="pyr-bar pyr-bar-h" style="width:${wh}%" title="${d.h} ${escHtml(tPlural('word_men_unit', d.h))}"></div>
+      </div>
+      <div class="pyr-lbl">${escHtml(d.lbl)}</div>
+      <div class="pyr-right">
+        <div class="pyr-bar pyr-bar-f" style="width:${wf}%" title="${d.f} ${escHtml(tPlural('word_women_unit', d.f))}"></div>
+        <span class="pyr-cnt">${d.f || ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById(elId).innerHTML =
+    `<div class="pyramide">
+       <div class="pyr-head"><span class="h">${escHtml(tf('pyr_men_tpl', { n: totH }))}</span><span class="f">${escHtml(tf('pyr_women_tpl', { n: totF }))}</span></div>
+       ${rows}
+     </div>`;
 }
 
 // Palette catégorielle stable
@@ -7766,7 +7766,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '203';
+const APP_VERSION = '204';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
