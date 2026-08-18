@@ -195,7 +195,7 @@
     cursor: pointer; font-family: inherit;
   }
   .btn-perso:hover { background: var(--hover); }
-  .perso-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 52vh; overflow-y: auto; }
+  .perso-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 64vh; overflow-y: auto; }
   .perso-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; }
   .perso-list li.off { opacity: .55; }
   .perso-list li.perso-sub { border: none; padding: 8px 2px 2px; font-size: 11px; font-weight: bold;
@@ -766,7 +766,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
 <!-- Modale : personnaliser l'affichage (KPI + blocs) — afficher/masquer + réordonner -->
 <div class="modal-overlay" id="modalPerso" onclick="if(event.target===this)fermerPerso()">
-  <div class="modal" style="max-width:440px">
+  <div class="modal" style="max-width:520px">
     <h2>🎛️ <span data-i18n="perso_title2">Personnaliser l'affichage</span></h2>
     <div class="perso-tabs">
       <button class="perso-tab actif" data-ptab="kpi" onclick="persoTab('kpi')" data-i18n="perso_tab_kpi">KPI</button>
@@ -7649,7 +7649,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '196';
+const APP_VERSION = '197';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
