@@ -610,6 +610,19 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div id="statsCompoHH"></div>
           <div id="statsCompoHHDetail" style="margin-top:8px;font-size:11px;color:var(--text2)"></div>
         </div>
+        <div class="card" data-block="ageLFS">
+          <div class="card-titre" data-i18n="card_age_lfs">📊 Tranches d'âge (LFS)</div>
+          <div id="statsAgeLFS"></div>
+        </div>
+        <div class="card" data-block="depend">
+          <div class="card-titre" data-i18n="card_dependency">⚖️ Ratio de dépendance</div>
+          <div id="statsDepend"></div>
+          <div id="statsDependDetail" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
+        </div>
+        <div class="card" data-block="contact">
+          <div class="card-titre" data-i18n="card_contactability">📞 Complétude des contacts</div>
+          <div id="statsContact"></div>
+        </div>
         <div class="card blk-wide" data-block="sankey">
           <div class="card-titre" data-i18n="card_sankey">🔀 Flux Nationalité → Sexe → Âge</div>
           <div id="statsSankey"></div>
@@ -989,6 +1002,18 @@ const I18N = {
   kpi_avg_age: { fr:"Âge moyen", nl:"Gemiddelde leeftijd", en:"Average age", de:"Durchschnittsalter" },
   kpi_avg_hh_size: { fr:"Taille moy. ménage", nl:"Gem. gezinsgrootte", en:"Avg. household size", de:"Ø Haushaltsgröße" },
   kpi_targets15: { fr:"Cibles ≥15 ans", nl:"Doelen ≥15 jaar", en:"Targets ≥15", de:"Zielpers. ≥15" },
+  kpi_targets_min: { fr:"Cibles ≥{n} ans", nl:"Doelen ≥{n} jaar", en:"Targets ≥{n}", de:"Zielpers. ≥{n}" },
+  card_age_lfs: { fr:"📊 Tranches d'âge (LFS)", nl:"📊 Leeftijdsgroepen (LFS)", en:"📊 Age brackets (LFS)", de:"📊 Altersgruppen (LFS)" },
+  card_dependency: { fr:"⚖️ Ratio de dépendance", nl:"⚖️ Afhankelijkheidsratio", en:"⚖️ Dependency ratio", de:"⚖️ Abhängigkeitsquote" },
+  card_contactability: { fr:"📞 Complétude des contacts", nl:"📞 Contactgegevens", en:"📞 Contact completeness", de:"📞 Kontaktvollständigkeit" },
+  lbl_has_phone: { fr:"Téléphone", nl:"Telefoon", en:"Phone", de:"Telefon" },
+  lbl_has_email: { fr:"Email", nl:"E-mail", en:"Email", de:"E-Mail" },
+  lbl_reachable: { fr:"Joignable", nl:"Bereikbaar", en:"Reachable", de:"Erreichbar" },
+  lbl_dep_young: { fr:"Jeunes (<15)", nl:"Jongeren (<15)", en:"Young (<15)", de:"Junge (<15)" },
+  lbl_dep_active: { fr:"Actifs (15–64)", nl:"Actief (15–64)", en:"Working age (15–64)", de:"Erwerbsalter (15–64)" },
+  lbl_dep_old: { fr:"Âgés (65+)", nl:"Ouderen (65+)", en:"Elderly (65+)", de:"Ältere (65+)" },
+  lbl_dep_ratio: { fr:"ratio dép.", nl:"afh.ratio", en:"dep. ratio", de:"Abh.quote" },
+  txt_dep_ratio: { fr:"Ratio de dépendance : {n} pour 100 actifs", nl:"Afhankelijkheidsratio: {n} per 100 actieven", en:"Dependency ratio: {n} per 100 working-age", de:"Abhängigkeitsquote: {n} je 100 Erwerbstätige" },
   kpi_pct_foreign: { fr:"% né·es à l'étranger", nl:"% in buitenland geboren", en:"% born abroad", de:"% im Ausland geboren" },
   kpi_pct_minors: { fr:"% mineurs (<15)", nl:"% minderjarigen (<15)", en:"% minors (<15)", de:"% Minderjährige (<15)" },
   kpi_age_median: { fr:"Âge médian", nl:"Mediane leeftijd", en:"Median age", de:"Medianalter" },
@@ -6695,7 +6720,7 @@ const KPI_DEFS = {
   age:  { i18n: 'kpi_avg_age',     color: 'var(--gold)',  val: c => c.ageMoy != null ? c.ageMoy + ' ans' : '—' },
   h:    { i18n: 'kpi_pct_men',     color: 'var(--bar-h)', tint: 'var(--bar-h)', val: c => c.popN ? Math.round(c.kM / c.popN * 100) + ' %' : '—' },
   f:    { i18n: 'kpi_pct_women',   color: 'var(--bar-f)', tint: 'var(--bar-f)', val: c => c.popN ? Math.round(c.kF / c.popN * 100) + ' %' : '—' },
-  cib:  { i18n: 'kpi_targets15',   color: '#5e35b1',      val: c => c.nbCibles15 },
+  cib:  { i18n: 'kpi_targets_min', color: '#5e35b1',      val: c => c.nbCibles15, dyn: () => tf('kpi_targets_min', { n: ageMinCible() }) },
   etr:  { i18n: 'kpi_pct_foreign', color: '#00838f',      val: c => c.popN ? Math.round(c.nEtr / c.popN * 100) + ' %' : '—' },
   min:  { i18n: 'kpi_pct_minors',  color: '#8d6e63',      val: c => c.membres ? Math.round(c.nMin / c.membres * 100) + ' %' : '—' },
   med:  { i18n: 'kpi_age_median',  color: '#ef6c00',      val: c => c.ageMed != null ? c.ageMed + ' ans' : '—' },
@@ -6715,9 +6740,12 @@ const BLOC_DEFS = {
   size:   { i18n: 'card_household_dist' },
   chh:    { i18n: 'card_targets_per_hh' },
   compo:  { i18n: 'card_hh_composition' },
+  ageLFS: { i18n: 'card_age_lfs' },
+  depend: { i18n: 'card_dependency' },
+  contact:{ i18n: 'card_contactability' },
   sankey: { i18n: 'card_sankey' },
 };
-const BLOC_ALL = ['nat', 'cont', 'eu', 'mrtl', 'sexe', 'birth', 'age', 'size', 'chh', 'compo', 'sankey'];
+const BLOC_ALL = ['nat', 'cont', 'eu', 'mrtl', 'sexe', 'birth', 'age', 'ageLFS', 'depend', 'size', 'chh', 'compo', 'contact', 'sankey'];
 
 // Colonnes du tableau de contacts de l'Aperçu — {libellé i18n, <th>, cellule(r)}.
 // La colonne d'expansion (▸) est structurelle : toujours présente, hors config.
@@ -6757,6 +6785,8 @@ function getCfg(kind) {
 }
 function saveCfg(kind, cfg) { try { localStorage.setItem(PERSO[kind].key, JSON.stringify(cfg)); } catch (e) { /* ignore */ } }
 function getKpiCfg() { return getCfg('kpi'); }   // conservé pour les tests
+// Libellé d'un élément : dynamique (ex. « Cibles ≥16 ») si `dyn`, sinon traduit.
+function persoLabel(def) { return def.dyn ? def.dyn() : t(def.i18n); }
 
 // Rend les tuiles KPI activées, dans l'ordre configuré, depuis le contexte c.
 function renderKPIs(c) {
@@ -6766,9 +6796,12 @@ function renderKPIs(c) {
     const d = KPI_DEFS[id];
     const v = c ? d.val(c) : '—';
     const tint = d.tint ? ` style="color:${d.tint}"` : '';
+    // Libellé dynamique (ex. « Cibles ≥16 ») → pas de data-i18n (re-rendu via
+    // afficher() au changement de langue) ; sinon data-i18n traduit à la volée.
+    const di18n = d.dyn ? '' : ` data-i18n="${d.i18n}"`;
     return `<div class="compteur" style="border-top-color:${d.color}">`
       + `<div class="val"${tint}>${escHtml(String(v))}</div>`
-      + `<div class="label" data-i18n="${d.i18n}">${escHtml(t(d.i18n))}</div></div>`;
+      + `<div class="label"${di18n}>${escHtml(persoLabel(d))}</div></div>`;
   }).join('');
 }
 
@@ -6817,7 +6850,7 @@ function persoTab(kind) {
 function renderPersoList() {
   const P = PERSO[_persoKind], cfg = getCfg(_persoKind);
   document.getElementById('persoList').innerHTML = cfg.map((x, i) => {
-    const lb = escHtml(t(P.defs[x.id].i18n));
+    const lb = escHtml(persoLabel(P.defs[x.id]));
     return `<li class="${x.on ? '' : 'off'}">`
       + `<input type="checkbox" ${x.on ? 'checked' : ''} onchange="persoToggle(${i})" aria-label="${lb}">`
       + `<span class="pl-lb">${lb}</span>`
@@ -6938,6 +6971,48 @@ function majStats(res) {
     .map(([iso, v]) => ({ label: paysNom(iso) || iso || '—', value: v.h + v.f }))
     .filter(d => d.value > 0).sort((a, b) => b.value - a.value));
   renderSankeyNSA('statsSankey', pop);
+
+  // ── Tranches d'âge LFS (H/F) sur la population du périmètre ──────────
+  const brLFS = [[0, 14, '0–14'], [15, 24, '15–24'], [25, 54, '25–54'], [55, 64, '55–64'], [65, 999, '65+']];
+  const ageLFS = brLFS.map(([, , lbl]) => ({ label: lbl, h: 0, f: 0 }));
+  pop.forEach(r => {
+    const a = parseInt(r.age, 10); if (isNaN(a)) return;
+    const bi = brLFS.findIndex(([lo, hi]) => a >= lo && a <= hi); if (bi < 0) return;
+    if (r.sexe === 'M') ageLFS[bi].h++; else if (r.sexe === 'F') ageLFS[bi].f++;
+  });
+  renderBarresStack('statsAgeLFS', ageLFS);
+
+  // ── Ratio de dépendance sur le ménage complet : (<15 + 65+) / (15–64) ─
+  const memD = res.outMembres;
+  const inBr = (r, lo, hi) => { const a = parseInt(r.age, 10); return !isNaN(a) && a >= lo && a <= hi; };
+  const dJeune = memD.filter(r => inBr(r, 0, 14)).length;
+  const dActif = memD.filter(r => inBr(r, 15, 64)).length;
+  const dAge   = memD.filter(r => inBr(r, 65, 999)).length;
+  const dRatio = dActif ? Math.round((dJeune + dAge) / dActif * 100) : null;
+  const depItems = [
+    { label: t('lbl_dep_young'),  value: dJeune, color: '#f9a825' },
+    { label: t('lbl_dep_active'), value: dActif, color: '#2e7d32' },
+    { label: t('lbl_dep_old'),    value: dAge,   color: '#8d6e63' },
+  ];
+  const elDep = document.getElementById('statsDepend');
+  if (window.Charts) elDep.innerHTML = Charts.donut(depItems, { total: dRatio != null ? dRatio : '—', unitLabel: t('lbl_dep_ratio'), ariaLabel: t('card_dependency') });
+  else renderDonut('statsDepend', depItems.filter(d => d.value > 0));
+  const elDepD = document.getElementById('statsDependDetail');
+  if (elDepD) elDepD.textContent = dRatio != null ? tf('txt_dep_ratio', { n: dRatio }) : '';
+
+  // ── Complétude des contacts (par ménage, référents FL=1) ────────────
+  const hhc = res.outCibles || [];
+  const nHHc = hhc.length || 1;
+  const aTel = r => r.gsm && String(r.gsm).trim();
+  const aMail = r => r.email && String(r.email).trim();
+  const cTel = hhc.filter(aTel).length, cMail = hhc.filter(aMail).length;
+  const cJoin = hhc.filter(r => aTel(r) || aMail(r)).length;
+  const pctL = (key, n) => `${t(key)} — ${Math.round(n / nHHc * 100)} %`;
+  renderBarres('statsContact', [
+    { label: pctL('lbl_has_phone', cTel),  count: cTel,  color: '#2e7d32' },
+    { label: pctL('lbl_has_email', cMail), count: cMail, color: '#0277bd' },
+    { label: pctL('lbl_reachable', cJoin), count: cJoin, color: '#1a237e' },
+  ], '#1a237e');
 
   // Cartes ménage (indépendantes de la portée d'affichage, dépendent de l'âge min)
   majMenagesCartes();
@@ -7454,7 +7529,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '181';
+const APP_VERSION = '182';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
