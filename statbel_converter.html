@@ -5376,12 +5376,12 @@ document.addEventListener('click', e => {
 
 function ouvrirParametres() {
   tableTriable('refSexe',
-    [{ label: t('col_code'), num: true }, { label: t('col_abbr') }, { label: t('col_label') }],
+    [{ label: t('col_code'), num: true }, { label: t('col_abbr'), render: (v) => (sexeIcone(v) ? sexeIcone(v) + ' ' : '') + escHtml(v) }, { label: t('col_label') }],
     Object.entries(SEX_MAP).map(([c, a]) => [c, a, sexeLabel(a) || '']));
 
   tableTriable('refMrtl',
     [{ label: t('col_code'), num: true }, { label: t('col_label') }],
-    Object.entries(MRTL_FR).map(([c, l]) => [c, l ? mrtlLabel(l) : '—']));
+    Object.entries(MRTL_FR).map(([c, l]) => [c, l ? ((mrtlIcone(l) ? mrtlIcone(l) + ' ' : '') + mrtlLabel(l)) : '—']));
 
   initPays();
 
@@ -7617,7 +7617,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '189';
+const APP_VERSION = '190';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
