@@ -66,7 +66,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // ── Blocs d'analyse ───────────────────────────────────────────────
     localStorage.removeItem('statbel_conv_blocs');
     persoTab('blocs');
-    out.blocDefaut = getCfg('blocs').length + '/' + getCfg('blocs').filter(x => x.on).length;   // 11/11 par défaut
+    out.blocDefaut = getCfg('blocs').length + '/' + getCfg('blocs').filter(x => x.on).length;   // 14/14 par défaut
+    // Libellé dynamique du KPI « Cibles ≥N » selon l'âge min courant
+    _ui.ageMinCible = 16;
+    out.cibLabel16 = KPI_DEFS.cib.dyn();   // « Cibles ≥16 ans »
     // Masquer le bloc Sankey → carte cachée dans le DOM + persistée
     const idxSankey = getCfg('blocs').findIndex(x => x.id === 'sankey');
     persoToggle(idxSankey);
@@ -107,7 +110,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(/%$/.test((r.etrValue || '').trim()), `KPI % né·es à l'étranger calculé → ${r.etrValue}`);
   A(r.reordered, 'réordonner (↑) échange bien les deux premiers KPI');
   A(r.reset === 'men,pop,size,age,h,f', 'Réinitialiser rétablit le défaut');
-  A(r.blocDefaut === '11/11', `blocs : 11 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
+  A(r.blocDefaut === '14/14', `blocs : 14 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
+  A(/16/.test(r.cibLabel16 || ''), `KPI « Cibles » suit l'âge min (≥16) → « ${r.cibLabel16} »`);
   A(r.sankeyHidden && r.blocPersisted, 'masquer un bloc cache la carte (DOM) et persiste');
   A(r.blocDomMatchesCfg, 'réordonner un bloc réordonne les cartes dans le DOM');
   A(r.colDefaut === '6/6', `colonnes : 6, toutes affichées par défaut → ${r.colDefaut}`);
