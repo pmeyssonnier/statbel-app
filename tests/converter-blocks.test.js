@@ -46,7 +46,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       adminCols: { NR_YEAR: '2026', NR_WAVE: '1', NR_SEQ: '1', NR_REF_WK: '36', NR_GRP: '12305' },
       grpId: '2026-12305', localisation: 'TEST',
     };
-    window._resultat = res;
+    _resultat = res;   // affecte le binding global `let _resultat` (lu par majMenagesCartes)
     if (typeof statsScope !== 'undefined') statsScope = 'membres';
     try { majStats(res); } catch (e) { out.threw = String((e && e.message) || e); return out; }
 
@@ -65,6 +65,12 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.dependDonut = document.getElementById('statsDepend').innerHTML.length > 0;
     // Complétude : 3 barres
     out.contactBars = document.querySelectorAll('#statsContact .bar-row').length;
+    // « Personnes à interroger (≥N) par ménage » : titre dynamique + drill-down
+    out.chhTitle = document.getElementById('titreCiblesHH').textContent;
+    out.chhClickable = !!document.querySelector('#statsCiblesHH .bar-row[onclick]');
+    zoomCibles('1');
+    out.chhDrill = !!document.getElementById('statsCiblesHHTM')
+      && document.getElementById('statsCiblesHHDetail').innerHTML.length > 0;
     return out;
   });
 
@@ -76,6 +82,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.drillClosed, 'fermeture du drill-down (✕) vide le détail');
   A(/100/.test(r.dependRatio || '') && r.dependDonut, `ratio de dépendance = 100 % → « ${r.dependRatio} »`);
   A(r.contactBars === 3, `complétude des contacts : 3 barres → ${r.contactBars}`);
+  A(/≥15/.test(r.chhTitle || '') && /interroger|survey|ondervragen|befragende/i.test(r.chhTitle || ''), `titre « à interroger » avec seuil dynamique → « ${r.chhTitle} »`);
+  A(r.chhClickable && r.chhDrill, 'barres « à interroger » cliquables → treemap des nationalités');
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
