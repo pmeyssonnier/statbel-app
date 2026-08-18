@@ -247,6 +247,7 @@
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 14px; }
   /* Légende H/F sous le treemap (couleurs des barres empilées des blocs d'analyse) */
   .hf-legende { display: flex; justify-content: flex-end; gap: 14px; margin-top: 8px; font-size: 11px; color: var(--text2); }
+  .hf-legende.hf-bandeau { margin-top: 0; margin-bottom: 6px; }   /* bandeau permanent au-dessus de la grille */
   .hf-pastille { display: inline-block; width: 11px; height: 11px; border-radius: 2px; vertical-align: middle; }
   .stat-row {
     display: flex; justify-content: space-between; align-items: center;
@@ -572,17 +573,18 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       </div>
       <!-- Tuiles KPI rendues dynamiquement depuis le registre + config perso (renderKPIs) -->
       <div class="compteurs compteurs-3" id="kpiGrid" style="margin:0 0 14px"></div>
+      <!-- Légende H/F permanente : code couleur des blocs d'analyse à barres empilées
+           (continent, taille, tranches d'âge…). Bandeau fixe, indépendant des blocs. -->
+      <div class="hf-legende hf-bandeau">
+        <span><span class="hf-pastille" style="background:var(--bar-h)"></span> <span data-i18n="legend_men">Men</span></span>
+        <span><span class="hf-pastille" style="background:var(--bar-f)"></span> <span data-i18n="legend_women">Women</span></span>
+      </div>
       <!-- Blocs d'analyse : une seule grille, réordonnables/masquables (data-block).
            Les visualisations larges (treemap, Sankey) occupent toute la largeur. -->
       <div class="stats-grid" id="statsBlocks">
         <div class="card blk-wide" data-block="nat">
           <div class="card-titre"><span data-i18n="card_nationalities">🌍 Nationalities</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_area_headcount">(surface ∝ effectif)</span></div>
           <div id="statsTreemap"></div>
-          <!-- Légende H/F : s'applique aux blocs d'analyse à barres empilées situés sous le treemap -->
-          <div class="hf-legende">
-            <span><span class="hf-pastille" style="background:var(--bar-h)"></span> <span data-i18n="legend_men">Men</span></span>
-            <span><span class="hf-pastille" style="background:var(--bar-f)"></span> <span data-i18n="legend_women">Women</span></span>
-          </div>
         </div>
         <div class="card" data-block="cont">
           <div class="card-titre" data-i18n="card_by_continent">🌐 By continent</div>
@@ -7647,7 +7649,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '195';
+const APP_VERSION = '196';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
