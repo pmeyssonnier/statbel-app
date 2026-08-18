@@ -882,6 +882,26 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
 <script>
 // ════════════════════════════════════════════════════════════════════════
+//  TABLE DES MATIÈRES — régions logiques (mono-fichier, exécutable file://)
+//  Le fichier reste un seul HTML ; ces régions sont des repères de navigation,
+//  cherchables via « RÉGION — ». Découpage cible pour un futur build éventuel.
+//
+//   DATA            i18n + tables de référence (sexe, état civil, pays PAYS_I18N,
+//                   communes REFNIS, en-têtes CSV)        → « I18N » / « TABLES DE CORRESPONDANCE »
+//   IMPORT          lecture & découpage des fichiers (CSV/TSV, séparateur) → « RÉGION — IMPORT »
+//   NORMALISATION   dates, adresses, décodage REFNIS/pays/état civil      → « RÉGION — NORMALISATION »
+//   CONVERSION      GRP → cibles/membres                   → « CONVERSION PRINCIPALE »
+//   AFFICHAGE/UI    onglets, sources, apparence, rapport   → « AFFICHAGE » / « ONGLETS »
+//   TABLES          tables triables + tableau Aperçu/ménage → « TABLES DE CORRESPONDANCE » / « TRI »
+//   CHARTS          barres / donut / treemap / pyramide / Sankey → « GRAPHIQUES » / « PYRAMIDE »
+//   ANALYTICS       majStats + BLOC_DEFS + renderers        → « STATISTIQUES »
+//   PERSONNALISATION registres PERSO (KPI/blocs/colonnes)   → « KPI — registre »
+//   EXPORT          CSV (toCsv/telecharger) + rapport       → « RÉGION — EXPORT »
+//   PLANNING        onglet planning LFS (carte, géocodage)  → « ONGLET PLANNING »
+//   ÉVÉNEMENTS      câblage global + init                   → « ÉVÉNEMENTS »
+// ════════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════════
 //  I18N — FR / NL / EN / DE (miroir du système de l'app enquête, index.html)
 // ════════════════════════════════════════════════════════════════════════
 const LANGS = ['fr', 'nl', 'en', 'de'];
@@ -4524,6 +4544,9 @@ function toggleMenage(i) {
   if (tg) tg.textContent = open ? '▾' : '▸';
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  RÉGION — IMPORT · lecture & découpage des fichiers (séparateur, CSV/TSV)
+// ════════════════════════════════════════════════════════════════════════
 function detecterSep(ligne) {
   const t = (ligne.match(/\t/g)||[]).length;
   const s = (ligne.match(/;/g) ||[]).length;
@@ -4554,6 +4577,9 @@ function splitLine(line, sep) {
   res.push(cur); return res;
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  RÉGION — NORMALISATION · dates & adresses (formats bruts → canoniques)
+// ════════════════════════════════════════════════════════════════════════
 function convertirDate(dob) {
   if (!dob || dob.includes('#')) return '';
   const p = dob.trim().split('-');
@@ -4776,6 +4802,9 @@ const DE_COMMUNITY = new Set(['63001','63012','63013','63023','63040','63048','6
 // Déduit arrondissement + province + région + NUTS2/NUTS3 d'un code REFNIS/NIS belge (5 chiffres).
 // 2 premiers chiffres = arrondissement ; 1er chiffre = province ; pour le « 2 »
 // (ex-Brabant) on distingue via les 2 premiers : 21 = Bruxelles, 23/24 = Brabant flamand, 25 = Brabant wallon.
+// ════════════════════════════════════════════════════════════════════════
+//  RÉGION — NORMALISATION (suite) · décodage REFNIS / pays / état civil
+// ════════════════════════════════════════════════════════════════════════
 function refnisInfo(refnis) {
   const vide = { district: '', province: '', region: '', nuts2: '', nuts3: '' };
   if (!/^\d{5}$/.test(refnis)) return vide;
@@ -4828,6 +4857,9 @@ function decoder(refnisRaw, nltyRaw, mrtlRaw) {
   };
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  RÉGION — EXPORT · sérialisation CSV & téléchargement
+// ════════════════════════════════════════════════════════════════════════
 function toCsv(rows, headers) {
   const esc = v => {
     const s = String(v==null?'':v);
@@ -7649,7 +7681,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '198';
+const APP_VERSION = '199';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
