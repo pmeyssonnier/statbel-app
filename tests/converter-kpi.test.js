@@ -82,6 +82,13 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     const domOrder = [...document.querySelectorAll('#statsBlocks [data-block]')].map(el => el.getAttribute('data-block'));
     const cfgOrder = getCfg('blocs').map(x => x.id);
     out.blocDomMatchesCfg = JSON.stringify(domOrder) === JSON.stringify(cfgOrder);
+    // Croix ✕ : injectée dans chaque carte, masque le bloc (config off + carte cachée)
+    initBlocClose();
+    out.blocXCount = document.querySelectorAll('#statsBlocks .card[data-block] .blk-x').length;   // 14
+    masquerBloc('cont');
+    const contCard = document.querySelector('#statsBlocks [data-block="cont"]');
+    out.blocXHidden = !!contCard && contCard.style.display === 'none';
+    out.blocXPersisted = (JSON.parse(localStorage.getItem('statbel_conv_blocs')).find(x => x.id === 'cont') || {}).on === false;
 
     // ── Colonnes du tableau (Aperçu) ─────────────────────────────────
     localStorage.removeItem('statbel_conv_cols');
@@ -132,6 +139,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(/16/.test(r.minLabel16 || ''), `KPI « % mineurs » suit l'âge min (<16) → « ${r.minLabel16} »`);
   A(r.sankeyHidden && r.blocPersisted, 'masquer un bloc cache la carte (DOM) et persiste');
   A(r.blocDomMatchesCfg, 'réordonner un bloc réordonne les cartes dans le DOM');
+  A(r.blocXCount === 14, `croix ✕ injectée dans les 14 blocs → ${r.blocXCount}`);
+  A(r.blocXHidden && r.blocXPersisted, 'croix ✕ masque le bloc (carte cachée + config persistée)');
   A(r.colDefaut === '6/6', `colonnes : 6, toutes affichées par défaut → ${r.colDefaut}`);
   A(r.headDefault === 7, `en-tête par défaut = 1 (expansion) + 6 colonnes → ${r.headDefault} th`);
   A(r.headAfterHide === 6 && r.gsmGone && r.colPersisted, 'masquer une colonne retire le th et persiste');

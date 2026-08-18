@@ -159,6 +159,18 @@
   .card-titre {
     font-weight: bold; color: var(--accent); font-size: 14px; margin-bottom: 12px;
   }
+  /* Croix ✕ de fermeture d'un bloc d'analyse (masque = équivaut à décocher dans Personnaliser) */
+  #statsBlocks .card[data-block] { position: relative; }
+  #statsBlocks .card-titre { padding-right: 22px; }
+  .blk-x {
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px; padding: 0; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 6px;
+    color: var(--text3); font-size: 13px; cursor: pointer;
+  }
+  .blk-x:hover { background: var(--card2); color: var(--bar-f); }
+  .blk-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   /* ── Compteurs (tuiles KPI — style repris du Résumé d'Interviews :
         carte blanche, ombre légère, bordure haute colorée, gros chiffre) ── */
@@ -1046,6 +1058,7 @@ const I18N = {
   col_num: { fr:"N° (ordre)", nl:"Nr. (volgorde)", en:"# (order)", de:"Nr. (Reihenfolge)" },
   btn_customize: { fr:"Personnaliser", nl:"Aanpassen", en:"Customize", de:"Anpassen" },
   menu_customize: { fr:"🎛️ Personnaliser l'affichage", nl:"🎛️ Weergave aanpassen", en:"🎛️ Customize display", de:"🎛️ Anzeige anpassen" },
+  bloc_hide: { fr:"Masquer ce bloc (réaffichable via Personnaliser)", nl:"Dit blok verbergen (opnieuw tonen via Aanpassen)", en:"Hide this block (restore via Customize)", de:"Diesen Block ausblenden (über Anpassen wieder einblenden)" },
   card_nationalities: { fr:"🌍 Nationalités", nl:"🌍 Nationaliteiten", en:"🌍 Nationalities", de:"🌍 Nationalitäten" },
   hint_area_headcount: { fr:"(surface ∝ effectif)", nl:"(oppervlakte ∝ aantal)", en:"(area ∝ headcount)", de:"(Fläche ∝ Anzahl)" },
   card_by_continent: { fr:"🌐 Par continent", nl:"🌐 Per continent", en:"🌐 By continent", de:"🌐 Nach Kontinent" },
@@ -6986,6 +6999,37 @@ function renderBlocsOrder() {
   });
 }
 
+// Injecte une croix ✕ (une fois) dans chaque carte de bloc → masquage direct à
+// l'écran, équivalent à décocher le bloc dans Personnaliser (réversible).
+function initBlocClose() {
+  document.querySelectorAll('#statsBlocks .card[data-block]').forEach(card => {
+    if (card.querySelector('.blk-x')) return;
+    const id = card.getAttribute('data-block');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'blk-x';
+    b.textContent = '✕';
+    b.title = t('bloc_hide');
+    b.setAttribute('aria-label', t('bloc_hide'));
+    b.setAttribute('data-i18n-title', 'bloc_hide');   // titre + aria suivent le changement de langue
+    b.setAttribute('data-i18n-aria', 'bloc_hide');
+    b.setAttribute('onclick', `masquerBloc('${id}')`);
+    card.appendChild(b);
+  });
+}
+
+// Masque un bloc depuis sa croix ✕ : bascule sa config 'blocs' à off, persiste,
+// réapplique l'ordre/visibilité, et rafraîchit le panneau s'il est ouvert.
+function masquerBloc(id) {
+  const cfg = getCfg('blocs');
+  const it = cfg.find(x => x.id === id);
+  if (!it || !it.on) return;
+  it.on = false;
+  saveCfg('blocs', cfg);
+  renderBlocsOrder();
+  if (document.getElementById('modalPerso').classList.contains('open') && _persoKind === 'blocs') renderPersoList();
+}
+
 // En-tête du tableau de contacts : colonne d'expansion (fixe) + colonnes activées,
 // dans l'ordre configuré. Réapplique l'indicateur de tri courant.
 function renderCiblesHead() {
@@ -7556,6 +7600,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 (async function init() {
   chargerApparence();
   appliquerLangue();            // applique la langue courante au chargement (sinon UI figée en anglais)
+  initBlocClose();              // injecte la croix ✕ de fermeture dans chaque bloc d'analyse
 
   // Stockage persistant : demande au navigateur de NE PAS purger le localStorage.
   // Sans ça, iOS/Safari (ITP) peut l'effacer après ~7 jours d'inactivité — on
@@ -7582,7 +7627,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '192';
+const APP_VERSION = '193';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
