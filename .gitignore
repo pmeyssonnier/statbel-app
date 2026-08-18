@@ -39,6 +39,9 @@
 !.github/workflows/*.yml
 # Config ESLint (dev, module ESM) — lint « prudent », bugs uniquement
 !eslint.config.mjs
+# Documentation d'architecture (dev) — carte des régions du code
+!docs/
+!docs/**
 
 # Données personnelles : jamais (sécurité renforcée)
 *.csv

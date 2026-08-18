@@ -4617,6 +4617,64 @@ function composerAdresse(r) {
   return adrs.trim();
 }
 
+// Déduit arrondissement + province + région + NUTS2/NUTS3 d'un code REFNIS/NIS belge (5 chiffres).
+// 2 premiers chiffres = arrondissement ; 1er chiffre = province ; pour le « 2 »
+// (ex-Brabant) on distingue via les 2 premiers : 21 = Bruxelles, 23/24 = Brabant flamand, 25 = Brabant wallon.
+function refnisInfo(refnis) {
+  const vide = { district: '', province: '', region: '', nuts2: '', nuts3: '' };
+  if (!/^\d{5}$/.test(refnis)) return vide;
+  const d = refnis[0], pp = refnis.slice(0, 2);
+  const district = ARROND[pp] || '';
+  let province = '', region = '';
+  switch (d) {
+    case '1': province = 'Antwerp';        region = 'Flanders';  break;
+    case '2':
+      if (pp === '21') { province = 'Brussels-Capital'; region = 'Brussels'; }
+      else if (pp === '25') { province = 'Walloon Brabant'; region = 'Wallonia'; }
+      else { province = 'Flemish Brabant'; region = 'Flanders'; }   // 23, 24
+      break;
+    case '3': province = 'West Flanders'; region = 'Flanders';  break;
+    case '4': province = 'East Flanders'; region = 'Flanders';  break;
+    case '5': province = 'Hainaut';       region = 'Wallonia';  break;
+    case '6': province = 'Liège';         region = 'Wallonia';  break;
+    case '7': province = 'Limburg';       region = 'Flanders';  break;
+    case '8': province = 'Luxembourg';    region = 'Wallonia';  break;
+    case '9': province = 'Namur';         region = 'Wallonia';  break;
+    default:  return vide;
+  }
+  const nuts2 = NUTS2_PROV[province] || '';
+  const nuts3 = DE_COMMUNITY.has(refnis) ? 'BE336' : (ARR_NUTS3[pp] || '');
+  return { district, province, region, nuts2, nuts3 };
+}
+
+function decoder(refnisRaw, nltyRaw, mrtlRaw) {
+  const refnis = (refnisRaw||'').trim();
+  const nlty   = (nltyRaw||'').trim();
+  const mrtl   = (mrtlRaw||'').trim();
+  // REFNIS à 5 chiffres = commune belge → né en Belgique ; sinon code pays étranger
+  const estCommuneBE = refnis.length === 5 && /^\d{5}$/.test(refnis);
+  const birthCountry = refnis
+    ? (estCommuneBE ? 'BEL' : (NLTY_ISO[refnis] || ''))
+    : (NLTY_ISO[nlty] || '');
+  const info = estCommuneBE ? refnisInfo(refnis) : { district: '', province: '', region: '', nuts2: '', nuts3: '' };
+  const com = REFNIS_COMMUNE[refnis] || null;
+  return {
+    birthCountry,
+    birthCommune:   com ? com.fr : '',
+    birthCommuneNl: com ? com.nl : '',
+    birthDistrict: info.district,
+    birthProvince: info.province,
+    birthRegion:   info.region,
+    birthNuts2:    info.nuts2,
+    birthNuts3:    info.nuts3,
+    nationality:   NLTY_ISO[nlty]||'',
+    maritalStatus: MRTL_FR[mrtl]||'',
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  RÉGION — DATA / RÉFÉRENCES (suite) · codes REFNIS/NIS + planning (arrondissement, province, NUTS)
+// ════════════════════════════════════════════════════════════════════════
 // Planning LFS Q3 2026 (par numero de groupe) — commune, quartier, dates des 4 interrogations
 const GRP_PLANNING = {
   '12704': { p:"BRU", c:"Bruxelles / Brussel", q:"DEUX EGLISES TWEE KERKEN", n:"4", i:[["27", "06/07/2026", "26/07/2026"], ["40", "05/10/2026", "25/10/2026"], ["27", "12/07/2027", "01/08/2027"], ["40", "11/10/2027", "31/10/2027"]] },
@@ -4798,64 +4856,6 @@ const ARR_NUTS3 = {
 };
 // Communes de la Communauté germanophone (arr. Verviers) → NUTS3 BE336
 const DE_COMMUNITY = new Set(['63001','63012','63013','63023','63040','63048','63061','63067','63087']);
-
-// Déduit arrondissement + province + région + NUTS2/NUTS3 d'un code REFNIS/NIS belge (5 chiffres).
-// 2 premiers chiffres = arrondissement ; 1er chiffre = province ; pour le « 2 »
-// (ex-Brabant) on distingue via les 2 premiers : 21 = Bruxelles, 23/24 = Brabant flamand, 25 = Brabant wallon.
-// ════════════════════════════════════════════════════════════════════════
-//  RÉGION — NORMALISATION (suite) · décodage REFNIS / pays / état civil
-// ════════════════════════════════════════════════════════════════════════
-function refnisInfo(refnis) {
-  const vide = { district: '', province: '', region: '', nuts2: '', nuts3: '' };
-  if (!/^\d{5}$/.test(refnis)) return vide;
-  const d = refnis[0], pp = refnis.slice(0, 2);
-  const district = ARROND[pp] || '';
-  let province = '', region = '';
-  switch (d) {
-    case '1': province = 'Antwerp';        region = 'Flanders';  break;
-    case '2':
-      if (pp === '21') { province = 'Brussels-Capital'; region = 'Brussels'; }
-      else if (pp === '25') { province = 'Walloon Brabant'; region = 'Wallonia'; }
-      else { province = 'Flemish Brabant'; region = 'Flanders'; }   // 23, 24
-      break;
-    case '3': province = 'West Flanders'; region = 'Flanders';  break;
-    case '4': province = 'East Flanders'; region = 'Flanders';  break;
-    case '5': province = 'Hainaut';       region = 'Wallonia';  break;
-    case '6': province = 'Liège';         region = 'Wallonia';  break;
-    case '7': province = 'Limburg';       region = 'Flanders';  break;
-    case '8': province = 'Luxembourg';    region = 'Wallonia';  break;
-    case '9': province = 'Namur';         region = 'Wallonia';  break;
-    default:  return vide;
-  }
-  const nuts2 = NUTS2_PROV[province] || '';
-  const nuts3 = DE_COMMUNITY.has(refnis) ? 'BE336' : (ARR_NUTS3[pp] || '');
-  return { district, province, region, nuts2, nuts3 };
-}
-
-function decoder(refnisRaw, nltyRaw, mrtlRaw) {
-  const refnis = (refnisRaw||'').trim();
-  const nlty   = (nltyRaw||'').trim();
-  const mrtl   = (mrtlRaw||'').trim();
-  // REFNIS à 5 chiffres = commune belge → né en Belgique ; sinon code pays étranger
-  const estCommuneBE = refnis.length === 5 && /^\d{5}$/.test(refnis);
-  const birthCountry = refnis
-    ? (estCommuneBE ? 'BEL' : (NLTY_ISO[refnis] || ''))
-    : (NLTY_ISO[nlty] || '');
-  const info = estCommuneBE ? refnisInfo(refnis) : { district: '', province: '', region: '', nuts2: '', nuts3: '' };
-  const com = REFNIS_COMMUNE[refnis] || null;
-  return {
-    birthCountry,
-    birthCommune:   com ? com.fr : '',
-    birthCommuneNl: com ? com.nl : '',
-    birthDistrict: info.district,
-    birthProvince: info.province,
-    birthRegion:   info.region,
-    birthNuts2:    info.nuts2,
-    birthNuts3:    info.nuts3,
-    nationality:   NLTY_ISO[nlty]||'',
-    maritalStatus: MRTL_FR[mrtl]||'',
-  };
-}
 
 // ════════════════════════════════════════════════════════════════════════
 //  RÉGION — EXPORT · sérialisation CSV & téléchargement
@@ -7682,7 +7682,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '200';
+const APP_VERSION = '201';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
