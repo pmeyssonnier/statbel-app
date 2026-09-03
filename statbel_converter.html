@@ -415,6 +415,19 @@
 
   /* ── Hidden ── */
   .hidden { display: none; }
+
+  /* ── Accessibilité : lien d'évitement (caché hors écran, révélé au focus) ── */
+  .skip-link {
+    position: fixed; top: 8px; left: 8px; z-index: 10001;
+    background: var(--bleu); color: #fff; padding: 10px 16px; border-radius: 8px;
+    font-size: 14px; font-weight: 600; text-decoration: none;
+    transform: translateY(-160%); transition: transform .15s ease;
+  }
+  .skip-link:focus { transform: translateY(0); outline: 2px solid #fff; outline-offset: 2px; }
+  /* Respecte « moins d'animations » : transitions/animations quasi instantanées. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  }
 </style>
 <!-- SheetJS xlsx 0.18.5 embarque (hors-ligne / file:// / VS Code) -->
 <script>
@@ -444,6 +457,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 </script>
 </head>
 <body>
+<a class="skip-link" href="#contenu" data-i18n="skip_link">Aller au contenu</a>
 
 <header>
   <div class="header-row">
@@ -480,7 +494,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
 </header>
 
-<div class="container">
+<main class="container" id="contenu" role="main" tabindex="-1">
 
   <!-- Zone de dépôt -->
   <div id="dropzone">
@@ -703,12 +717,12 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </div>
   </div>
 
-</div>
+</main>
 
 <!-- Modale : mapping des colonnes d'un planning importé -->
 <div class="modal-overlay" id="modalPlanMap" onclick="if(event.target===this)fermerMappingPlanning()">
-  <div class="modal" style="max-width:560px">
-    <h2 data-i18n="btn_import_planning">📥 Importer un planning</h2>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ttl-planmap" style="max-width:560px">
+    <h2 id="ttl-planmap" data-i18n="btn_import_planning">📥 Importer un planning</h2>
     <p style="font-size:12px;color:var(--text2);margin-bottom:10px" data-i18n="map_intro">
       Fichier : <strong id="mapFichier"></strong> — <span id="mapNbLignes"></span> ligne(s).
       Associe chaque information à une colonne du fichier (1 ligne = 1 mission/interrogation).
@@ -741,8 +755,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
 <!-- Modale : export des données converties -->
 <div class="modal-overlay" id="modalExport" onclick="if(event.target===this)fermerExport()">
-  <div class="modal" style="max-width:520px">
-    <h2 data-i18n="menu_export">⬇️ Export converted data</h2>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ttl-export" style="max-width:520px">
+    <h2 id="ttl-export" data-i18n="menu_export">⬇️ Export converted data</h2>
     <p style="font-size:12px;color:var(--text2);margin-bottom:12px"><span data-i18n="lbl_source_file">Source file:</span> <strong id="expNom"></strong></p>
     <div class="btns" style="flex-direction:column">
       <button class="btn-dl btn-cibles" id="btnCibles">
@@ -770,8 +784,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
 <!-- Modale : personnaliser l'affichage (KPI + blocs) — afficher/masquer + réordonner -->
 <div class="modal-overlay" id="modalPerso" onclick="if(event.target===this)fermerPerso()">
-  <div class="modal" style="max-width:520px">
-    <h2>🎛️ <span data-i18n="perso_title2">Personnaliser l'affichage</span></h2>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ttl-perso" style="max-width:520px">
+    <h2 id="ttl-perso">🎛️ <span data-i18n="perso_title2">Personnaliser l'affichage</span></h2>
     <div class="perso-tabs">
       <button class="perso-tab actif" data-ptab="kpi" onclick="persoTab('kpi')" data-i18n="perso_tab_kpi">KPI</button>
       <button class="perso-tab" data-ptab="blocs" onclick="persoTab('blocs')" data-i18n="perso_tab_blocs">Blocs d'analyse</button>
@@ -789,8 +803,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 <!-- Modale : tables de correspondance -->
 <!-- Modale : apparence (thème + taille du texte) -->
 <div class="modal-overlay" id="modalApparence" onclick="if(event.target===this)fermerApparence()">
-  <div class="modal" style="max-width:460px">
-    <h2 data-i18n="menu_appearance">🎨 Appearance</h2>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ttl-apparence" style="max-width:460px">
+    <h2 id="ttl-apparence" data-i18n="menu_appearance">🎨 Appearance</h2>
     <h3 data-i18n="lbl_language">🌐 Language</h3>
     <select id="setLangConv" onchange="changerLangue(this.value)" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;width:100%;max-width:280px">
       <option value="fr">🇫🇷 Français</option>
@@ -828,8 +842,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 </div>
 
 <div class="modal-overlay" id="modalParams" onclick="if(event.target===this)fermerParametres()">
-  <div class="modal">
-    <h2 data-i18n="menu_lookup">⚙️ Lookup tables</h2>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ttl-params">
+    <h2 id="ttl-params" data-i18n="menu_lookup">⚙️ Lookup tables</h2>
     <p style="font-size:12px;color:var(--text2)" data-i18n="lookup_intro">STATBEL codes used during conversion.</p>
 
     <div class="lk-tabs">
@@ -1031,6 +1045,7 @@ const I18N = {
   ph_search_country: { fr:"Rechercher par NIS, ISO ou nom…", nl:"Zoeken op NIS, ISO of naam…", en:"Search NIS, ISO or name…", de:"Suche nach NIS, ISO oder Name…" },
   ph_search_commune: { fr:"Rechercher par REFNIS ou nom…", nl:"Zoeken op REFNIS of naam…", en:"Search REFNIS or name…", de:"Suche nach REFNIS oder Name…" },
   btn_clear: { fr:"Effacer", nl:"Wissen", en:"Clear", de:"Löschen" },
+  skip_link: { fr:"Aller au contenu", nl:"Naar de inhoud", en:"Skip to content", de:"Zum Inhalt springen" },
 
   // ── Statistics ────────────────────────────────────────────────────
   lbl_survey_colon: { fr:"Enquête :", nl:"Enquête:", en:"Survey:", de:"Umfrage:" },
@@ -7772,8 +7787,52 @@ document.getElementById('btnRapport').addEventListener('click', () => {
   } catch (e) { console.error('init():', e); }
 })();
 
+// ════════════════════════════════════════════════════════════════════════
+//  ACCESSIBILITÉ — clavier sur les cliquables + modales (dialog, focus piégé)
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  // 1) Drill-downs (barres, pyramide, fil d'Ariane, ligne ménage) : focusables
+  //    et activables au clavier (Entrée / Espace), sans toucher aux générateurs
+  //    — un observateur enrichit aussi les éléments ajoutés dynamiquement.
+  //    role="button" seulement hors <tr> (préserve la sémantique de ligne).
+  const CLIC = '.bar-row[onclick],.pyr-row[onclick],.bd-crumb[onclick],.cible-row[onclick]';
+  const BTN  = '.bar-row[onclick],.pyr-row[onclick],.bd-crumb[onclick]';
+  function enrichir1(x){ if(!x.hasAttribute('tabindex')) x.setAttribute('tabindex','0'); if(x.matches(BTN)) x.setAttribute('role','button'); }
+  function enrichir(el){ if(!el || el.nodeType!==1) return; if(el.matches && el.matches(CLIC)) enrichir1(el); el.querySelectorAll && el.querySelectorAll(CLIC).forEach(enrichir1); }
+  new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(enrichir))).observe(document.body,{childList:true,subtree:true});
+  enrichir(document.body);
+  document.addEventListener('keydown', e=>{
+    if(e.key!=='Enter' && e.key!==' ' && e.key!=='Spacebar') return;
+    const el = e.target.closest && e.target.closest(CLIC);
+    if(el){ e.preventDefault(); el.click(); }
+  });
+
+  // 2) Modales : Échap ferme, Tab piégé dans la boîte, focus restitué au retour.
+  const overlays = () => [...document.querySelectorAll('.modal-overlay')];
+  const focusables = m => [...m.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);
+  document.addEventListener('keydown', e=>{
+    const ouverte = overlays().filter(m=>m.classList.contains('open')).pop();
+    if(!ouverte) return;
+    if(e.key==='Escape'){ e.preventDefault(); ouverte.classList.remove('open'); return; }
+    if(e.key==='Tab'){
+      const f=focusables(ouverte); if(!f.length){ e.preventDefault(); return; }
+      const premier=f[0], dernier=f[f.length-1], actif=document.activeElement;
+      if(e.shiftKey && (actif===premier || !ouverte.contains(actif))){ e.preventDefault(); dernier.focus(); }
+      else if(!e.shiftKey && (actif===dernier || !ouverte.contains(actif))){ e.preventDefault(); premier.focus(); }
+    }
+  });
+  const obs = new MutationObserver(ms=>ms.forEach(mu=>{
+    if(mu.attributeName!=='class') return;
+    const m=mu.target, open=m.classList.contains('open');
+    if(open===(m._a11yOpen===true)) return; m._a11yOpen=open;
+    if(open){ m._a11yPrev=document.activeElement; const f=focusables(m); if(f[0]) f[0].focus(); }
+    else if(m._a11yPrev && document.contains(m._a11yPrev)){ m._a11yPrev.focus(); m._a11yPrev=null; }
+  }));
+  overlays().forEach(m=>obs.observe(m,{attributes:true,attributeFilter:['class']}));
+})();
+
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '206';
+const APP_VERSION = '207';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
