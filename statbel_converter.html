@@ -39,7 +39,7 @@
     --border: #e0e0e0;
     --text:   #222222;
     --text2:  #555555;
-    --text3:  #999999;
+    --text3:  #616161;   /* texte tertiaire — ≥ 4,5:1 sur fond clair (WCAG 1.4.3) */
     --card2:  #e8eaf6;   /* surfaces secondaires (titres, KPI, en-têtes tableau, survols) */
     --row-alt:#fafafa;   /* lignes paires */
     --track:  #eef0f5;   /* fond des barres */
@@ -427,6 +427,12 @@
   /* Respecte « moins d'animations » : transitions/animations quasi instantanées. */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  }
+  /* Cible tactile ≥ 24 px (WCAG 2.5.8) pour les petits boutons ✕ de recherche.
+     Affichés en flex par le JS (display:flex) → le glyphe reste centré. */
+  button[data-i18n-title="btn_clear"] {
+    width: 26px; height: 26px; padding: 0;
+    align-items: center; justify-content: center;
   }
 </style>
 <!-- SheetJS xlsx 0.18.5 embarque (hors-ligne / file:// / VS Code) -->
@@ -5538,7 +5544,7 @@ function filtrerPays() {
   const ue   = document.getElementById('filtrePaysUE').value;
   const champ = document.getElementById('filtrePays');
   const q    = sansAccent((champ.value || '').trim());
-  document.getElementById('filtrePaysClear').style.display = champ.value ? 'block' : 'none';
+  document.getElementById('filtrePaysClear').style.display = champ.value ? 'flex' : 'none';
   const rows = _paysAll.filter(r =>
     (!cont || r[5] === cont) &&
     (!ue || (ue === 'eu' ? r[6] === 'EU' : r[6] !== 'EU')) &&
@@ -5616,7 +5622,7 @@ function filtrerCommunes() {
   const dist = document.getElementById('filtreDistrict').value;
   const champ = document.getElementById('filtreCommune');
   const q    = sansAccent((champ.value || '').trim());
-  document.getElementById('filtreCommuneClear').style.display = champ.value ? 'block' : 'none';
+  document.getElementById('filtreCommuneClear').style.display = champ.value ? 'flex' : 'none';
   const rows = _communesAll.filter(r =>
     (!reg || r[5] === reg) && (!prov || r[4] === prov) && (!dist || r[3] === dist) &&
     (!q || r[0].includes(q) || sansAccent(r[1]).includes(q) || sansAccent(r[2]).includes(q))
@@ -6015,7 +6021,7 @@ function planRowsFiltres() {
   const aVenir = document.getElementById('planAVenir').checked;
   const champ = document.getElementById('planSearch');
   const q = sansAccent((champ.value || '').trim());
-  document.getElementById('planSearchClear').style.display = champ.value ? 'block' : 'none';
+  document.getElementById('planSearchClear').style.display = champ.value ? 'flex' : 'none';
   const now = new Date(); now.setHours(0, 0, 0, 0);
   return _planRows.filter(r =>
     (!prov || r.prov === prov) && (!comm || r.commune === comm) && (!quar || r.quartier === quar) &&
@@ -7832,7 +7838,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '207';
+const APP_VERSION = '208';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

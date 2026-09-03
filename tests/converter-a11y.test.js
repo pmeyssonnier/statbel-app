@@ -58,6 +58,24 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     }
     out.reducedMotion = rm;
 
+    // ── Contraste du texte tertiaire (thème clair) ≥ 4,5:1 sur blanc (WCAG 1.4.3) ──
+    const hexToRgb = h => { h = h.trim().replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+    const relLum = rgb => { const a = rgb.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]; };
+    const ratio = (x, y) => { const L1 = relLum(x), L2 = relLum(y), hi = Math.max(L1, L2), lo = Math.min(L1, L2); return (hi + 0.05) / (lo + 0.05); };
+    const t3 = getComputedStyle(document.documentElement).getPropertyValue('--text3');
+    out.text3Contrast = t3 ? ratio(hexToRgb(t3), [255, 255, 255]) : 0;
+
+    // ── Cible tactile ≥ 24 px pour les boutons ✕ de recherche (WCAG 2.5.8) ──
+    let tt = false;
+    for (const sh of document.styleSheets) {
+      let rules; try { rules = sh.cssRules; } catch (e) { continue; }
+      if (!rules) continue;
+      for (const ru of rules) {
+        if (ru.selectorText && ru.selectorText.includes('btn_clear') && ru.style && parseInt(ru.style.width, 10) >= 24) tt = true;
+      }
+    }
+    out.touchRule = tt;
+
     // ── Modales : dialog + aria-labelledby vers un titre existant ──
     const modals = [...document.querySelectorAll('.modal[role="dialog"]')];
     out.modalCount = modals.length;
@@ -119,6 +137,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.hiddenByDefault, 'lien d\'évitement caché hors écran par défaut');
   A(r.visibleOnFocus, 'lien d\'évitement révélé au focus clavier');
   A(r.reducedMotion, 'règle @media prefers-reduced-motion présente');
+  A(r.text3Contrast >= 4.5, `texte tertiaire (--text3) ≥ 4,5:1 sur blanc → ${r.text3Contrast ? r.text3Contrast.toFixed(2) : r.text3Contrast}:1`);
+  A(r.touchRule, 'boutons ✕ de recherche : cible tactile ≥ 24 px (règle CSS)');
   A(r.modalCount === 5, `5 modales en role="dialog" → ${r.modalCount}`);
   A(r.modalAria, 'modales : aria-modal="true" + aria-labelledby vers un titre existant');
   A(r.barRole === 'button' && r.barTab === '0', `barre de drill-down focusable + role button → role=${r.barRole} tabindex=${r.barTab}`);
