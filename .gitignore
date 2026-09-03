@@ -45,6 +45,15 @@
 !docs/
 !docs/**
 
+# Skill de design Impeccable (outillage dev, non servi) — depuis Devis-generator-app
+!.claude/
+!.claude/skills/
+!.claude/skills/impeccable/
+!.claude/skills/impeccable/**
+!.claude/agents/
+!.claude/agents/impeccable-*.md
+!.claude/launch.json
+
 # Données personnelles : jamais (sécurité renforcée)
 *.csv
 *.json
