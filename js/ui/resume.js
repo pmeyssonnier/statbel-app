@@ -191,12 +191,17 @@ export function renduResume() {
   // Personnes interrogées (≥ 15 ans) dans les ménages « Fait » : direct + proxy.
   // Source exacte = colonne nb_cibles (export Convertisseur) ; repli sur la taille
   // du ménage quand le détail n'est pas importé.
-  let nbInterroges = 0, interrogesExact = true;
+  // nbAutres = les ≥15 interrogés EN PLUS du référent (1 référent/ménage « Fait ») :
+  // par ménage, cibles ≥15 − 1. Total = nbInterroges − nombre de ménages « Fait ».
+  let nbInterroges = 0, nbAutres = 0, interrogesExact = true;
   nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
     if (!doneStatuts.includes(c.statut || statutDefaut())) return;
     const n15 = parseInt(c.nb_cibles, 10);
-    if (!isNaN(n15)) { nbInterroges += n15; }
-    else { const tm = parseInt(c.taille_menage, 10); nbInterroges += (!isNaN(tm) && tm > 0) ? tm : 1; interrogesExact = false; }
+    let m;
+    if (!isNaN(n15)) { m = n15; }
+    else { const tm = parseInt(c.taille_menage, 10); m = (!isNaN(tm) && tm > 0) ? tm : 1; interrogesExact = false; }
+    nbInterroges += m;
+    nbAutres += Math.max(m - 1, 0);
   }));
 
   let kpiHtml = `
@@ -210,6 +215,11 @@ export function renduResume() {
       <div class="kpi-val" style="color:#00838f">${nbInterroges}${interrogesExact ? '' : ' *'}</div>
       <div class="kpi-lbl">🎤 ${esc(t('res_interviewed'))}</div>
       <div class="kpi-pct">${nbFait} ${esc(statutLabel(doneStatuts[0] || 'Done'))}</div>
+    </div>
+    <div class="kpi-card" style="border-top-color:#6a1b9a" title="${esc(t('res_others_tip'))}">
+      <div class="kpi-val" style="color:#6a1b9a">${nbAutres}${interrogesExact ? '' : ' *'}</div>
+      <div class="kpi-lbl">👥 ${esc(t('res_others'))}</div>
+      <div class="kpi-pct">${esc(t('res_others_sub'))}</div>
     </div>`;
 
   statutsCfg.forEach(s => {
