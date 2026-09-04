@@ -61,6 +61,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   --border: #dde2f0;
   --accent: #2255cc;
   --accent2:#1a42a0;
+  --card2:  #fafbfc;   /* surface secondaire (aperçus) */
+  --hover:  #f8f9ff;   /* survol de ligne */
+  --chrome: #1a1f2e;   /* bandeaux/badges sombres (texte blanc) — stable clair/sombre */
+  --chrome2:#3d4460;   /* survol des badges sombres */
   --v1:#2255cc; --v1l:#dde8ff;
   --v2:#0e7c4a; --v2l:#d4f0e2;
   --v3:#7b22cc; --v3l:#eedeff;
@@ -73,7 +77,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 
 /* ══ Header (même bandeau que Interviews / Convertisseur) ════════════ */
 header{
-  background:var(--ink);color:#fff;
+  background:var(--chrome);color:#fff;
   padding:10px 16px;
   box-shadow:0 2px 8px rgba(0,0,0,.25);
   position:sticky;top:0;z-index:100;
@@ -95,7 +99,7 @@ header{
   font-size:13px;font-family:var(--font);
   background:rgba(255,255,255,.15);color:#fff;cursor:pointer;
 }
-#selPlanning option{background:var(--ink);color:#fff}
+#selPlanning option{background:var(--chrome);color:#fff}
 
 .hdr-status{
   font-size:12px;font-weight:700;color:#fff;white-space:nowrap;
@@ -170,7 +174,7 @@ header{
                     text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
 select,input[type=text]{
   width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;
-  font-size:13px;font-family:var(--font);color:var(--ink);background:#fff;
+  font-size:13px;font-family:var(--font);color:var(--ink);background:var(--card);
 }
 select:focus,input:focus{outline:none;border-color:var(--accent)}
 select[multiple]{height:120px}
@@ -178,31 +182,31 @@ select[multiple]{height:120px}
 /* Groupes sélectionnés */
 .groups-selected{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:32px}
 .grp-tag{
-  background:var(--ink);color:#fff;border-radius:6px;
+  background:var(--chrome);color:#fff;border-radius:6px;
   padding:4px 10px;font-size:12px;font-weight:600;
   display:flex;align-items:center;gap:6px;cursor:pointer;
 }
-.grp-tag:hover{background:var(--ink2)}
+.grp-tag:hover{background:var(--chrome2)}
 .grp-tag .gt-qtier{opacity:.65;font-weight:400}
 
 /* ══ Vue controls ════════════════════════════════════════════════════ */
 .view-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .btn-view{
   padding:7px 16px;border-radius:7px;border:2px solid var(--border);
-  background:#fff;color:var(--ink2);font-size:12px;font-weight:600;cursor:pointer;
+  background:var(--card);color:var(--ink2);font-size:12px;font-weight:600;cursor:pointer;
   transition:.15s;
 }
-.btn-view.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-view.active{background:var(--chrome);color:#fff;border-color:var(--chrome)}
 .btn-view:hover:not(.active){background:var(--bg);border-color:var(--ink3)}
 .nav-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--border);
-         background:#fff;color:var(--ink2);font-size:12px;cursor:pointer}
+         background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer}
 .nav-btn:hover{background:var(--bg)}
 #navLabel{font-weight:700;font-size:14px;color:var(--ink);min-width:160px;text-align:center}
 
 /* ══ Légende vagues ══════════════════════════════════════════════════ */
 .sort-btns{display:flex;gap:2px}
 .sort-btn{padding:1px 6px;border-radius:4px;border:1px solid var(--border);
-          background:#fff;color:var(--ink3);font-size:10px;cursor:pointer;line-height:1.4}
+          background:var(--card);color:var(--ink3);font-size:10px;cursor:pointer;line-height:1.4}
 .sort-btn:hover{background:var(--bg);border-color:var(--accent);color:var(--accent)}
 .legend{display:flex;gap:14px;flex-wrap:wrap}
 .leg-item{display:flex;align-items:center;gap:5px;font-size:12px}
@@ -210,13 +214,13 @@ select[multiple]{height:120px}
 
 /* ══ Vue LISTE ═══════════════════════════════════════════════════════ */
 .list-table{width:100%;border-collapse:collapse;font-size:13px}
-.list-table th{background:var(--ink);color:#fff;padding:8px 10px;
+.list-table th{background:var(--chrome);color:#fff;padding:8px 10px;
                text-align:left;font-size:11px;font-weight:700;
                text-transform:uppercase;letter-spacing:.4px}
 .list-table th:first-child{border-radius:8px 0 0 0}
 .list-table th:last-child{border-radius:0 8px 0 0}
 .list-table td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
-.list-table tr:hover td{background:#f8f9ff}
+.list-table tr:hover td{background:var(--hover)}
 .v-badge{display:inline-block;padding:2px 9px;border-radius:12px;
          font-size:11px;font-weight:700;white-space:nowrap}
 
@@ -240,7 +244,7 @@ select[multiple]{height:120px}
             padding:5px;color:var(--ink3);text-transform:uppercase}
 .month-day{
   min-height:52px;border-radius:6px;padding:5px 6px;
-  border:1px solid var(--border);background:#fff;
+  border:1px solid var(--border);background:var(--card);
   font-size:11px;position:relative;
 }
 .month-day.other-month{opacity:.35;background:var(--bg)}
@@ -282,10 +286,10 @@ select[multiple]{height:120px}
 .cand-field input[readonly]{background:var(--bg);color:var(--ink2);cursor:default}
 .cand-auto{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
   color:var(--accent);background:var(--v1l);border-radius:4px;padding:1px 5px;margin-left:4px}
-.cand-preview{border:1px solid var(--border);border-radius:8px;padding:8px 10px;max-height:200px;overflow:auto;background:#fafbfc}
+.cand-preview{border:1px solid var(--border);border-radius:8px;padding:8px 10px;max-height:200px;overflow:auto;background:var(--card2)}
 .cand-preview table{width:100%;border-collapse:collapse;font-size:12px}
 .cand-preview th{text-align:left;color:var(--ink3);font-weight:600;padding:3px 6px;border-bottom:1px solid var(--border)}
-.cand-preview td{padding:3px 6px;border-bottom:1px solid #eef0f2;color:var(--ink)}
+.cand-preview td{padding:3px 6px;border-bottom:1px solid var(--border);color:var(--ink)}
 .cand-preview tr:last-child td{border-bottom:none}
 .cand-modal{position:fixed;inset:0;background:rgba(15,20,30,.5);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;z-index:1000;overflow:auto}
 .cand-modal-box{background:var(--card);border-radius:var(--radius);box-shadow:0 16px 48px rgba(0,0,0,.28);max-width:780px;width:100%;padding:14px 24px;margin:auto;position:relative}
@@ -302,6 +306,20 @@ select[multiple]{height:120px}
 .skip-link:focus{transform:translateY(0);outline:2px solid #fff;outline-offset:2px}
 /* Respecte « moins d'animations » : transitions/animations quasi instantanées. */
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+/* ══ Thème sombre (suit la préférence système) — DESIGN.md : thème-aware ══ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:#e7eaf3; --ink2:#b9c0d6; --ink3:#8b93ad;
+    --bg:#161a24; --card:#1e2430; --card2:#242b39; --hover:#252c3b;
+    --border:#333b4d; --accent:#7da2ff; --accent2:#5f86f0;
+    --chrome:#0e1119; --chrome2:#232838;
+    --v1:#7da2ff; --v1l:#1f2b47;
+    --v2:#43c78d; --v2l:#123528;
+    --v3:#c58cff; --v3l:#2c1f42;
+    --v4:#ff8a4d; --v4l:#3a2214;
+    --shadow:0 2px 12px rgba(0,0,0,.5);
+  }
+}
 </style>
 </head>
 <body>
@@ -385,7 +403,7 @@ select[multiple]{height:120px}
     </div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="selectAll()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--accent);background:var(--v1l);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">✅ Tout sélectionner</button>
-      <button onclick="clearAll()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--ink2);font-size:12px;cursor:pointer">✕ Effacer</button>
+      <button onclick="clearAll()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer">✕ Effacer</button>
       <input type="text" id="searchGrp" placeholder="🔎 Rechercher groupe / quartier…" style="flex:1;min-width:180px" oninput="applyFilters()">
     </div>
     <div class="groups-selected" id="groupsSelected">
@@ -492,7 +510,7 @@ select[multiple]{height:120px}
       <canvas id="candSigCanvas" width="480" height="100"
         style="border:1px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:480px;height:100px;cursor:crosshair;display:block"></canvas>
       <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button type="button" onclick="candSigClear()" style="padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--ink2);font-size:12px;cursor:pointer">✕ Effacer la signature</button>
+        <button type="button" onclick="candSigClear()" style="padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer">✕ Effacer la signature</button>
         <span style="font-size:11px;color:var(--ink3)">Signez à la souris ou au doigt — la signature est intégrée au .docx.</span>
       </div>
     </div>
@@ -1820,7 +1838,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '182';
+const APP_VERSION = '183';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

@@ -278,6 +278,21 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(docx.paOk, 'candidature .docx : choix « pas » coche « pas intéressé(e) »');
     A(docx.plOk, 'candidature .docx : choix « plus » coche « n\'est plus intéressé(e) »');
 
+    // Thème sombre (prefers-color-scheme:dark) : fond de page + cartes foncés,
+    // texte clair, bandeau (chrome) qui reste foncé.
+    await p.emulateMedia({ colorScheme: 'dark' });
+    const dark = await p.evaluate(() => {
+      const lum = el => { const c = getComputedStyle(el).backgroundColor.match(/\d+/g); if (!c) return null; return (0.2126 * +c[0] + 0.7152 * +c[1] + 0.0722 * +c[2]) / 255; };
+      const txtLum = el => { const c = getComputedStyle(el).color.match(/\d+/g); return (0.2126 * +c[0] + 0.7152 * +c[1] + 0.0722 * +c[2]) / 255; };
+      const card = document.querySelector('.card'), header = document.querySelector('header');
+      return { bodyBg: lum(document.body), cardBg: card ? lum(card) : null, headerBg: header ? lum(header) : null, txt: txtLum(document.body) };
+    });
+    A(dark.bodyBg !== null && dark.bodyBg < 0.2, `sombre : fond de page foncé → lum ${dark.bodyBg != null ? dark.bodyBg.toFixed(2) : dark.bodyBg}`);
+    A(dark.cardBg !== null && dark.cardBg < 0.25, `sombre : cartes foncées (plus de #fff) → lum ${dark.cardBg != null ? dark.cardBg.toFixed(2) : dark.cardBg}`);
+    A(dark.headerBg !== null && dark.headerBg < 0.2, `sombre : bandeau reste foncé → lum ${dark.headerBg != null ? dark.headerBg.toFixed(2) : dark.headerBg}`);
+    A(dark.txt > 0.6, `sombre : texte clair → lum ${dark.txt != null ? dark.txt.toFixed(2) : dark.txt}`);
+    await p.emulateMedia({ colorScheme: 'light' });
+
     A(perr.length === 0, 'plannings présents : aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
     await p.close();
   }
