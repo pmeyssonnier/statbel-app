@@ -193,6 +193,9 @@ touchent pas Interviews, ils seront donc rattachés à la prochaine version d'ap
   qui lance tout `tests/*.test.js` (Playwright + Chromium) sur chaque push et PR.
 - **`CLAUDE.md`** dégraissé (spécifique dépôt) + skills contributeur
   (`statbel-app`, `statbel-data`, `pwa-headless-test`).
+- **Pose des tags** (`tag-release.yml`) : repli par l'API Git Refs quand `git push`
+  est refusé au `GITHUB_TOKEN` parce que le commit visé porte un
+  `.github/workflows/*` différent de celui de la branche par défaut (cas v3.14).
 
 ## Versions antérieures (≤ 3.7)
 Voir l'historique git : `git log --oneline`. Points marquants : découpage en

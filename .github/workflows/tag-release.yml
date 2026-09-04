@@ -28,6 +28,7 @@ jobs:
 
       - name: Créer et pousser le(s) tag(s)
         env:
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
           REF: ${{ inputs.ref }}
           SHA: ${{ github.sha }}
@@ -36,11 +37,35 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Pousse un tag, avec repli par l'API Git Refs.
+          # GITHUB_TOKEN est un jeton d'App : git refuse un ref dont l'arbre
+          # contient un .github/workflows/* différent de celui de la branche
+          # par défaut (« refusing to allow a GitHub App to create or update
+          # workflow ... without workflows permission ») et le bloc
+          # `permissions:` n'offre aucun scope `workflows`. Cas réel : v3.14
+          # (6264e62), antérieur à la refonte de tests.yml. L'API Git Refs ne
+          # crée aucun contenu — juste une référence sur un commit déjà
+          # présent — et n'est pas soumise à ce garde-fou.
+          push_tag() {
+            t="$1"; c="$2"
+            if git push origin "refs/tags/$t" 2>/tmp/push.err; then
+              echo "  poussé $t"; return 0
+            fi
+            sed 's/^/    /' /tmp/push.err
+            echo "  repli API pour $t"
+            sha=$(git rev-parse "$c^{commit}")
+            obj=$(gh api "repos/$GITHUB_REPOSITORY/git/tags" \
+                    -f tag="$t" -f message="$t" -f object="$sha" -f type=commit \
+                    --jq .sha)
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+                    -f ref="refs/tags/$t" -f sha="$obj" --jq .ref
+          }
+
           if [ -n "$TAG" ]; then
             target="${REF:-$SHA}"
             echo "Tag unique : $TAG → $target"
             git tag -a "$TAG" "$target" -m "$TAG" 2>/dev/null || echo "  $TAG existe déjà, on ré-utilise"
-            git push origin "$TAG"
+            push_tag "$TAG" "$target"
           else
             echo "Backfill des versions v3.8 → v3.27"
             # tag  ->  commit de merge correspondant
@@ -58,7 +83,7 @@ jobs:
               else
                 git tag -a "$t" "$c" -m "$t"
                 echo "  créé $t → $c"
+                push_tag "$t" "$c"
               fi
             done
-            git push origin --tags
           fi
