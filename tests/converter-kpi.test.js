@@ -2,8 +2,9 @@
  * Test de non-régression — personnalisation du Convertisseur (KPI + blocs d'analyse).
  *
  * Vérifie le registre KPI + la config perso (afficher/masquer + réordonner) :
- *  - rendu par défaut = 6 KPI dans l'ordre attendu ;
+ *  - rendu par défaut = 7 KPI dans l'ordre attendu (dont l'indemnité potentielle) ;
  *  - renderKPIs calcule les valeurs depuis un contexte ;
+ *  - l'indemnité potentielle reprend les quotas du module Interviews (localStorage) ;
  *  - activer un KPI « nouveau » (ex. % né·es à l'étranger) l'ajoute et persiste ;
  *  - réordonner (persoMove) change l'ordre et persiste ;
  *  - Réinitialiser rétablit le défaut.
@@ -29,8 +30,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   const r = await p.evaluate(() => {
     const out = {};
     localStorage.removeItem('statbel_conv_kpi');       // partir d'un état neuf
+    // Quotas de paiement repris du module Interviews (même localStorage, même origine).
+    localStorage.setItem('statbel_settings', JSON.stringify({ paieMenage: 10, paiePersonne: 5 }));
 
-    // Défaut : 6 KPI dans l'ordre attendu
+    // Défaut : 7 KPI dans l'ordre attendu (dont l'indemnité potentielle)
     out.def = getKpiCfg().filter(x => x.on).map(x => x.id).join(',');
     out.total = getKpiCfg().length;
 
@@ -41,6 +44,19 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.nTiles = document.querySelectorAll('#kpiGrid .compteur').length;
     // % mineurs = sur le ménage complet (nMin / membres), pas sur pop : 8/66 ≈ 12 %
     out.minFormula = KPI_DEFS.min.val(_kpiCtx);
+
+    // Indemnité potentielle = nbHH×qMénage + nbCibles15×qPersonne = 26×10 + 42×5 = 470 €
+    const paieTile = () => [...document.querySelectorAll('#kpiGrid .compteur')]
+      .filter(el => el.querySelector('.label').getAttribute('data-i18n') === 'kpi_pay_potential')[0];
+    out.paieValue = paieTile() ? paieTile().querySelector('.val').textContent : null;
+    out.paieTip = paieTile() ? (paieTile().getAttribute('title') || '') : '';
+    // Sans quotas dans les paramètres Interviews → « — » + titre explicatif
+    localStorage.removeItem('statbel_settings');
+    renderKPIs(_kpiCtx);
+    out.paieNoQuota = paieTile() ? paieTile().querySelector('.val').textContent : null;
+    out.paieNoQuotaTip = paieTile() ? (paieTile().getAttribute('title') || '') : '';
+    localStorage.setItem('statbel_settings', JSON.stringify({ paieMenage: 10, paiePersonne: 5 }));
+    renderKPIs(_kpiCtx);
 
     // Activer « % né·es à l'étranger » (etr) → apparaît + persiste
     ouvrirPerso();
@@ -130,15 +146,19 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     return out;
   });
 
-  A(r.def === 'men,pop,size,age,h,f', `défaut = 6 KPI ordonnés → ${r.def}`);
-  A(r.total === 10, `registre complet (10 KPI, dont 4 nouveaux) → ${r.total}`);
-  A(r.nTiles === 6 && r.vals === '26|66|2.5|46 ans|50 %|50 %', `rendu des valeurs depuis le contexte → ${r.vals}`);
+  A(r.def === 'men,pop,size,age,h,f,paie', `défaut = 7 KPI ordonnés (dont indemnité) → ${r.def}`);
+  A(r.total === 11, `registre complet (11 KPI, dont l'indemnité potentielle) → ${r.total}`);
+  A(r.nTiles === 7 && r.vals.startsWith('26|66|2.5|46 ans|50 %|50 %'), `rendu des valeurs depuis le contexte → ${r.vals}`);
   A(r.minFormula === '12 %', `% mineurs calculé sur le ménage complet (8/66) → ${r.minFormula}`);
+  A(/470/.test(r.paieValue || ''), `KPI indemnité potentielle = 26×10€ + 42×5€ = 470 € → "${r.paieValue}"`);
+  A(/26/.test(r.paieTip || '') && /42/.test(r.paieTip || ''), `titre de l'indemnité détaille la formule → "${r.paieTip}"`);
+  A(r.paieNoQuota === '—', `sans quotas configurés, l'indemnité affiche « — » → "${r.paieNoQuota}"`);
+  A((r.paieNoQuotaTip || '').length > 0, 'sans quotas, un titre explique où les définir (module Interviews)');
   A(r.modalOpen, 'panneau « Personnaliser » s\'ouvre');
   A(r.etrShown && r.etrPersisted, 'activer un KPI l\'affiche et le persiste (localStorage)');
   A(/%$/.test((r.etrValue || '').trim()), `KPI % né·es à l'étranger calculé → ${r.etrValue}`);
   A(r.reordered, 'réordonner (↑) échange bien les deux premiers KPI');
-  A(r.reset === 'men,pop,size,age,h,f', 'Réinitialiser rétablit le défaut');
+  A(r.reset === 'men,pop,size,age,h,f,paie', 'Réinitialiser rétablit le défaut');
   A(r.blocDefaut === '15/15', `blocs : 15 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
   A(/16/.test(r.cibLabel16 || ''), `KPI « Cibles » suit l'âge min (≥16) → « ${r.cibLabel16} »`);
   A(/16/.test(r.minLabel16 || ''), `KPI « % mineurs » suit l'âge min (<16) → « ${r.minLabel16} »`);
