@@ -63,6 +63,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       tbl.querySelector('th').click();   // trier par 1re colonne (Contact)
       const firstAfter = tbl.querySelector('tbody tr td') ? tbl.querySelector('tbody tr td').textContent : null;
       const interviewedCard = [...document.querySelectorAll('.kpi-grid .kpi-card')].find(c => c.textContent.includes('🎤'));
+      const othersCard = [...document.querySelectorAll('.kpi-grid .kpi-card')].find(c => c.textContent.includes('👥'));
       return {
         kpiSparks: document.querySelectorAll('.kpi-grid .kpi-card svg').length,
         donutSvg: box.querySelectorAll('svg').length,
@@ -71,6 +72,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
         badges: tbl.querySelectorAll('.chart-badge').length,
         sortable: !!tbl.querySelector('th[aria-sort]'),
         interviewed: interviewedCard ? interviewedCard.querySelector('.kpi-val').textContent.trim() : null,
+        others: othersCard ? othersCard.querySelector('.kpi-val').textContent.trim() : null,
         firstBefore, firstAfter,
       };
     });
@@ -81,6 +83,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
 
   A(r.kpiSparks >= 2, `sparklines dans les cartes KPI (statuts avec activité datée) → ${r.kpiSparks}`);
   A(r.interviewed === '5', `KPI « Personnes interrogées ≥15 » = Σ nb_cibles des Fait (2+3) → "${r.interviewed}"`);
+  A(r.others === '3', `KPI « Autres interrogés ≥15 (hors référent) » = Σ(nb_cibles−1) des Fait (1+2) → "${r.others}"`);
   A(r.donutSvg >= 1 && r.donutLegend, `donut « Répartition des statuts » rendu avec légende (svg=${r.donutSvg})`);
   A(r.rows === 4, `tableau de contacts : 4 lignes (2 enquêtes) → ${r.rows}`);
   A(r.badges === 4, `un badge de statut par ligne → ${r.badges}`);
