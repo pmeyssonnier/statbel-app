@@ -207,6 +207,10 @@ touchent pas Interviews, ils seront donc rattachés à la prochaine version d'ap
   qui lance tout `tests/*.test.js` (Playwright + Chromium) sur chaque push et PR.
 - **`CLAUDE.md`** dégraissé (spécifique dépôt) + skills contributeur
   (`statbel-app`, `statbel-data`, `pwa-headless-test`).
+- **`docs/eft-cati-cawi.md`** : connaissance terrain des vagues 2 à 4 (CATI/CAWI)
+  — panel à 4 vagues, bascule CAWI, les deux axes d'état côté Statbel
+  (complétion du questionnaire vs feuille de contact), recrutement EBM, et ce
+  que ça implique pour nos statuts. Processus uniquement, aucune donnée de ménage.
 - **Pose des tags** (`tag-release.yml`) : réduit au tag unique une fois le
   backfill v3.8 → v3.27 fait (il reste dans l'historique du fichier). Casse
   normalisée (`3.28`/`V3.28` → `v3.28`), cible vérifiée, et **un tag existant
