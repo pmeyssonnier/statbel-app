@@ -1087,6 +1087,9 @@ const I18N = {
   kpi_pct_minors: { fr:"% mineurs (<15)", nl:"% minderjarigen (<15)", en:"% minors (<15)", de:"% Minderjährige (<15)" },
   kpi_pct_minors_dyn: { fr:"% mineurs (<{n})", nl:"% minderjarigen (<{n})", en:"% minors (<{n})", de:"% Minderjährige (<{n})" },
   kpi_age_median: { fr:"Âge médian", nl:"Mediane leeftijd", en:"Median age", de:"Medianalter" },
+  kpi_pay_potential: { fr:"Indemnité potentielle", nl:"Potentiële vergoeding", en:"Potential payment", de:"Potenzielle Vergütung" },
+  kpi_pay_potential_tip: { fr:"Montant maximal payé par Statbel si toute l'enquête est réalisée : {hh} ménages × {qm} + {cib} cibles × {qp}. Quotas repris des paramètres du module Interviews.", nl:"Maximaal door Statbel betaald bedrag als de volledige enquête wordt uitgevoerd: {hh} huishoudens × {qm} + {cib} doelen × {qp}. Quota's overgenomen uit de instellingen van de Interviews-module.", en:"Maximum amount paid by Statbel if the whole survey is completed: {hh} households × {qm} + {cib} targets × {qp}. Quotas taken from the Interviews module settings.", de:"Höchstbetrag, den Statbel bei vollständiger Durchführung der Erhebung zahlt: {hh} Haushalte × {qm} + {cib} Zielpersonen × {qp}. Quoten aus den Einstellungen des Interviews-Moduls." },
+  kpi_pay_no_quota: { fr:"Définissez les quotas de paiement (par ménage et par personne ≥15) dans les paramètres du module Interviews pour estimer l'indemnité.", nl:"Stel de betalingsquota in (per huishouden en per persoon ≥15) in de instellingen van de Interviews-module om de vergoeding te schatten.", en:"Set the payment quotas (per household and per person ≥15) in the Interviews module settings to estimate the payment.", de:"Legen Sie die Zahlungsquoten (pro Haushalt und pro Person ≥15) in den Einstellungen des Interviews-Moduls fest, um die Vergütung zu schätzen." },
   btn_customize_kpi: { fr:"Personnaliser les KPI", nl:"KPI aanpassen", en:"Customize KPIs", de:"KPIs anpassen" },
   perso_title: { fr:"Personnaliser les KPI", nl:"KPI aanpassen", en:"Customize KPIs", de:"KPIs anpassen" },
   perso_hint: { fr:"Cochez et réordonnez les indicateurs de la vue Statistiques.", nl:"Vink aan en herschik de indicatoren van de Statistiek-weergave.", en:"Toggle and reorder the indicators of the Statistics view.", de:"Indikatoren der Statistik-Ansicht aus-/einblenden und neu ordnen." },
@@ -6813,6 +6816,20 @@ function median(a) {
   return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
 }
 
+// Quotas de paiement Statbel repris des PARAMÈTRES du module Interviews
+// (localStorage['statbel_settings'], même origine — comme la langue). Absents ou
+// nuls → { menage:0, personne:0 } (KPI « — » avec repli explicatif dans le titre).
+function paieQuotas() {
+  try {
+    const s = JSON.parse(localStorage.getItem('statbel_settings') || '{}');
+    return { menage: Number(s.paieMenage) || 0, personne: Number(s.paiePersonne) || 0 };
+  } catch (e) { return { menage: 0, personne: 0 }; }
+}
+function eurFmt(n) {
+  try { return new Intl.NumberFormat(uiLang || 'fr', { style: 'currency', currency: 'EUR' }).format(n); }
+  catch (e) { return (Math.round(n * 100) / 100) + ' €'; }
+}
+
 // Registre des indicateurs disponibles : libellé (i18n), couleur de bordure,
 // teinte éventuelle de la valeur, et fonction de calcul depuis le contexte.
 const KPI_DEFS = {
@@ -6826,9 +6843,19 @@ const KPI_DEFS = {
   etr:  { i18n: 'kpi_pct_foreign', color: '#00838f',      val: c => c.popN ? Math.round(c.nEtr / c.popN * 100) + ' %' : '—' },
   min:  { i18n: 'kpi_pct_minors',  color: '#8d6e63',      val: c => c.membres ? Math.round(c.nMin / c.membres * 100) + ' %' : '—', dyn: () => tf('kpi_pct_minors_dyn', { n: ageMinCible() }) },
   med:  { i18n: 'kpi_age_median',  color: '#ef6c00',      val: c => c.ageMed != null ? c.ageMed + ' ans' : '—' },
+  // Indemnité POTENTIELLE : montant maximal payé par Statbel si toute l'enquête
+  // est réalisée. Même règle que le Résumé d'Interviews (ménages × quota ménage
+  // + cibles ≥ âge min × quota personne), mais sur la totalité du groupe (rien
+  // n'est encore réalisé au stade Convertisseur). Quotas repris des paramètres
+  // du module Interviews ; absents → « — » + titre explicatif.
+  paie: { i18n: 'kpi_pay_potential', color: '#1b5e20', tint: '#1b5e20',
+          val: c => { const q = paieQuotas(); return (!q.menage && !q.personne) ? '—' : eurFmt(c.nbHH * q.menage + c.nbCibles15 * q.personne); },
+          tip: c => { const q = paieQuotas(); return (!q.menage && !q.personne)
+            ? t('kpi_pay_no_quota')
+            : tf('kpi_pay_potential_tip', { hh: c.nbHH, qm: eurFmt(q.menage), cib: c.nbCibles15, qp: eurFmt(q.personne) }); } },
 };
-const KPI_ALL = ['men', 'pop', 'size', 'age', 'h', 'f', 'cib', 'etr', 'min', 'med'];
-const KPI_ON_DEFAUT = ['men', 'pop', 'size', 'age', 'h', 'f'];   // affichés par défaut, dans cet ordre
+const KPI_ALL = ['men', 'pop', 'size', 'age', 'h', 'f', 'cib', 'etr', 'min', 'med', 'paie'];
+const KPI_ON_DEFAUT = ['men', 'pop', 'size', 'age', 'h', 'f', 'paie'];   // affichés par défaut, dans cet ordre
 
 // Registre des blocs d'analyse (cartes de la vue Stats) — tous affichés par défaut.
 const BLOC_DEFS = {
@@ -6981,10 +7008,12 @@ function renderKPIs(c) {
     const d = KPI_DEFS[id];
     const v = c ? d.val(c) : '—';
     const tint = d.tint ? ` style="color:${d.tint}"` : '';
+    // Titre (survol) éventuel — ex. formule/source de l'indemnité potentielle.
+    const tip = (d.tip && c) ? ` title="${escHtml(d.tip(c))}"` : '';
     // Libellé dynamique (ex. « Cibles ≥16 ») → pas de data-i18n (re-rendu via
     // afficher() au changement de langue) ; sinon data-i18n traduit à la volée.
     const di18n = d.dyn ? '' : ` data-i18n="${d.i18n}"`;
-    return `<div class="compteur" style="border-top-color:${d.color}">`
+    return `<div class="compteur" style="border-top-color:${d.color}"${tip}>`
       + `<div class="val"${tint}>${escHtml(String(v))}</div>`
       + `<div class="label"${di18n}>${escHtml(persoLabel(d))}</div></div>`;
   }).join('');
@@ -7838,7 +7867,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '208';
+const APP_VERSION = '209';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
