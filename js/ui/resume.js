@@ -11,7 +11,7 @@
  */
 import { renderCourbeAvancement, collecterVisites } from './stats.js';
 import { esc } from '../core/util.js';
-import { t, labelNbEnquetes, localeApp } from '../core/i18n.js';
+import { t, tf, labelNbEnquetes, localeApp } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
 
 export function exporterResumeXLSX() {
@@ -46,12 +46,14 @@ export function exporterResumeXLSX() {
 
   // KPI « réalisé » + indemnité (mêmes règles que la vue Résumé).
   const realiseSet = new Set(statutsCfg.filter(s => s.realise).map(s => s.label));
-  let nbRealises = 0, nbInterroges = 0;
+  let nbRealises = 0, nbInterroges = 0, nbTotalCibles = 0;
   nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
+    const n15 = parseInt(c.nb_cibles, 10), tm = parseInt(c.taille_menage, 10);
+    const m = !isNaN(n15) ? n15 : (tm > 0 ? tm : 1);
+    nbTotalCibles += m;
     if (!realiseSet.has(c.statut || statutDefaut())) return;
     nbRealises++;
-    const n15 = parseInt(c.nb_cibles, 10), tm = parseInt(c.taille_menage, 10);
-    nbInterroges += !isNaN(n15) ? n15 : (tm > 0 ? tm : 1);
+    nbInterroges += m;
   }));
   const qMenage = Number(settings.paieMenage) || 0, qPersonne = Number(settings.paiePersonne) || 0;
   const indemnite = nbRealises * qMenage + nbInterroges * qPersonne;
@@ -101,7 +103,7 @@ export function exporterResumeXLSX() {
     [],
     ['✅ Ménages réalisés', nbRealises, ''],
     ['🎤 Personnes interrogées (≥15)', nbInterroges, ''],
-    ['👥 Autres interrogés (hors référent)', Math.max(nbInterroges - nbRealises, 0), ''],
+    ['🎯 Total à interroger (≥15)', nbTotalCibles, ''],
     ...((qMenage > 0 || qPersonne > 0) ? [
       [],
       ['Indemnité / ménage réalisé (€)', qMenage, ''],
@@ -210,20 +212,17 @@ export function renduResume() {
   // Carte total : tempo global (toutes activités confondues par jour)
   const serieTotal = joursSpark.map(d => evtsSpark.filter(e => e.iso.slice(0, 10) === d).length);
 
-  // Personnes interrogées (≥ 15 ans) dans les ménages RÉALISÉS : direct + proxy.
-  // Source exacte = colonne nb_cibles (export Convertisseur) ; repli sur la taille
-  // du ménage quand le détail n'est pas importé.
-  // nbAutres = les ≥15 interrogés EN PLUS du référent (1 référent/ménage réalisé) :
-  // par ménage, cibles ≥15 − 1. Total = nbInterroges − nombre de ménages réalisés.
-  let nbInterroges = 0, nbAutres = 0, interrogesExact = true;
+  // Personnes ≥15 (cibles) : interrogées (ménages RÉALISÉS) vs total à interroger
+  // (tous les ménages). Source = colonne nb_cibles (export Convertisseur) ; repli
+  // sur la taille du ménage quand le détail n'est pas importé (marqueur « * »).
+  let nbInterroges = 0, nbTotalCibles = 0, interrogesExact = true;
   nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
-    if (!realiseStatuts.includes(c.statut || statutDefaut())) return;
     const n15 = parseInt(c.nb_cibles, 10);
     let m;
     if (!isNaN(n15)) { m = n15; }
     else { const tm = parseInt(c.taille_menage, 10); m = (!isNaN(tm) && tm > 0) ? tm : 1; interrogesExact = false; }
-    nbInterroges += m;
-    nbAutres += Math.max(m - 1, 0);
+    nbTotalCibles += m;
+    if (realiseStatuts.includes(c.statut || statutDefaut())) nbInterroges += m;
   }));
 
   let kpiHtml = `
@@ -236,12 +235,7 @@ export function renduResume() {
     <div class="kpi-card" style="border-top-color:#00838f" title="${esc(t('res_interviewed_tip'))}">
       <div class="kpi-val" style="color:#00838f">${nbInterroges}${interrogesExact ? '' : ' *'}</div>
       <div class="kpi-lbl">🎤 ${esc(t('res_interviewed'))}</div>
-      <div class="kpi-pct">${nbRealises} ${esc(t('res_realises'))}</div>
-    </div>
-    <div class="kpi-card" style="border-top-color:#6a1b9a" title="${esc(t('res_others_tip'))}">
-      <div class="kpi-val" style="color:#6a1b9a">${nbAutres}${interrogesExact ? '' : ' *'}</div>
-      <div class="kpi-lbl">👥 ${esc(t('res_others'))}</div>
-      <div class="kpi-pct">${esc(t('res_others_sub'))}</div>
+      <div class="kpi-pct">${esc(tf('res_interviewed_of', { n: nbTotalCibles }))}</div>
     </div>`;
 
   // ── Indemnité estimée (si un quota de paiement est configuré) ──────────────
