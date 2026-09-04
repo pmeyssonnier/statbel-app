@@ -7,7 +7,8 @@ Le numéro de version de référence est celui de l'app **Interviews**
 (`APP_VERSION` dans `js/app.js`). Chaque release bumpe aussi le `CACHE` du
 service worker (`sw.js`) — indiqué entre parenthèses. Le Convertisseur et le
 Planner ont leur propre `APP_VERSION` interne (entier), signalés quand ils
-changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant.
+changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
+(exception : la 3.14, sans tag — voir la note de sa section).
 
 ## [Non publié]
 
@@ -137,6 +138,19 @@ touchent pas Interviews, ils seront donc rattachés à la prochaine version d'ap
 - Test `statut-lock` rendu en FR pour garder le cas multilingue réellement couvert.
 
 ## [3.14] — 2026-08-16  (SW `statbel-v217`)
+
+> ⚠️ **Seule version sans tag ni release** (v3.8 → v3.27 sont tagués). Le tag
+> `v3.14` devrait pointer sur `6264e62` (merge de #80). Impossible à poser
+> depuis Actions : le `GITHUB_TOKEN` est un jeton d'App et GitHub refuse un ref
+> dont l'arbre `.github/workflows/*` diffère de celui de la branche par défaut
+> (« refusing to allow a GitHub App to create or update workflow
+> `.github/workflows/tests.yml` without `workflows` permission ») — or ce commit
+> précède la refonte de `tests.yml`. L'API Git Refs oppose le même refus (403),
+> et l'interface web ne sait cibler qu'une branche ou un commit récent. Pour
+> combler le trou : `git push origin v3.14` depuis un clone dont les
+> identifiants ont le scope `workflow`, ou un PAT *Contents + Workflows: write*
+> mis en secret et utilisé par `tag-release.yml`.
+
 ### Ajouté
 - **Nouveau set d'icônes Statbel** (presse-papiers + checklist) et favicon, pour
   les trois apps et la PWA installée.
@@ -193,9 +207,12 @@ touchent pas Interviews, ils seront donc rattachés à la prochaine version d'ap
   qui lance tout `tests/*.test.js` (Playwright + Chromium) sur chaque push et PR.
 - **`CLAUDE.md`** dégraissé (spécifique dépôt) + skills contributeur
   (`statbel-app`, `statbel-data`, `pwa-headless-test`).
-- **Pose des tags** (`tag-release.yml`) : repli par l'API Git Refs quand `git push`
-  est refusé au `GITHUB_TOKEN` parce que le commit visé porte un
-  `.github/workflows/*` différent de celui de la branche par défaut (cas v3.14).
+- **Pose des tags** (`tag-release.yml`) : le `GITHUB_TOKEN` ne peut taguer qu'un
+  commit dont les fichiers `.github/workflows/*` sont **identiques** à ceux de la
+  branche par défaut ; un commit antérieur à une refonte de workflow n'est donc
+  taguable que depuis un clone, ou avec un PAT *Workflows: write* (voir la note
+  de la 3.14). Le workflow pousse tag par tag : un ref refusé n'annule plus la
+  pose des suivants.
 
 ## Versions antérieures (≤ 3.7)
 Voir l'historique git : `git log --oneline`. Points marquants : découpage en
