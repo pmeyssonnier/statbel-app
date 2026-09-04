@@ -116,6 +116,7 @@ export function renderStatutsEditor() {
       <input type="text" class="se-icon" value="${esc(s.icon)}" maxlength="2" onchange="modifierStatut(${i},'icon',this.value)" title="${t('ed_icon')}">
       <input type="text" class="se-label" value="${esc(statutLabel(s.label))}" onchange="modifierStatut(${i},'label',this.value)" title="${t('ed_label')}">
       <label class="se-flag" title="${esc(t('flag_done_title'))}"><input type="checkbox" ${s.done?'checked':''} onchange="modifierStatut(${i},'done',this.checked)"> ✓</label>
+      <label class="se-flag" title="${esc(t('flag_realise_title'))}"><input type="checkbox" ${s.realise?'checked':''} onchange="modifierStatut(${i},'realise',this.checked)"> 🎤</label>
       <label class="se-flag" title="${esc(t('flag_rdv_title'))}"><input type="checkbox" ${s.rdv?'checked':''} onchange="modifierStatut(${i},'rdv',this.checked)"> 📅</label>
       <button class="se-del" onclick="supprimerStatut(${i})" title="${t('del_status_title')}" aria-label="${esc(t('del_status_title'))}"${settings.statuts.length<=1?' disabled':''}>🗑️</button>
     </div>`).join('');
@@ -145,7 +146,7 @@ export function modifierStatut(idx, field, value) {
 }
 
 export function ajouterStatut() {
-  settings.statuts.push({ label:'Nouveau', color:'#607d8b', icon:'•', done:false, rdv:false });
+  settings.statuts.push({ label:'Nouveau', color:'#607d8b', icon:'•', done:false, rdv:false, realise:false });
   saveSettings();
   renderStatutsEditor();
   rafraichirStatutsVues();
