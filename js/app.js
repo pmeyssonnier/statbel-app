@@ -99,7 +99,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.25';
+const APP_VERSION = '3.26';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
@@ -113,6 +113,8 @@ const SETTINGS_DEFAULTS = {
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
   fontSize:   'normal',   // 'small' | 'normal' (défaut/système) | 'large' | 'xlarge'
   csvSep:     'auto',     // séparateur d'export CSV : 'auto' (régional) | ',' | ';'
+  paieMenage:   0,        // indemnité (€) par ménage réalisé (0 = masquée)
+  paiePersonne: 0,        // indemnité (€) par personne ≥15 interrogée
   // Langue : détectée depuis le navigateur au 1er lancement (fr/nl/en), défaut fr
   lang: (() => { const l = (navigator.language || 'fr').slice(0,2).toLowerCase(); return ['fr','nl','en','de'].includes(l) ? l : 'fr'; })(),
 };
@@ -196,6 +198,8 @@ function validerSettings(raw) {
     if (allowed.includes(raw[k])) out[k] = raw[k];
   }
   if (Number.isInteger(raw.statutsV) && raw.statutsV >= 0) out.statutsV = raw.statutsV;
+  if (typeof raw.paieMenage === 'number' && raw.paieMenage >= 0 && isFinite(raw.paieMenage)) out.paieMenage = raw.paieMenage;
+  if (typeof raw.paiePersonne === 'number' && raw.paiePersonne >= 0 && isFinite(raw.paiePersonne)) out.paiePersonne = raw.paiePersonne;
   const st = validerStatuts(raw.statuts);
   if (st) out.statuts = st;
   return out;
