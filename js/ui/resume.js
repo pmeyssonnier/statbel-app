@@ -167,10 +167,10 @@ export function renduResume() {
   });
 
   // ── KPI cards ────────────────────────────────────────────────────
-  // Trouver "Fait" et "À faire" dynamiquement
-  const doneStatuts  = statutsCfg.filter(s => s.done).map(s => s.label);
-
-  const nbFait   = doneStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
+  // « Réalisé » = interview faite (cibles ≥15 interrogées, direct ou proxy) ;
+  // distinct de « traité » (done), qui inclut aussi refus/absent/déménagé.
+  const realiseStatuts = statutsCfg.filter(s => s.realise).map(s => s.label);
+  const nbRealises = realiseStatuts.reduce((acc, s) => acc + (totauxParStatut[s] || 0), 0);
 
   // ── Sparklines : activité quotidienne par statut (lib partagée js/charts.js) ──
   // Série alignée sur les jours d'activité observés ; RDV futurs exclus.
@@ -188,14 +188,14 @@ export function renduResume() {
   // Carte total : tempo global (toutes activités confondues par jour)
   const serieTotal = joursSpark.map(d => evtsSpark.filter(e => e.iso.slice(0, 10) === d).length);
 
-  // Personnes interrogées (≥ 15 ans) dans les ménages « Fait » : direct + proxy.
+  // Personnes interrogées (≥ 15 ans) dans les ménages RÉALISÉS : direct + proxy.
   // Source exacte = colonne nb_cibles (export Convertisseur) ; repli sur la taille
   // du ménage quand le détail n'est pas importé.
-  // nbAutres = les ≥15 interrogés EN PLUS du référent (1 référent/ménage « Fait ») :
-  // par ménage, cibles ≥15 − 1. Total = nbInterroges − nombre de ménages « Fait ».
+  // nbAutres = les ≥15 interrogés EN PLUS du référent (1 référent/ménage réalisé) :
+  // par ménage, cibles ≥15 − 1. Total = nbInterroges − nombre de ménages réalisés.
   let nbInterroges = 0, nbAutres = 0, interrogesExact = true;
   nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
-    if (!doneStatuts.includes(c.statut || statutDefaut())) return;
+    if (!realiseStatuts.includes(c.statut || statutDefaut())) return;
     const n15 = parseInt(c.nb_cibles, 10);
     let m;
     if (!isNaN(n15)) { m = n15; }
@@ -214,7 +214,7 @@ export function renduResume() {
     <div class="kpi-card" style="border-top-color:#00838f" title="${esc(t('res_interviewed_tip'))}">
       <div class="kpi-val" style="color:#00838f">${nbInterroges}${interrogesExact ? '' : ' *'}</div>
       <div class="kpi-lbl">🎤 ${esc(t('res_interviewed'))}</div>
-      <div class="kpi-pct">${nbFait} ${esc(statutLabel(doneStatuts[0] || 'Done'))}</div>
+      <div class="kpi-pct">${nbRealises} ${esc(t('res_realises'))}</div>
     </div>
     <div class="kpi-card" style="border-top-color:#6a1b9a" title="${esc(t('res_others_tip'))}">
       <div class="kpi-val" style="color:#6a1b9a">${nbAutres}${interrogesExact ? '' : ' *'}</div>

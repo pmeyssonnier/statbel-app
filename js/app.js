@@ -82,13 +82,15 @@ import {
 // rdv  : statut « rendez-vous » → active la date/heure et la vue 📅
 // Libellés = identifiants canoniques EN (langue pivot). L'affichage est traduit
 // via statutLabel(). Migration des anciennes données FR → EN au chargement.
+// done = « traité » (plus à revisiter) ; realise = interview RÉALISÉE (les cibles
+// ≥15 sont interrogées). Un refus/absent/déménagé est « traité » mais non réalisé.
 const STATUTS_DEFAULTS = [
-  { label:'To do',       color:'#90a4ae', icon:'✕',  done:false, rdv:false },
-  { label:'In progress', color:'#f9a825', icon:'⏳', done:false, rdv:true  },
-  { label:'Done',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false },
-  { label:'Absent',      color:'#a1887f', icon:'⊘',  done:true,  rdv:false },
-  { label:'Refusal',     color:'#c62828', icon:'✗',  done:true,  rdv:false },
-  { label:'Moved',       color:'#6a1b9a', icon:'📦', done:true,  rdv:false },
+  { label:'To do',       color:'#90a4ae', icon:'✕',  done:false, rdv:false, realise:false },
+  { label:'In progress', color:'#f9a825', icon:'⏳', done:false, rdv:true,  realise:false },
+  { label:'Done',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false, realise:true  },
+  { label:'Absent',      color:'#a1887f', icon:'⊘',  done:true,  rdv:false, realise:false },
+  { label:'Refusal',     color:'#c62828', icon:'✗',  done:true,  rdv:false, realise:false },
+  { label:'Moved',       color:'#6a1b9a', icon:'📦', done:true,  rdv:false, realise:false },
 ];
 // Palette contrastée par défaut (clé = label EN) — appliquée aux statuts standards
 // lors de la migration pour bien distinguer les segments du graphe.
@@ -97,7 +99,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.24';
+const APP_VERSION = '3.25';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
@@ -105,7 +107,7 @@ const SETTINGS_DEFAULTS = {
   mapStyle: 'gray',       // 'gray' | 'color'  (Bruxelles uniquement)
   navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
   statuts:  cloneStatuts(),
-  statutsV: 7,            // version de schéma des statuts (7 = pivot EN + palette contrastée ; installs neuves sautent les migrations)
+  statutsV: 8,            // version de schéma des statuts (8 = drapeau « réalisé » ; installs neuves sautent les migrations)
   pinCode:    '',         // code PIN de verrouillage de l'app ('' = désactivé)
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
@@ -149,6 +151,17 @@ function chargerSettings() {
       if (STATUT_COULEURS[en]) s.color = STATUT_COULEURS[en];
     });
     settings.statutsV = 7;
+    saveSettings();
+  }
+  // Migration v8 : drapeau « réalisé » (interview faite). On le déduit du label
+  // (un statut « traité » positif — Done/Réalisé/Fait), sinon false. Modifiable
+  // ensuite dans l'éditeur de statuts. Distingue « réalisé » de « traité ».
+  if (settings.statutsV < 8) {
+    settings.statuts.forEach(s => {
+      if (typeof s.realise !== 'boolean')
+        s.realise = s.done === true && /done|réalis|realis|\bfait\b|complet/i.test(s.label);
+    });
+    settings.statutsV = 8;
     saveSettings();
   }
   // OSM/Nominatim retiré (géocodage en masse bloqué) → bascule vers UrbIS
@@ -204,6 +217,8 @@ function validerStatuts(arr) {
       icon:  typeof s.icon === 'string' ? s.icon.slice(0, 4) : '•',
       done:  s.done === true,
       rdv:   s.rdv === true,
+      realise: (typeof s.realise === 'boolean') ? s.realise
+        : (s.done === true && /done|réalis|realis|\bfait\b|complet/i.test(label)),
     });
   }
   return out.length ? out : null;

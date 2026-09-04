@@ -37,17 +37,21 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   let r;
   try {
     r = await p.evaluate(async () => {
+      // « Absent » est done:true (traité) mais realise:false → ses cibles NE
+      // doivent PAS compter dans « personnes interrogées » (c'est le fix KPI).
       settings.statuts = [
-        { label: 'To do', color: '#90a4ae', icon: '⚪', done: false, rdv: false },
-        { label: 'Done',  color: '#2e7d32', icon: '✅', done: true,  rdv: false },
-        { label: 'Refus', color: '#c62828', icon: '⛔', done: false, rdv: false },
-        { label: 'RDV',   color: '#f9a825', icon: '📅', done: false, rdv: true },
+        { label: 'To do',  color: '#90a4ae', icon: '⚪', done: false, rdv: false, realise: false },
+        { label: 'Done',   color: '#2e7d32', icon: '✅', done: true,  rdv: false, realise: true  },
+        { label: 'Absent', color: '#a1887f', icon: '⊘',  done: true,  rdv: false, realise: false },
+        { label: 'Refus',  color: '#c62828', icon: '⛔', done: false, rdv: false, realise: false },
+        { label: 'RDV',    color: '#f9a825', icon: '📅', done: false, rdv: true,  realise: false },
       ];
       Object.keys(enquetes).forEach(k => delete enquetes[k]);
       enquetes.G1 = [
         { ordre: '1', nom: 'Dupont', prenom: 'Jean', adresse: 'Rue A, 1000 Bruxelles', statut: 'Done', date: '10/08/2026', nb_cibles: 2, historique: [{ statut: 'RDV', date: '05/08/2026' }, { statut: 'Done', date: '10/08/2026' }] },
         { ordre: '2', nom: 'Martin', prenom: 'Anne', adresse: 'Rue B, 1000 Bruxelles', statut: 'To do', date: '', nb_cibles: 1, historique: [] },
         { ordre: '3', nom: 'Sy', prenom: 'Omar', adresse: 'Rue C, 1030 Schaerbeek', statut: 'Refus', date: '08/08/2026', nb_cibles: 1, historique: [{ statut: 'RDV', date: '06/08/2026' }] },
+        { ordre: '4', nom: 'Zola', prenom: 'Marc', adresse: 'Rue E, 1030 Schaerbeek', statut: 'Absent', date: '09/08/2026', nb_cibles: 4, historique: [] },
       ];
       enquetes.G2 = [
         { ordre: '1', nom: 'Blanc', prenom: 'Eva', adresse: 'Rue D, 1030 Schaerbeek', statut: 'Done', date: '11/08/2026', nb_cibles: 3, historique: [{ statut: 'Done', date: '11/08/2026' }] },
@@ -82,11 +86,11 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   }
 
   A(r.kpiSparks >= 2, `sparklines dans les cartes KPI (statuts avec activité datée) → ${r.kpiSparks}`);
-  A(r.interviewed === '5', `KPI « Personnes interrogées ≥15 » = Σ nb_cibles des Fait (2+3) → "${r.interviewed}"`);
-  A(r.others === '3', `KPI « Autres interrogés ≥15 (hors référent) » = Σ(nb_cibles−1) des Fait (1+2) → "${r.others}"`);
+  A(r.interviewed === '5', `KPI « Personnes interrogées ≥15 » = Σ nb_cibles des RÉALISÉS (2+3), Absent(4) exclu → "${r.interviewed}"`);
+  A(r.others === '3', `KPI « Autres interrogés ≥15 (hors référent) » = Σ(nb_cibles−1) des réalisés (1+2) → "${r.others}"`);
   A(r.donutSvg >= 1 && r.donutLegend, `donut « Répartition des statuts » rendu avec légende (svg=${r.donutSvg})`);
-  A(r.rows === 4, `tableau de contacts : 4 lignes (2 enquêtes) → ${r.rows}`);
-  A(r.badges === 4, `un badge de statut par ligne → ${r.badges}`);
+  A(r.rows === 5, `tableau de contacts : 5 lignes (2 enquêtes) → ${r.rows}`);
+  A(r.badges === 5, `un badge de statut par ligne → ${r.badges}`);
   A(r.sortable, 'en-têtes triables (aria-sort présent)');
   // Défaut = tri par visites décroissant (Dupont, 2 passages) ; clic sur Contact → tri alpha (Blanc).
   A(r.firstBefore === 'Dupont Jean' && r.firstAfter === 'Blanc Eva',
