@@ -44,6 +44,18 @@ export function exporterResumeXLSX() {
   // Ligne totaux
   rows.push(['TOTAL', ...statutsCfg.map(s => totauxParStatut[s.label] || 0), grandTotal]);
 
+  // KPI « réalisé » + indemnité (mêmes règles que la vue Résumé).
+  const realiseSet = new Set(statutsCfg.filter(s => s.realise).map(s => s.label));
+  let nbRealises = 0, nbInterroges = 0;
+  nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
+    if (!realiseSet.has(c.statut || statutDefaut())) return;
+    nbRealises++;
+    const n15 = parseInt(c.nb_cibles, 10), tm = parseInt(c.taille_menage, 10);
+    nbInterroges += !isNaN(n15) ? n15 : (tm > 0 ? tm : 1);
+  }));
+  const qMenage = Number(settings.paieMenage) || 0, qPersonne = Number(settings.paiePersonne) || 0;
+  const indemnite = nbRealises * qMenage + nbInterroges * qPersonne;
+
   const ws1 = XLSX.utils.aoa_to_sheet(rows);
 
   // Largeurs de colonnes
@@ -86,6 +98,16 @@ export function exporterResumeXLSX() {
       const pct = grandTotal ? (nb/grandTotal*100).toFixed(1)+'%' : '0%';
       return [s.icon + ' ' + s.label, nb, pct];
     }),
+    [],
+    ['✅ Ménages réalisés', nbRealises, ''],
+    ['🎤 Personnes interrogées (≥15)', nbInterroges, ''],
+    ['👥 Autres interrogés (hors référent)', Math.max(nbInterroges - nbRealises, 0), ''],
+    ...((qMenage > 0 || qPersonne > 0) ? [
+      [],
+      ['Indemnité / ménage réalisé (€)', qMenage, ''],
+      ['Indemnité / personne ≥15 (€)', qPersonne, ''],
+      ['💶 Indemnité estimée (€)', +indemnite.toFixed(2), ''],
+    ] : []),
     [],
     ['Nombre d\'enquêtes', nomEnquetes.length, ''],
     ['Date export', new Date().toLocaleDateString('fr-BE'), ''],
@@ -221,6 +243,22 @@ export function renduResume() {
       <div class="kpi-lbl">👥 ${esc(t('res_others'))}</div>
       <div class="kpi-pct">${esc(t('res_others_sub'))}</div>
     </div>`;
+
+  // ── Indemnité estimée (si un quota de paiement est configuré) ──────────────
+  // Barème : montant par ménage RÉALISÉ + montant par personne ≥15 interrogée.
+  // Les visites non réalisées (refus, absent, déménagé…) ne sont pas indemnisées.
+  const qMenage = Number(settings.paieMenage) || 0;
+  const qPersonne = Number(settings.paiePersonne) || 0;
+  if (qMenage > 0 || qPersonne > 0) {
+    const indemnite = nbRealises * qMenage + nbInterroges * qPersonne;
+    const eur = n => new Intl.NumberFormat(localeApp(), { style: 'currency', currency: 'EUR' }).format(n);
+    kpiHtml += `
+    <div class="kpi-card" style="border-top-color:#1b5e20" title="${esc(t('res_pay_tip'))}">
+      <div class="kpi-val" style="color:#1b5e20">${esc(eur(indemnite))}${interrogesExact ? '' : ' *'}</div>
+      <div class="kpi-lbl">💶 ${esc(t('res_pay'))}</div>
+      <div class="kpi-pct">${nbRealises}×${esc(eur(qMenage))} + ${nbInterroges}×${esc(eur(qPersonne))}</div>
+    </div>`;
+  }
 
   statutsCfg.forEach(s => {
     const nb  = totauxParStatut[s.label] || 0;

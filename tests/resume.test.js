@@ -57,6 +57,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
         { ordre: '1', nom: 'Blanc', prenom: 'Eva', adresse: 'Rue D, 1030 Schaerbeek', statut: 'Done', date: '11/08/2026', nb_cibles: 3, historique: [{ statut: 'Done', date: '11/08/2026' }] },
       ];
       enqueteActive = 'G1';
+      settings.paieMenage = 10; settings.paiePersonne = 5;   // quotas de paiement
       if (typeof refreshSelect === 'function') refreshSelect();
       setResumeScope('all');
       setView('resume');
@@ -68,6 +69,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       const firstAfter = tbl.querySelector('tbody tr td') ? tbl.querySelector('tbody tr td').textContent : null;
       const interviewedCard = [...document.querySelectorAll('.kpi-grid .kpi-card')].find(c => c.textContent.includes('🎤'));
       const othersCard = [...document.querySelectorAll('.kpi-grid .kpi-card')].find(c => c.textContent.includes('👥'));
+      const payCard = [...document.querySelectorAll('.kpi-grid .kpi-card')].find(c => c.textContent.includes('💶'));
       return {
         kpiSparks: document.querySelectorAll('.kpi-grid .kpi-card svg').length,
         donutSvg: box.querySelectorAll('svg').length,
@@ -77,6 +79,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
         sortable: !!tbl.querySelector('th[aria-sort]'),
         interviewed: interviewedCard ? interviewedCard.querySelector('.kpi-val').textContent.trim() : null,
         others: othersCard ? othersCard.querySelector('.kpi-val').textContent.trim() : null,
+        pay: payCard ? payCard.querySelector('.kpi-val').textContent.replace(/\s/g, ' ').trim() : null,
         firstBefore, firstAfter,
       };
     });
@@ -88,6 +91,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.kpiSparks >= 2, `sparklines dans les cartes KPI (statuts avec activité datée) → ${r.kpiSparks}`);
   A(r.interviewed === '5', `KPI « Personnes interrogées ≥15 » = Σ nb_cibles des RÉALISÉS (2+3), Absent(4) exclu → "${r.interviewed}"`);
   A(r.others === '3', `KPI « Autres interrogés ≥15 (hors référent) » = Σ(nb_cibles−1) des réalisés (1+2) → "${r.others}"`);
+  A(/45/.test(r.pay || ''), `KPI « Indemnité estimée » = 2 ménages×10€ + 5 pers×5€ = 45 € → "${r.pay}"`);
   A(r.donutSvg >= 1 && r.donutLegend, `donut « Répartition des statuts » rendu avec légende (svg=${r.donutSvg})`);
   A(r.rows === 5, `tableau de contacts : 5 lignes (2 enquêtes) → ${r.rows}`);
   A(r.badges === 5, `un badge de statut par ligne → ${r.badges}`);

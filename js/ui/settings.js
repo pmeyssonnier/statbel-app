@@ -62,6 +62,8 @@ export function ouvrirSettings() {
   document.getElementById('setFontFamily').value = settings.fontFamily;
   document.getElementById('setFontSize').value   = settings.fontSize;
   { const e = document.getElementById('setCsvSep'); if (e) e.value = settings.csvSep || 'auto'; }
+  { const e = document.getElementById('setPayHousehold'); if (e) e.value = settings.paieMenage || ''; }
+  { const e = document.getElementById('setPayPerson'); if (e) e.value = settings.paiePersonne || ''; }
   document.getElementById('setProvider').value = settings.provider;
   document.getElementById('setMapStyle').value = settings.mapStyle;
   document.getElementById('setNav').value      = settings.navMode;
