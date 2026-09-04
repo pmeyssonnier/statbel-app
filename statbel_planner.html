@@ -55,7 +55,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 :root{
   --ink:    #1a1f2e;
   --ink2:   #3d4460;
-  --ink3:   #7b82a0;
+  --ink3:   #656c88;   /* texte tertiaire — ≥ 4,5:1 sur fond clair (WCAG 1.4.3) */
   --bg:     #f4f6fb;
   --card:   #ffffff;
   --border: #dde2f0;
@@ -1065,7 +1065,8 @@ function renderAnnee() {
     html += `<div style="margin-bottom:20px">
       <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px;
                   padding:5px 10px;background:var(--bg);border-radius:6px;
-                  border-left:3px solid var(--accent)">
+                  display:flex;align-items:center;gap:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none"></span>
         ${esc(row.numero)} — ${esc(row.quartier)}
       </div>
       <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">`;
@@ -1819,7 +1820,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '181';
+const APP_VERSION = '182';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

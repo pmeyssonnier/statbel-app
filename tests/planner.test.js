@@ -226,6 +226,27 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(a11y.closedOnEsc, 'Échap ferme la modale candidature');
     A(a11y.focusRestored, 'focus restitué au déclencheur à la fermeture');
 
+    // Polish/adapt : contraste --ink3 (≥4,5:1) + vue année sans bordure « side-tab ».
+    const polish = await p.evaluate(() => {
+      const out = {};
+      const hexToRgb = h => { h = h.trim().replace('#', ''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+      const relLum = rgb => { const a = rgb.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]; };
+      const ratio = (x, y) => { const L1 = relLum(x), L2 = relLum(y), hi = Math.max(L1, L2), lo = Math.min(L1, L2); return (hi + 0.05) / (lo + 0.05); };
+      const cs = getComputedStyle(document.documentElement);
+      const ink3 = cs.getPropertyValue('--ink3'), bg = cs.getPropertyValue('--bg');
+      out.ink3Contrast = (ink3 && bg) ? ratio(hexToRgb(ink3), hexToRgb(bg)) : 0;
+      // Vue année avec des groupes → en-têtes de quartier rendus.
+      document.getElementById('selPlanning').value = '__ALL__'; onChangePlanning();
+      selectAll(); setView('annee');
+      const html = document.body.innerHTML;
+      out.noSideTab = !/border-left:\s*3px solid var\(--accent\)/.test(html);
+      out.hasDot = /border-radius:50%;background:var\(--accent\)/.test(html);
+      return out;
+    });
+    A(polish.ink3Contrast >= 4.5, `texte tertiaire (--ink3) ≥ 4,5:1 sur --bg → ${polish.ink3Contrast ? polish.ink3Contrast.toFixed(2) : polish.ink3Contrast}:1`);
+    A(polish.noSideTab, 'vue année : plus de bordure « side-tab » (border-left 3px accent)');
+    A(polish.hasDot, 'vue année : puce d\'accent en tête de groupe (remplace la barre)');
+
     // Génération .docx : titre centré + case à cocher choisie transmise. Le ZIP
     // est en méthode STORE → le document.xml est présent verbatim dans les octets.
     const docx = await p.evaluate(() => {
