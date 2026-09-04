@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
       - name: Installer les devDependencies
         run: npm install
       - name: ESLint (0 erreur, 0 avertissement)
@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
       - name: Installer les devDependencies
         run: npm install
       # Le navigateur + ses dépendances système (le pretest de npm ne pose que le

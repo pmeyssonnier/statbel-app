@@ -46,12 +46,20 @@ jobs:
             fi
             notes_for "$t" > /tmp/notes.md || true
             if gh release view "$t" >/dev/null 2>&1; then
-              if [ -s /tmp/notes.md ]; then gh release edit "$t" --title "$t" --notes-file /tmp/notes.md; fi
-              echo "↻ mise à jour de la release $t"
+              if [ -s /tmp/notes.md ]; then
+                gh release edit "$t" --title "$t" --notes-file /tmp/notes.md
+                echo "↻ notes de $t réécrites depuis le CHANGELOG"
+              else
+                echo "::warning::$t : aucune section « ## [${t#v}] » dans le CHANGELOG → notes inchangées"
+              fi
             elif [ -s /tmp/notes.md ]; then
               gh release create "$t" --title "$t" --notes-file /tmp/notes.md; echo "✓ créé $t"
             else
-              gh release create "$t" --title "$t" --generate-notes;    echo "✓ créé $t (notes auto)"
+              # Repli visible : sans section dans le CHANGELOG on retombe sur les
+              # notes auto de GitHub, mais on le signale (une section oubliée est
+              # sinon indétectable dans le log).
+              gh release create "$t" --title "$t" --generate-notes
+              echo "::warning::$t : aucune section « ## [${t#v}] » dans le CHANGELOG → notes auto-générées"
             fi
           }
 

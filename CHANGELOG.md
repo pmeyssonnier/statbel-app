@@ -207,12 +207,19 @@ touchent pas Interviews, ils seront donc rattachés à la prochaine version d'ap
   qui lance tout `tests/*.test.js` (Playwright + Chromium) sur chaque push et PR.
 - **`CLAUDE.md`** dégraissé (spécifique dépôt) + skills contributeur
   (`statbel-app`, `statbel-data`, `pwa-headless-test`).
-- **Pose des tags** (`tag-release.yml`) : le `GITHUB_TOKEN` ne peut taguer qu'un
-  commit dont les fichiers `.github/workflows/*` sont **identiques** à ceux de la
-  branche par défaut ; un commit antérieur à une refonte de workflow n'est donc
-  taguable que depuis un clone, ou avec un PAT *Workflows: write* (voir la note
-  de la 3.14). Le workflow pousse tag par tag : un ref refusé n'annule plus la
-  pose des suivants.
+- **Pose des tags** (`tag-release.yml`) : réduit au tag unique une fois le
+  backfill v3.8 → v3.27 fait (il reste dans l'historique du fichier). Casse
+  normalisée (`3.28`/`V3.28` → `v3.28`), cible vérifiée, et **un tag existant
+  n'est jamais déplacé en silence** : même commit → rien à faire, commit
+  différent → échec explicite. Limite du `GITHUB_TOKEN` : il ne peut taguer
+  qu'un commit dont les `.github/workflows/*` sont **identiques** à ceux de la
+  branche par défaut ; un commit antérieur à une refonte de workflow n'est
+  taguable que depuis un clone ou avec un PAT *Workflows: write* (voir la note
+  de la 3.14).
+- **Notes de release** (`create-release.yml`) : une section de CHANGELOG
+  manquante déclenche désormais un `::warning::` (notes auto à la création,
+  notes inchangées à la mise à jour) au lieu de passer inaperçue dans le log.
+- **CI** : `node-version` 20 → 22 (Node 20 déprécié côté runners).
 
 ## Versions antérieures (≤ 3.7)
 Voir l'historique git : `git log --oneline`. Points marquants : découpage en
