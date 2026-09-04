@@ -188,6 +188,44 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(cand.nbRO && cand.dRO, 'NbGroupes et Date en lecture seule (champs calculés)');
     A(cand.nbAfter === String(cand.selAfter), `NbGroupes suit la sélection en direct (${cand.selAfter}) → "${cand.nbAfter}"`);
 
+    // Accessibilité (harden) : landmark + lien d'évitement + modale candidature.
+    const a11y = await p.evaluate(() => {
+      const out = {};
+      const skip = document.querySelector('.skip-link');
+      out.skipTarget = skip ? new URL(skip.href).hash : null;
+      const main = document.getElementById('contenu');
+      out.mainRole = main ? (main.getAttribute('role') || main.tagName.toLowerCase()) : null;
+      out.mainTab = main ? main.getAttribute('tabindex') : null;
+      const focusables = [...document.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select,[tabindex]:not([tabindex="-1"])')]
+        .filter(el => el.offsetParent !== null || el.getClientRects().length || el === skip);
+      out.skipIsFirst = focusables[0] === skip;
+      const avant = skip.getBoundingClientRect(); out.hidden = avant.bottom <= 0;
+      skip.style.transition = 'none'; skip.focus();
+      const apres = skip.getBoundingClientRect(); out.revealed = apres.top >= 0 && apres.bottom > 0;
+      let rm = false;
+      for (const sh of document.styleSheets) { let rs; try { rs = sh.cssRules; } catch (e) { continue; } if (!rs) continue; for (const ru of rs) { if (ru.media && ru.media.mediaText && ru.media.mediaText.includes('prefers-reduced-motion')) rm = true; } }
+      out.reducedMotion = rm;
+      // Modale candidature : dialog + focus déplacé dedans à l'ouverture, Échap ferme + restitue le focus.
+      const pre = document.getElementById('selPlanning'); pre.focus();
+      openCandidature();
+      const modal = document.getElementById('candModal'), box = modal.querySelector('.cand-modal-box');
+      out.dialogRole = box.getAttribute('role') === 'dialog' && box.getAttribute('aria-modal') === 'true';
+      out.focusInModal = box.contains(document.activeElement);
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      out.closedOnEsc = modal.style.display === 'none';
+      out.focusRestored = document.activeElement === pre;
+      return out;
+    });
+    A(a11y.skipTarget === '#contenu', `lien d'évitement cible #contenu → ${a11y.skipTarget}`);
+    A(a11y.mainRole === 'main' && a11y.mainTab === '-1', 'landmark principal <main id="contenu" tabindex="-1">');
+    A(a11y.skipIsFirst, 'lien d\'évitement = 1er élément focusable');
+    A(a11y.hidden && a11y.revealed, 'lien d\'évitement caché par défaut, révélé au focus');
+    A(a11y.reducedMotion, 'règle @media prefers-reduced-motion présente');
+    A(a11y.dialogRole, 'modale candidature = role="dialog" + aria-modal');
+    A(a11y.focusInModal, 'ouverture candidature : focus déplacé dans la boîte de dialogue');
+    A(a11y.closedOnEsc, 'Échap ferme la modale candidature');
+    A(a11y.focusRestored, 'focus restitué au déclencheur à la fermeture');
+
     // Génération .docx : titre centré + case à cocher choisie transmise. Le ZIP
     // est en méthode STORE → le document.xml est présent verbatim dans les octets.
     const docx = await p.evaluate(() => {

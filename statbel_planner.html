@@ -297,9 +297,15 @@ select[multiple]{height:120px}
    est resserré. Les champs pleine largeur (Enquête, Adresse) conservent .cand-wide. */
 @media(max-width:640px){.cand-grid{gap:10px 8px}.cand-modal{padding:12px 8px}.cand-modal-box{padding:18px 16px}}
 @media(max-width:380px){.cand-field label{font-size:10px}.cand-field input{font-size:13px;padding:8px}}
+/* Accessibilité : lien d'évitement (caché hors écran, révélé au focus clavier) */
+.skip-link{position:fixed;top:8px;left:8px;z-index:10001;background:var(--accent);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transform:translateY(-160%);transition:transform .15s ease}
+.skip-link:focus{transform:translateY(0);outline:2px solid #fff;outline-offset:2px}
+/* Respecte « moins d'animations » : transitions/animations quasi instantanées. */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 </style>
 </head>
 <body>
+<a class="skip-link" href="#contenu">Aller au contenu</a>
 
 <header>
   <div class="header-row">
@@ -331,7 +337,7 @@ select[multiple]{height:120px}
   </div>
 </header>
 
-<div class="main">
+<main class="main" id="contenu" role="main" tabindex="-1">
 
   <!-- 1. Invite affichée uniquement quand aucun planning n'est chargé.
        Le sélecteur de trimestre est dans le bandeau ; le récapitulatif du nombre
@@ -499,7 +505,7 @@ select[multiple]{height:120px}
   </div>
 
 
-</div>
+</main>
 
 <script>
 // ══════════════════════════════════════════════════════════════════════
@@ -1740,19 +1746,37 @@ function genererCandidature(){
   }catch(e){ alert('Erreur lors de la génération : '+e.message); }
 }
 
-function candEscHandler(e){ if(e.key==='Escape') closeCandidature(); }
+let candPrevFocus=null;
+function candFocusables(m){
+  const box=(m&&m.querySelector('.cand-modal-box'))||m;
+  return [...box.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);
+}
+// Échap ferme ; Tab piégé dans la boîte de dialogue (accessibilité modale).
+function candKeyHandler(e){
+  if(e.key==='Escape'){ e.preventDefault(); closeCandidature(); return; }
+  if(e.key!=='Tab') return;
+  const m=document.getElementById('candModal'); if(!m) return;
+  const box=m.querySelector('.cand-modal-box')||m;
+  const f=candFocusables(m); if(!f.length){ e.preventDefault(); return; }
+  const first=f[0], last=f[f.length-1], a=document.activeElement;
+  if(e.shiftKey && (a===first || !box.contains(a))){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && (a===last || !box.contains(a))){ e.preventDefault(); first.focus(); }
+}
 function openCandidature(){
   const m=document.getElementById('candModal');
   if(!m) return;
   candSetDateAujourdhui();        // Date = date du jour à chaque ouverture
   updateCandidaturePreview();     // NbGroupes = nb de groupes sélectionnés
+  candPrevFocus=document.activeElement;   // à restituer à la fermeture
   m.style.display='flex';
-  document.addEventListener('keydown', candEscHandler);
+  document.addEventListener('keydown', candKeyHandler);
+  const f=candFocusables(m); if(f[0]) f[0].focus();   // focus dans la modale
 }
 function closeCandidature(){
   const m=document.getElementById('candModal');
   if(m) m.style.display='none';
-  document.removeEventListener('keydown', candEscHandler);
+  document.removeEventListener('keydown', candKeyHandler);
+  if(candPrevFocus && document.contains(candPrevFocus)){ candPrevFocus.focus(); candPrevFocus=null; }
 }
 
 /* ── Signature (canvas → PNG intégré au .docx) ── */
@@ -1795,7 +1819,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '180';
+const APP_VERSION = '181';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
