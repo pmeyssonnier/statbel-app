@@ -1,22 +1,33 @@
 name: Créer un tag de version
 
-# Pose des tags de version directement depuis GitHub (le git push local est
-# parfois bloqué par un proxy). Déclenchement MANUEL : onglet Actions →
-# « Créer un tag de version » → Run workflow.
-#   - sans paramètre  : backfill des tags manquants v3.8 → v3.27 (idempotent).
-#   - avec « tag »     : crée ce tag unique sur le commit indiqué (ou le courant).
+# Pose un tag de version depuis GitHub (le git push local est parfois bloqué par
+# un proxy). Déclenchement MANUEL : onglet Actions → « Créer un tag de version »
+# → Run workflow, en donnant le tag (ex. v3.28) et, au besoin, le commit visé.
+#
+# LIMITE CONNUE — GITHUB_TOKEN est un jeton d'App : GitHub refuse un ref dont
+# l'arbre .github/workflows/* diffère de celui de la branche par défaut
+# (« refusing to allow a GitHub App to create or update workflow ... without
+# workflows permission »), le bloc `permissions:` n'offre aucun scope
+# `workflows`, et l'API Git Refs oppose le même 403. Taguer le sommet de main
+# (le cas normal) passe toujours ; un commit antérieur à une refonte de workflow
+# n'est taguable que depuis un clone (identifiants avec le scope `workflow`) ou
+# avec un PAT *Contents + Workflows: write*. Cas réel resté ouvert : v3.14 —
+# voir la note de sa section dans le CHANGELOG.
+#
+# Le backfill v3.8 → v3.27 a été retiré une fois les tags posés ; il reste dans
+# l'historique (`git log -p -- .github/workflows/tag-release.yml`).
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag unique à créer (ex. v3.28). Vide = backfill v3.8→v3.27."
-        required: false
+        description: "Tag à créer (ex. v3.28)."
+        required: true
       ref:
-        description: "Commit ou branche cible du tag unique (défaut : commit courant)."
+        description: "Commit ou branche cible (défaut : commit courant)."
         required: false
 
 permissions:
-  contents: write   # nécessaire pour pousser les tags via GITHUB_TOKEN
+  contents: write   # nécessaire pour pousser le tag via GITHUB_TOKEN
 
 jobs:
   tag:
@@ -24,9 +35,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0   # historique complet → les commits cibles sont présents
+          fetch-depth: 0   # historique complet → le commit cible est présent
 
-      - name: Créer et pousser le(s) tag(s)
+      - name: Créer et pousser le tag
         env:
           TAG: ${{ inputs.tag }}
           REF: ${{ inputs.ref }}
@@ -36,57 +47,32 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # LIMITE CONNUE — GITHUB_TOKEN est un jeton d'App : GitHub refuse un
-          # ref dont l'arbre .github/workflows/* diffère de celui de la branche
-          # par défaut (« refusing to allow a GitHub App to create or update
-          # workflow ... without workflows permission »). Le bloc `permissions:`
-          # n'offre aucun scope `workflows`, et l'API Git Refs oppose le même
-          # 403 : un commit antérieur à une refonte de workflow n'est donc
-          # taguable que depuis un clone (identifiants avec le scope `workflow`)
-          # ou avec un PAT *Contents + Workflows: write*. Cas réel resté ouvert :
-          # v3.14 (6264e62), antérieur à la refonte de tests.yml — voir la note
-          # de la section [3.14] du CHANGELOG.
-          push_tag() {
-            t="$1"
-            if git push origin "refs/tags/$t" 2>/tmp/push.err; then
-              echo "  poussé $t"; return 0
-            fi
-            sed 's/^/    /' /tmp/push.err
-            echo "  ✗ $t non poussé (voir la LIMITE CONNUE en tête de ce script)"
-            return 1
+          # Normalise la saisie (les tags git sont sensibles à la casse) :
+          # « V3.28 » ou « 3.28 » → « v3.28 ».
+          TAG="v${TAG#[vV]}"
+          target="${REF:-$SHA}"
+          want=$(git rev-parse --verify -q "$target^{commit}") || {
+            echo "::error::cible introuvable : $target (donne un SHA complet, une branche ou un tag)"
+            exit 1
           }
+          echo "$TAG → $want"
 
-          if [ -n "$TAG" ]; then
-            target="${REF:-$SHA}"
-            echo "Tag unique : $TAG → $target"
-            git tag -a "$TAG" "$target" -m "$TAG" 2>/dev/null || echo "  $TAG existe déjà, on ré-utilise"
-            push_tag "$TAG"
-          else
-            refuses=""
-            echo "Backfill des versions v3.8 → v3.27"
-            # tag  ->  commit de merge correspondant
-            # v3.14 (6264e62) est absent volontairement : non taguable par le
-            # runner (voir LIMITE CONNUE ci-dessus + note [3.14] du CHANGELOG).
-            for pair in \
-              "v3.8:5af9b61"  "v3.9:75b35a4"  "v3.10:55c2981" \
-              "v3.11:897cf1f" "v3.12:4791ee4" "v3.13:0e642b4" \
-              "v3.15:484ea7f" "v3.16:510578c" \
-              "v3.17:b53fc5f" "v3.18:a25ed3b" "v3.19:7096cc2" \
-              "v3.20:fe108f6" "v3.21:aaf53aa" "v3.22:1c35600" \
-              "v3.23:e438b91" "v3.24:58b97f6" "v3.25:68013a5" \
-              "v3.26:056fc2c" "v3.27:3298e21"; do
-              t="${pair%%:*}"; c="${pair##*:}"
-              if git rev-parse -q --verify "refs/tags/$t" >/dev/null; then
-                echo "  $t existe déjà, skip"
-              else
-                git tag -a "$t" "$c" -m "$t"
-                echo "  créé $t → $c"
-                # un ref refusé ne doit pas empêcher la pose des suivants
-                push_tag "$t" || refuses="$refuses $t"
-              fi
-            done
-            if [ -n "$refuses" ]; then
-              echo "Tags refusés :$refuses"
-              exit 1
+          # Un tag déjà posé n'est jamais déplacé en silence : soit il est déjà
+          # au bon endroit (rien à faire), soit il faut le supprimer sciemment.
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            have=$(git rev-list -n1 "$TAG")
+            if [ "$have" = "$want" ]; then
+              echo "::notice::$TAG existe déjà et pointe au bon endroit — rien à faire"
+              exit 0
             fi
+            echo "::error::$TAG existe déjà et pointe sur $have — supprime-le avant de le reposer"
+            exit 1
           fi
+
+          git tag -a "$TAG" "$want" -m "$TAG"
+          if ! git push origin "refs/tags/$TAG" 2>/tmp/push.err; then
+            sed 's/^/    /' /tmp/push.err
+            echo "::error::$TAG non poussé — voir la LIMITE CONNUE en tête de ce workflow"
+            exit 1
+          fi
+          echo "poussé $TAG"
