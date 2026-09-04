@@ -9,6 +9,144 @@ service worker (`sw.js`) — indiqué entre parenthèses. Le Convertisseur et le
 Planner ont leur propre `APP_VERSION` interne (entier), signalés quand ils
 changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant.
 
+## [Non publié]
+
+Déjà en ligne (GitHub Pages déploie `main`) mais sans tag : ces changements ne
+touchent pas Interviews, ils seront donc rattachés à la prochaine version d'app.
+
+### Ajouté
+- **Convertisseur (209) — KPI « Indemnité potentielle »** dans la vue Statistiques
+  (SW `statbel-v270`) : montant maximal payé si toute l'enquête du groupe était
+  réalisée (`ménages × quota ménage + cibles ≥ âge min × quota personne`). Quotas
+  repris des **Paramètres d'Interviews** via `localStorage['statbel_settings']` ;
+  « — » explicite + titre d'aide s'ils sont absents. Formule détaillée au survol,
+  7ᵉ tuile désactivable via « Personnaliser les KPI », i18n 4 langues.
+
+## [3.27] — 2026-09-04  (SW `statbel-v268` → `v269`)
+### Ajouté
+- **Résumé — 2ᵉ KPI « personnes ≥15 interrogées »**, avec le sous-libellé
+  « sur N à interroger » = Σ des cibles ≥15 de **tous** les ménages du périmètre
+  (réalisés ou non). Export XLSX aligné (ligne « 🎯 Total à interroger »).
+- **Planner (183) — thème sombre** complet, piloté par `prefers-color-scheme`.
+### Retiré
+- Carte « 👥 Autres interrogés (hors référent) » du Résumé : elle prêtait à
+  confusion en excluant implicitement les référents.
+
+## [3.26] — 2026-09-04  (SW `statbel-v267`)
+### Ajouté
+- **Quotas de paiement** dans les Paramètres (indemnité par ménage réalisé et par
+  personne ≥ âge cible interrogée) + **calcul des indemnités** au Résumé.
+
+## [3.25] — 2026-09-04  (SW `statbel-v264` → `v266`)
+### Ajouté
+- **Planner (181) — durcissement a11y** : landmark principal, lien d'évitement,
+  focus piégé et restauré dans les modales, respect de `prefers-reduced-motion`.
+### Corrigé
+- **KPI « interrogés » du Résumé basé sur le réalisé**, plus sur le traité.
+- Planner (182) : polish a11y — contraste des textes tertiaires, bordure des
+  onglets latéraux (« side-tab »).
+
+## [3.24] — 2026-09-04  (SW `statbel-v251` → `v263`)
+### Ajouté
+- **Résumé — KPI « Autres interrogés (≥15, hors référent) »** *(retiré en 3.27)*.
+- **Convertisseur (207-208) — durcissement a11y** : landmarks, navigation clavier,
+  modales `<dialog>` avec piège de focus, puis polish contraste tertiaire et
+  cibles tactiles.
+- **Convertisseur (202) — bloc Sankey ménages** (taille → ≥N → âge dominant).
+- **Planner (180)** : candidature `.docx` — titre centré + case à cocher au choix.
+- **`PRODUCT.md` et `DESIGN.md`** : vérité produit et système visuel *incumbent*
+  (rédigés à la main, l'hôte du bundle Impeccable étant bloqué en sortie réseau).
+- Skill de design **Impeccable** dans `.claude/skills/`.
+### Modifié
+- **Convertisseur (199-206) — rangement interne** : régions logiques + table des
+  matières, régions EXPORT / NORMALISATION / CHARTS / TABLES rendues physiquement
+  contiguës, carte d'architecture. Même rangement pour le **Planner (179)**.
+### Corrigé
+- Convertisseur (203) : même hauteur pour les deux Sankey (`viewBox` commun).
+- Convertisseur (205) : hauteur des donuts régulée sur mobile (lib partagée
+  `js/charts.js`).
+- Test a11y « lien d'évitement révélé au focus » fiabilisé (course d'animation).
+
+## [3.23] — 2026-08-18  (SW `statbel-v250`)
+### Corrigé
+- **Appariement au ré-import sécurisé** : rapprochement sur le n° d'ordre avec
+  contrôle de cohérence (plus de fiche écrasée par une ligne qui ne lui
+  correspond pas).
+
+## [3.22] — 2026-08-18  (SW `statbel-v235` → `v249`)
+### Ajouté
+- **Interviews — édition de fiche** limitée au statut, contact, note et
+  historique (le reste reste piloté par l'import).
+- **Convertisseur (185-198)** : drill-down treemap sur les tranches d'âge (libellé
+  « LFS » retiré), bloc « Personnes à interroger (≥N) par ménage » + drill-down
+  nationalités, drapeaux pays et icônes sexe/état civil dans les tables (y compris
+  Lookup), colonnes du détail du ménage configurables, croix ✕ pour masquer un
+  bloc à l'écran, légende H/F en bandeau permanent au-dessus des blocs, largeurs
+  de colonne prédéfinies (Contacts + Lookup), entrée « Personnaliser l'affichage »
+  dans le menu.
+### Modifié
+- Convertisseur : squelette commun pour les blocs d'analyse, colonnes du ménage en
+  sous-groupe de l'onglet Colonnes, fenêtre « Personnaliser » agrandie.
+
+## [3.21] — 2026-08-18  (SW `statbel-v224` → `v234`)
+### Ajouté
+- **Convertisseur (174-184) — personnalisation complète** : KPI au style du Résumé
+  d'Interviews, grille 2×3 avec tuile « Taille moy. ménage », KPI affichables /
+  masquables / réordonnables, blocs d'analyse personnalisables via un panneau à
+  onglets, colonnes du tableau personnalisables, 3 nouveaux blocs d'analyse +
+  libellé « Cibles » dynamique, et **stockage persistant** des réglages d'une
+  session à l'autre.
+- Popup de mise à jour plus compact (bouton « OK »).
+### Modifié
+- Convertisseur : Ménages avant Population totale dans les KPI ; KPI retirés de
+  l'Aperçu (redondants avec Statistiques).
+### Corrigé
+- « % mineurs » suit l'âge cible configuré ; côté Convertisseur, il est calculé sur
+  le **ménage complet** et non sur le périmètre.
+
+## [3.20] — 2026-08-17  (SW `statbel-v223`)
+### Corrigé
+- **Popup de mise à jour autonome dans `index.html`** : il ne dépend plus du bundle
+  mis en cache, ce qui débloque les installations figées sur une vieille version.
+
+## [3.19] — 2026-08-17  (SW `statbel-v222`)
+### Ajouté
+- **a11y — passe 3** : landmarks, lien d'évitement, focus clavier visible.
+
+## [3.18] — 2026-08-17  (SW `statbel-v221`)
+### Ajouté
+- **a11y — passe 2** : piège de focus, `inert` sur l'arrière-plan et restauration
+  du focus à la fermeture des modales.
+
+## [3.17] — 2026-08-17  (SW `statbel-v220`)
+### Modifié
+- **Mise à jour de la PWA en opt-in** : popup « Mise à jour disponible » au lieu du
+  rechargement automatique (plus de perte de saisie en cours).
+
+## [3.16] — 2026-08-17  (SW `statbel-v219`)
+### Ajouté
+- **a11y — passe 1** : noms accessibles et états ARIA sur les contrôles.
+
+## [3.15] — 2026-08-17  (SW `statbel-v218`)
+### Ajouté
+- **Garde-fous de sauvegarde** : rappel déclenché par le **risque** (volume de
+  données non sauvegardées, ancienneté) et visibilité renforcée de l'état.
+- Outillage : `package.json` (`npm test` / `npm run lint`) + garde CI du **rituel
+  de version** (`tools/check-version-bump.js`).
+### Corrigé
+- Test `statut-lock` rendu en FR pour garder le cas multilingue réellement couvert.
+
+## [3.14] — 2026-08-16  (SW `statbel-v217`)
+### Ajouté
+- **Nouveau set d'icônes Statbel** (presse-papiers + checklist) et favicon, pour
+  les trois apps et la PWA installée.
+- CI : workflows manuels **« Créer un tag de version »** et **« Créer une
+  release »** (notes tirées du CHANGELOG, backfill des releases manquantes,
+  normalisation de la casse du tag).
+### Modifié
+- CI : `actions/checkout` et `actions/setup-node` en v5 (fin de l'avertissement
+  Node 20).
+
 ## [3.13] — 2026-08-14  (SW `statbel-v216`)
 ### Ajouté
 - **CI ESLint « prudent »** (`eslint.config.js` + job `lint` dans le workflow, en
@@ -55,6 +193,9 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant.
   qui lance tout `tests/*.test.js` (Playwright + Chromium) sur chaque push et PR.
 - **`CLAUDE.md`** dégraissé (spécifique dépôt) + skills contributeur
   (`statbel-app`, `statbel-data`, `pwa-headless-test`).
+- **Pose des tags** (`tag-release.yml`) : repli par l'API Git Refs quand `git push`
+  est refusé au `GITHUB_TOKEN` parce que le commit visé porte un
+  `.github/workflows/*` différent de celui de la branche par défaut (cas v3.14).
 
 ## Versions antérieures (≤ 3.7)
 Voir l'historique git : `git log --oneline`. Points marquants : découpage en
