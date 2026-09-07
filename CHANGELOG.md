@@ -10,18 +10,19 @@ Planner ont leur propre `APP_VERSION` interne (entier), signalés quand ils
 changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 (exception : la 3.14, sans tag — voir la note de sa section).
 
-## [Non publié]
+## [3.28] — 2026-09-07  (SW `statbel-v270` → `v271`)
 
-Déjà en ligne (GitHub Pages déploie `main`) mais sans tag : ces changements ne
-touchent pas Interviews, ils seront donc rattachés à la prochaine version d'app.
+Version de publication du KPI du Convertisseur livré après la 3.27 : le code était
+déjà sur `main` (donc en ligne), il lui manquait le numéro de version et le tag.
+Interviews n'est pas modifiée fonctionnellement.
 
 ### Ajouté
-- **Convertisseur (209) — KPI « Indemnité potentielle »** dans la vue Statistiques
-  (SW `statbel-v270`) : montant maximal payé si toute l'enquête du groupe était
-  réalisée (`ménages × quota ménage + cibles ≥ âge min × quota personne`). Quotas
-  repris des **Paramètres d'Interviews** via `localStorage['statbel_settings']` ;
-  « — » explicite + titre d'aide s'ils sont absents. Formule détaillée au survol,
-  7ᵉ tuile désactivable via « Personnaliser les KPI », i18n 4 langues.
+- **Convertisseur (209) — KPI « Indemnité potentielle »** dans la vue Statistiques :
+  montant maximal payé si toute l'enquête du groupe était réalisée
+  (`ménages × quota ménage + cibles ≥ âge min × quota personne`). Quotas repris des
+  **Paramètres d'Interviews** via `localStorage['statbel_settings']` ; « — » explicite
+  + titre d'aide s'ils sont absents. Formule détaillée au survol, 7ᵉ tuile
+  désactivable via « Personnaliser les KPI », i18n 4 langues.
 
 ## [3.27] — 2026-09-04  (SW `statbel-v268` → `v269`)
 ### Ajouté
