@@ -1259,12 +1259,15 @@ function detecterLangueNavigateur() {
   const l = (navigator.language || 'fr').slice(0, 2).toLowerCase();
   return LANGS.includes(l) ? l : 'fr';
 }
+// Lecture défensive de localStorage['statbel_settings'] — paramètres partagés
+// avec l'app enquête (index.html) : langue, quotas de paiement…
+function lireSettings() {
+  try { return JSON.parse(localStorage.getItem('statbel_settings') || '{}') || {}; } catch (e) { return {}; }
+}
 // Langue partagée avec l'app enquête (index.html) via localStorage['statbel_settings'].lang
 function chargerLangueInitiale() {
-  try {
-    const raw = JSON.parse(localStorage.getItem('statbel_settings') || '{}');
-    if (raw && LANGS.includes(raw.lang)) return raw.lang;
-  } catch (e) {}
+  const raw = lireSettings();
+  if (LANGS.includes(raw.lang)) return raw.lang;
   return detecterLangueNavigateur();
 }
 let uiLang = chargerLangueInitiale();
@@ -1285,8 +1288,7 @@ function appliquerLangue() {
 // puis ré-applique le balisage et ré-rend les vues dynamiques (stats / planning / tableaux).
 function changerLangue(v) {
   uiLang = LANGS.includes(v) ? v : 'fr';
-  let raw = {};
-  try { raw = JSON.parse(localStorage.getItem('statbel_settings') || '{}') || {}; } catch (e) { raw = {}; }
+  const raw = lireSettings();
   raw.lang = uiLang;
   try { localStorage.setItem('statbel_settings', JSON.stringify(raw)); } catch (e) {}
   appliquerLangue();
@@ -6816,14 +6818,19 @@ function median(a) {
   return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
 }
 
-// Quotas de paiement Statbel repris des PARAMÈTRES du module Interviews
-// (localStorage['statbel_settings'], même origine — comme la langue). Absents ou
-// nuls → { menage:0, personne:0 } (KPI « — » avec repli explicatif dans le titre).
+// Quotas de paiement Statbel repris des PARAMÈTRES du module Interviews (même
+// localStorage['statbel_settings'] que la langue — lu à chaque rendu, pas mis en
+// cache dans _kpiCtx : un changement de quotas doit apparaître sans réimporter).
+// Absents ou nuls → { menage:0, personne:0 } (KPI « — » avec repli explicatif).
 function paieQuotas() {
-  try {
-    const s = JSON.parse(localStorage.getItem('statbel_settings') || '{}');
-    return { menage: Number(s.paieMenage) || 0, personne: Number(s.paiePersonne) || 0 };
-  } catch (e) { return { menage: 0, personne: 0 }; }
+  const s = lireSettings();
+  return { menage: Number(s.paieMenage) || 0, personne: Number(s.paiePersonne) || 0 };
+}
+// Calcul de l'indemnité potentielle, factorisé pour que `val` et `tip` (appelés
+// séparément par renderKPIs) ne redérivent pas chacun leur « a-t-on un quota ? ».
+function paieCalc(c) {
+  const q = paieQuotas();
+  return { q, has: !!(q.menage || q.personne), montant: c.nbHH * q.menage + c.nbCibles15 * q.personne };
 }
 function eurFmt(n) {
   try { return new Intl.NumberFormat(uiLang || 'fr', { style: 'currency', currency: 'EUR' }).format(n); }
@@ -6849,10 +6856,10 @@ const KPI_DEFS = {
   // n'est encore réalisé au stade Convertisseur). Quotas repris des paramètres
   // du module Interviews ; absents → « — » + titre explicatif.
   paie: { i18n: 'kpi_pay_potential', color: '#1b5e20', tint: '#1b5e20',
-          val: c => { const q = paieQuotas(); return (!q.menage && !q.personne) ? '—' : eurFmt(c.nbHH * q.menage + c.nbCibles15 * q.personne); },
-          tip: c => { const q = paieQuotas(); return (!q.menage && !q.personne)
-            ? t('kpi_pay_no_quota')
-            : tf('kpi_pay_potential_tip', { hh: c.nbHH, qm: eurFmt(q.menage), cib: c.nbCibles15, qp: eurFmt(q.personne) }); } },
+          val: c => { const { has, montant } = paieCalc(c); return has ? eurFmt(montant) : '—'; },
+          tip: c => { const { has, q } = paieCalc(c); return has
+            ? tf('kpi_pay_potential_tip', { hh: c.nbHH, qm: eurFmt(q.menage), cib: c.nbCibles15, qp: eurFmt(q.personne) })
+            : t('kpi_pay_no_quota'); } },
 };
 const KPI_ALL = ['men', 'pop', 'size', 'age', 'h', 'f', 'cib', 'etr', 'min', 'med', 'paie'];
 const KPI_ON_DEFAUT = ['men', 'pop', 'size', 'age', 'h', 'f', 'paie'];   // affichés par défaut, dans cet ordre
@@ -7867,7 +7874,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '209';
+const APP_VERSION = '210';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
