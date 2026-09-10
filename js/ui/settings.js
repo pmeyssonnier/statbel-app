@@ -154,6 +154,57 @@ export function ajouterStatut() {
   rafraichirStatutsVues();
 }
 
+// ── Préréglages de statuts prêts à l'emploi ─────────────────────────
+// « cati » reprend les 6 valeurs de la feuille de contact EFT (CATI). `from`
+// re-mappe les statuts par défaut (libellés canoniques EN) vers l'équivalent
+// CATI, pour préserver le suivi existant lors de la bascule.
+export const STATUT_PRESETS = {
+  cati: {
+    i18nLabel: 'preset_cati',
+    statuts: [
+      { label:'Pas encore de contact entrepris',      color:'#90a4ae', icon:'•',  done:false, rdv:false, realise:false },
+      { label:'Rdv fixé',                              color:'#f9a825', icon:'📅', done:false, rdv:true,  realise:false },
+      { label:'Tentatives de contacts sans résultat',  color:'#fb8c00', icon:'🔁', done:false, rdv:false, realise:false },
+      { label:'Négatif',                               color:'#c62828', icon:'✗',  done:true,  rdv:false, realise:false },
+      { label:'Interview réalisée',                    color:'#2e7d32', icon:'✓',  done:true,  rdv:false, realise:true  },
+      { label:'Inconnu',                               color:'#607d8b', icon:'❓', done:false, rdv:false, realise:false },
+    ],
+    from: {
+      'To do':       'Pas encore de contact entrepris',
+      'In progress': 'Rdv fixé',
+      'Done':        'Interview réalisée',
+      'Absent':      'Tentatives de contacts sans résultat',
+      'Refusal':     'Négatif',
+      'Moved':       'Négatif',
+      'Impossible':  'Inconnu',
+    },
+  },
+};
+
+// Applique un préréglage : remplace la liste des statuts et re-mappe les
+// contacts existants (statut courant + historique) vers les nouveaux libellés
+// via `from`, sinon vers le 1er statut (repli) — aucun historique orphelin.
+export function appliquerPresetStatuts(key) {
+  const preset = STATUT_PRESETS[key];
+  if (!preset) return;
+  if (!confirm(tf('cf_preset_statuts', { name: t(preset.i18nLabel) }))) return;
+  const nouveaux = preset.statuts.map(s => ({ ...s }));
+  const connus = new Set(nouveaux.map(s => s.label));
+  const repli = nouveaux[0].label;
+  const remap = old => (!old || connus.has(old)) ? old : ((preset.from && preset.from[old]) || repli);
+  let migres = 0;
+  Object.values(enquetes).forEach(arr => arr.forEach(c => {
+    if (c.statut && !connus.has(c.statut)) { c.statut = remap(c.statut); migres++; }
+    if (Array.isArray(c.historique)) c.historique.forEach(h => { if (h.statut && !connus.has(h.statut)) { h.statut = remap(h.statut); migres++; } });
+  }));
+  settings.statuts = nouveaux;
+  if (filtreActif !== 'Tous' && !connus.has(filtreActif)) filtreActif = remap(filtreActif);
+  if (migres) sauver();
+  saveSettings();
+  renderStatutsEditor();
+  rafraichirStatutsVues();
+}
+
 export function supprimerStatut(idx) {
   if (settings.statuts.length <= 1) return;
   const st    = settings.statuts[idx];

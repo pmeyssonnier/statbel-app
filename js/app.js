@@ -60,7 +60,7 @@ import {
 } from './ui/stats.js';
 import {
   appliquerTheme, appliquerPolice, ouvrirSettings, fermerSettings, majSettingsUI,
-  renderStatutsEditor, modifierStatut, ajouterStatut, supprimerStatut,
+  renderStatutsEditor, modifierStatut, ajouterStatut, supprimerStatut, appliquerPresetStatuts,
   FONT_FAMILIES, FONT_SIZES,
 } from './ui/settings.js';
 import {
@@ -99,7 +99,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.31';
+const APP_VERSION = '3.32';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
@@ -1016,7 +1016,7 @@ Object.assign(window, {
   renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
   exporterBackup, majLastBackupInfo, majKebabBackupInfo, majComparaisonRestore, importerBackup,
   viderCacheCoords, listerNonGeocodees, renderNonGeo, allerAFiche, renderStatutsEditor,
-  rafraichirStatutsVues, modifierStatut, ajouterStatut, supprimerStatut, toggleKebab,
+  rafraichirStatutsVues, modifierStatut, ajouterStatut, supprimerStatut, appliquerPresetStatuts, toggleKebab,
   emailSuggest, choisirSuggestion, fermerSuggestions, emailKeydown, exporterResumeXLSX,
   exporterResumePDF, collecterVisites, renderActiviteQuotidienne, renderProgressionGlobale,
   renderCourbeAvancement, dessinerCourbeProgression, renderEvenementsChrono,
