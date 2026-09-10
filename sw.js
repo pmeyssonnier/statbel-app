@@ -57,7 +57,9 @@ const APP_OPTIONAL = [
   './vendor/leaflet/images/layers-2x.png',
   // pdf.js (import PDF du convertisseur) — volumineux, mis en cache best-effort
   './vendor/pdfjs/pdf.min.js',
-  './vendor/pdfjs/pdf.worker.min.js'
+  './vendor/pdfjs/pdf.worker.min.js',
+  // Manuel d'utilisation illustré — volumineux (captures en data-URI), best-effort
+  './docs/manuel.html'
 ];
 const APP_SHELL = APP_CRITICAL.concat(APP_OPTIONAL);   // pour la stratégie fetch
 

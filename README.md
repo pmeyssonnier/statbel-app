@@ -16,6 +16,9 @@ l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
 Le **numéro de version** de la PWA est affiché dans chaque app (aligné sur le cache du
 service worker `sw.js`).
 
+📘 **[Manuel d'utilisation illustré](docs/manuel.html)** (`docs/manuel.html`) — présentation de chaque
+module avec captures d'écran ; fichier HTML autonome, ouvrable hors-ligne par double-clic.
+
 ---
 
 ## 📋 Interviews (`index.html`)
