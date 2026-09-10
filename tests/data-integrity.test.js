@@ -140,6 +140,50 @@ const EXEC = process.env.CHROMIUM_PATH
     return { hist: c.historique.map(h => h.statut + '@' + h.date), statut: c.statut, date: c.date };
   });
 
+  // ── #4 : éditer la DATE d'une entrée d'historique → pas de ligne dupliquée,
+  //          et statut/date courants re-dérivés de l'entrée éditée ──
+  results.hist_edit_date = await p.evaluate(() => {
+    __setup(JSON.parse(JSON.stringify(__ST)), { E: [
+      { ordre: '1', nom: 'A', prenom: 'a', adresse: 'Rue 1', statut: 'Fait', date: '10/09/2026',
+        historique: [{ statut: 'Fait', date: '10/09/2026', heure: '10:00' }] }
+    ]});
+    enqueteActive = 'E';
+    changerDateHistorique(0, 0, '05/09/2026');
+    const c = enquetes.E[0];
+    return { n: c.historique.length, hd: c.historique[0].date, statut: c.statut, date: c.date };
+  });
+
+  // ── #5 : supprimer l'unique entrée → reste supprimée (pas de résurrection),
+  //          le contact revient au statut par défaut ──
+  results.hist_delete = await p.evaluate(() => {
+    __setup(JSON.parse(JSON.stringify(__ST)), { E: [
+      { ordre: '1', nom: 'A', prenom: 'a', adresse: 'Rue 1', statut: 'Fait', date: '10/09/2026',
+        historique: [{ statut: 'Fait', date: '10/09/2026', heure: '10:00' }] }
+    ]});
+    enqueteActive = 'E';
+    supprimerHistorique(0, 0);   // confirm() auto-accepté (dialog handler)
+    const c = enquetes.E[0];
+    return { n: c.historique.length, statut: c.statut || '(vide)' };
+  });
+
+  // ── #6 : réimport NON destructif → suivi (statut/historique) + coordonnées
+  //          (tél/e-mail/notes) préservés, démographie (adresse/ménage/≥15) mise à jour ──
+  results.import_preserve = await p.evaluate(() => {
+    __setup(JSON.parse(JSON.stringify(__ST)), { E: [
+      { ordre: '0005', nom: 'Dupont', prenom: 'Jean', adresse: 'Ancienne adr 1', birth_date: '1980-01-01',
+        statut: 'Fait', date: '01/08/2026', gsm: '0470 11 22 33', email: 'jean@ex.be', notes: 'ne pas appeler avant 18h',
+        taille_menage: 2, nb_cibles: 1, historique: [{ statut: 'Fait', date: '01/08/2026' }] }
+    ]});
+    // Fichier réimporté : mêmes ordre+identité, DÉMOGRAPHIE à jour, mais tél/e-mail/
+    // notes VIDES et statut par défaut → ne doivent PAS écraser l'existant.
+    const neu = [{ ordre: '0005', nom: 'Dupont', prenom: 'Jean', adresse: 'Nouvelle adr 9', birth_date: '1980-01-01',
+      statut: 'To do', gsm: '', email: '', notes: '', taille_menage: 4, nb_cibles: 3 }];
+    const { result } = preparerImport(neu, 'E');
+    const r = result[0];
+    return { statut: r.statut, hist: (r.historique || []).length, gsm: r.gsm, email: r.email, notes: r.notes,
+             adresse: r.adresse, taille: r.taille_menage, cibles: r.nb_cibles };
+  });
+
   await b.close();
   await srv.close();
 
@@ -163,6 +207,17 @@ const EXEC = process.env.CHROMIUM_PATH
       eq(results.delete_statut.hist, ['To do', 'Fait']) && results.delete_statut.courant === 'To do'],
     ['#3 même statut « done » à 2 dates → les deux restent, courant = récent',
       results.sync_dates.hist.length === 2 && results.sync_dates.date === '05/08/2026'],
+    ['#4 éditer la date d\'une entrée → pas de doublon, courant synchronisé',
+      results.hist_edit_date.n === 1 && results.hist_edit_date.hd === '05/09/2026'
+      && results.hist_edit_date.statut === 'Fait' && results.hist_edit_date.date === '05/09/2026'],
+    ['#5 supprimer l\'unique entrée → reste supprimée (pas de résurrection)',
+      results.hist_delete.n === 0 && results.hist_delete.statut === '(vide)'],
+    ['#6 réimport : suivi + coordonnées préservés, démographie mise à jour',
+      results.import_preserve.statut === 'Fait' && results.import_preserve.hist === 1
+      && results.import_preserve.gsm === '0470 11 22 33' && results.import_preserve.email === 'jean@ex.be'
+      && results.import_preserve.notes === 'ne pas appeler avant 18h'
+      && results.import_preserve.adresse === 'Nouvelle adr 9'
+      && results.import_preserve.taille === 4 && results.import_preserve.cibles === 3],
   ];
   let ok = true;
   for (const [name, pass] of checks) { console.log((pass ? '✓ PASS ' : '✗ FAIL ') + name); if (!pass) ok = false; }

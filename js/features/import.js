@@ -79,13 +79,17 @@ export function preparerImport(rawRows, nom) {
       return;
     }
     if (!o) { result.push(neu); return; }                  // nouveau contact correct
-    const travaille = (Array.isArray(o.historique) && o.historique.length)
-      || (o.statut && o.statut !== statutDefaut()) || o.rdv;
-    if (!travaille) { result.push(neu); return; }
-    const m = Object.assign({}, neu);                      // préserve le suivi
-    m.statut = o.statut; m.date = o.date;
-    if (o.rdv) m.rdv = o.rdv; else delete m.rdv;
+    // Contact apparié : la DÉMOGRAPHIE vient du fichier importé (nom, adresse,
+    // âge, taille du ménage, cibles ≥15…), mais le SUIVI et les COORDONNÉES
+    // saisis dans l'app ne sont JAMAIS écrasés par l'import quand ils existent
+    // — statut, dates d'historique, RDV, téléphone, e-mail, notes sont préservés.
+    const m = Object.assign({}, neu);
+    if (o.statut && o.statut !== statutDefaut()) { m.statut = o.statut; m.date = o.date; }
     if (Array.isArray(o.historique) && o.historique.length) m.historique = o.historique;
+    if (o.rdv)   m.rdv   = o.rdv;
+    if (o.gsm)   m.gsm   = o.gsm;
+    if (o.email) m.email = o.email;
+    if (o.notes) m.notes = o.notes;
     result.push(m);
   });
   return { result, exclus, incertains: match.incertains() };
