@@ -239,6 +239,8 @@
   .badge { font-size: 11px; color: var(--badge-color); background: var(--badge-bg); padding: 2px 8px; border-radius: 10px; text-decoration:none; display:inline-block; }
   .badge-tel { color: #2e7d32 !important; background: #e8f5e9 !important; font-weight: 600; }
   .badge-tel:hover { background: #c8e6c9 !important; }
+  .badge-mail { color: #3949ab !important; background: #e8eaf6 !important; font-weight: 600; }
+  .badge-mail:hover { background: #c5cae9 !important; }
   .badge-rdv { color: #1565c0 !important; background: #e3f2fd !important; font-weight: 600; }
   .badge.green { color: #2e7d32; background: #e8f5e9; }
 

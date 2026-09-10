@@ -358,7 +358,7 @@ export function rendu() {
     const def = statutDef(statut);
     const badges = [];
     if (c.gsm)   badges.push(`<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>`);
-    if (c.email) badges.push(`<span class="badge">✉️ ${esc(c.email)}</span>`);
+    if (c.email) badges.push(`<a class="badge badge-mail" href="mailto:${esc(c.email)}">✉️ ${esc(c.email)}</a>`);
     // Date associée au statut : RDV (si statut « rendez-vous ») sinon date d'action
     const dateStatut = (c.rdv && def.rdv) ? '📅 ' + formatRdv(c.rdv) : (c.date ? formatDateJour(c.date) : '');
     const _p = parseAdresse(c.adresse);
