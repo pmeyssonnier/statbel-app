@@ -4891,14 +4891,33 @@ const DE_COMMUNITY = new Set(['63001','63012','63013','63023','63040','63048','6
 // ════════════════════════════════════════════════════════════════════════
 //  RÉGION — EXPORT · sérialisation CSV & téléchargement
 // ════════════════════════════════════════════════════════════════════════
+// Séparateur d'export CSV — IDENTIQUE au module Interviews. Réglage partagé via
+// localStorage['statbel_settings'].csvSep ('auto' | ',' | ';'), même origine.
+// 'auto' = régional : les locales à virgule décimale (fr/nl/de-BE…) prennent
+// « ; » — ce qu'attend Excel pour découper les colonnes automatiquement —,
+// sinon « , ». Combiné au BOM UTF-8, le fichier s'ouvre directement dans Excel.
+function csvSepRegional() {
+  try { return (1.1).toLocaleString().includes(',') ? ';' : ','; } catch (e) { return ','; }
+}
+function csvSepExport() {
+  let s = 'auto';
+  try {
+    const raw = JSON.parse(localStorage.getItem('statbel_settings') || '{}');
+    if (raw && (raw.csvSep === ',' || raw.csvSep === ';' || raw.csvSep === 'auto')) s = raw.csvSep;
+  } catch (e) {}
+  return s === ';' ? ';' : s === ',' ? ',' : csvSepRegional();
+}
+
 function toCsv(rows, headers) {
+  const sep = csvSepExport();
+  // Guillemets si la cellule contient un séparateur possible (« , » ou « ; »),
+  // un guillemet ou un saut de ligne → sûr quel que soit le séparateur choisi.
   const esc = v => {
     const s = String(v==null?'':v);
-    return (s.includes(',') || s.includes('"') || s.includes('\n'))
-      ? '"'+s.replace(/"/g,'""')+'"' : s;
+    return /[",;\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
   };
-  const headerLine = headers.map(h => EN_LABEL[h] || h).join(',');   // en-têtes anglais
-  return [headerLine, ...rows.map(r => headers.map(h => esc(r[h]||'')).join(','))].join('\n');
+  const headerLine = headers.map(h => esc(EN_LABEL[h] || h)).join(sep);   // en-têtes anglais
+  return [headerLine, ...rows.map(r => headers.map(h => esc(r[h]||'')).join(sep))].join('\n');
 }
 
 function telecharger(contenu, nom, bom = false) {
@@ -7790,10 +7809,10 @@ document.getElementById('btnCibles').addEventListener('click', () => {
   telecharger(toCsv(_resultat.outCibles, CSV_HEADERS), nomEnquete(_resultat) + '.csv', true);   // UTF-8 BOM
 });
 document.getElementById('btnEnquete').addEventListener('click', () => {
-  telecharger(toCsv(_resultat.outEnquete, CSV_HEADERS_ENQUETE), nomEnquete(_resultat) + '_enquete.csv', false);
+  telecharger(toCsv(_resultat.outEnquete, CSV_HEADERS_ENQUETE), nomEnquete(_resultat) + '_enquete.csv', true);   // UTF-8 BOM (ouverture directe Excel)
 });
 document.getElementById('btnMembres').addEventListener('click', () => {
-  telecharger(toCsv(_resultat.outMembres, CSV_HEADERS_MEMBRES), nomEnquete(_resultat) + '_membres.csv', false);
+  telecharger(toCsv(_resultat.outMembres, CSV_HEADERS_MEMBRES), nomEnquete(_resultat) + '_membres.csv', true);   // UTF-8 BOM (ouverture directe Excel)
 });
 document.getElementById('btnRapport').addEventListener('click', () => {
   telecharger(genererRapport(nomEnquete(_resultat), _resultat.outCibles, _resultat.outMembres), nomEnquete(_resultat) + '_rapport.txt', false);
@@ -7874,7 +7893,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '210';
+const APP_VERSION = '211';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
