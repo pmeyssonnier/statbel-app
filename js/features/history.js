@@ -52,6 +52,12 @@ export function syncStatutCourant(c) {
 export function apresModifHistorique(i) {
   const c = contacts()[i];
   trierHistorique(c);
+  // Le suivi courant est intégralement RE-DÉRIVÉ de l'historique édité. On efface
+  // d'abord l'état courant : sinon syncStatutCourant, voyant l'ancien couple
+  // (statut, date) courant absent de l'historique fraîchement modifié, ré-injecte
+  // une entrée « fantôme » à l'ancienne date. C'était le bug « modifier la date
+  // d'une entrée en recrée une, et la ligne d'origine revient à chaque suppression ».
+  c.statut = ''; c.date = ''; c.rdv = '';
   syncStatutCourant(c);
   sauver();
   rafraichirHistorique(i);
