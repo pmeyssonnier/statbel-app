@@ -49,6 +49,7 @@ export const I18N = {
   "title_mypos": { fr:"Ma position", nl:"Mijn locatie", en:"My location", de:"Mein Standort" },
   "title_more": { fr:"Plus d'options", nl:"Meer opties", en:"More actions", de:"Mehr Optionen" },
   "menu_settings": { fr:"⚙️ Paramètres", nl:"⚙️ Instellingen", en:"⚙️ Settings", de:"⚙️ Einstellungen" },
+  "menu_manual": { fr:"📘 Manuel d'utilisation", nl:"📘 Handleiding", en:"📘 User manual", de:"📘 Benutzerhandbuch" },
   "menu_help": { fr:"❓ Aide", nl:"❓ Help", en:"❓ Help", de:"❓ Hilfe" },
   "menu_import": { fr:"⬆️ Importer CSV / Excel", nl:"⬆️ CSV / Excel importeren", en:"⬆️ Import CSV / Excel", de:"⬆️ CSV / Excel importieren" },
   "menu_export": { fr:"⬇️ Exporter CSV", nl:"⬇️ CSV exporteren", en:"⬇️ Export CSV", de:"⬇️ CSV exportieren" },
