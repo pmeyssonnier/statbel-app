@@ -4493,6 +4493,7 @@ const CSV_HEADERS = [
   'ordre','prenom','nom','adresse','statut','date_interview','rdv',
   'sexe','birth_date','age','birth_country','nationality','marital_status',
   'taille_menage','nb_cibles','gsm','email','notes',
+  'collect_method','web_user_id','web_user_pwd',
   'planning_commune','planning_quartier','wave','ref_week','field_start','field_stop',
 ];
 const CSV_HEADERS_MEMBRES = [
@@ -4508,6 +4509,7 @@ const CSV_HEADERS_ENQUETE = [
   'statut','date_interview','rdv',
   'sexe','birth_date','age','birth_country','nationality','marital_status',
   'taille_menage','nb_cibles','gsm','email','notes',
+  'collect_method','web_user_id','web_user_pwd',
   'planning_commune','planning_quartier','wave','ref_week','field_start','field_stop',
 ];
 
@@ -4539,6 +4541,10 @@ const EN_LABEL = {
   gsm:            'gsm',
   email:          'email',
   notes:          'notes',
+  // méthode de collecte + accès web (noms de colonnes GRP conservés)
+  collect_method: 'CD_WSH_CLCT_MTHD',
+  web_user_id:    'TX_WEB_USER_ID',
+  web_user_pwd:   'TX_WEB_USER_PSWRD',
   // colonnes membres
   nr_hh:          'nr_hh',
   nr_membre:      'member_nr',
@@ -5070,6 +5076,10 @@ function convertir(srcRows) {
       taille_menage: String(tailleHH[hh]||1),
       nb_cibles: String(nb15HH[hh]||0),   // personnes du ménage ≥ âge min (direct + proxy)
       gsm: r['NR_PHONE']||'', email: r['TX_EMAIL']||'', notes: '',
+      // Méthode de collecte souhaitée (CATI/CAWI) + identifiants d'accès web du ménage.
+      collect_method: (r['CD_WSH_CLCT_MTHD']||'').trim(),
+      web_user_id:    (r['TX_WEB_USER_ID']||'').trim(),
+      web_user_pwd:   (r['TX_WEB_USER_PSWRD']||'').trim(),
     };
   });
 
@@ -7926,7 +7936,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '212';
+const APP_VERSION = '213';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
