@@ -10,6 +10,19 @@ Planner ont leur propre `APP_VERSION` interne (entier), signalés quand ils
 changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 (exception : la 3.14, sans tag — voir la note de sa section).
 
+## [Non publié]
+
+### Modifié
+- **Convertisseur (210) — refactorisation interne du KPI « Indemnité potentielle »**
+  (SW `statbel-v272`), sans changement de comportement (`/simplify` sur la PR #136) :
+  les quotas de paiement sont lus via `lireSettings()`, un helper désormais partagé
+  avec la lecture de la langue au lieu d'un `JSON.parse(localStorage…)` dupliqué à
+  trois endroits ; `val` et `tip` du KPI factorisent leur calcul commun (quotas,
+  test « a-t-on un quota ? », montant) dans `paieCalc()` plutôt que de le redériver
+  chacun de leur côté. Les quotas restent lus à chaque rendu (pas mis en cache dans
+  `_kpiCtx`) : un changement de quotas doit rester visible sans réimporter — suite
+  `converter-kpi.test.js` inchangée, 19/19 verts.
+
 ## [3.28] — 2026-09-07  (SW `statbel-v270` → `v271`)
 
 Version de publication du KPI du Convertisseur livré après la 3.27 : le code était
