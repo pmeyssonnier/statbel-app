@@ -55,6 +55,30 @@ const GRP = [
   A(/user12345/.test(r.body) && /p@ss-Word!9|"p@ss-Word!9"/.test(r.body) && /CAWI/.test(r.body),
     'export enquête : valeurs présentes dans la ligne');
   A(r.inHeaders, 'colonnes ajoutées aussi à l\'export « cibles » (CSV_HEADERS)');
+
+  // Colonne optionnelle « Méthode de collecte » : disponible, OFF par défaut,
+  // affiche la valeur une fois activée dans Personnaliser → Colonnes.
+  const r2 = await p.evaluate((rows) => {
+    localStorage.removeItem('statbel_conv_cols');
+    const res = convertir(rows); res.structureWarn = [];
+    sources[res.grpId] = { res, fileName: 'x.xlsx' }; sourceActive = res.grpId;
+    afficher(res);
+    const cfg = getCfg('cols');
+    const col = cfg.find(x => x.id === 'collect');
+    const before = document.getElementById('bodyCibles').innerHTML;
+    const idx = cfg.findIndex(x => x.id === 'collect');
+    persoToggle('cols', idx);   // activer la colonne
+    const after = document.getElementById('bodyCibles').innerHTML;
+    return {
+      available: COL_ALL.includes('collect') && !!COL_DEFS.collect,
+      onDefault: col ? col.on : null,
+      beforeHas: /CAWI/.test(before), afterHas: /CAWI/.test(after),
+    };
+  }, GRP);
+  A(r2.available, 'colonne « Méthode de collecte » disponible dans les options');
+  A(r2.onDefault === false, 'colonne « Méthode de collecte » masquée par défaut (opt-in)');
+  A(!r2.beforeHas && r2.afterHas, 'activer la colonne affiche la méthode dans le tableau');
+
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
