@@ -73,11 +73,20 @@ const GRP = [
       available: COL_ALL.includes('collect') && !!COL_DEFS.collect,
       onDefault: col ? col.on : null,
       beforeHas: /CAWI/.test(before), afterHas: /CAWI/.test(after),
+      readable: /\(CAWI\)/.test(after) && /border-radius/.test(after),   // libellé lisible + pastille
+      // Décodeur tolérant
+      ci_cawi: (collecteInfo('CAWI')||{}).key, ci_cati: (collecteInfo('CATI')||{}).key,
+      ci_tel: (collecteInfo('Par téléphone')||{}).key, ci_web: (collecteInfo('web')||{}).key,
+      ci_unknown: collecteInfo('zzz'), ci_empty: collecteInfo(''),
     };
   }, GRP);
   A(r2.available, 'colonne « Méthode de collecte » disponible dans les options');
   A(r2.onDefault === false, 'colonne « Méthode de collecte » masquée par défaut (opt-in)');
   A(!r2.beforeHas && r2.afterHas, 'activer la colonne affiche la méthode dans le tableau');
+  A(r2.readable, 'la préférence est affichée de façon lisible (« … (CAWI) » en pastille)');
+  A(r2.ci_cawi === 'collect_cawi' && r2.ci_cati === 'collect_cati', 'collecteInfo reconnaît CATI / CAWI');
+  A(r2.ci_tel === 'collect_cati' && r2.ci_web === 'collect_cawi', 'collecteInfo reconnaît « téléphone » / « web »');
+  A(r2.ci_unknown === null && r2.ci_empty === null, 'collecteInfo : valeur inconnue/vide → null (affichage brut)');
 
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 

@@ -967,6 +967,8 @@ const I18N = {
   tip_sms:  { fr:"Envoyer un SMS", nl:"Sms versturen", en:"Send SMS", de:"SMS senden" },
   th_household: { fr:"Ménage", nl:"Huishouden", en:"Household", de:"Haushalt" },
   th_collect: { fr:"Méthode de collecte", nl:"Verzamelmethode", en:"Collection method", de:"Erhebungsmethode" },
+  collect_cati: { fr:"📞 Téléphone (CATI)", nl:"📞 Telefoon (CATI)", en:"📞 Phone (CATI)", de:"📞 Telefon (CATI)" },
+  collect_cawi: { fr:"💻 Internet (CAWI)", nl:"💻 Internet (CAWI)", en:"💻 Web (CAWI)", de:"💻 Internet (CAWI)" },
   admin_year: { fr:"Année", nl:"Jaar", en:"Year", de:"Jahr" },
   admin_wave: { fr:"Vague", nl:"Golf", en:"Wave", de:"Welle" },
   admin_sequence: { fr:"Séquence", nl:"Volgnummer", en:"Sequence", de:"Sequenz" },
@@ -4662,6 +4664,17 @@ function telBE(raw) {
   return { e164, disp };
 }
 
+// Préférence de méthode de collecte (CD_WSH_CLCT_MTHD) → libellé lisible + couleurs.
+// Tolérant : reconnaît CATI/CAWI et les formes texte (téléphone/internet/web…).
+// Valeur inconnue → null (on affiche alors la valeur brute telle quelle).
+function collecteInfo(v) {
+  const u = String(v == null ? '' : v).trim().toUpperCase();
+  if (!u) return null;
+  if (/CATI|T[ÉE]L|PHONE|TELEPH/.test(u))                 return { key: 'collect_cati', bg: '#e3f2fd', fg: '#1565c0' };
+  if (/CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(u))       return { key: 'collect_cawi', bg: '#e8f5e9', fg: '#2e7d32' };
+  return null;
+}
+
 function composerAdresse(r) {
   const rue   = (r['TX_ADRS_USTR_NM']||'').trim();
   const hs    = (r['CD_ADRS_HS']||'').trim();
@@ -7018,7 +7031,11 @@ const COL_DEFS = {
   menage:  { i18n: 'th_household', th: '<th class="sortable" data-col="taille_menage" data-table="cibles" style="min-width:96px" data-i18n="th_household">Household</th>',
              cell: r => `<td style="text-align:center">${escHtml(r.taille_menage)}${parseInt(r.nb_cibles, 10) > 1 ? ` <span style="color:var(--text3);font-size:11px">(${escHtml(r.nb_cibles)} ≥15)</span>` : ''}</td>` },
   collect: { i18n: 'th_collect',   th: '<th style="min-width:120px" data-i18n="th_collect">Collection method</th>',
-             cell: r => `<td style="white-space:nowrap">${escHtml(r.collect_method) || '<span class="vide">—</span>'}</td>` },
+             cell: r => { const s = (r.collect_method || '').trim(); if (!s) return '<td><span class="vide">—</span></td>';
+               const info = collecteInfo(s);
+               return `<td style="white-space:nowrap">${info
+                 ? `<span style="display:inline-block;padding:1px 9px;border-radius:10px;font-size:11px;font-weight:600;background:${info.bg};color:${info.fg}">${escHtml(t(info.key))}</span>`
+                 : escHtml(s)}</td>`; } },
 };
 const COL_ALL = ['ordre', 'contact', 'adresse', 'gsm', 'email', 'menage', 'collect'];
 // Colonnes affichées par défaut (méthode de collecte = optionnelle, à activer via Personnaliser).
