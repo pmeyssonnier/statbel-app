@@ -12,7 +12,42 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
-### Déplacé
+## [3.32] — 2026-09-11  (SW `statbel-v271` → `v287`)
+
+Palier de publication regroupant le chantier depuis la 3.28. Versions internes
+atteintes : **Convertisseur 215**, **Planner 191**, SW **v287**. Interviews n'évolue
+que par corrections (pas de nouvelle fonctionnalité majeure).
+
+### Ajouté
+- **Manuel d'utilisation illustré** (`docs/manuel.html`) décrivant les modules, avec
+  captures d'écran ; lien depuis le README et entrée « 📘 Manuel » du menu d'Interviews.
+- **Convertisseur — export CSV UTF-8 avec BOM + séparateur régional** (`;`/`,` selon
+  `statbel_settings.csvSep`, partagé avec Interviews).
+- **Convertisseur — Aperçu plus lisible** : date de naissance en `jj/mm/aaaa`, e-mail
+  cliquable (`mailto:`), téléphone au format `+32 xxx xx xx xx` avec liens `tel:`/`sms:`.
+- **Convertisseur — import des identifiants web du ménage** : colonnes
+  `CD_WSH_CLCT_MTHD`, `TX_WEB_USER_ID`, `TX_WEB_USER_PSWRD` (conservées à l'export).
+- **Convertisseur — colonne optionnelle « Méthode de collecte »** (opt-in), préférence
+  CATI/CAWI affichée en pastille lisible.
+- **Interviews — préréglage de statuts « Feuille de contact CATI »** (6 valeurs, re-mappe
+  le suivi existant).
+- **Planner — renommer un planning** (bouton « ✏️ Renommer ») ; le libellé se répercute
+  partout (sélecteur du header, agenda, annexe du Convertisseur).
+- **Planner — import sans doublon** : un planning déjà importé est reconnu par son
+  **contenu** (ensemble des codes de groupes), insensible au renommage du fichier ; ses
+  données et son libellé sont remplacés au lieu d'être dupliqués.
+- **Planner — pastille de comptage** des groupes sélectionnés sur l'icône de l'onglet Agenda.
+
+### Modifié / Déplacé
+- **Planner en 3 onglets** — Planning / Agenda / Candidature, présentés **dans le bandeau**
+  (icône seule + libellé au survol, comme Interviews et le Convertisseur). La Candidature
+  devient un onglet plein (plus une modale).
+- **Planner — box « Communes choisies » éditable** (onglet Candidature) : une ligne par
+  commune, ordre de priorité (▲▼), retrait (✕) et recalcul automatique du nombre de groupes.
+- **Planner — un seul sélecteur de trimestre** (celui du header) qui pilote à la fois
+  l'agenda et la carte de l'onglet Planning ; suppression du sélecteur redondant.
+- **Planner — titre de candidature synchronisé** : « EFT 2026-Tx » dérivé du trimestre
+  sélectionné dans le header (champ éditable).
 - **Onglet « Planning » : Convertisseur → Planner** (Convertisseur 215, Planner 184,
   SW `statbel-v280`). L'import et la gestion des plannings trimestriels LFS
   (`LFS_IESS_GRP_APPEL_Y2026Qx_FR`) — sélecteur, filtres province/commune/quartier,
@@ -31,8 +66,6 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
   garde cette couche de lecture mais n'a plus d'onglet Planning. Nouveau test bout-en-bout
   `tests/planning-move.test.js`, branche Planner ajoutée à `tests/csp.test.js` ;
   suite complète 25/25 verte.
-
-### Modifié
 - **Convertisseur (210) — refactorisation interne du KPI « Indemnité potentielle »**
   (SW `statbel-v272`), sans changement de comportement (`/simplify` sur la PR #136) :
   les quotas de paiement sont lus via `lireSettings()`, un helper désormais partagé
@@ -42,6 +75,13 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
   chacun de leur côté. Les quotas restent lus à chaque rendu (pas mis en cache dans
   `_kpiCtx`) : un changement de quotas doit rester visible sans réimporter — suite
   `converter-kpi.test.js` inchangée, 19/19 verts.
+
+### Corrigé
+- **Interviews — import non destructif** : à la ré-importation, les statuts, dates
+  d'historique, n° de téléphone, e-mails, dates/heures de rendez-vous et notes existants
+  ne sont plus écrasés ; correction d'une ligne d'historique « fantôme » qui réapparaissait
+  après édition de sa date.
+- **Interviews — e-mail du contact cliquable** (`mailto:`) sur la fiche contact.
 
 ## [3.28] — 2026-09-07  (SW `statbel-v270` → `v271`)
 
