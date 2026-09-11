@@ -12,6 +12,13 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+## [3.36] — 2026-09-11  (SW `statbel-v288` → `v293`)
+
+Palier de publication regroupant le chantier depuis la 3.32, centré sur le suivi
+**CAPI vs CATI/CAWI** dans Interviews. Versions internes atteintes :
+**Interviews 3.36**, **Planner 193**, SW **v293**. Convention : les tags `vX.Y`
+pointent sur le commit de merge.
+
 ### Ajouté
 - **Interviews — méthode de collecte + préréglage auto** (Interviews 3.36, SW `statbel-v293`) :
   l'import reconnaît et conserve la colonne **`CD_WSH_CLCT_MTHD`** (CATI/CAWI) du CSV
