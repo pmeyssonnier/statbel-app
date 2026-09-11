@@ -237,10 +237,20 @@ export const STATUT_PRESETS = {
 export function appliquerPresetStatuts(key) {
   const preset = STATUT_PRESETS[key];
   if (!preset) return;
-  const cible = cibleStatuts();
   const nom = enqueteActive || '';
   // Le message de confirmation nomme l'enquête visée pour éviter toute méprise.
   if (!confirm(tf('cf_preset_statuts', { name: t(preset.i18nLabel), survey: nom || t('res_allsurveys') }))) return;
+  poserPresetStatuts(key);
+}
+
+// Cœur du préréglage, SANS confirmation : remplace le vocabulaire de l'enquête
+// active (cibleStatuts) et re-mappe ses contacts (statut courant + historique)
+// via `from`, sinon vers le 1er statut. Utilisé par le bouton (avec confirm) et
+// par la déduction automatique à l'import (silencieux).
+function poserPresetStatuts(key) {
+  const preset = STATUT_PRESETS[key];
+  if (!preset) return;
+  const cible = cibleStatuts();
   const nouveaux = preset.statuts.map(s => ({ ...s }));
   const connus = new Set(nouveaux.map(s => s.label));
   const repli = nouveaux[0].label;
@@ -252,6 +262,23 @@ export function appliquerPresetStatuts(key) {
   saveSettings();
   renderStatutsEditor();
   rafraichirStatutsVues();
+}
+
+// Normalise une méthode de collecte brute (CD_WSH_CLCT_MTHD) → true si CATI ou CAWI.
+// Regex alignée sur collecteInfo() du Convertisseur.
+function methodeCatiCawi(v) {
+  return /CATI|T[ÉE]L|PHONE|TELEPH|CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(String(v || '').toUpperCase());
+}
+
+// Déduit le préréglage de statuts d'une enquête NEUVE d'après la méthode de
+// collecte des fiches importées : ≥1 fiche CATI/CAWI → préréglage « feuille de
+// contact CATI » ; sinon aucune méthode (vague 1 CAPI) → défaut CAPI (no-op).
+// L'enquête active doit déjà être l'enquête créée (enqueteActive = nom).
+export function deduirePresetStatuts(nom, rows) {
+  if (!(rows || []).some(c => methodeCatiCawi(c && c.collect_method))) return;
+  poserPresetStatuts('cati');
+  if (typeof afficherToast === 'function')
+    afficherToast(tf('toast_preset_auto', { name: t(STATUT_PRESETS.cati.i18nLabel) }), 5000);
 }
 
 export function supprimerStatut(idx) {

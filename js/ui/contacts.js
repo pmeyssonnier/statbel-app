@@ -178,6 +178,18 @@ export function ligneDemographie(c) {
     if (!isNaN(nc) && nc > 1) m += ` (${nc} ≥15)`;
     parts.push(m);
   }
+  // Méthode de collecte (CATI/CAWI, issue du Convertisseur) : pastille colorée.
+  if (c.collect_method) {
+    const u = String(c.collect_method).toUpperCase();
+    const cawi = /CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(u);
+    const cati = /CATI|T[ÉE]L|PHONE|TELEPH/.test(u);
+    if (cati || cawi) {
+      const label = cati ? 'CATI' : 'CAWI';
+      parts.push(`<span style="font-weight:600;color:${cati ? '#1565c0' : '#2e7d32'}">${cati ? '📞' : '🌐'} ${label}</span>`);
+    } else {
+      parts.push('📋 ' + esc(c.collect_method));
+    }
+  }
   return parts.join(' · ');
 }
 
