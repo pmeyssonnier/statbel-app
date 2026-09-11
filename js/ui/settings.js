@@ -108,11 +108,44 @@ export function majSettingsUI() {
   }
 }
 
-// ── Éditeur de statuts ──────────────────────────────────────────────
+// ── Éditeur de statuts (cloisonné par enquête) ──────────────────────
+// Le vocabulaire édité est celui de l'enquête active (settings.statutsParEnquete),
+// semé à la volée depuis le modèle au 1er changement. Les re-mappages de contacts
+// ne concernent alors QUE l'enquête active. Sans enquête active, on édite le modèle
+// global et on ne re-mappe que les enquêtes qui en dépendent (repli).
+function cibleStatuts() {
+  if (enqueteActive) {
+    const m = settings.statutsParEnquete || (settings.statutsParEnquete = {});
+    if (!Array.isArray(m[enqueteActive]) || !m[enqueteActive].length)
+      m[enqueteActive] = statutsActifs().map(s => ({ ...s }));   // clone du modèle
+    return { arr: m[enqueteActive], remap: [enqueteActive], set: nx => { m[enqueteActive] = nx; } };
+  }
+  return {
+    arr: settings.statuts,
+    remap: Object.keys(enquetes).filter(n => statutsPourEnquete(n) === settings.statuts),
+    set: nx => { settings.statuts = nx; },
+  };
+}
+// Applique une réécriture de libellé/repli aux contacts (statut courant + historique)
+// des seules enquêtes visées. Renvoie le nombre d'entrées migrées.
+function remapContacts(noms, fn) {
+  let migres = 0;
+  noms.forEach(n => (enquetes[n] || []).forEach(c => {
+    const nv = fn(c.statut || '');
+    if (nv !== undefined && nv !== (c.statut || '')) { c.statut = nv; migres++; }
+    if (Array.isArray(c.historique)) c.historique.forEach(h => {
+      const hv = fn(h.statut || '');
+      if (hv !== undefined && hv !== (h.statut || '')) { h.statut = hv; migres++; }
+    });
+  }));
+  return migres;
+}
+
 export function renderStatutsEditor() {
   const box = document.getElementById('statutsEditor');
   if (!box) return;
-  box.innerHTML = settings.statuts.map((s, i) => `
+  const arr = statutsActifs();
+  box.innerHTML = arr.map((s, i) => `
     <div class="statut-edit-row">
       <input type="color" value="${s.color}" onchange="modifierStatut(${i},'color',this.value)" title="${t('ed_color')}">
       <input type="text" class="se-icon" value="${esc(s.icon)}" maxlength="2" onchange="modifierStatut(${i},'icon',this.value)" title="${t('ed_icon')}">
@@ -120,25 +153,23 @@ export function renderStatutsEditor() {
       <label class="se-flag" title="${esc(t('flag_done_title'))}"><input type="checkbox" ${s.done?'checked':''} onchange="modifierStatut(${i},'done',this.checked)"> ✓</label>
       <label class="se-flag" title="${esc(t('flag_realise_title'))}"><input type="checkbox" ${s.realise?'checked':''} onchange="modifierStatut(${i},'realise',this.checked)"> 🎤</label>
       <label class="se-flag" title="${esc(t('flag_rdv_title'))}"><input type="checkbox" ${s.rdv?'checked':''} onchange="modifierStatut(${i},'rdv',this.checked)"> 📅</label>
-      <button class="se-del" onclick="supprimerStatut(${i})" title="${t('del_status_title')}" aria-label="${esc(t('del_status_title'))}"${settings.statuts.length<=1?' disabled':''}>🗑️</button>
+      <button class="se-del" onclick="supprimerStatut(${i})" title="${t('del_status_title')}" aria-label="${esc(t('del_status_title'))}"${arr.length<=1?' disabled':''}>🗑️</button>
     </div>`).join('');
 }
 
 export function modifierStatut(idx, field, value) {
-  const st = settings.statuts[idx];
+  const cible = cibleStatuts();
+  const st = cible.arr[idx];
   if (!st) return;
   if (field === 'label') {
     const old = st.label, nw = (value || '').trim() || old;
     if (nw !== old) {
-      // Migrer les contacts existants vers le nouveau libellé (statut courant
-      // ET historique, sinon les entrées d'historique deviennent orphelines).
-      Object.values(enquetes).forEach(arr => arr.forEach(c => {
-        if ((c.statut || '') === old) c.statut = nw;
-        if (Array.isArray(c.historique)) c.historique.forEach(h => { if (h.statut === old) h.statut = nw; });
-      }));
+      // Migrer les contacts des enquêtes visées vers le nouveau libellé (statut
+      // courant ET historique, sinon les entrées d'historique deviennent orphelines).
+      const migres = remapContacts(cible.remap, s => s === old ? nw : undefined);
       if (filtreActif === old) filtreActif = nw;
       st.label = nw;
-      sauver();
+      if (migres) sauver();
     }
   } else {
     st[field] = value;
@@ -148,7 +179,7 @@ export function modifierStatut(idx, field, value) {
 }
 
 export function ajouterStatut() {
-  settings.statuts.push({ label:'Nouveau', color:'#607d8b', icon:'•', done:false, rdv:false, realise:false });
+  cibleStatuts().arr.push({ label:'Nouveau', color:'#607d8b', icon:'•', done:false, rdv:false, realise:false });
   saveSettings();
   renderStatutsEditor();
   rafraichirStatutsVues();
@@ -159,6 +190,25 @@ export function ajouterStatut() {
 // re-mappe les statuts par défaut (libellés canoniques EN) vers l'équivalent
 // CATI, pour préserver le suivi existant lors de la bascule.
 export const STATUT_PRESETS = {
+  capi: {
+    i18nLabel: 'preset_capi',
+    statuts: [
+      { label:'To do',       color:'#90a4ae', icon:'✕',  done:false, rdv:false, realise:false },
+      { label:'In progress', color:'#f9a825', icon:'⏳', done:false, rdv:true,  realise:false },
+      { label:'Done',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false, realise:true  },
+      { label:'Absent',      color:'#a1887f', icon:'⊘',  done:true,  rdv:false, realise:false },
+      { label:'Refusal',     color:'#c62828', icon:'✗',  done:true,  rdv:false, realise:false },
+      { label:'Moved',       color:'#6a1b9a', icon:'📦', done:true,  rdv:false, realise:false },
+    ],
+    from: {
+      'Pas encore de contact entrepris':      'To do',
+      'Rdv fixé':                             'In progress',
+      'Interview réalisée':                   'Done',
+      'Tentatives de contacts sans résultat': 'Absent',
+      'Négatif':                              'Refusal',
+      'Inconnu':                              'To do',
+    },
+  },
   cati: {
     i18nLabel: 'preset_cati',
     statuts: [
@@ -187,17 +237,16 @@ export const STATUT_PRESETS = {
 export function appliquerPresetStatuts(key) {
   const preset = STATUT_PRESETS[key];
   if (!preset) return;
-  if (!confirm(tf('cf_preset_statuts', { name: t(preset.i18nLabel) }))) return;
+  const cible = cibleStatuts();
+  const nom = enqueteActive || '';
+  // Le message de confirmation nomme l'enquête visée pour éviter toute méprise.
+  if (!confirm(tf('cf_preset_statuts', { name: t(preset.i18nLabel), survey: nom || t('res_allsurveys') }))) return;
   const nouveaux = preset.statuts.map(s => ({ ...s }));
   const connus = new Set(nouveaux.map(s => s.label));
   const repli = nouveaux[0].label;
   const remap = old => (!old || connus.has(old)) ? old : ((preset.from && preset.from[old]) || repli);
-  let migres = 0;
-  Object.values(enquetes).forEach(arr => arr.forEach(c => {
-    if (c.statut && !connus.has(c.statut)) { c.statut = remap(c.statut); migres++; }
-    if (Array.isArray(c.historique)) c.historique.forEach(h => { if (h.statut && !connus.has(h.statut)) { h.statut = remap(h.statut); migres++; } });
-  }));
-  settings.statuts = nouveaux;
+  const migres = remapContacts(cible.remap, s => connus.has(s) ? undefined : remap(s));
+  cible.set(nouveaux);
   if (filtreActif !== 'Tous' && !connus.has(filtreActif)) filtreActif = remap(filtreActif);
   if (migres) sauver();
   saveSettings();
@@ -206,20 +255,15 @@ export function appliquerPresetStatuts(key) {
 }
 
 export function supprimerStatut(idx) {
-  if (settings.statuts.length <= 1) return;
-  const st    = settings.statuts[idx];
+  const cible = cibleStatuts();
+  if (cible.arr.length <= 1) return;
+  const st    = cible.arr[idx];
   // Statut de repli = premier statut restant après suppression
-  const cible = (settings.statuts[idx === 0 ? 1 : 0] || {}).label;
-  if (!confirm(tf('cf_del_status', { label: statutLabel(st.label), cible: statutLabel(cible) }))) return;
-  settings.statuts.splice(idx, 1);
-  // Migration : réassigner les contacts orphelins (toutes enquêtes) vers le repli
-  const repli = statutDefaut();   // = settings.statuts[0].label après splice
-  let migres = 0;
-  Object.values(enquetes).forEach(arr => arr.forEach(c => {
-    if ((c.statut || '') === st.label) { c.statut = repli; migres++; }
-    // Migrer aussi les entrées d'historique vers le statut de repli
-    if (Array.isArray(c.historique)) c.historique.forEach(h => { if (h.statut === st.label) { h.statut = repli; migres++; } });
-  }));
+  const replLabel = (cible.arr[idx === 0 ? 1 : 0] || {}).label;
+  if (!confirm(tf('cf_del_status', { label: statutLabel(st.label), cible: statutLabel(replLabel) }))) return;
+  cible.arr.splice(idx, 1);
+  // Migration : réassigner les contacts orphelins (enquêtes visées) vers le repli
+  const migres = remapContacts(cible.remap, s => s === st.label ? replLabel : undefined);
   if (filtreActif === st.label) filtreActif = 'Tous';
   if (migres) sauver();
   saveSettings();

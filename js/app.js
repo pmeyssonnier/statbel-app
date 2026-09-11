@@ -99,15 +99,17 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.34';
+const APP_VERSION = '3.35';
 
 const SETTINGS_DEFAULTS = {
   theme:    'light',      // 'light' | 'dark' | 'auto'
   provider: 'auto',  // 'auto' | 'bruxelles' | 'wallonie' | 'flandre' | 'osm'
   mapStyle: 'gray',       // 'gray' | 'color'  (Bruxelles uniquement)
   navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
-  statuts:  cloneStatuts(),
+  statuts:  cloneStatuts(),  // modèle par défaut + repli de lecture (voir statutsParEnquete)
   statutsV: 8,            // version de schéma des statuts (8 = drapeau « réalisé » ; installs neuves sautent les migrations)
+  statutsParEnquete: {},  // { [nomEnquête]: [statuts…] } — vocabulaire propre à chaque enquête (CAPI vs CATI/CAWI)
+  statutsScopeV: 0,       // garde de migration du cloisonnement par enquête (0 = pas encore semé)
   pinCode:    '',         // code PIN de verrouillage de l'app ('' = désactivé)
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
@@ -202,6 +204,17 @@ function validerSettings(raw) {
   if (typeof raw.paiePersonne === 'number' && raw.paiePersonne >= 0 && isFinite(raw.paiePersonne)) out.paiePersonne = raw.paiePersonne;
   const st = validerStatuts(raw.statuts);
   if (st) out.statuts = st;
+  // Vocabulaire par enquête : chaque entrée assainie via validerStatuts (itération
+  // own-property pour éviter toute pollution de prototype). Absent d'un vieux backup
+  // → map vide, les enquêtes retomberont sur out.statuts puis seront (re)semées.
+  out.statutsParEnquete = {};
+  if (raw.statutsParEnquete && typeof raw.statutsParEnquete === 'object') {
+    for (const nom of Object.keys(raw.statutsParEnquete)) {
+      const v = validerStatuts(raw.statutsParEnquete[nom]);
+      if (v) out.statutsParEnquete[nom] = v;
+    }
+  }
+  if (Number.isInteger(raw.statutsScopeV) && raw.statutsScopeV >= 0) out.statutsScopeV = raw.statutsScopeV;
   return out;
 }
 
@@ -229,12 +242,37 @@ function validerStatuts(arr) {
 }
 
 // ── Accès aux statuts (pilotés par les paramètres) ───────────────────
-function statutDefs()       { return settings.statuts; }
-function statutDefaut()     { return (settings.statuts[0] || {label:'To do'}).label; }
+// Chaque enquête a son propre vocabulaire de statuts (settings.statutsParEnquete).
+// Repli : le modèle global settings.statuts (nouvelle enquête pas encore semée,
+// ou aucune enquête active). Ne jamais lire settings.statuts en direct pour un
+// rendu/comptage lié à une enquête → passer par ces accesseurs.
+function statutsPourEnquete(nom) {
+  const m = settings.statutsParEnquete;
+  return (nom && m && Array.isArray(m[nom]) && m[nom].length) ? m[nom] : settings.statuts;
+}
+function statutsActifs()    { return statutsPourEnquete(enqueteActive); }
+function statutDefs()       { return statutsActifs(); }
+function statutDefaut()     { return (statutsActifs()[0] || {label:'To do'}).label; }
 function statutDef(label)   {
-  return settings.statuts.find(s => s.label === label)
-      || settings.statuts[0]
+  const arr = statutsActifs();
+  return arr.find(s => s.label === label)
+      || arr[0]
       || { label, color:'#90a4ae', icon:'•', done:false, rdv:false };
+}
+
+// Sème le vocabulaire de chaque enquête existante depuis le modèle global, une
+// seule fois (idempotent). Ne touche JAMAIS les statuts des contacts : on copie
+// simplement la liste que toutes les enquêtes partageaient déjà.
+function migrerStatutsParEnquete() {
+  const m = settings.statutsParEnquete || (settings.statutsParEnquete = {});
+  let chg = false;
+  Object.keys(enquetes).forEach(nom => {
+    if (!Array.isArray(m[nom]) || !m[nom].length) {
+      m[nom] = settings.statuts.map(s => ({ ...s }));   // clone profond
+      chg = true;
+    }
+  });
+  if (!settings.statutsScopeV || chg) { settings.statutsScopeV = 1; saveSettings(); }
 }
 
 
@@ -953,6 +991,7 @@ async function init() {
 
   await charger();
   migrerVersAnglais();   // pivot EN : convertit les anciennes données FR
+  migrerStatutsParEnquete();   // sème le vocabulaire propre à chaque enquête (après le pivot EN)
 
   // Purger les coordonnées invalides ou hors Belgique du localStorage
   Object.keys(localStorage).forEach(k => {
@@ -984,7 +1023,8 @@ async function init() {
 Object.assign(window, {
   validerSettings, validerStatuts,
   debounce, esc, correspondRecherche, regionPourCP, chargerSettings, saveSettings,
-  statutDefs, statutDefaut, statutDef, ouvrirDB, idbReq, idbTx, majEtatSauvegarde,
+  statutDefs, statutDefaut, statutDef, statutsPourEnquete, statutsActifs,
+  migrerStatutsParEnquete, ouvrirDB, idbReq, idbTx, majEtatSauvegarde,
   signalerEchecSauvegarde, sauver, charger, coordsCache, saveCoords, majIndicateurReseau,
   restaurerIndicateur, setupA11y, majBackupBanner, fermerBackupBanner, contacts,
   contactsFiltres, refreshSelect, changerEnquete, renommerEnquete, fermerRename,

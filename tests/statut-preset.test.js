@@ -49,10 +49,14 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
 
     appliquerPresetStatuts('cati');
 
-    const byLabel = l => settings.statuts.find(s => s.label === l) || {};
+    // Cloisonné par enquête : le préréglage écrit dans statutsParEnquete.G,
+    // pas dans le modèle global settings.statuts. On lit via statutDefs()
+    // (enquête active = G). Le modèle global doit rester inchangé.
+    const byLabel = l => statutDefs().find(s => s.label === l) || {};
     const g = enquetes.G;
     return {
-      labels: settings.statuts.map(s => s.label),
+      labels: statutDefs().map(s => s.label),
+      modeleIntact: settings.statuts.map(s => s.label).join(','),
       rdvFlag:      byLabel('Rdv fixé').rdv,
       realiseFlags: [byLabel('Interview réalisée').realise, byLabel('Interview réalisée').done],
       negatif:      [byLabel('Négatif').done, byLabel('Négatif').realise],
@@ -77,6 +81,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(JSON.stringify(r.c2h) === JSON.stringify(['Tentatives de contacts sans résultat']),
     `historique « Absent » re-mappé → Tentatives… (got ${JSON.stringify(r.c2h)})`);
   A(r.c3 === 'Pas encore de contact entrepris', `contact « To do » re-mappé → Pas encore… (got ${r.c3})`);
+  A(r.modeleIntact === 'To do,In progress,Done,Absent,Refusal',
+    `le préréglage n'a PAS touché le modèle global (cloisonné par enquête) (got ${r.modeleIntact})`);
   A(perr.length === 0, 'aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
 
   await b.close();

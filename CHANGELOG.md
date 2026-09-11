@@ -13,6 +13,14 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Interviews — statuts propres à chaque enquête** (Interviews 3.35, SW `statbel-v292`) :
+  le vocabulaire de statuts n'est plus global mais **cloisonné par enquête**
+  (`settings.statutsParEnquete`). Éditer un statut ou appliquer un préréglage n'affecte
+  plus que l'enquête active → une enquête **CAPI** (face-à-face) et une enquête
+  **CATI/CAWI** ne se mélangent plus. Nouveau préréglage **« CAPI (face-à-face) »** à côté
+  du préréglage CATI. Migration idempotente (chaque enquête existante hérite une copie du
+  modèle, aucun statut de contact modifié) ; round-trip sauvegarde préservé. Le résumé
+  multi-enquêtes agrège l'**union** des vocabulaires. Nouveau test `tests/statut-scope.test.js`.
 - **Planner — pastille de comptage aussi sur l'onglet Candidature** (Planner 192,
   SW `statbel-v288`) : le nombre de groupes retenus s'affiche en pastille verte sur
   l'icône 📝, comme sur l'onglet Agenda 📅 ; masquée quand aucun groupe n'est retenu.
