@@ -19,6 +19,14 @@ const { serve } = require('./_serve');
 const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/usr/bin/chromium';
 const PAGES = ['/index.html', '/statbel_planner.html', '/statbel_converter.html', '/statbel_pdf2grp.html'];
 
+// Un planning minimal (format Convertisseur) pour faire vivre la carte du Planner :
+// initPlanning() crée L.map (tuiles → img-src https:) puis géocode (→ connect-src).
+const PLAN_SEED = [{
+  id: 'plan_csp', nom: 'CSP — EFT / LFS', type: 'EFT / LFS', embedded: false, grp: {},
+  rows: [{ code: '12345', prov: 'BRU', commune: 'Bruxelles / Brussel', communeFR: 'Bruxelles',
+           quartier: 'NORD', wave: 1, sem: '10', start: '02/03/2026', stop: '22/03/2026' }],
+}];
+
 (async () => {
   const srv = await serve();
   const b = await chromium.launch({ executablePath: EXEC, args: ['--no-sandbox'] });
@@ -33,6 +41,11 @@ const PAGES = ['/index.html', '/statbel_planner.html', '/statbel_converter.html'
         window.__csp.push(e.violatedDirective + ' ← ' + (e.blockedURI || '(inline)'));
       });
     });
+    // Le Planner héberge désormais la carte + le géocodeur : on seed un planning
+    // pour que la carte s'initialise vraiment (sinon rien n'exerce img-src/connect-src).
+    if (path === '/statbel_planner.html') {
+      await p.addInitScript(data => { localStorage.setItem('plannings', JSON.stringify(data)); }, PLAN_SEED);
+    }
     await p.goto(srv.url + path, { waitUntil: 'load' });
     await p.waitForTimeout(700);
 
@@ -43,6 +56,17 @@ const PAGES = ['/index.html', '/statbel_planner.html', '/statbel_converter.html'
         try { setView('carte'); } catch (e) {}
         // fetch vers un géocodeur régional autorisé : ne doit PAS violer connect-src
         try { await fetch('https://geoservices.wallonie.be/geocodeWS/ping'); } catch (e) {}
+        try { await fetch('https://nominatim.openstreetmap.org/search?q=x'); } catch (e) {}
+      });
+      await p.waitForTimeout(500);
+    }
+
+    // Sur le Planner : la carte est déjà initialisée (planning seedé) ; on force en
+    // plus une vérification d'adresse (UrbIS/Nominatim) et une connexion géocodeur.
+    if (path === '/statbel_planner.html') {
+      await p.evaluate(async () => {
+        try { const el = document.getElementById('planAdrCheck'); if (el) { el.value = 'Grand Place, Bruxelles'; verifierAdresse(); } } catch (e) {}
+        try { await fetch('https://geoservices.irisnet.be/localization/Rest/Localize/getaddresses?address=x'); } catch (e) {}
         try { await fetch('https://nominatim.openstreetmap.org/search?q=x'); } catch (e) {}
       });
       await p.waitForTimeout(500);
