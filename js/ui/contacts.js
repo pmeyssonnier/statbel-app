@@ -413,7 +413,7 @@ export function buildHistoriqueHTML(c, i) {
   // Du plus récent au plus ancien (idx = position réelle conservée)
   const lignes = hist.map((h, idx) => ({ h, idx })).reverse().map(({ h, idx }) => {
     const def = statutDef(h.statut);
-    const opts = settings.statuts.map(s =>
+    const opts = statutDefs().map(s =>
       `<option value="${esc(s.label)}"${s.label === h.statut ? ' selected' : ''}>${esc(s.icon)} ${esc(statutLabel(s.label))}</option>`
     ).join('');
     let rdvField = '';

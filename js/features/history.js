@@ -74,8 +74,9 @@ export function ajouterHistorique(i) {
   if (c.statut && dCur.done && c.date && !c.historique.some(h => h.statut === c.statut && h.date === c.date)) {
     c.historique.push({ statut: c.statut, date: c.date });
   }
+  const defs = statutDefs();
   const defaut = (dCur && (dCur.done || dCur.rdv)) ? c.statut
-    : (settings.statuts.find(s => s.done || s.rdv) || settings.statuts[0]).label;
+    : (defs.find(s => s.done || s.rdv) || defs[0]).label;
   c.historique.push({ statut: defaut, date: todayStr(), heure: nowHHMM() });
   apresModifHistorique(i);
 }

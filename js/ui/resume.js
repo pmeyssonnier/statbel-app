@@ -14,10 +14,22 @@ import { esc } from '../core/util.js';
 import { t, tf, labelNbEnquetes, localeApp } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
 
+// Vocabulaire agrégé pour un ensemble d'enquêtes : chaque enquête ayant désormais
+// ses propres statuts (settings.statutsParEnquete), le résumé multi-enquêtes prend
+// l'UNION des vocabulaires (dédupliquée par label, 1ʳᵉ occurrence gagnante), afin
+// qu'aucune colonne/aucun « réalisé » d'une enquête ne soit oublié.
+function statutsUnion(noms) {
+  const vus = new Set(); const out = [];
+  (noms || []).forEach(n => statutsPourEnquete(n).forEach(s => {
+    if (!vus.has(s.label)) { vus.add(s.label); out.push(s); }
+  }));
+  return out.length ? out : statutDefs();
+}
+
 export function exporterResumeXLSX() {
   const wb = XLSX.utils.book_new();
   const nomEnquetes = Object.keys(enquetes);
-  const statutsCfg  = settings.statuts;
+  const statutsCfg  = statutsUnion(nomEnquetes);
 
   // ── Feuille 1 : Tableau croisé ──────────────────────────────────
   const header = ['Enquête', ...statutsCfg.map(s => s.icon + ' ' + s.label), 'Total'];
@@ -145,7 +157,7 @@ export function renduResume() {
   const toutesEnq   = Object.keys(enquetes);
   const scopeActive = resumeScope === 'active' && enqueteActive && enquetes[enqueteActive];
   const nomEnquetes = scopeActive ? [enqueteActive] : toutesEnq;
-  const statutsCfg  = settings.statuts; // [{ label, color, icon }]
+  const statutsCfg  = statutsUnion(nomEnquetes); // union des vocabulaires du périmètre
 
   // Pour chaque statut, couleur et icône
   const statutMap = {};

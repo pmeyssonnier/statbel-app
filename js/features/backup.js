@@ -53,8 +53,6 @@ export function fermerBackupBanner() {
 
 /** Construit le HTML du détail enquêtes × statuts pour un objet enquetes */
 export function buildBackupDetailHTML(src, meta) {
-  const statutsCfg = settings.statuts;
-
   const noms = Object.keys(src);
   let grandTotal = 0;
   let html = '';
@@ -64,6 +62,8 @@ export function buildBackupDetailHTML(src, meta) {
   }
 
   noms.forEach(nom => {
+    // Chaque enquête affiche ses propres statuts (repli sur le modèle global).
+    const statutsCfg = statutsPourEnquete(nom);
     const arr = src[nom] || [];
     const cpt = {};
     arr.forEach(c => {
@@ -341,6 +341,7 @@ export function importerBackup(event) {
         }
         _pendingRestore = null; _pendingSettings = null; _pendingCoords = null;
         migrerVersAnglais();   // backup éventuellement en FR → pivot EN
+        migrerStatutsParEnquete();   // (re)sème le vocabulaire propre à chaque enquête restaurée
         sauver();
         refreshSelect();
         rendu();

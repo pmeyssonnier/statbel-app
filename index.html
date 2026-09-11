@@ -370,10 +370,14 @@
     <details class="set-accordion">
       <summary data-i18n="sec_status">🏷️ Statuts disponibles</summary>
       <div class="set-row" style="margin-top:8px;">
+        <small class="hint" data-i18n="statuts_scope_hint" style="font-weight:600;color:var(--accent,#1a73e8)">Les statuts sont propres à l'enquête active (CAPI, CATI/CAWI…).</small>
         <div id="statutsEditor"></div>
         <button class="btn-secondary" style="align-self:flex-start" data-i18n="btn_addstatus" onclick="ajouterStatut()">＋ Ajouter un statut</button>
         <small data-i18n="statut_hint">« ✓ » horodate la date de l'action (entretien, refus…). « 📅 » active la date/heure et la vue agenda.</small>
-        <button class="btn-secondary" style="align-self:flex-start;margin-top:2px" data-i18n="preset_cati_btn" onclick="appliquerPresetStatuts('cati')">📋 Préréglage « Feuille de contact CATI »</button>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;margin-top:2px">
+          <button class="btn-secondary" data-i18n="preset_capi_btn" onclick="appliquerPresetStatuts('capi')">🚪 Préréglage « CAPI (face-à-face) »</button>
+          <button class="btn-secondary" data-i18n="preset_cati_btn" onclick="appliquerPresetStatuts('cati')">📋 Préréglage « Feuille de contact CATI »</button>
+        </div>
       </div>
     </details>
 
