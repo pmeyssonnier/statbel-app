@@ -12,6 +12,13 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Modifié
+- **Interviews — pastille méthode de collecte repositionnée** (Interviews 3.37,
+  SW `statbel-v294`) : CATI/CAWI quitte la ligne démographique (où elle passait à la
+  ligne) pour devenir une pastille dédiée sur la ligne des canaux de contact
+  (📞 CATI en bleu / 🌐 CAWI en vert), à côté du téléphone et de l'e-mail, dans les
+  vues Liste et Agenda.
+
 ## [3.36] — 2026-09-11  (SW `statbel-v288` → `v293`)
 
 Palier de publication regroupant le chantier depuis la 3.32, centré sur le suivi

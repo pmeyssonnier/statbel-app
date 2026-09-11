@@ -242,6 +242,8 @@
   .badge-mail { color: #3949ab !important; background: #e8eaf6 !important; font-weight: 600; }
   .badge-mail:hover { background: #c5cae9 !important; }
   .badge-rdv { color: #1565c0 !important; background: #e3f2fd !important; font-weight: 600; }
+  .badge-cati { color: #1565c0 !important; background: #e3f2fd !important; font-weight: 600; }
+  .badge-cawi { color: #2e7d32 !important; background: #e8f5e9 !important; font-weight: 600; }
   .badge.green { color: #2e7d32; background: #e8f5e9; }
 
   .card-bottom { display: flex; gap: 6px; align-items: center; justify-content: space-between; margin-top: 6px; }
