@@ -145,16 +145,44 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(ren.agendaShort, 'renommer : le sélecteur du header reflète le nouveau nom');
   A(ren.nomRestored === NOM_ATTENDU, 'renommer : nom d\'origine rétabli pour la suite du test');
 
-  // ── 2d. Pastille de comptage sur l'onglet Agenda (nb de groupes sélectionnés) ──
+  // ── 2c-bis. Gestion du planning déplacée dans le menu ⋮ (plus de boutons inline) ──
+  const menu = await p.evaluate(() => {
+    setTab('planning');
+    const inMenu = id => { const el = document.getElementById(id); return !!el && el.closest('#kebabMenu') !== null; };
+    // Aucun bouton d'import/gestion dans la barre du #planMgmtCard.
+    const rowBtns = [...document.querySelectorAll('#planMgmtCard .btn-reset')]
+      .map(b => b.textContent.trim());
+    return {
+      importInMenu: [...document.querySelectorAll('#kebabMenu .kebab-item')].some(b => /Importer un planning/.test(b.textContent)),
+      renInMenu: inMenu('planRenBtn'),
+      delInMenu: inMenu('planDelBtn'),
+      renVisible: document.getElementById('planRenBtn').style.display !== 'none',
+      delVisible: document.getElementById('planDelBtn').style.display !== 'none',
+      noImportRow: !rowBtns.some(t => /Importer un planning/.test(t)),
+    };
+  });
+  A(menu.importInMenu, 'menu ⋮ : option « Importer un planning » présente');
+  A(menu.renInMenu && menu.delInMenu, 'menu ⋮ : options Renommer/Supprimer présentes dans le menu');
+  A(menu.renVisible && menu.delVisible, 'menu ⋮ : Renommer/Supprimer visibles quand un planning est actif');
+  A(menu.noImportRow, 'onglet Planning : plus de bouton d\'import inline dans la carte de gestion');
+
+  // ── 2d. Pastille de comptage sur les onglets Agenda ET Candidature ──────
   const badge = await p.evaluate(() => {
     document.getElementById('selPlanning').value = _plans[0].id; onChangePlanning();
     const b = document.getElementById('agendaCount');
-    const hidden0 = b.hidden;                       // aucune sélection → masquée
+    const c = document.getElementById('candCount');
+    const hidden0 = b.hidden, cHidden0 = c.hidden; // aucune sélection → masquées
     selected.add('12345'); updateAgenda();
-    return { hidden0, txt: b.textContent, shown: !b.hidden, noHdrCount: !document.getElementById('hdrCount') };
+    return {
+      hidden0, txt: b.textContent, shown: !b.hidden,
+      cHidden0, cTxt: c.textContent, cShown: !c.hidden,
+      noHdrCount: !document.getElementById('hdrCount'),
+    };
   });
-  A(badge.hidden0, 'pastille : masquée quand aucun groupe sélectionné');
-  A(badge.shown && badge.txt === '1', `pastille : affiche le nombre de groupes sélectionnés (got "${badge.txt}")`);
+  A(badge.hidden0, 'pastille agenda : masquée quand aucun groupe sélectionné');
+  A(badge.shown && badge.txt === '1', `pastille agenda : affiche le nombre de groupes (got "${badge.txt}")`);
+  A(badge.cHidden0, 'pastille candidature : masquée quand aucun groupe sélectionné');
+  A(badge.cShown && badge.cTxt === '1', `pastille candidature : affiche le nombre de groupes (got "${badge.cTxt}")`);
   A(badge.noHdrCount, 'header : ancien compteur #hdrCount retiré');
 
   // ── 3. Convertisseur (même origine) : le lien GRP↔LFS est lisible ───────

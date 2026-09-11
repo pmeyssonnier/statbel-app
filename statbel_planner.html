@@ -397,11 +397,15 @@ select[multiple]{height:120px}
       <div class="view-toggle" id="hdrTabs" role="tablist" aria-label="Sections du planner">
         <button class="btn-ico active" id="tab-planning"    role="tab" aria-selected="true"  aria-controls="pane-planning"    data-tip="Planning"    aria-label="Planning"    onclick="setTab('planning')">🗺️</button>
         <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      aria-label="Agenda"      onclick="setTab('agenda')">📅<span class="tab-count" id="agendaCount" hidden></span></button>
-        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝</button>
+        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝<span class="tab-count" id="candCount" hidden></span></button>
       </div>
       <div class="kebab-wrap">
         <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" aria-label="Plus d'options">⋮</button>
         <div class="kebab-menu" id="kebabMenu">
+          <button class="kebab-item" onclick="document.getElementById('planFileInput').click();toggleKebab()">📥 Importer un planning</button>
+          <button class="kebab-item" id="planRenBtn" style="display:none" onclick="renommerPlanningImporte();toggleKebab()">✏️ Renommer le planning</button>
+          <button class="kebab-item" id="planDelBtn" style="display:none" onclick="supprimerPlanningImporte();toggleKebab()">🗑️ Supprimer le planning</button>
+          <hr class="kebab-sep">
           <button class="kebab-item" onclick="openCandidature();toggleKebab()">📝 Candidature enquêteur</button>
           <hr class="kebab-sep">
           <button class="kebab-item" onclick="sauvegarder();toggleKebab()">💾 Sauvegarder</button>
@@ -447,12 +451,10 @@ select[multiple]{height:120px}
       Importe un fichier de planning LFS (Excel/CSV) puis associe ses colonnes. Sélectionne une
       province/commune pour voir les missions et localiser les quartiers/adresses sur la carte.
     </p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px;align-items:center">
-      <button class="btn-reset" onclick="document.getElementById('planFileInput').click()">📥 Importer un planning</button>
-      <button class="btn-reset" id="planRenBtn" style="display:none" onclick="renommerPlanningImporte()">✏️ Renommer</button>
-      <button class="btn-reset" id="planDelBtn" style="display:none" onclick="supprimerPlanningImporte()">🗑️ Supprimer</button>
-      <input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display:none" onchange="importerPlanningFichier(this)">
-    </div>
+    <p style="font-size:11px;color:var(--text2);margin:0 0 8px">
+      Import, renommage et suppression du planning : menu <strong>⋮</strong> (en haut à droite).
+    </p>
+    <input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display:none" onchange="importerPlanningFichier(this)">
     <div id="planFiltres" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px;align-items:center">
       <select id="planProvince" onchange="majCommunesPlan();filtrerPlanning()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
       <select id="planCommune" onchange="majQuartiersPlan();filtrerPlanning()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
@@ -2927,6 +2929,11 @@ function updateCandidaturePreview(){
   const total=communes.reduce((s,c)=>s+c.count,0);
   const cnt=document.getElementById('candGrpCount');
   if(cnt) cnt.textContent=total;
+  // Pastille de comptage sur l'onglet Candidature (mêmes groupes retenus).
+  const cb=document.getElementById('candCount');
+  if(cb){ cb.textContent=total; cb.hidden=total===0; }
+  const ctab=document.getElementById('tab-candidature');
+  if(ctab) ctab.setAttribute('data-tip', total ? 'Candidature — ' + total + ' groupe(s)' : 'Candidature');
   const box=document.getElementById('candGrpPreview');
   if(!communes.length){
     box.innerHTML='<div style="color:var(--ink3);font-size:12px">Aucun groupe sélectionné — choisissez des groupes dans l\'onglet Agenda.</div>';
@@ -3059,7 +3066,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '191';
+const APP_VERSION = '193';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
