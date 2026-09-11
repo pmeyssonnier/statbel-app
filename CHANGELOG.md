@@ -13,6 +13,12 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Interviews — méthode de collecte + préréglage auto** (Interviews 3.36, SW `statbel-v293`) :
+  l'import reconnaît et conserve la colonne **`CD_WSH_CLCT_MTHD`** (CATI/CAWI) du CSV
+  exporté par le Convertisseur, l'affiche en **pastille** dans la fiche, et **déduit
+  automatiquement** le préréglage de statuts d'une enquête neuve (≥1 fiche CATI/CAWI →
+  feuille de contact CATI ; sinon CAPI). Modifiable ensuite via les boutons de préréglage.
+  Round-trip conservé à l'export. Nouveau test `tests/statut-autopreset.test.js`.
 - **Interviews — statuts propres à chaque enquête** (Interviews 3.35, SW `statbel-v292`) :
   le vocabulaire de statuts n'est plus global mais **cloisonné par enquête**
   (`settings.statutsParEnquete`). Éditer un statut ou appliquer un préréglage n'affecte

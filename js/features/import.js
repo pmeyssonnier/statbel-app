@@ -202,12 +202,18 @@ export function renderImportApercu(s) {
 export function confirmerImport() {
   const nom = document.getElementById('inputNomEnquete').value.trim();
   if (!nom) { alert(t('al_enter_name')); return; }
+  // Nouvelle enquête ? (évalué AVANT l'écriture ci-dessous). Sert à ne déduire le
+  // préréglage de statuts que pour une enquête créée, jamais sur un ré-import.
+  const estNouvelle = !enquetes[nom];
   // Pas de confirm() natif ici : la comparaison détaillée (majComparaisonImport)
   // est déjà visible dans la modale avant que l'utilisateur ne clique sur ce bouton.
   // Fusion : préserve le suivi des contacts appariés ; exclut les erronés
   // (un erroné déjà présent est conservé tel quel, jamais supprimé).
   enquetes[nom] = preparerImport(csvEnAttente, nom).result;
   enqueteActive = nom;
+  // Déduction du préréglage de statuts d'après la méthode de collecte (CATI/CAWI)
+  // des fiches importées — seulement pour une enquête neuve.
+  if (estNouvelle && typeof deduirePresetStatuts === 'function') deduirePresetStatuts(nom, enquetes[nom]);
   // Cache de coordonnées écrit MAINTENANT (après confirmation), pas au parse
   (coordsEnAttente || []).forEach(c => { try { saveCoords(c.adresse, c.lat, c.lng); } catch(e){} });
   csvEnAttente  = null;
