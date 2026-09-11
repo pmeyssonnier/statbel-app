@@ -145,6 +145,27 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(ren.agendaShort, 'renommer : le sélecteur du header reflète le nouveau nom');
   A(ren.nomRestored === NOM_ATTENDU, 'renommer : nom d\'origine rétabli pour la suite du test');
 
+  // ── 2c-bis. Gestion du planning déplacée dans le menu ⋮ (plus de boutons inline) ──
+  const menu = await p.evaluate(() => {
+    setTab('planning');
+    const inMenu = id => { const el = document.getElementById(id); return !!el && el.closest('#kebabMenu') !== null; };
+    // Aucun bouton d'import/gestion dans la barre du #planMgmtCard.
+    const rowBtns = [...document.querySelectorAll('#planMgmtCard .btn-reset')]
+      .map(b => b.textContent.trim());
+    return {
+      importInMenu: [...document.querySelectorAll('#kebabMenu .kebab-item')].some(b => /Importer un planning/.test(b.textContent)),
+      renInMenu: inMenu('planRenBtn'),
+      delInMenu: inMenu('planDelBtn'),
+      renVisible: document.getElementById('planRenBtn').style.display !== 'none',
+      delVisible: document.getElementById('planDelBtn').style.display !== 'none',
+      noImportRow: !rowBtns.some(t => /Importer un planning/.test(t)),
+    };
+  });
+  A(menu.importInMenu, 'menu ⋮ : option « Importer un planning » présente');
+  A(menu.renInMenu && menu.delInMenu, 'menu ⋮ : options Renommer/Supprimer présentes dans le menu');
+  A(menu.renVisible && menu.delVisible, 'menu ⋮ : Renommer/Supprimer visibles quand un planning est actif');
+  A(menu.noImportRow, 'onglet Planning : plus de bouton d\'import inline dans la carte de gestion');
+
   // ── 2d. Pastille de comptage sur les onglets Agenda ET Candidature ──────
   const badge = await p.evaluate(() => {
     document.getElementById('selPlanning').value = _plans[0].id; onChangePlanning();
