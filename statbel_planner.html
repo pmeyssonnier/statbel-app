@@ -450,6 +450,7 @@ select[multiple]{height:120px}
       <label style="font-size:12px;color:var(--text2);font-weight:bold">Planning :</label>
       <select id="planSelect" onchange="chargerPlanningSelectionne()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-width:200px"></select>
       <button class="btn-reset" onclick="document.getElementById('planFileInput').click()">📥 Importer un planning</button>
+      <button class="btn-reset" id="planRenBtn" style="display:none" onclick="renommerPlanningImporte()">✏️ Renommer</button>
       <button class="btn-reset" id="planDelBtn" style="display:none" onclick="supprimerPlanningImporte()">🗑️ Supprimer</button>
       <input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display:none" onchange="importerPlanningFichier(this)">
     </div>
@@ -1696,6 +1697,7 @@ function majBadgePlanning() {
 function appliquerPlanningActif() {
   const p = _plannings[_planActif];
   document.getElementById('planDelBtn').style.display = p ? '' : 'none';
+  document.getElementById('planRenBtn').style.display = p ? '' : 'none';
   if (!p) {
     _planRows = [];
     document.getElementById('planProvince').innerHTML = `<option value="">${esc('Toutes les provinces')}</option>`;
@@ -1721,6 +1723,18 @@ function chargerPlanningSelectionne() {
   _planActif = document.getElementById('planSelect').value;
   appliquerPlanningActif();
   filtrerPlanning();
+}
+
+// Renomme le libellé du planning actif (le contenu/les codes sont inchangés).
+function renommerPlanningImporte() {
+  const p = _plannings[_planActif];
+  if (!p) return;
+  const nouveau = (prompt('Nouveau nom du planning :', p.nom) || '').trim();
+  if (!nouveau || nouveau === p.nom) return;
+  p.nom = nouveau;
+  sauverPlanningsImportes();
+  remplirSelecteurPlanning();
+  rafraichirAnnexesPlanning();   // met à jour le sélecteur d'agenda + l'annexe Convertisseur
 }
 
 function supprimerPlanningImporte() {
@@ -3022,7 +3036,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '189';
+const APP_VERSION = '190';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

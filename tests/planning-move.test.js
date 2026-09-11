@@ -118,6 +118,27 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(dedup.countAfterRestore === 1 && dedup.nomRestored === NOM_ATTENDU && dedup.communeRestored === 'Bruxelles / Brussel',
     'restauration : toujours 1 entrée, nom + données d\'origine rétablis');
 
+  // ── 2c. Renommer le planning : met à jour le libellé (pas de doublon) ───
+  //         puis on restaure le nom d'origine pour la suite du test.
+  const ren = await p.evaluate((nomOrig) => {
+    const origPrompt = window.prompt;
+    window.prompt = () => 'Bruxelles Q1 (court)';
+    renommerPlanningImporte();
+    const stored = JSON.parse(localStorage.getItem('plannings') || '[]');
+    const out = {
+      nom: (stored[0] || {}).nom, count: stored.length,
+      optShort: [...document.getElementById('planSelect').options].some(o => /court/.test(o.textContent)),
+      agendaShort: [...document.getElementById('selPlanning').options].some(o => /court/.test(o.textContent)),
+    };
+    window.prompt = () => nomOrig; renommerPlanningImporte(); window.prompt = origPrompt;   // restaure
+    out.nomRestored = (JSON.parse(localStorage.getItem('plannings') || '[]')[0] || {}).nom;
+    return out;
+  }, NOM_ATTENDU);
+  A(ren.nom === 'Bruxelles Q1 (court)', `renommer : libellé mis à jour (got "${ren.nom}")`);
+  A(ren.count === 1, 'renommer : pas de nouvelle entrée (toujours 1)');
+  A(ren.optShort && ren.agendaShort, 'renommer : sélecteurs Planning + Agenda reflètent le nouveau nom');
+  A(ren.nomRestored === NOM_ATTENDU, 'renommer : nom d\'origine rétabli pour la suite du test');
+
   // ── 3. Convertisseur (même origine) : le lien GRP↔LFS est lisible ───────
   await p.goto(srv.url + '/statbel_converter.html', { waitUntil: 'load' });
   await p.waitForTimeout(300);
