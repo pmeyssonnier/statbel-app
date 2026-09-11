@@ -1850,10 +1850,21 @@ function estFichierLFS(headers) {
       && h.some(x => x.includes('start_interrogation_1') || x.includes('start_interro_1'));
 }
 
-// Anti-doublon : si un planning du même nom existe déjà, on réutilise son id
-// (ses données sont alors REMPLACÉES, pas dupliquées) ; sinon on crée un id neuf.
-function idPourPlanning(nom) {
-  const existant = Object.values(_plannings).find(p => p.nom === nom);
+// Signature de CONTENU d'un planning = ensemble trié de ses codes de groupes.
+// Permet de reconnaître un même planning même si le fichier a été renommé.
+function signaturePlanning(rows) {
+  return [...new Set((rows || []).map(r => String(r.code || '').trim()).filter(Boolean))].sort().join(',');
+}
+
+// Anti-doublon : on reconnaît un planning déjà importé PAR SON CONTENU (mêmes codes
+// de groupes) — insensible au renommage du fichier. À défaut de codes (import
+// générique sans colonne groupe), repli sur l'égalité du nom. Si trouvé, on réutilise
+// son id → les données (et le libellé) sont REMPLACÉES, pas dupliquées ; sinon id neuf.
+function idPourPlanning(nom, rows) {
+  const sig = signaturePlanning(rows);
+  const existant = Object.values(_plannings).find(p =>
+    sig ? signaturePlanning(p.rows) === sig
+        : p.nom === nom);
   return existant ? existant.id : 'plan_' + Date.now();
 }
 
@@ -1881,7 +1892,7 @@ function importerPlanningLFS(nomFichier) {
   });
   if (!rows.length) { alert('Aucun groupe lisible dans ce fichier LFS.'); return; }
   const nomComplet = nomFichier.replace(/\.[^.]+$/, '') + ' — EFT / LFS';
-  const id = idPourPlanning(nomComplet);            // réutilise l'id existant → pas de doublon
+  const id = idPourPlanning(nomComplet, rows);      // reconnu par contenu → pas de doublon
   const remplace = !!_plannings[id];
   _plannings[id] = { id, nom: nomComplet, type: 'EFT / LFS', rows, grp, embedded: false };
   sauverPlanningsImportes();
@@ -1963,7 +1974,7 @@ function confirmerMappingPlanning() {
   }).filter(Boolean);
   if (!rows.length) { err.textContent = 'Aucune ligne avec une commune.'; err.style.display = 'block'; return; }
   const nomComplet = nom + ' — ' + type;
-  const id = idPourPlanning(nomComplet);            // réutilise l'id existant → pas de doublon
+  const id = idPourPlanning(nomComplet, rows);      // reconnu par contenu → pas de doublon
   const remplace = !!_plannings[id];
   _plannings[id] = { id, nom: nomComplet, type, rows, embedded: false };
   sauverPlanningsImportes();
@@ -3011,7 +3022,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '188';
+const APP_VERSION = '189';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
