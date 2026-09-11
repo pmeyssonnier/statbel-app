@@ -341,6 +341,31 @@ select[multiple]{height:120px}
 .modal{ background:var(--card); color:var(--ink); border-radius:12px; max-width:560px; width:100%;
   padding:18px 20px; box-shadow:0 8px 30px rgba(0,0,0,0.3); }
 .modal h2{ font-size:16px; color:var(--accent); margin-bottom:4px; }
+/* ── Onglets principaux du module (Planning / Agenda / Candidature) ── */
+.tabbar{ display:flex; gap:6px; margin:0 0 16px; border-bottom:2px solid var(--border); flex-wrap:wrap; }
+.tab{ appearance:none; border:none; background:none; font:inherit; cursor:pointer;
+  padding:10px 18px; font-size:14px; font-weight:600; color:var(--ink2);
+  border-bottom:3px solid transparent; margin-bottom:-2px; border-radius:8px 8px 0 0; }
+.tab:hover:not(.active){ background:var(--card2); color:var(--ink); }
+.tab.active{ color:var(--accent); border-bottom-color:var(--accent); }
+.tab .tab-ico{ margin-right:6px; }
+.tabpane[hidden]{ display:none; }
+.tab-empty{ font-size:13px; color:var(--ink3); line-height:1.6; padding:6px 2px; }
+/* ── Box « Communes choisies » éditable (onglet Candidature) ── */
+.cand-line{ display:flex; align-items:center; gap:10px; padding:7px 9px; border:1px solid var(--border);
+  border-radius:8px; margin-bottom:6px; background:var(--card); }
+.cand-line .cand-rank{ min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:50%; background:var(--accent); color:#fff; font-size:12px; font-weight:700; flex:none; }
+.cand-prio{ display:flex; flex-direction:column; gap:2px; flex:none; }
+.cand-mv{ appearance:none; border:1px solid var(--border); background:var(--card2); color:var(--ink2);
+  font-size:9px; line-height:1; padding:2px 6px; border-radius:4px; cursor:pointer; }
+.cand-mv:disabled{ opacity:.35; cursor:default; }
+.cand-comm{ flex:1; min-width:0; font-size:13px; font-weight:600; color:var(--ink); display:flex; flex-direction:column; }
+.cand-comm .cand-q{ font-size:11px; font-weight:400; color:var(--ink3); }
+.cand-cnt{ font-size:12px; color:var(--ink2); white-space:nowrap; flex:none; }
+.cand-del{ appearance:none; border:1px solid var(--border); background:var(--card); color:#c62828;
+  font-size:13px; padding:3px 9px; border-radius:6px; cursor:pointer; flex:none; }
+.cand-del:hover{ background:var(--card2); }
 </style>
 </head>
 <body>
@@ -377,6 +402,16 @@ select[multiple]{height:120px}
 </header>
 
 <main class="main" id="contenu" role="main" tabindex="-1">
+
+  <!-- Onglets du module : Planning (import + carte) · Agenda (vues + exports) · Candidature. -->
+  <div class="tabbar" role="tablist" aria-label="Sections du planner">
+    <button class="tab active" id="tab-planning" role="tab" aria-selected="true" aria-controls="pane-planning" onclick="setTab('planning')"><span class="tab-ico">🗺️</span>Planning</button>
+    <button class="tab" id="tab-agenda" role="tab" aria-selected="false" aria-controls="pane-agenda" onclick="setTab('agenda')"><span class="tab-ico">📅</span>Agenda</button>
+    <button class="tab" id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" onclick="setTab('candidature')"><span class="tab-ico">📝</span>Candidature</button>
+  </div>
+
+  <!-- ════ Onglet PLANNING : import / suppression + visualisation par quartiers ════ -->
+  <section class="tabpane" id="pane-planning" role="tabpanel" aria-labelledby="tab-planning">
 
   <!-- 1. Invite affichée uniquement quand aucun planning n'est chargé.
        Le sélecteur de trimestre est dans le bandeau ; le récapitulatif du nombre
@@ -431,6 +466,17 @@ select[multiple]{height:120px}
     <div id="planMap" style="height:340px;border-radius:8px;margin:0 0 10px;background:var(--card2);position:relative;z-index:0"></div>
     <div id="planGeoStatus" style="font-size:11px;color:var(--text2);margin:0 0 6px"></div>
     <div class="ref-scroll" style="max-height:340px"><table class="ref-table" id="refPlanning"></table></div>
+  </div>
+
+  </section><!-- /pane-planning -->
+
+  <!-- ════ Onglet AGENDA : sélection des groupes + vues Liste/Semaine/Mois/Année + exports ════ -->
+  <section class="tabpane" id="pane-agenda" role="tabpanel" aria-labelledby="tab-agenda" hidden>
+
+  <!-- Invite affichée quand aucun planning n'est encore chargé. -->
+  <div class="tab-empty" id="agendaEmpty" style="display:none">
+    Aucun planning chargé. Importez d'abord un planning dans l'onglet <strong>🗺️ Planning</strong>,
+    puis revenez ici pour sélectionner des groupes et bâtir votre agenda.
   </div>
 
   <!-- 2. Filtres & sélection — le badge « N groupe(s) » est en haut à droite du titre. -->
@@ -512,6 +558,8 @@ select[multiple]{height:120px}
     <div id="agendaContent"></div>
   </div>
 
+  </section><!-- /pane-agenda -->
+
   <!-- Sauvegarde locale : accessible via le menu ⋮ (Sauvegarder / Restaurer / Effacer). -->
 
   <!-- Modale : mapping des colonnes d'un planning importé (formats non-LFS) -->
@@ -548,16 +596,13 @@ select[multiple]{height:120px}
     </div>
   </div>
 
-  <!-- 4. Candidature enquêteur (modale, ouverte via le bouton 📝 Candidature) -->
-  <div id="candModal" class="cand-modal" style="display:none">
-   <div class="cand-modal-box" role="dialog" aria-modal="true" aria-label="Candidature enquêteur">
-    <div class="cand-modal-head">
-      <div class="card-title" style="margin:0"><span>📝</span> Candidature enquêteur</div>
-      <button class="cand-close" onclick="closeCandidature()" title="Fermer" aria-label="Fermer">×</button>
-    </div>
+  <!-- ════ Onglet CANDIDATURE : génération du formulaire enquêteur (.docx) ════ -->
+  <section class="tabpane" id="pane-candidature" role="tabpanel" aria-labelledby="tab-candidature" hidden>
+   <div class="card">
+    <div class="card-title" style="margin:0 0 6px"><span>📝</span> Candidature enquêteur</div>
     <p style="font-size:12px;color:var(--ink3);margin:0 0 14px">
-      Remplit le formulaire de candidature avec vos coordonnées et les groupes sélectionnés.
-      Vos informations personnelles sont mémorisées sur cet appareil.
+      Remplit le formulaire de candidature avec vos coordonnées et les groupes sélectionnés
+      dans l'onglet <strong>📅 Agenda</strong>. Vos informations personnelles sont mémorisées sur cet appareil.
     </p>
 
     <div class="cand-grid">
@@ -587,11 +632,12 @@ select[multiple]{height:120px}
     </div>
 
     <div style="margin-top:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px">
-        Communes choisies — <span id="candGrpCount">0</span> groupe(s)
+      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:var(--ink2)">Communes choisies — <span id="candGrpCount">0</span> groupe(s)</span>
+        <span style="font-size:11px;color:var(--ink3)">▲▼ pour l'ordre de priorité · ✕ pour retirer une commune (le nombre de groupes se recalcule)</span>
       </div>
       <div id="candGrpPreview" class="cand-preview">
-        <div style="color:var(--ink3);font-size:12px">Aucun groupe sélectionné — choisissez des groupes ci-dessus.</div>
+        <div style="color:var(--ink3);font-size:12px">Aucun groupe sélectionné — choisissez des groupes dans l'onglet Agenda.</div>
       </div>
     </div>
 
@@ -619,7 +665,7 @@ select[multiple]{height:120px}
       <span style="font-size:11px;color:var(--ink3)">Formulaire de candidature rempli — s'ouvre dans Word / LibreOffice</span>
     </div>
    </div>
-  </div>
+  </section><!-- /pane-candidature -->
 
 
 </main>
@@ -765,9 +811,11 @@ function chargerPlanningsConvertisseur() {
     allRows = []; filtered = [];
     document.getElementById('filterCard').style.display = 'none';
     document.getElementById('agendaCard').style.display = 'none';
+    const ae = document.getElementById('agendaEmpty'); if (ae) ae.style.display = '';   // invite onglet Agenda
     if (typeof majPlanMgmt === 'function') majPlanMgmt();   // masque la carte de gestion
     return;
   }
+  { const ae = document.getElementById('agendaEmpty'); if (ae) ae.style.display = 'none'; }
   card.style.display = 'none'; sel.style.display = '';  // masque l'invite
 
   const prev = sel.value;                       // préserver le choix courant si possible
@@ -2749,30 +2797,89 @@ function candSaveInfos(){
   try{ localStorage.setItem(CAND_LS_KEY,JSON.stringify(o)); }catch(e){}
 }
 
+// Ordre de priorité des communes choisies (persistant tant que la sélection existe).
+let candCommuneOrder = [];
+
+// Regroupe les groupes sélectionnés PAR COMMUNE, dans l'ordre de priorité choisi.
+// Met à jour candCommuneOrder : élague les communes disparues, ajoute les nouvelles
+// (par ordre alphabétique) à la fin. Retourne [{commune, communeFR, count, groups[], quartiers[]}].
+function candCommunes(){
+  const map=new Map();
+  selectedRows().forEach(r=>{
+    const key=(r.commune||'').trim() || '—';
+    let e=map.get(key);
+    if(!e){ e={commune:key, communeFR:key.split('/')[0].trim()||key, groups:[], quartiers:new Set()}; map.set(key,e); }
+    e.groups.push(r.numero);
+    if(r.quartier) e.quartiers.add(r.quartier);
+  });
+  const ordered=candCommuneOrder.filter(k=>map.has(k));
+  [...map.keys()].filter(k=>!ordered.includes(k))
+    .sort((a,b)=>a.localeCompare(b,'fr',{sensitivity:'base'}))
+    .forEach(k=>ordered.push(k));
+  candCommuneOrder=ordered;
+  return ordered.map(k=>{ const e=map.get(k);
+    const grps=e.groups.slice().sort((a,b)=>{ const na=parseInt(a,10),nb=parseInt(b,10);
+      return (!isNaN(na)&&!isNaN(nb)&&na!==nb)?na-nb:String(a).localeCompare(String(b)); });
+    return { commune:k, communeFR:e.communeFR, count:grps.length, groups:grps, quartiers:[...e.quartiers].sort() };
+  });
+}
+
+// Groupes transmis au .docx : dans l'ordre de priorité des communes, puis par n°.
 function candSelectedGroups(){
-  return selectedRows().slice().sort((a,b)=>{
-    const na=parseInt(a.numero,10), nb=parseInt(b.numero,10);
-    if(!isNaN(na)&&!isNaN(nb)&&na!==nb) return na-nb;
-    return String(a.numero).localeCompare(String(b.numero));
-  }).map(r=>({ numero:r.numero, commune:(r.commune||'').split('/')[0].trim() }));
+  const out=[];
+  candCommunes().forEach(c=> c.groups.forEach(n=> out.push({ numero:n, commune:c.communeFR })));
+  return out;
+}
+
+// Monte/descend une commune dans l'ordre de priorité (i = rang affiché).
+function candMoveCommune(i, dir){
+  const keys=candCommunes().map(c=>c.commune);
+  const j=i+dir;
+  if(j<0||j>=keys.length) return;
+  [keys[i],keys[j]]=[keys[j],keys[i]];
+  candCommuneOrder=keys;
+  updateCandidaturePreview();
+}
+
+// Retire une commune : désélectionne ses groupes et recalcule tout (nb de groupes inclus).
+function candRemoveCommune(i){
+  const c=candCommunes()[i];
+  if(!c) return;
+  c.groups.forEach(n=>selected.delete(n));
+  candCommuneOrder=candCommuneOrder.filter(k=>k!==c.commune);
+  renderGroupsList();
+  updateAgenda();               // → met à jour l'agenda + updateCandidaturePreview
 }
 
 function updateCandidaturePreview(){
   if(!document.getElementById('candGrpPreview')) return;
-  const groups=candSelectedGroups();
+  const communes=candCommunes();
+  const total=communes.reduce((s,c)=>s+c.count,0);
   const cnt=document.getElementById('candGrpCount');
-  if(cnt) cnt.textContent=groups.length;
+  if(cnt) cnt.textContent=total;
   const box=document.getElementById('candGrpPreview');
-  if(!groups.length){
-    box.innerHTML='<div style="color:var(--ink3);font-size:12px">Aucun groupe sélectionné — choisissez des groupes ci-dessus.</div>';
+  if(!communes.length){
+    box.innerHTML='<div style="color:var(--ink3);font-size:12px">Aucun groupe sélectionné — choisissez des groupes dans l\'onglet Agenda.</div>';
   }else{
-    box.innerHTML='<table><thead><tr><th style="width:110px">N° Groupe</th><th>Commune</th></tr></thead><tbody>'+
-      groups.map(g=>'<tr><td>'+candEscHtml(g.numero)+'</td><td>'+candEscHtml(g.commune)+'</td></tr>').join('')+
-      '</tbody></table>';
+    const last=communes.length-1;
+    box.innerHTML=communes.map((c,i)=>
+      '<div class="cand-line">'
+      +'<span class="cand-rank" title="Priorité '+(i+1)+'">'+(i+1)+'</span>'
+      +'<span class="cand-prio">'
+        +'<button type="button" class="cand-mv" title="Monter" onclick="candMoveCommune('+i+',-1)"'+(i===0?' disabled':'')+'>▲</button>'
+        +'<button type="button" class="cand-mv" title="Descendre" onclick="candMoveCommune('+i+',1)"'+(i===last?' disabled':'')+'>▼</button>'
+      +'</span>'
+      +'<span class="cand-comm">'+candEscHtml(c.communeFR)
+        +(c.quartiers.length?'<span class="cand-q">'+candEscHtml(c.quartiers.slice(0,5).join(' · '))+(c.quartiers.length>5?' …':'')+'</span>':'')
+      +'</span>'
+      +'<span class="cand-cnt">'+c.count+' groupe(s)</span>'
+      +'<button type="button" class="cand-del" title="Retirer cette commune" aria-label="Retirer '+candEscHtml(c.communeFR)+'" onclick="candRemoveCommune('+i+')">✕</button>'
+      +'</div>'
+    ).join('');
   }
-  // NbGroupes est toujours égal au nombre de groupes sélectionnés (champ calculé).
+  // NbGroupes = total des groupes des communes retenues (champ calculé, recalculé).
   const nb=candEl('NbGroupes');
-  if(nb) nb.value=String(groups.length);
+  if(nb) nb.value=String(total);
 }
 
 function genererCandidature(){
@@ -2816,37 +2923,29 @@ function genererCandidature(){
   }catch(e){ alert('Erreur lors de la génération : '+e.message); }
 }
 
-let candPrevFocus=null;
-function candFocusables(m){
-  const box=(m&&m.querySelector('.cand-modal-box'))||m;
-  return [...box.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);
-}
-// Échap ferme ; Tab piégé dans la boîte de dialogue (accessibilité modale).
-function candKeyHandler(e){
-  if(e.key==='Escape'){ e.preventDefault(); closeCandidature(); return; }
-  if(e.key!=='Tab') return;
-  const m=document.getElementById('candModal'); if(!m) return;
-  const box=m.querySelector('.cand-modal-box')||m;
-  const f=candFocusables(m); if(!f.length){ e.preventDefault(); return; }
-  const first=f[0], last=f[f.length-1], a=document.activeElement;
-  if(e.shiftKey && (a===first || !box.contains(a))){ e.preventDefault(); last.focus(); }
-  else if(!e.shiftKey && (a===last || !box.contains(a))){ e.preventDefault(); first.focus(); }
-}
-function openCandidature(){
-  const m=document.getElementById('candModal');
-  if(!m) return;
-  candSetDateAujourdhui();        // Date = date du jour à chaque ouverture
-  updateCandidaturePreview();     // NbGroupes = nb de groupes sélectionnés
-  candPrevFocus=document.activeElement;   // à restituer à la fermeture
-  m.style.display='flex';
-  document.addEventListener('keydown', candKeyHandler);
-  const f=candFocusables(m); if(f[0]) f[0].focus();   // focus dans la modale
-}
-function closeCandidature(){
-  const m=document.getElementById('candModal');
-  if(m) m.style.display='none';
-  document.removeEventListener('keydown', candKeyHandler);
-  if(candPrevFocus && document.contains(candPrevFocus)){ candPrevFocus.focus(); candPrevFocus=null; }
+// La candidature est désormais un onglet plein (plus de modale) : on bascule dessus.
+function openCandidature(){ setTab('candidature'); }
+
+// ══════════════════════════════════════════════════════════════════════
+//  ONGLETS — Planning / Agenda / Candidature
+// ══════════════════════════════════════════════════════════════════════
+const TABS = ['planning', 'agenda', 'candidature'];
+function setTab(name){
+  if(!TABS.includes(name)) name='planning';
+  TABS.forEach(n=>{
+    const t=document.getElementById('tab-'+n), pane=document.getElementById('pane-'+n);
+    const on=(n===name);
+    if(t){ t.classList.toggle('active', on); t.setAttribute('aria-selected', on?'true':'false'); }
+    if(pane) pane.hidden=!on;
+  });
+  // Planning : (ré)initialise la carte Leaflet (invalidateSize sur conteneur affiché).
+  if(name==='planning' && typeof initPlanning==='function') initPlanning();
+  // Candidature : prépare date du jour + aperçu des communes choisies + signature.
+  if(name==='candidature'){
+    if(typeof candSetDateAujourdhui==='function') candSetDateAujourdhui();
+    if(typeof candSigInit==='function') candSigInit();
+    if(typeof updateCandidaturePreview==='function') updateCandidaturePreview();
+  }
 }
 
 /* ── Signature (canvas → PNG intégré au .docx) ── */
@@ -2889,7 +2988,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '184';
+const APP_VERSION = '185';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
