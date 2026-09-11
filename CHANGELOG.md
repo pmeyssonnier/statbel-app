@@ -18,9 +18,10 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
   l'icône 📝, comme sur l'onglet Agenda 📅 ; masquée quand aucun groupe n'est retenu.
 
 ### Modifié / Déplacé
-- **Interviews — menu ⋮ réorganisé** (Interviews 3.33, SW `statbel-v290`) :
+- **Interviews — menu ⋮ réorganisé** (Interviews 3.34, SW `statbel-v291`) :
   « Renommer » / « Supprimer cette enquête » remontés au-dessus d'Importer /
-  Exporter CSV ; « Aide » et « Manuel d'utilisation » déplacés en fin de menu.
+  Exporter CSV ; « Paramètres », « Aide » et « Manuel d'utilisation » déplacés
+  en fin de menu.
 - **Planner — gestion du planning déplacée dans le menu ⋮** (Planner 193,
   SW `statbel-v289`) : les trois boutons de l'onglet Planning (📥 Importer,
   ✏️ Renommer, 🗑️ Supprimer) laissent place à trois entrées du menu ⋮
