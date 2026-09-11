@@ -105,11 +105,13 @@ header{
 }
 #selPlanning option{background:var(--chrome);color:#fff}
 
-.hdr-status{
-  font-size:12px;font-weight:700;color:#fff;white-space:nowrap;
-  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
-  border-radius:20px;padding:3px 10px;
+/* Pastille de comptage sur l'onglet Agenda (nb de groupes sélectionnés) */
+.tab-count{
+  position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;
+  border-radius:9px;background:#2e7d32;color:#fff;font-size:10px;font-weight:700;
+  line-height:16px;text-align:center;box-shadow:0 0 0 1px var(--chrome);pointer-events:none;
 }
+.tab-count[hidden]{display:none}
 .btn-ico{
   background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);
   width:36px;height:36px;border-radius:7px;font-size:18px;cursor:pointer;line-height:1;
@@ -394,10 +396,9 @@ select[multiple]{height:120px}
     <div class="header-col3">
       <div class="view-toggle" id="hdrTabs" role="tablist" aria-label="Sections du planner">
         <button class="btn-ico active" id="tab-planning"    role="tab" aria-selected="true"  aria-controls="pane-planning"    data-tip="Planning"    aria-label="Planning"    onclick="setTab('planning')">🗺️</button>
-        <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      aria-label="Agenda"      onclick="setTab('agenda')">📅</button>
+        <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      aria-label="Agenda"      onclick="setTab('agenda')">📅<span class="tab-count" id="agendaCount" hidden></span></button>
         <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝</button>
       </div>
-      <span class="hdr-status" id="hdrCount" title="Groupes sélectionnés">0</span>
       <div class="kebab-wrap">
         <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" aria-label="Plus d'options">⋮</button>
         <div class="kebab-menu" id="kebabMenu">
@@ -447,8 +448,6 @@ select[multiple]{height:120px}
       province/commune pour voir les missions et localiser les quartiers/adresses sur la carte.
     </p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px;align-items:center">
-      <label style="font-size:12px;color:var(--text2);font-weight:bold">Planning :</label>
-      <select id="planSelect" onchange="chargerPlanningSelectionne()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-width:200px"></select>
       <button class="btn-reset" onclick="document.getElementById('planFileInput').click()">📥 Importer un planning</button>
       <button class="btn-reset" id="planRenBtn" style="display:none" onclick="renommerPlanningImporte()">✏️ Renommer</button>
       <button class="btn-reset" id="planDelBtn" style="display:none" onclick="supprimerPlanningImporte()">🗑️ Supprimer</button>
@@ -836,8 +835,9 @@ function chargerPlanningsConvertisseur() {
   _plans.forEach(p => opts.push(`<option value="${esc(p.id)}">${esc(p.nom)}</option>`));
   sel.innerHTML = opts.join('');
   if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
-  onChangePlanning();
-  if (typeof majPlanMgmt === 'function') majPlanMgmt();   // gestion + carte + tableau de référence
+  if (typeof chargerRegistrePlannings === 'function') chargerRegistrePlannings();  // _plannings prêt pour la carte
+  onChangePlanning();                                     // agenda + carte (même trimestre)
+  if (typeof majPlanMgmt === 'function') majPlanMgmt();   // affiche la carte de gestion + initPlanning
 }
 
 // Applique le trimestre choisi (ou « Tout ») → allRows + filtres + agenda.
@@ -856,6 +856,12 @@ function onChangePlanning() {
   document.getElementById('filterCard').style.display = allRows.length ? '' : 'none';
   renderGroupsList();
   updateAgenda();
+
+  // Le sélecteur du header pilote aussi la carte de l'onglet Planning (même trimestre).
+  _planActif = (id === '__ALL__') ? '__ALL__' : id;
+  if (typeof appliquerPlanningActif === 'function') { appliquerPlanningActif(); filtrerPlanning(); }
+  // La candidature reprend le trimestre sélectionné (titre « EFT 2026-Tx »).
+  if (typeof syncCandSurvey === 'function') syncCandSurvey();
 }
 
 // Badge « N groupe(s) » : dépend des filtres (province/commune/quartier/recherche)
@@ -1024,9 +1030,11 @@ function clearAll() {
 
 function updateAgenda() {
   const count = selected.size;
-  const hc = document.getElementById('hdrCount');
-  hc.textContent = '✓ ' + count;                       // compact dans le bandeau
-  hc.title = count + ' groupe(s) sélectionné(s)';
+  // Pastille de comptage sur l'onglet Agenda (masquée quand aucune sélection).
+  const b = document.getElementById('agendaCount');
+  if (b) { b.textContent = count; b.hidden = count === 0; }
+  const tab = document.getElementById('tab-agenda');
+  if (tab) tab.setAttribute('data-tip', count ? 'Agenda — ' + count + ' groupe(s)' : 'Agenda');
   majBadgeGroupes();                                   // le badge dépend de la sélection
   const card = document.getElementById('agendaCard');
   if (count === 0) {
@@ -1672,39 +1680,40 @@ function chargerRegistrePlannings() {
   let imp = [];
   try { imp = JSON.parse(localStorage.getItem('plannings') || '[]'); } catch (e) { imp = []; }
   imp.forEach(p => { if (p && p.id) _plannings[p.id] = p; });
-  if (!_plannings[_planActif]) _planActif = Object.keys(_plannings)[0] || '';
+  // Garder l'agrégat « Tout » (__ALL__) tel quel ; sinon retomber sur le 1er planning.
+  if (_planActif !== '__ALL__' && !_plannings[_planActif]) _planActif = Object.keys(_plannings)[0] || '';
 }
 
 function sauverPlanningsImportes() {
   try { localStorage.setItem('plannings', JSON.stringify(Object.values(_plannings))); } catch (e) {}
 }
 
+// Le sélecteur dédié #planSelect a été retiré (le sélecteur du header pilote tout).
+// Fonction conservée en no-op pour les appelants historiques (import/rename/delete).
 function remplirSelecteurPlanning() {
+  const el = document.getElementById('planSelect');
+  if (!el) return;
   const vals = Object.values(_plannings);
-  document.getElementById('planSelect').innerHTML = vals.length
+  el.innerHTML = vals.length
     ? vals.map(p => `<option value="${p.id}"${p.id === _planActif ? ' selected' : ''}>${esc(p.nom)}</option>`).join('')
     : `<option value="">${esc('(aucun planning — importez-en un)')}</option>`;
-  majBadgePlanning();
 }
 
-// Badge « (N) » sur l'onglet Planning = nb de plannings importés
-function majBadgePlanning() {
-  const el = document.getElementById('nbPlannings');
-  if (el) el.textContent = '(' + Object.keys(_plannings).length + ')';
-}
-
-// Construit _planRows depuis le planning actif + (re)remplit province/commune
+// Construit _planRows depuis le trimestre actif (ou l'agrégat « Tout ») + (re)remplit province/commune.
 function appliquerPlanningActif() {
-  const p = _plannings[_planActif];
-  document.getElementById('planDelBtn').style.display = p ? '' : 'none';
-  document.getElementById('planRenBtn').style.display = p ? '' : 'none';
-  if (!p) {
+  const tout = _planActif === '__ALL__';
+  const actif = (!tout && _plannings[_planActif]) ? _plannings[_planActif] : null;
+  const plans = tout ? Object.values(_plannings) : (actif ? [actif] : []);
+  // Renommer / Supprimer : seulement sur un trimestre unique réel (masqués si « Tout » ou aucun).
+  document.getElementById('planDelBtn').style.display = actif ? '' : 'none';
+  document.getElementById('planRenBtn').style.display = actif ? '' : 'none';
+  if (!plans.length) {
     _planRows = [];
     document.getElementById('planProvince').innerHTML = `<option value="">${esc('Toutes les provinces')}</option>`;
     majCommunesPlan();
     return;
   }
-  _planRows = (p.rows || []).map(r => ({
+  _planRows = plans.flatMap(pl => pl.rows || []).map(r => ({
     code: r.code || '', prov: r.prov || '', commune: r.commune || '',
     communeFR: r.communeFR || (r.commune || '').split('/')[0].trim(),
     quartier: r.quartier || '', wave: r.wave || '', sem: r.sem || '',
@@ -1719,12 +1728,6 @@ function appliquerPlanningActif() {
   majCommunesPlan();
 }
 
-function chargerPlanningSelectionne() {
-  _planActif = document.getElementById('planSelect').value;
-  appliquerPlanningActif();
-  filtrerPlanning();
-}
-
 // Renomme le libellé du planning actif (le contenu/les codes sont inchangés).
 function renommerPlanningImporte() {
   const p = _plannings[_planActif];
@@ -1733,8 +1736,7 @@ function renommerPlanningImporte() {
   if (!nouveau || nouveau === p.nom) return;
   p.nom = nouveau;
   sauverPlanningsImportes();
-  remplirSelecteurPlanning();
-  rafraichirAnnexesPlanning();   // met à jour le sélecteur d'agenda + l'annexe Convertisseur
+  rafraichirAnnexesPlanning();   // reconstruit header + agenda + carte
 }
 
 function supprimerPlanningImporte() {
@@ -1744,16 +1746,12 @@ function supprimerPlanningImporte() {
   delete _plannings[_planActif];
   sauverPlanningsImportes();
   _planActif = Object.keys(_plannings)[0] || '';
-  remplirSelecteurPlanning();
-  appliquerPlanningActif();
-  rafraichirAnnexesPlanning();
-  filtrerPlanning();
+  rafraichirAnnexesPlanning();   // reconstruit header + agenda + carte
 }
 
 function initPlanning() {
   if (!_planInit) {
     chargerRegistrePlannings();
-    remplirSelecteurPlanning();
     appliquerPlanningActif();
     _planInit = true;
   }
@@ -1911,10 +1909,9 @@ function importerPlanningLFS(nomFichier) {
   _plannings[id] = { id, nom: nomComplet, type: 'EFT / LFS', rows, grp, embedded: false };
   sauverPlanningsImportes();
   _planActif = id;
-  remplirSelecteurPlanning();
-  appliquerPlanningActif();
-  filtrerPlanning();
-  rafraichirAnnexesPlanning();
+  rafraichirAnnexesPlanning();                 // reconstruit header + agenda + carte
+  const sel = document.getElementById('selPlanning');
+  if (sel && [...sel.options].some(o => o.value === id)) { sel.value = id; onChangePlanning(); }  // focalise le planning importé
   if (remplace && typeof afficherToast === 'function') afficherToast('🔄 Planning existant mis à jour (données remplacées).');
 }
 
@@ -1993,11 +1990,10 @@ function confirmerMappingPlanning() {
   _plannings[id] = { id, nom: nomComplet, type, rows, embedded: false };
   sauverPlanningsImportes();
   _planActif = id;
-  remplirSelecteurPlanning();
-  appliquerPlanningActif();
-  filtrerPlanning();
   fermerMappingPlanning();
-  rafraichirAnnexesPlanning();
+  rafraichirAnnexesPlanning();                 // reconstruit header + agenda + carte
+  const selp = document.getElementById('selPlanning');
+  if (selp && [...selp.options].some(o => o.value === id)) { selp.value = id; onChangePlanning(); }  // focalise le planning importé
   if (remplace && typeof afficherToast === 'function') afficherToast('🔄 Planning existant mis à jour (données remplacées).');
 }
 
@@ -2592,13 +2588,10 @@ async function geocodeQuartier(g) {
 function majPlanMgmt() {
   const card = document.getElementById('planMgmtCard');
   if (!card) return;
-  if (!_plans.length) { card.style.display = 'none'; return; }
-  card.style.display = '';
-  chargerRegistrePlannings();
-  remplirSelecteurPlanning();
-  appliquerPlanningActif();
-  filtrerPlanning();
-  initPlanning();
+  card.style.display = _plans.length ? '' : 'none';
+  // La carte (registre + _planRows) est déjà rafraîchie par onChangePlanning() ;
+  // ici on ne fait qu'afficher la carte de gestion et (ré)initialiser Leaflet.
+  if (_plans.length) initPlanning();
 }
 
 // Le script consommateur a déjà tourné (majPlanMgmt était alors indéfini) :
@@ -2828,6 +2821,35 @@ function candSetDateAujourdhui(){
   const d=candEl('Date'); if(d) d.value=new Date().toLocaleDateString('fr-BE');
 }
 
+// Dérive « <sigle> <année>-T<x> » du trimestre sélectionné dans le header.
+// Renvoie null si « Tout » / aucun trimestre unique → on ne touche pas au champ.
+// Repli sur le nom du planning si l'année/trimestre n'est pas reconnu.
+function surveyDepuisPlanning(){
+  const sel=document.getElementById('selPlanning');
+  const id=sel?sel.value:'';
+  if(!id || id==='__ALL__') return null;
+  const p=(typeof _plannings!=='undefined' && _plannings[id])
+        || (typeof _plans!=='undefined' && _plans.find(x=>x.id===id));
+  if(!p) return null;
+  const nom=p.nom||'';
+  const sigle=(p.type && p.type.split('/')[0].trim()) || 'EFT';
+  const m=nom.match(/(20\d{2})\D*?[QT]\s*([1-4])/i) || nom.match(/[QT]\s*([1-4])\D*?(20\d{2})/i);
+  if(m){
+    const year=/^\d{4}$/.test(m[1])?m[1]:m[2];
+    const q   =/^\d{4}$/.test(m[1])?m[2]:m[1];
+    return sigle+' '+year+'-T'+q;
+  }
+  return nom;   // repli
+}
+
+// Synchronise le champ titre #candSurvey sur le trimestre du header (reste éditable).
+function syncCandSurvey(){
+  const s=surveyDepuisPlanning();
+  if(!s) return;
+  const el=document.getElementById('candSurvey');
+  if(el){ el.value=s; if(typeof candSaveInfos==='function') candSaveInfos(); }
+}
+
 function candLoadInfos(){
   let saved={};
   try{ saved=JSON.parse(localStorage.getItem(CAND_LS_KEY)||'{}'); }catch(e){}
@@ -2991,6 +3013,7 @@ function setTab(name){
   // Candidature : prépare date du jour + aperçu des communes choisies + signature.
   if(name==='candidature'){
     if(typeof candSetDateAujourdhui==='function') candSetDateAujourdhui();
+    if(typeof syncCandSurvey==='function') syncCandSurvey();   // titre = trimestre du header
     if(typeof candSigInit==='function') candSigInit();
     if(typeof updateCandidaturePreview==='function') updateCandidaturePreview();
   }
@@ -3036,7 +3059,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '190';
+const APP_VERSION = '191';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

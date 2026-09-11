@@ -68,7 +68,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       selOptions: [...document.getElementById('selPlanning').options].map(o => o.textContent),
       mgmtVisible: document.getElementById('planMgmtCard').style.display !== 'none',
       filterVisible: document.getElementById('filterCard').style.display !== 'none',
-      planSelectHas: [...document.getElementById('planSelect').options].some(o => /EFT \/ LFS/.test(o.textContent)),
+      noPlanSelect: !document.getElementById('planSelect'),   // sélecteur dédié retiré
     };
   }, [LFS_HEADERS, LFS_ROW, LFS_FILE]);
 
@@ -86,8 +86,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   }
   A(imp.mgmtVisible, 'Planner : carte de gestion du planning affichée');
   A(imp.filterVisible, 'Planner : carte de filtres/agenda affichée');
-  A(imp.planSelectHas, 'Planner : sélecteur de gestion liste le planning importé');
-  A(imp.selOptions.some(t => /EFT \/ LFS/.test(t)), 'Planner : sélecteur d\'agenda liste le planning importé');
+  A(imp.noPlanSelect, 'Planner : sélecteur #planSelect retiré (le header pilote la carte)');
+  A(imp.selOptions.some(t => /EFT \/ LFS/.test(t)), 'Planner : sélecteur du header liste le planning importé');
+
+  // ── 2a. Candidature : le titre « EFT 2026-Tx » se dérive du trimestre du header ──
+  const survey = await p.evaluate(() => {
+    setTab('candidature');
+    return document.getElementById('candSurvey').value;
+  });
+  A(survey === 'EFT 2026-T1', `titre candidature dérivé du trimestre (got "${survey}")`);
 
   // ── 2b. Anti-doublon PAR CONTENU : réimporter les mêmes codes de groupes
   //         via un fichier RENOMMÉ remplace l'entrée (pas de doublon) et met à
@@ -127,7 +134,6 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     const stored = JSON.parse(localStorage.getItem('plannings') || '[]');
     const out = {
       nom: (stored[0] || {}).nom, count: stored.length,
-      optShort: [...document.getElementById('planSelect').options].some(o => /court/.test(o.textContent)),
       agendaShort: [...document.getElementById('selPlanning').options].some(o => /court/.test(o.textContent)),
     };
     window.prompt = () => nomOrig; renommerPlanningImporte(); window.prompt = origPrompt;   // restaure
@@ -136,8 +142,20 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   }, NOM_ATTENDU);
   A(ren.nom === 'Bruxelles Q1 (court)', `renommer : libellé mis à jour (got "${ren.nom}")`);
   A(ren.count === 1, 'renommer : pas de nouvelle entrée (toujours 1)');
-  A(ren.optShort && ren.agendaShort, 'renommer : sélecteurs Planning + Agenda reflètent le nouveau nom');
+  A(ren.agendaShort, 'renommer : le sélecteur du header reflète le nouveau nom');
   A(ren.nomRestored === NOM_ATTENDU, 'renommer : nom d\'origine rétabli pour la suite du test');
+
+  // ── 2d. Pastille de comptage sur l'onglet Agenda (nb de groupes sélectionnés) ──
+  const badge = await p.evaluate(() => {
+    document.getElementById('selPlanning').value = _plans[0].id; onChangePlanning();
+    const b = document.getElementById('agendaCount');
+    const hidden0 = b.hidden;                       // aucune sélection → masquée
+    selected.add('12345'); updateAgenda();
+    return { hidden0, txt: b.textContent, shown: !b.hidden, noHdrCount: !document.getElementById('hdrCount') };
+  });
+  A(badge.hidden0, 'pastille : masquée quand aucun groupe sélectionné');
+  A(badge.shown && badge.txt === '1', `pastille : affiche le nombre de groupes sélectionnés (got "${badge.txt}")`);
+  A(badge.noHdrCount, 'header : ancien compteur #hdrCount retiré');
 
   // ── 3. Convertisseur (même origine) : le lien GRP↔LFS est lisible ───────
   await p.goto(srv.url + '/statbel_converter.html', { waitUntil: 'load' });
