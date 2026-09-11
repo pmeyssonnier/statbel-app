@@ -12,6 +12,11 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Planner — pastille de comptage aussi sur l'onglet Candidature** (Planner 192,
+  SW `statbel-v288`) : le nombre de groupes retenus s'affiche en pastille verte sur
+  l'icône 📝, comme sur l'onglet Agenda 📅 ; masquée quand aucun groupe n'est retenu.
+
 ## [3.32] — 2026-09-11  (SW `statbel-v271` → `v287`)
 
 Palier de publication regroupant le chantier depuis la 3.28. Versions internes

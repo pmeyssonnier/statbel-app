@@ -397,7 +397,7 @@ select[multiple]{height:120px}
       <div class="view-toggle" id="hdrTabs" role="tablist" aria-label="Sections du planner">
         <button class="btn-ico active" id="tab-planning"    role="tab" aria-selected="true"  aria-controls="pane-planning"    data-tip="Planning"    aria-label="Planning"    onclick="setTab('planning')">🗺️</button>
         <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      aria-label="Agenda"      onclick="setTab('agenda')">📅<span class="tab-count" id="agendaCount" hidden></span></button>
-        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝</button>
+        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝<span class="tab-count" id="candCount" hidden></span></button>
       </div>
       <div class="kebab-wrap">
         <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" aria-label="Plus d'options">⋮</button>
@@ -2927,6 +2927,11 @@ function updateCandidaturePreview(){
   const total=communes.reduce((s,c)=>s+c.count,0);
   const cnt=document.getElementById('candGrpCount');
   if(cnt) cnt.textContent=total;
+  // Pastille de comptage sur l'onglet Candidature (mêmes groupes retenus).
+  const cb=document.getElementById('candCount');
+  if(cb){ cb.textContent=total; cb.hidden=total===0; }
+  const ctab=document.getElementById('tab-candidature');
+  if(ctab) ctab.setAttribute('data-tip', total ? 'Candidature — ' + total + ' groupe(s)' : 'Candidature');
   const box=document.getElementById('candGrpPreview');
   if(!communes.length){
     box.innerHTML='<div style="color:var(--ink3);font-size:12px">Aucun groupe sélectionné — choisissez des groupes dans l\'onglet Agenda.</div>';
@@ -3059,7 +3064,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '191';
+const APP_VERSION = '192';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
