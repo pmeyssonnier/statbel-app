@@ -178,19 +178,17 @@ export function ligneDemographie(c) {
     if (!isNaN(nc) && nc > 1) m += ` (${nc} ≥15)`;
     parts.push(m);
   }
-  // Méthode de collecte (CATI/CAWI, issue du Convertisseur) : pastille colorée.
-  if (c.collect_method) {
-    const u = String(c.collect_method).toUpperCase();
-    const cawi = /CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(u);
-    const cati = /CATI|T[ÉE]L|PHONE|TELEPH/.test(u);
-    if (cati || cawi) {
-      const label = cati ? 'CATI' : 'CAWI';
-      parts.push(`<span style="font-weight:600;color:${cati ? '#1565c0' : '#2e7d32'}">${cati ? '📞' : '🌐'} ${label}</span>`);
-    } else {
-      parts.push('📋 ' + esc(c.collect_method));
-    }
-  }
   return parts.join(' · ');
+}
+
+// Pastille « méthode de collecte » (CATI/CAWI, issue du Convertisseur), affichée
+// sur la ligne des canaux de contact (à côté du téléphone/e-mail).
+export function methodeBadge(c) {
+  if (!c || !c.collect_method) return '';
+  const u = String(c.collect_method).toUpperCase();
+  if (/CATI|T[ÉE]L|PHONE|TELEPH/.test(u))            return '<span class="badge badge-cati">📞 CATI</span>';
+  if (/CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(u)) return '<span class="badge badge-cawi">🌐 CAWI</span>';
+  return `<span class="badge">📋 ${esc(c.collect_method)}</span>`;
 }
 
 export function toggleEdit(i) {
@@ -369,6 +367,8 @@ export function rendu() {
     if (!correspondRecherche(c, q)) return;
     const def = statutDef(statut);
     const badges = [];
+    const mb = methodeBadge(c);
+    if (mb)      badges.push(mb);                 // méthode CATI/CAWI en tête des canaux de contact
     if (c.gsm)   badges.push(`<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>`);
     if (c.email) badges.push(`<a class="badge badge-mail" href="mailto:${esc(c.email)}">✉️ ${esc(c.email)}</a>`);
     // Date associée au statut : RDV (si statut « rendez-vous ») sinon date d'action
@@ -522,7 +522,7 @@ export function buildRdvCard(c, i, today, def) {
       <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank">📍 ${esc(c.adresse)}</a>
       ${distHtml}
     </div>
-    ${c.gsm   ? `<div style="margin-top:4px"><a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a></div>` : ''}
+    ${(() => { const mb = methodeBadge(c); const tel = c.gsm ? `<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>` : ''; return (mb || tel) ? `<div class="card-badges" style="margin-top:4px">${mb}${tel}</div>` : ''; })()}
     ${c.notes ? `<div style="margin-top:6px;font-size:12px;color:var(--text3);">📝 ${esc(c.notes)}</div>` : ''}
     ${buildHistoriqueHTML(c, i)}`;
   return div;
