@@ -544,7 +544,6 @@ select[multiple]{height:120px}
         <button class="nav-btn" onclick="exportCsvApp()" title="Export CSV pour enquetes_statbel.html" style="border-color:#1a237e;color:#1a237e;font-weight:600">⬇️ CSV App</button>
         <button class="nav-btn" onclick="exportIcs()" title="Exporter vers Google Agenda / iCal" style="border-color:#7b22cc;color:#7b22cc;font-weight:600">📅 iCal</button>
         <button class="nav-btn" onclick="exportChevauchements()" title="Exporter les chevauchements" style="border-color:#f57f17;color:#f57f17;font-weight:600">⚠️ Chevauch.</button>
-        <button class="nav-btn" onclick="openCandidature()" title="Candidature enquêteur (formulaire officiel .docx)" style="border-color:#7b22cc;color:#7b22cc;font-weight:600">📝 Candidature</button>
       </div>
     </div>
 
@@ -2988,7 +2987,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '185';
+const APP_VERSION = '186';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
