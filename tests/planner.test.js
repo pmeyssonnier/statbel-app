@@ -188,6 +188,34 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(cand.nbRO && cand.dRO, 'NbGroupes et Date en lecture seule (champs calculés)');
     A(cand.nbAfter === String(cand.selAfter), `NbGroupes suit la sélection en direct (${cand.selAfter}) → "${cand.nbAfter}"`);
 
+    // Box « Communes choisies » éditable : 1 ligne / commune, priorité ▲▼, retrait ✕, recompte.
+    const boxEdit = await p.evaluate(() => {
+      document.getElementById('selPlanning').value = '__ALL__'; onChangePlanning();
+      selected.clear(); ['11001', '25002', '62003'].forEach(n => selected.add(n)); updateAgenda();
+      setTab('candidature');                       // rend la box éditable
+      const lines = () => [...document.querySelectorAll('#candGrpPreview .cand-line')];
+      const names = () => lines().map(l => l.querySelector('.cand-comm').textContent.trim());
+      const before = names();
+      const selBefore = selected.size;
+      candMoveCommune(0, 1);                        // descend la 1re commune
+      const moved = names();
+      candRemoveCommune(0);                         // retire la commune désormais en tête
+      const after = names();
+      return {
+        nBefore: before.length, selBefore,
+        movedOk: moved[0] === before[1] && moved[1] === before[0],
+        nAfter: after.length, selAfter: selected.size,
+        count: document.getElementById('candGrpCount').textContent,
+        nbField: document.getElementById('candNbGroupes').value,
+      };
+    });
+    A(boxEdit.nBefore === 3, `box éditable : une ligne par commune (attendu 3, got ${boxEdit.nBefore})`);
+    A(boxEdit.movedOk, 'box éditable : ▲▼ réordonne les communes par priorité');
+    A(boxEdit.nAfter === 2, `box éditable : ✕ retire une commune (3 → ${boxEdit.nAfter})`);
+    A(boxEdit.selAfter === 2, `box éditable : ✕ désélectionne les groupes de la commune retirée (${boxEdit.selBefore} → ${boxEdit.selAfter})`);
+    A(boxEdit.count === '2' && boxEdit.nbField === '2',
+      `box éditable : nombre de groupes recalculé (badge ${boxEdit.count}, champ ${boxEdit.nbField})`);
+
     // Accessibilité (harden) : landmark + lien d'évitement + modale candidature.
     const a11y = await p.evaluate(() => {
       const out = {};
@@ -205,15 +233,17 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       let rm = false;
       for (const sh of document.styleSheets) { let rs; try { rs = sh.cssRules; } catch (e) { continue; } if (!rs) continue; for (const ru of rs) { if (ru.media && ru.media.mediaText && ru.media.mediaText.includes('prefers-reduced-motion')) rm = true; } }
       out.reducedMotion = rm;
-      // Modale candidature : dialog + focus déplacé dedans à l'ouverture, Échap ferme + restitue le focus.
-      const pre = document.getElementById('selPlanning'); pre.focus();
-      openCandidature();
-      const modal = document.getElementById('candModal'), box = modal.querySelector('.cand-modal-box');
-      out.dialogRole = box.getAttribute('role') === 'dialog' && box.getAttribute('aria-modal') === 'true';
-      out.focusInModal = box.contains(document.activeElement);
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      out.closedOnEsc = modal.style.display === 'none';
-      out.focusRestored = document.activeElement === pre;
+      // Onglets Planning / Agenda / Candidature : role tab/tabpanel, bascule = 1 panneau visible.
+      setTab('candidature');
+      out.candShown = document.getElementById('pane-candidature').hidden === false;
+      out.candTabSel = document.getElementById('tab-candidature').getAttribute('aria-selected') === 'true';
+      out.othersHidden = document.getElementById('pane-planning').hidden === true
+                      && document.getElementById('pane-agenda').hidden === true;
+      out.tabRole = document.getElementById('tab-candidature').getAttribute('role') === 'tab'
+                 && document.getElementById('pane-candidature').getAttribute('role') === 'tabpanel';
+      setTab('planning');
+      out.backToPlanning = document.getElementById('pane-planning').hidden === false
+                        && document.getElementById('pane-candidature').hidden === true;
       return out;
     });
     A(a11y.skipTarget === '#contenu', `lien d'évitement cible #contenu → ${a11y.skipTarget}`);
@@ -221,10 +251,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(a11y.skipIsFirst, 'lien d\'évitement = 1er élément focusable');
     A(a11y.hidden && a11y.revealed, 'lien d\'évitement caché par défaut, révélé au focus');
     A(a11y.reducedMotion, 'règle @media prefers-reduced-motion présente');
-    A(a11y.dialogRole, 'modale candidature = role="dialog" + aria-modal');
-    A(a11y.focusInModal, 'ouverture candidature : focus déplacé dans la boîte de dialogue');
-    A(a11y.closedOnEsc, 'Échap ferme la modale candidature');
-    A(a11y.focusRestored, 'focus restitué au déclencheur à la fermeture');
+    A(a11y.candShown && a11y.candTabSel, 'onglet Candidature : panneau affiché + onglet sélectionné (aria-selected)');
+    A(a11y.othersHidden, 'onglets : les autres panneaux (Planning, Agenda) sont masqués');
+    A(a11y.tabRole, 'onglets : role="tab" / role="tabpanel" (ARIA)');
+    A(a11y.backToPlanning, 'basculer sur Planning ré-affiche son panneau, masque Candidature');
 
     // Polish/adapt : contraste --ink3 (≥4,5:1) + vue année sans bordure « side-tab ».
     const polish = await p.evaluate(() => {
