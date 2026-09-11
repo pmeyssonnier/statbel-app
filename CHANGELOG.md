@@ -25,6 +25,15 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
   sur le portail LFS 2026. Aucun envoi automatique : rien ne quitte l'appareil sans action de
   l'utilisateur. Nouveau test `tests/rappel.test.js`.
 
+### Corrigé
+- **Convertisseur — identifiants numériques longs cassés en notation scientifique**
+  (Convertisseur 216, SW `statbel-v297`) : à la lecture d'un fichier source **Excel**,
+  un identifiant numérique long en format « Standard » (ex. `TX_WEB_USER_ID`) était rendu
+  `2.02612E+11` par SheetJS (`raw:false`), perdant les derniers chiffres. `parseXlsx`
+  récupère désormais l'**entier complet** depuis la valeur brute (`raw:true`) pour toute
+  cellule affichée en scientifique ; les dates, codes à zéros de tête et décimaux restent
+  inchangés. Nouveau test `tests/converter-xlsx-bignum.test.js`.
+
 ### Modifié
 - **Interviews — téléphone affiché au format `+32 xxx xx xx xx`** (Interviews 3.38,
   SW `statbel-v295`) : les numéros importés (souvent bruts, ex. `465812582`) sont

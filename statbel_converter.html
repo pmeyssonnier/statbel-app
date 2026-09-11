@@ -6753,8 +6753,15 @@ function parseXlsx(arrayBuffer) {
   const ws = wb.Sheets[wb.SheetNames[0]];        // première feuille
   if (!ws) throw new Error(t('al_no_sheet'));
   // header:1 → tableau de tableaux ; raw:false + defval:'' → tout en texte, cases vides = ''
-  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
-  const nonVides = aoa.filter(r => r.some(c => String(c).trim() !== ''));
+  // (les dates dépendent du texte formaté). En parallèle, la lecture BRUTE (raw:true)
+  // sert de repli pour les cellules qu'Excel affiche en notation scientifique : un ID
+  // numérique long en format « Standard » (ex. TX_WEB_USER_ID) est rendu « 2.02612E+11 »
+  // par raw:false — la valeur brute conserve l'entier complet (voir cellTexte()).
+  const aoa    = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+  const aoaRaw = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true,  defval: '' });
+  const garder = i => aoa[i].some(c => String(c).trim() !== '');
+  const nonVides    = aoa.filter((r, i) => garder(i));
+  const nonVidesRaw = aoaRaw.filter((r, i) => garder(i));
   if (nonVides.length < 2) throw new Error(t('al_empty_or_invalid'));
 
   // Repérer la vraie ligne d'en-tête : certains exports ajoutent un titre parasite
@@ -6766,14 +6773,31 @@ function parseXlsx(arrayBuffer) {
   });
   let h = nonVides.findIndex(estEntete);
   if (h < 0) h = 0;                              // repli : 1re ligne non vide
-  const lignes  = nonVides.slice(h);
+  const lignes    = nonVides.slice(h);
+  const lignesRaw = nonVidesRaw.slice(h);
   if (lignes.length < 2) throw new Error(t('al_empty_or_invalid'));
   const headers = lignes[0].map(c => String(c).trim().replace(/^\"|\"$/g, ''));
-  return lignes.slice(1).map(vals => {
+  return lignes.slice(1).map((vals, idx) => {
+    const rawVals = lignesRaw[idx + 1] || [];
     const row = {};
-    headers.forEach((hk, i) => { if (hk) row[hk] = String(vals[i] != null ? vals[i] : '').trim(); });
+    headers.forEach((hk, i) => { if (hk) row[hk] = cellTexte(vals[i], rawVals[i]); });
     return row;
   });
+}
+
+// Texte d'une cellule Excel, en réparant la notation scientifique : quand la valeur
+// FORMATÉE ressemble à « 2.02612E+11 » (ID numérique long affiché en « Standard ») et
+// que la valeur BRUTE est un entier fini, on reconstruit l'entier complet plutôt que
+// la forme tronquée à 6 chiffres significatifs. Sinon on garde le texte formaté (dates,
+// codes, décimaux… inchangés).
+function cellTexte(fVal, rVal) {
+  const s = String(fVal != null ? fVal : '').trim();
+  if (/^[+-]?\d+(?:\.\d+)?[eE][+-]?\d+$/.test(s) &&
+      typeof rVal === 'number' && isFinite(rVal) && Number.isInteger(rVal) &&
+      Math.abs(rVal) < 1e21) {
+    return rVal.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
+  }
+  return s;
 }
 
 // Colonnes attendues d'un export GRP STATBEL
@@ -6949,7 +6973,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '215';
+const APP_VERSION = '216';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
