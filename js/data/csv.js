@@ -32,6 +32,8 @@ export const CHAMPS_IMPORT = [
   ['taille_menage',  'Taille ménage',   ['taille_menage','taille_ménage','household_size','taille','menage','ménage']],
   ['nb_cibles',      'Cibles ≥15',      ['nb_cibles','members_15plus','targets_15','cibles_15','nb_15']],
   ['collect_method', 'Méthode de collecte', ['cd_wsh_clct_mthd','collect_method','methode_collecte','méthode_collecte','collecte','collection_method']],
+  ['web_user_id',    'Identifiant web',  ['tx_web_user_id','web_user_id','user_id','login','identifiant']],
+  ['web_user_pwd',   'Mot de passe web', ['tx_web_user_pswrd','web_user_pwd','password','mot_de_passe','pwd']],
   ['gsm',            'Téléphone',       ['gsm','tel','telephone','phone','gsm_tel','mobile_number']],
   ['email',          'Email',           ['email','mail','e_mail']],
   ['history',        'Historique',      ['history','historique']],
@@ -153,6 +155,8 @@ export function parseCSV(text) {
       taille_menage:  map.taille_menage>=0 ? (parseInt(cols[map.taille_menage])||null) : null,
       nb_cibles:      map.nb_cibles>=0 ? (parseInt(cols[map.nb_cibles])||null) : null,
       collect_method: g(cols,map.collect_method) || null,   // CATI/CAWI (issu du Convertisseur, CD_WSH_CLCT_MTHD)
+      web_user_id:    g(cols,map.web_user_id)  || null,      // accès web CAWI (TX_WEB_USER_ID) — donnée perso, reste sur l'appareil
+      web_user_pwd:   g(cols,map.web_user_pwd) || null,      // accès web CAWI (TX_WEB_USER_PSWRD) — donnée perso, reste sur l'appareil
       gsm:            g(cols,map.gsm),
       email:          g(cols,map.email),
       ...(histArr.length ? { historique: histArr } : {}),
@@ -195,7 +199,7 @@ export function sepCSVexport() {
 }
 
 export function genererCSV() {
-  const rows = [['order','first_name','last_name','address','status','interview_date','appointment','sex','birth_date','age','birth_country','nationality','marital_status','household_size','members_15plus','CD_WSH_CLCT_MTHD','phone','email','notes','history','lat','lng']];
+  const rows = [['order','first_name','last_name','address','status','interview_date','appointment','sex','birth_date','age','birth_country','nationality','marital_status','household_size','members_15plus','CD_WSH_CLCT_MTHD','TX_WEB_USER_ID','TX_WEB_USER_PSWRD','phone','email','notes','history','lat','lng']];
   contacts().forEach(c => {
     const cc = coordsCache(c.adresse);
     // Historique sérialisé : « status@date | status@date » (statut canonique EN)
@@ -210,7 +214,7 @@ export function genererCSV() {
       csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
       csvCell(c.statut||statutDefaut()), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
       csvCell(c.birth_date||''), csvCell(c.age||''), csvCell(c.birth_country||''), csvCell(c.nationality||''),
-      csvCell(c.marital_status||''), csvCell(c.taille_menage||''), csvCell(c.nb_cibles||''), csvCell(c.collect_method||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||''),
+      csvCell(c.marital_status||''), csvCell(c.taille_menage||''), csvCell(c.nb_cibles||''), csvCell(c.collect_method||''), csvCell(c.web_user_id||''), csvCell(c.web_user_pwd||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||''),
       csvCell(hist), csvCell(cc?cc.lat:''), csvCell(cc?cc.lng:'')
     ]);
   });
