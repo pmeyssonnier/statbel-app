@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Interviews — rappel e-mail / SMS pour les contacts CATI/CAWI** (Interviews 3.39,
+  SW `statbel-v296`) : dans la fiche d'un contact dont la méthode est CATI ou CAWI, deux
+  boutons **✉️ Rappel** (mailto:) et **💬 Rappel** (sms:) ouvrent l'appli mail/SMS de
+  l'appareil avec un message prérempli invitant à compléter l'enquête. Pour le **CAWI**, le
+  message inclut le **lien du portail**, l'**identifiant** et le **mot de passe** d'accès web
+  du ménage ; pour le **CATI**, un simple rappel de disponibilité (avec le RDV s'il existe).
+  L'import reconnaît désormais et conserve (round-trip) les colonnes **`TX_WEB_USER_ID`** et
+  **`TX_WEB_USER_PSWRD`** du CSV « cibles » du Convertisseur (identifiants = données perso,
+  jamais versionnées). Nouveau réglage **« Lien enquête web (CAWI) »** (Paramètres), préréglé
+  sur le portail LFS 2026. Aucun envoi automatique : rien ne quitte l'appareil sans action de
+  l'utilisateur. Nouveau test `tests/rappel.test.js`.
+
 ### Modifié
 - **Interviews — téléphone affiché au format `+32 xxx xx xx xx`** (Interviews 3.38,
   SW `statbel-v295`) : les numéros importés (souvent bruts, ex. `465812582`) sont

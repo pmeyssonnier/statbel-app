@@ -286,6 +286,8 @@
   .btn-cancel-edit { background:var(--badge-bg); color:var(--text); border:1px solid var(--border); padding:8px 12px; border-radius:8px; font-size:13px; cursor:pointer; }
   .btn-vcard { background:#e3f2fd; color:#1a237e; border:1px solid #90caf9; padding:8px 12px; border-radius:8px; font-size:13px; cursor:pointer; white-space:nowrap; }
   .btn-vcard:hover { background:#bbdefb; }
+  .btn-rappel { background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; padding:8px 12px; border-radius:8px; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .btn-rappel:hover { background:#c8e6c9; }
   .btn-edit {
     position: absolute; top: 50%; right: 0; transform: translateY(-50%);
     background: transparent; color: var(--text3);

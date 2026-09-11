@@ -15,7 +15,7 @@
 import { esc, formaterGsm, telBE, calcAge, todayStr, nowHHMM,
          dateFrToISO, dateISOToFr, composeAdresse, parseAdresse,
          correspondRecherche } from '../core/util.js';
-import { t, tPlural, nomJourCourt } from '../core/i18n.js';
+import { t, tf, tPlural, nomJourCourt } from '../core/i18n.js';
 import { statutLabel, paysAffiche, etatCivilGenre, maritalCanon,
          MARITAL_I18N, PAYS_I18N } from '../data/canon.js';
 import { coordsCache } from '../data/idb.js';
@@ -191,6 +191,60 @@ export function methodeBadge(c) {
   return `<span class="badge">📋 ${esc(c.collect_method)}</span>`;
 }
 
+// Classe la méthode de collecte (mêmes regex que methodeBadge) → 'cawi' | 'cati' | ''.
+// Sert à décider si l'on propose un rappel et quel message composer.
+export function classerMethode(v) {
+  const u = String(v || '').toUpperCase();
+  if (/CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(u)) return 'cawi';
+  if (/CATI|T[ÉE]L|PHONE|TELEPH/.test(u))            return 'cati';
+  return '';
+}
+
+// Construit un message de rappel prérempli pour un contact CATI/CAWI.
+// Fonction PURE (aucun effet de bord) → testable : renvoie {subject, body, href}.
+// canal ∈ 'mail' | 'sms'. Le corps CAWI n'inclut que les lignes réellement
+// renseignées (lien configuré, identifiant, mot de passe) ; le CATI est un simple
+// rappel de disponibilité, sans identifiants web.
+export function construireRappel(c, canal) {
+  const m = classerMethode(c && c.collect_method);
+  const lignes = [ tf('rappel_hello', { name: (c && c.prenom) || '' }) ];
+  if (m === 'cawi') {
+    lignes.push(t('rappel_intro_cawi'));
+    const url = (settings.cawiUrl || '').trim();
+    if (url)          lignes.push(t('rappel_lbl_link')  + ' : ' + url);
+    if (c.web_user_id)  lignes.push(t('rappel_lbl_login') + ' : ' + c.web_user_id);
+    if (c.web_user_pwd) lignes.push(t('rappel_lbl_pwd')   + ' : ' + c.web_user_pwd);
+  } else {
+    lignes.push(t('rappel_intro_cati'));
+    if (c && c.rdv) lignes.push(tf('rappel_rdv', { rdv: c.rdv }));
+  }
+  lignes.push(t('rappel_thanks'));
+  const body    = lignes.filter(Boolean).join('\n');
+  const subject = t(m === 'cawi' ? 'rappel_subject_cawi' : 'rappel_subject_cati');
+  let href = '';
+  if (canal === 'mail') {
+    href = 'mailto:' + encodeURIComponent(c.email || '').replace(/%40/g, '@')
+         + '?subject=' + encodeURIComponent(subject)
+         + '&body='    + encodeURIComponent(body);
+  } else {
+    const tb  = c.gsm ? telBE(c.gsm) : null;
+    const num = tb ? tb.e164 : (c.gsm || '');
+    // « ?&body= » : forme compatible iOS et Android (le sujet n'existe pas en SMS).
+    href = 'sms:' + num + '?&body=' + encodeURIComponent(body);
+  }
+  return { subject, body, href };
+}
+
+// Ouvre l'appli mail/SMS de l'appareil avec le rappel prérempli (aucune donnée
+// n'est transmise sans action de l'utilisateur).
+export function envoyerRappel(i, canal) {
+  const c = contacts()[i];
+  if (!c) return;
+  const { href } = construireRappel(c, canal);
+  window.location.href = href;
+  if (typeof afficherToast === 'function') afficherToast(t('toast_rappel'));
+}
+
 export function toggleEdit(i) {
   const el = document.getElementById('edit-'+i);
   // Édition paresseuse : le formulaire n'est construit qu'au premier clic,
@@ -283,6 +337,12 @@ export function buildEditForm(i) {
               placeholder="hh:mm" maxlength="5" oninput="this.value=formatHeureSaisie(this.value)" onchange="changerRdvDH(${i})"
               style="width:70px;border-color:#90caf9;background:#fff;text-align:center;">
           </div>
+        </div>` : ''}
+        ${classerMethode(c.collect_method) ? `
+        <div class="edit-row" style="flex-direction:row;gap:8px;flex-wrap:wrap;align-items:center">
+          <label style="flex-basis:100%">${t('rappel_titre')}</label>
+          ${c.email ? `<button type="button" class="btn-rappel" onclick="envoyerRappel(${i},'mail')" title="${esc(t('btn_rappel_mail'))}">✉️ ${esc(t('btn_rappel_mail'))}</button>` : ''}
+          ${c.gsm   ? `<button type="button" class="btn-rappel" onclick="envoyerRappel(${i},'sms')" title="${esc(t('btn_rappel_sms'))}">💬 ${esc(t('btn_rappel_sms'))}</button>` : ''}
         </div>` : ''}
         <div class="edit-btns">
           <button class="btn-cancel-edit" onclick="toggleEdit(${i})">${t('btn_close')}</button>
