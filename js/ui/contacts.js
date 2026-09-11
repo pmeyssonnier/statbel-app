@@ -12,7 +12,7 @@
  * formatDateJour, formatDateFrSaisie, afficherMarqueurs, vueActive,
  * markersLayer, maPosition, filtreActif, refreshSelect) sont globaux (pont).
  */
-import { esc, formaterGsm, calcAge, todayStr, nowHHMM,
+import { esc, formaterGsm, telBE, calcAge, todayStr, nowHHMM,
          dateFrToISO, dateISOToFr, composeAdresse, parseAdresse,
          correspondRecherche } from '../core/util.js';
 import { t, tPlural, nomJourCourt } from '../core/i18n.js';
@@ -369,7 +369,7 @@ export function rendu() {
     const badges = [];
     const mb = methodeBadge(c);
     if (mb)      badges.push(mb);                 // méthode CATI/CAWI en tête des canaux de contact
-    if (c.gsm)   badges.push(`<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>`);
+    if (c.gsm)   { const tb = telBE(c.gsm); badges.push(`<a class="badge badge-tel" href="tel:${esc(tb?tb.e164:c.gsm)}">📞 ${esc(tb?tb.disp:c.gsm)}</a>`); }
     if (c.email) badges.push(`<a class="badge badge-mail" href="mailto:${esc(c.email)}">✉️ ${esc(c.email)}</a>`);
     // Date associée au statut : RDV (si statut « rendez-vous ») sinon date d'action
     const dateStatut = (c.rdv && def.rdv) ? '📅 ' + formatRdv(c.rdv) : (c.date ? formatDateJour(c.date) : '');
@@ -522,7 +522,7 @@ export function buildRdvCard(c, i, today, def) {
       <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank">📍 ${esc(c.adresse)}</a>
       ${distHtml}
     </div>
-    ${(() => { const mb = methodeBadge(c); const tel = c.gsm ? `<a class="badge badge-tel" href="tel:${esc(c.gsm)}">📞 ${esc(c.gsm)}</a>` : ''; return (mb || tel) ? `<div class="card-badges" style="margin-top:4px">${mb}${tel}</div>` : ''; })()}
+    ${(() => { const mb = methodeBadge(c); const tb = c.gsm ? telBE(c.gsm) : null; const tel = c.gsm ? `<a class="badge badge-tel" href="tel:${esc(tb?tb.e164:c.gsm)}">📞 ${esc(tb?tb.disp:c.gsm)}</a>` : ''; return (mb || tel) ? `<div class="card-badges" style="margin-top:4px">${mb}${tel}</div>` : ''; })()}
     ${c.notes ? `<div style="margin-top:6px;font-size:12px;color:var(--text3);">📝 ${esc(c.notes)}</div>` : ''}
     ${buildHistoriqueHTML(c, i)}`;
   return div;

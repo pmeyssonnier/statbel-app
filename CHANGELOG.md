@@ -13,6 +13,11 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Interviews — téléphone affiché au format `+32 xxx xx xx xx`** (Interviews 3.38,
+  SW `statbel-v295`) : les numéros importés (souvent bruts, ex. `465812582`) sont
+  formatés à l'affichage (vues Liste, Agenda, popup carte) via `telBE()` — mobile
+  groupé 3-2-2-2, fixe 2-2-2-2, préfixes `0`/`32`/`0032` tolérés ; le lien `tel:`
+  utilise l'E.164 `+32…`. Valeur stockée inchangée (formatage à l'affichage seul).
 - **Interviews — pastille méthode de collecte repositionnée** (Interviews 3.37,
   SW `statbel-v294`) : CATI/CAWI quitte la ligne démographique (où elle passait à la
   ligne) pour devenir une pastille dédiée sur la ligne des canaux de contact

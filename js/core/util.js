@@ -179,6 +179,25 @@ export function formaterGsm(val) {
   return '+' + d.slice(0,2) + ' ' + d.slice(2,5) + ' ' + d.slice(5,7) + ' ' + d.slice(7,9) + ' ' + d.slice(9,11);
 }
 
+// Téléphone belge (affichage) → { e164:'+32…' (lien tel:), disp:'+32 xxx xx xx xx' }.
+// Tolérant : chiffres seuls ; préfixe 0032 / 32 / 0 géré ; 9 chiffres nationaux
+// (mobile) groupés 3-2-2-2, 8 (fixe) 2-2-2-2, sinon national tel quel. Renvoie
+// null si vide. Aligné sur telBE() du Convertisseur.
+export function telBE(raw) {
+  let d = String(raw || '').replace(/\D/g, '');
+  if (!d) return null;
+  if (d.startsWith('0032')) d = d.slice(4);
+  else if (d.startsWith('32')) d = d.slice(2);
+  else if (d.startsWith('0'))  d = d.slice(1);
+  if (!d) return null;
+  const e164 = '+32' + d;
+  let disp;
+  if (d.length === 9)      disp = `+32 ${d.slice(0,3)} ${d.slice(3,5)} ${d.slice(5,7)} ${d.slice(7,9)}`;
+  else if (d.length === 8) disp = `+32 ${d.slice(0,2)} ${d.slice(2,4)} ${d.slice(4,6)} ${d.slice(6,8)}`;
+  else                     disp = '+32 ' + d;
+  return { e164, disp };
+}
+
 /** Insère les ':' pendant la saisie de l'heure : 0930 → 09:30 */
 export function formatHeureSaisie(v) {
   const d = (v || '').replace(/\D/g, '').slice(0, 4);
