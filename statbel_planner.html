@@ -1850,6 +1850,13 @@ function estFichierLFS(headers) {
       && h.some(x => x.includes('start_interrogation_1') || x.includes('start_interro_1'));
 }
 
+// Anti-doublon : si un planning du même nom existe déjà, on réutilise son id
+// (ses données sont alors REMPLACÉES, pas dupliquées) ; sinon on crée un id neuf.
+function idPourPlanning(nom) {
+  const existant = Object.values(_plannings).find(p => p.nom === nom);
+  return existant ? existant.id : 'plan_' + Date.now();
+}
+
 // Parse un fichier LFS GRP_APPEL → index .grp (code → {p,c,q,i:[[sem,start,stop]…]}) + lignes longues
 function importerPlanningLFS(nomFichier) {
   const idx = {}; _mapHeaders.forEach((h, i) => { idx[sansAccent(h)] = i; });
@@ -1873,15 +1880,17 @@ function importerPlanningLFS(nomFichier) {
     grp[code] = { p, c, q, i };
   });
   if (!rows.length) { alert('Aucun groupe lisible dans ce fichier LFS.'); return; }
-  const nom = nomFichier.replace(/\.[^.]+$/, '');
-  const id = 'plan_' + Date.now();
-  _plannings[id] = { id, nom: nom + ' — EFT / LFS', type: 'EFT / LFS', rows, grp, embedded: false };
+  const nomComplet = nomFichier.replace(/\.[^.]+$/, '') + ' — EFT / LFS';
+  const id = idPourPlanning(nomComplet);            // réutilise l'id existant → pas de doublon
+  const remplace = !!_plannings[id];
+  _plannings[id] = { id, nom: nomComplet, type: 'EFT / LFS', rows, grp, embedded: false };
   sauverPlanningsImportes();
   _planActif = id;
   remplirSelecteurPlanning();
   appliquerPlanningActif();
   filtrerPlanning();
   rafraichirAnnexesPlanning();
+  if (remplace && typeof afficherToast === 'function') afficherToast('🔄 Planning existant mis à jour (données remplacées).');
 }
 
 // Après import/suppression : le Planner (et, via le stockage partagé, l'annexe
@@ -1953,14 +1962,18 @@ function confirmerMappingPlanning() {
     };
   }).filter(Boolean);
   if (!rows.length) { err.textContent = 'Aucune ligne avec une commune.'; err.style.display = 'block'; return; }
-  const id = 'plan_' + Date.now();
-  _plannings[id] = { id, nom: nom + ' — ' + type, type, rows, embedded: false };
+  const nomComplet = nom + ' — ' + type;
+  const id = idPourPlanning(nomComplet);            // réutilise l'id existant → pas de doublon
+  const remplace = !!_plannings[id];
+  _plannings[id] = { id, nom: nomComplet, type, rows, embedded: false };
   sauverPlanningsImportes();
   _planActif = id;
   remplirSelecteurPlanning();
   appliquerPlanningActif();
   filtrerPlanning();
   fermerMappingPlanning();
+  rafraichirAnnexesPlanning();
+  if (remplace && typeof afficherToast === 'function') afficherToast('🔄 Planning existant mis à jour (données remplacées).');
 }
 
 function majCommunesPlan() {
@@ -2998,7 +3011,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '187';
+const APP_VERSION = '188';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

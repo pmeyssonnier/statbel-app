@@ -89,6 +89,28 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(imp.planSelectHas, 'Planner : sélecteur de gestion liste le planning importé');
   A(imp.selOptions.some(t => /EFT \/ LFS/.test(t)), 'Planner : sélecteur d\'agenda liste le planning importé');
 
+  // ── 2b. Anti-doublon : réimporter le MÊME fichier remplace les données ──
+  //         (pas de nouvelle entrée) ; on restaure ensuite l'état d'origine.
+  const dedup = await p.evaluate((args) => {
+    const [headers, orig] = args;
+    // Ligne modifiée (même code 12345) : commune/quartier différents.
+    const modif = orig.slice(); modif[2] = 'Ixelles / Elsene'; modif[3] = 'FLAGEY';
+    _mapHeaders = headers.slice(); _mapData = [modif];
+    importerPlanningLFS('LFS_IESS_GRP_APPEL_Y2026Q1_FR.xlsx');   // même nom de fichier
+    const a = JSON.parse(localStorage.getItem('plannings') || '[]');
+    const ga = (a[0] && a[0].grp && a[0].grp['12345']) || {};
+    // Restaure les données d'origine (pour la suite du test).
+    _mapHeaders = headers.slice(); _mapData = [orig.slice()];
+    importerPlanningLFS('LFS_IESS_GRP_APPEL_Y2026Q1_FR.xlsx');
+    const b = JSON.parse(localStorage.getItem('plannings') || '[]');
+    const gb = (b[0] && b[0].grp && b[0].grp['12345']) || {};
+    return { countAfterReimport: a.length, communeReplaced: ga.c, countAfterRestore: b.length, communeRestored: gb.c };
+  }, [LFS_HEADERS, LFS_ROW]);
+  A(dedup.countAfterReimport === 1, `réimport du même fichier : pas de doublon (toujours 1 entrée, got ${dedup.countAfterReimport})`);
+  A(dedup.communeReplaced === 'Ixelles / Elsene', `réimport : données remplacées (commune "${dedup.communeReplaced}")`);
+  A(dedup.countAfterRestore === 1 && dedup.communeRestored === 'Bruxelles / Brussel',
+    'réimport : toujours 1 entrée après restauration des données d\'origine');
+
   // ── 3. Convertisseur (même origine) : le lien GRP↔LFS est lisible ───────
   await p.goto(srv.url + '/statbel_converter.html', { waitUntil: 'load' });
   await p.waitForTimeout(300);
