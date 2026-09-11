@@ -89,6 +89,56 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(imp.planSelectHas, 'Planner : sélecteur de gestion liste le planning importé');
   A(imp.selOptions.some(t => /EFT \/ LFS/.test(t)), 'Planner : sélecteur d\'agenda liste le planning importé');
 
+  // ── 2b. Anti-doublon PAR CONTENU : réimporter les mêmes codes de groupes
+  //         via un fichier RENOMMÉ remplace l'entrée (pas de doublon) et met à
+  //         jour le libellé. On restaure ensuite le nom + les données d'origine.
+  const dedup = await p.evaluate((args) => {
+    const [headers, orig] = args;
+    // Fichier renommé (libellé plus court) + commune modifiée, MÊME code 12345.
+    const modif = orig.slice(); modif[2] = 'Ixelles / Elsene'; modif[3] = 'FLAGEY';
+    _mapHeaders = headers.slice(); _mapData = [modif];
+    importerPlanningLFS('Q1.xlsx');                              // nom différent, mêmes codes
+    const a = JSON.parse(localStorage.getItem('plannings') || '[]');
+    const A0 = a[0] || {};
+    // Restaure nom + données d'origine (réimport du fichier initial).
+    _mapHeaders = headers.slice(); _mapData = [orig.slice()];
+    importerPlanningLFS('LFS_IESS_GRP_APPEL_Y2026Q1_FR.xlsx');
+    const b = JSON.parse(localStorage.getItem('plannings') || '[]');
+    const B0 = b[0] || {};
+    return {
+      countAfterRename: a.length, nomAfterRename: A0.nom,
+      communeReplaced: (A0.grp && A0.grp['12345'] || {}).c,
+      countAfterRestore: b.length, nomRestored: B0.nom,
+      communeRestored: (B0.grp && B0.grp['12345'] || {}).c,
+    };
+  }, [LFS_HEADERS, LFS_ROW]);
+  A(dedup.countAfterRename === 1, `fichier renommé, mêmes codes : pas de doublon (1 entrée, got ${dedup.countAfterRename})`);
+  A(dedup.nomAfterRename === 'Q1 — EFT / LFS', `renommage : le libellé suit le nouveau nom (got "${dedup.nomAfterRename}")`);
+  A(dedup.communeReplaced === 'Ixelles / Elsene', `renommage : données remplacées (commune "${dedup.communeReplaced}")`);
+  A(dedup.countAfterRestore === 1 && dedup.nomRestored === NOM_ATTENDU && dedup.communeRestored === 'Bruxelles / Brussel',
+    'restauration : toujours 1 entrée, nom + données d\'origine rétablis');
+
+  // ── 2c. Renommer le planning : met à jour le libellé (pas de doublon) ───
+  //         puis on restaure le nom d'origine pour la suite du test.
+  const ren = await p.evaluate((nomOrig) => {
+    const origPrompt = window.prompt;
+    window.prompt = () => 'Bruxelles Q1 (court)';
+    renommerPlanningImporte();
+    const stored = JSON.parse(localStorage.getItem('plannings') || '[]');
+    const out = {
+      nom: (stored[0] || {}).nom, count: stored.length,
+      optShort: [...document.getElementById('planSelect').options].some(o => /court/.test(o.textContent)),
+      agendaShort: [...document.getElementById('selPlanning').options].some(o => /court/.test(o.textContent)),
+    };
+    window.prompt = () => nomOrig; renommerPlanningImporte(); window.prompt = origPrompt;   // restaure
+    out.nomRestored = (JSON.parse(localStorage.getItem('plannings') || '[]')[0] || {}).nom;
+    return out;
+  }, NOM_ATTENDU);
+  A(ren.nom === 'Bruxelles Q1 (court)', `renommer : libellé mis à jour (got "${ren.nom}")`);
+  A(ren.count === 1, 'renommer : pas de nouvelle entrée (toujours 1)');
+  A(ren.optShort && ren.agendaShort, 'renommer : sélecteurs Planning + Agenda reflètent le nouveau nom');
+  A(ren.nomRestored === NOM_ATTENDU, 'renommer : nom d\'origine rétabli pour la suite du test');
+
   // ── 3. Convertisseur (même origine) : le lien GRP↔LFS est lisible ───────
   await p.goto(srv.url + '/statbel_converter.html', { waitUntil: 'load' });
   await p.waitForTimeout(300);

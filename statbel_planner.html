@@ -116,6 +116,24 @@ header{
   display:inline-flex;align-items:center;justify-content:center;padding:0;
 }
 .btn-ico:hover{background:rgba(255,255,255,.25)}
+/* Onglets dans le bandeau (icône seule + libellé au survol) — comme Interviews/Convertisseur */
+.view-toggle{display:flex;gap:3px}
+.btn-ico.active{background:#fff;color:var(--chrome);font-weight:bold}
+.btn-ico[data-tip]{position:relative}
+.btn-ico[data-tip]::after{
+  content:attr(data-tip);position:absolute;top:calc(100% + 18px);left:50%;
+  transform:translateX(-50%);background:rgba(30,30,30,.92);color:#fff;
+  padding:3px 9px;border-radius:6px;font-size:11px;font-weight:normal;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:400;
+}
+.btn-ico[data-tip]::before{
+  content:"";position:absolute;top:calc(100% + 12px);left:50%;
+  transform:translateX(-50%);border:5px solid transparent;
+  border-bottom-color:rgba(30,30,30,.92);opacity:0;pointer-events:none;
+  transition:opacity .15s;z-index:400;
+}
+.btn-ico[data-tip]:hover::after,.btn-ico[data-tip]:hover::before,
+.btn-ico[data-tip]:focus-visible::after,.btn-ico[data-tip]:focus-visible::before{opacity:1}
 .kebab-wrap{position:relative}
 .kebab-menu{
   display:none;position:absolute;right:0;top:calc(100% + 6px);
@@ -341,14 +359,7 @@ select[multiple]{height:120px}
 .modal{ background:var(--card); color:var(--ink); border-radius:12px; max-width:560px; width:100%;
   padding:18px 20px; box-shadow:0 8px 30px rgba(0,0,0,0.3); }
 .modal h2{ font-size:16px; color:var(--accent); margin-bottom:4px; }
-/* ── Onglets principaux du module (Planning / Agenda / Candidature) ── */
-.tabbar{ display:flex; gap:6px; margin:0 0 16px; border-bottom:2px solid var(--border); flex-wrap:wrap; }
-.tab{ appearance:none; border:none; background:none; font:inherit; cursor:pointer;
-  padding:10px 18px; font-size:14px; font-weight:600; color:var(--ink2);
-  border-bottom:3px solid transparent; margin-bottom:-2px; border-radius:8px 8px 0 0; }
-.tab:hover:not(.active){ background:var(--card2); color:var(--ink); }
-.tab.active{ color:var(--accent); border-bottom-color:var(--accent); }
-.tab .tab-ico{ margin-right:6px; }
+/* ── Panneaux d'onglets (les boutons d'onglet vivent dans le bandeau, #hdrTabs) ── */
 .tabpane[hidden]{ display:none; }
 .tab-empty{ font-size:13px; color:var(--ink3); line-height:1.6; padding:6px 2px; }
 /* ── Box « Communes choisies » éditable (onglet Candidature) ── */
@@ -381,6 +392,11 @@ select[multiple]{height:120px}
       <select id="selPlanning" onchange="onChangePlanning()" title="Trimestre / planning" style="display:none"></select>
     </div>
     <div class="header-col3">
+      <div class="view-toggle" id="hdrTabs" role="tablist" aria-label="Sections du planner">
+        <button class="btn-ico active" id="tab-planning"    role="tab" aria-selected="true"  aria-controls="pane-planning"    data-tip="Planning"    aria-label="Planning"    onclick="setTab('planning')">🗺️</button>
+        <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      aria-label="Agenda"      onclick="setTab('agenda')">📅</button>
+        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝</button>
+      </div>
       <span class="hdr-status" id="hdrCount" title="Groupes sélectionnés">0</span>
       <div class="kebab-wrap">
         <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" aria-label="Plus d'options">⋮</button>
@@ -403,12 +419,7 @@ select[multiple]{height:120px}
 
 <main class="main" id="contenu" role="main" tabindex="-1">
 
-  <!-- Onglets du module : Planning (import + carte) · Agenda (vues + exports) · Candidature. -->
-  <div class="tabbar" role="tablist" aria-label="Sections du planner">
-    <button class="tab active" id="tab-planning" role="tab" aria-selected="true" aria-controls="pane-planning" onclick="setTab('planning')"><span class="tab-ico">🗺️</span>Planning</button>
-    <button class="tab" id="tab-agenda" role="tab" aria-selected="false" aria-controls="pane-agenda" onclick="setTab('agenda')"><span class="tab-ico">📅</span>Agenda</button>
-    <button class="tab" id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" onclick="setTab('candidature')"><span class="tab-ico">📝</span>Candidature</button>
-  </div>
+  <!-- Onglets déplacés dans le bandeau (#hdrTabs) — voir <header>. -->
 
   <!-- ════ Onglet PLANNING : import / suppression + visualisation par quartiers ════ -->
   <section class="tabpane" id="pane-planning" role="tabpanel" aria-labelledby="tab-planning">
@@ -439,6 +450,7 @@ select[multiple]{height:120px}
       <label style="font-size:12px;color:var(--text2);font-weight:bold">Planning :</label>
       <select id="planSelect" onchange="chargerPlanningSelectionne()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-width:200px"></select>
       <button class="btn-reset" onclick="document.getElementById('planFileInput').click()">📥 Importer un planning</button>
+      <button class="btn-reset" id="planRenBtn" style="display:none" onclick="renommerPlanningImporte()">✏️ Renommer</button>
       <button class="btn-reset" id="planDelBtn" style="display:none" onclick="supprimerPlanningImporte()">🗑️ Supprimer</button>
       <input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display:none" onchange="importerPlanningFichier(this)">
     </div>
@@ -1685,6 +1697,7 @@ function majBadgePlanning() {
 function appliquerPlanningActif() {
   const p = _plannings[_planActif];
   document.getElementById('planDelBtn').style.display = p ? '' : 'none';
+  document.getElementById('planRenBtn').style.display = p ? '' : 'none';
   if (!p) {
     _planRows = [];
     document.getElementById('planProvince').innerHTML = `<option value="">${esc('Toutes les provinces')}</option>`;
@@ -1710,6 +1723,18 @@ function chargerPlanningSelectionne() {
   _planActif = document.getElementById('planSelect').value;
   appliquerPlanningActif();
   filtrerPlanning();
+}
+
+// Renomme le libellé du planning actif (le contenu/les codes sont inchangés).
+function renommerPlanningImporte() {
+  const p = _plannings[_planActif];
+  if (!p) return;
+  const nouveau = (prompt('Nouveau nom du planning :', p.nom) || '').trim();
+  if (!nouveau || nouveau === p.nom) return;
+  p.nom = nouveau;
+  sauverPlanningsImportes();
+  remplirSelecteurPlanning();
+  rafraichirAnnexesPlanning();   // met à jour le sélecteur d'agenda + l'annexe Convertisseur
 }
 
 function supprimerPlanningImporte() {
@@ -1839,6 +1864,24 @@ function estFichierLFS(headers) {
       && h.some(x => x.includes('start_interrogation_1') || x.includes('start_interro_1'));
 }
 
+// Signature de CONTENU d'un planning = ensemble trié de ses codes de groupes.
+// Permet de reconnaître un même planning même si le fichier a été renommé.
+function signaturePlanning(rows) {
+  return [...new Set((rows || []).map(r => String(r.code || '').trim()).filter(Boolean))].sort().join(',');
+}
+
+// Anti-doublon : on reconnaît un planning déjà importé PAR SON CONTENU (mêmes codes
+// de groupes) — insensible au renommage du fichier. À défaut de codes (import
+// générique sans colonne groupe), repli sur l'égalité du nom. Si trouvé, on réutilise
+// son id → les données (et le libellé) sont REMPLACÉES, pas dupliquées ; sinon id neuf.
+function idPourPlanning(nom, rows) {
+  const sig = signaturePlanning(rows);
+  const existant = Object.values(_plannings).find(p =>
+    sig ? signaturePlanning(p.rows) === sig
+        : p.nom === nom);
+  return existant ? existant.id : 'plan_' + Date.now();
+}
+
 // Parse un fichier LFS GRP_APPEL → index .grp (code → {p,c,q,i:[[sem,start,stop]…]}) + lignes longues
 function importerPlanningLFS(nomFichier) {
   const idx = {}; _mapHeaders.forEach((h, i) => { idx[sansAccent(h)] = i; });
@@ -1862,15 +1905,17 @@ function importerPlanningLFS(nomFichier) {
     grp[code] = { p, c, q, i };
   });
   if (!rows.length) { alert('Aucun groupe lisible dans ce fichier LFS.'); return; }
-  const nom = nomFichier.replace(/\.[^.]+$/, '');
-  const id = 'plan_' + Date.now();
-  _plannings[id] = { id, nom: nom + ' — EFT / LFS', type: 'EFT / LFS', rows, grp, embedded: false };
+  const nomComplet = nomFichier.replace(/\.[^.]+$/, '') + ' — EFT / LFS';
+  const id = idPourPlanning(nomComplet, rows);      // reconnu par contenu → pas de doublon
+  const remplace = !!_plannings[id];
+  _plannings[id] = { id, nom: nomComplet, type: 'EFT / LFS', rows, grp, embedded: false };
   sauverPlanningsImportes();
   _planActif = id;
   remplirSelecteurPlanning();
   appliquerPlanningActif();
   filtrerPlanning();
   rafraichirAnnexesPlanning();
+  if (remplace && typeof afficherToast === 'function') afficherToast('🔄 Planning existant mis à jour (données remplacées).');
 }
 
 // Après import/suppression : le Planner (et, via le stockage partagé, l'annexe
@@ -1942,14 +1987,18 @@ function confirmerMappingPlanning() {
     };
   }).filter(Boolean);
   if (!rows.length) { err.textContent = 'Aucune ligne avec une commune.'; err.style.display = 'block'; return; }
-  const id = 'plan_' + Date.now();
-  _plannings[id] = { id, nom: nom + ' — ' + type, type, rows, embedded: false };
+  const nomComplet = nom + ' — ' + type;
+  const id = idPourPlanning(nomComplet, rows);      // reconnu par contenu → pas de doublon
+  const remplace = !!_plannings[id];
+  _plannings[id] = { id, nom: nomComplet, type, rows, embedded: false };
   sauverPlanningsImportes();
   _planActif = id;
   remplirSelecteurPlanning();
   appliquerPlanningActif();
   filtrerPlanning();
   fermerMappingPlanning();
+  rafraichirAnnexesPlanning();
+  if (remplace && typeof afficherToast === 'function') afficherToast('🔄 Planning existant mis à jour (données remplacées).');
 }
 
 function majCommunesPlan() {
@@ -2987,7 +3036,7 @@ function candSaveSig(){
 candLoadInfos();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '186';
+const APP_VERSION = '190';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
