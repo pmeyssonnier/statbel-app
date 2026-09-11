@@ -12,6 +12,26 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Déplacé
+- **Onglet « Planning » : Convertisseur → Planner** (Convertisseur 215, Planner 184,
+  SW `statbel-v280`). L'import et la gestion des plannings trimestriels LFS
+  (`LFS_IESS_GRP_APPEL_Y2026Qx_FR`) — sélecteur, filtres province/commune/quartier,
+  carte Leaflet, vérificateur d'adresse par géocodage régional (UrbIS/SPW/Geopunt +
+  Nominatim) et tableau de référence — quittent le Convertisseur pour le module
+  **Planning Statbel** (`statbel_planner.html`), où vivait déjà la consultation
+  (agenda, candidature). Le Planner reçoit la CSP élargie (géocodeurs en `connect-src`,
+  tuiles en `img-src https:`) et Leaflet vendorisé (déjà en cache, aucune nouvelle
+  ressource servie). Textes portés en FR en dur (le Planner n'a pas de `t()`) ;
+  `communeRegion()` (table REFNIS ~2 800 lignes) remplacée par une résolution allégée
+  par code province + repli Bruxelles.
+  **Lien GRP↔LFS conservé** : l'import écrit toujours l'index `grp` dans le stockage
+  partagé `localStorage['plannings']`, que le Convertisseur relit
+  (`chargerRegistrePlannings`/`chercherPlanning`/`planningPourGRP`) pour relier chaque
+  `GRP_2026xxxxx` au planning importé dans son annexe « Aperçu » — le Convertisseur
+  garde cette couche de lecture mais n'a plus d'onglet Planning. Nouveau test bout-en-bout
+  `tests/planning-move.test.js`, branche Planner ajoutée à `tests/csp.test.js` ;
+  suite complète 25/25 verte.
+
 ### Modifié
 - **Convertisseur (210) — refactorisation interne du KPI « Indemnité potentielle »**
   (SW `statbel-v272`), sans changement de comportement (`/simplify` sur la PR #136) :

@@ -139,7 +139,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.reducedMotion, 'règle @media prefers-reduced-motion présente');
   A(r.text3Contrast >= 4.5, `texte tertiaire (--text3) ≥ 4,5:1 sur blanc → ${r.text3Contrast ? r.text3Contrast.toFixed(2) : r.text3Contrast}:1`);
   A(r.touchRule, 'boutons ✕ de recherche : cible tactile ≥ 24 px (règle CSS)');
-  A(r.modalCount === 5, `5 modales en role="dialog" → ${r.modalCount}`);
+  A(r.modalCount === 4, `4 modales en role="dialog" → ${r.modalCount}`);
   A(r.modalAria, 'modales : aria-modal="true" + aria-labelledby vers un titre existant');
   A(r.barRole === 'button' && r.barTab === '0', `barre de drill-down focusable + role button → role=${r.barRole} tabindex=${r.barTab}`);
   A(r.cibleTab === '0' && r.cibleKeepsRow, 'ligne ménage focusable (tabindex) en conservant sa sémantique de ligne');
