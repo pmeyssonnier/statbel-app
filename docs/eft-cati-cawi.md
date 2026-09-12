@@ -5,6 +5,15 @@
 > **processus**, jamais des données de ménage. Complète `docs/architecture-convertisseur.md`
 > (technique) et le skill `statbel-data` (n° de groupe, référent/cible, provinces, NIS).
 
+> **⚠️ Mise à jour EFT 2026 — accès web par identifiants.** Ce document décrit le processus
+> **EFT 2025**, où l'accès CAWI / feuille de contact se faisait par un **lien propre à chaque
+> ménage, sans login**. **Depuis 2026, l'accès web se fait par identifiants** : un
+> **identifiant** (`TX_WEB_USER_ID`) et un **mot de passe** (`TX_WEB_USER_PSWRD`) par ménage,
+> sur le portail `https://blaise.economie.fgov.be/lfspanel2026/`. Le **Convertisseur** importe
+> ces colonnes et les transmet au CSV ; **Interviews** les affiche et les inclut dans les
+> rappels e-mail/SMS aux ménages CAWI. Les mentions « sans login » ci-dessous valent donc pour
+> **2025** ; pour 2026, lire « identifiant + mot de passe ».
+
 ## Le panel : 4 vagues, deux modes
 
 L'EFT interroge chaque ménage sur **4 vagues**. La vague 1 est en face-à-face (CAPI) ;
@@ -39,9 +48,11 @@ en vague 4, l'essentiel du travail est du **suivi de complétion**, pas de l'int
 | Ménage, en autonomie (CAWI) | `https://statbel.statdata.be/b/LFSPanel2025` — **ne pas chercher via Google** |
 | Enquêteur (CATI) | `https://lfspanel.statdata.be/lfspanel/` |
 
-L'enquêteur utilise **la même application CAWI** que les ménages : pas d'identification
-par ménage, ni pour le questionnaire en ligne ni pour la feuille de contact — on y entre
-par le **lien propre à chaque ménage** depuis la liste.
+En **EFT 2025**, l'enquêteur utilisait **la même application CAWI** que les ménages : pas
+d'identification par ménage, ni pour le questionnaire en ligne ni pour la feuille de contact
+— on y entrait par le **lien propre à chaque ménage** depuis la liste. **Depuis 2026,
+l'accès web se fait par identifiant + mot de passe** par ménage (voir la note « Mise à jour
+EFT 2026 » ci-dessus), sur le portail `lfspanel2026`.
 
 Documents reçus par l'enquêteur : la **liste des ménages**, une **copie de la lettre**
 envoyée aux ménages, et le **bordereau**.
@@ -59,7 +70,8 @@ Puis, par ménage :
 - **préférence** de méthode d'interrogation (en ligne ou par téléphone) ;
 - **état d'avancement** du questionnaire ;
 - **résultat de la feuille de contact** ;
-- **lien vers le CAWI** et **lien vers la feuille de contact** (par ménage, sans login) ;
+- **accès au CAWI** et à la **feuille de contact**, par ménage (EFT 2025 : liens sans login ;
+  **EFT 2026 : identifiant + mot de passe web**, `TX_WEB_USER_ID` / `TX_WEB_USER_PSWRD`) ;
 - **centre** de rattachement : Bruxelles, Liège, Charleroi, Gand, Anvers.
 
 ### État d'avancement du questionnaire (4 valeurs)
@@ -104,8 +116,11 @@ pondération de l'**indice des prix à la consommation**.
 - **Le n° de vague fait partie de l'identité du lot**, au même titre que l'année, le
   trimestre et le groupe (cf. `AAAA-VSSGG` dans le skill `statbel-data`) ; la semaine de
   référence et la période du terrain encadrent le travail.
-- **Les liens par ménage sont sans login.** Un lien CAWI ou feuille de contact est donc un
-  secret de fait : s'il devait un jour transiter par nos apps, il se traite comme une
-  donnée personnelle — il reste sur l'appareil, jamais dans un export partagé.
+- **L'accès web par ménage est une donnée personnelle.** En **2025**, il s'agissait d'un
+  **lien propre à chaque ménage, sans login** ; **depuis 2026**, d'un **identifiant + mot de
+  passe** (`TX_WEB_USER_ID` / `TX_WEB_USER_PSWRD`). Dans les deux cas c'est un **secret de
+  fait** : le Convertisseur importe ces identifiants (round-trip à l'export) et Interviews les
+  inclut dans les rappels e-mail/SMS — ils **restent sur l'appareil**, jamais dans un export
+  partagé ni versionnés.
 - **Le Planner reste centré sur le face-à-face** (vague 1 / CAPI, déplacements, agenda) ;
   le CATI/CAWI est du travail « au bureau », sans itinéraire.
