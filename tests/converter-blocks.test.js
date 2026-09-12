@@ -84,6 +84,18 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     zoomCibles('1');
     out.chhDrill = !!document.getElementById('statsCiblesHHTM')
       && document.getElementById('statsCiblesHHDetail').innerHTML.length > 0;
+    // Ratio de dépendance : puces cliquables → treemap des nationalités de la tranche.
+    // « Actifs » (15–64) = 2 personnes (FRA 40, BEL 30).
+    out.dependChips = document.querySelectorAll('#statsDependDetail button[onclick^="zoomDepend"]').length;
+    zoomDepend('active');
+    out.dependDrill = !!document.querySelector('#statsDependTM #statsDependTM-tm')
+      && document.getElementById('statsDependTM').innerHTML.length > 0;
+    // Composition des ménages : puces cliquables → treemap (réf. du ménage).
+    // « Multi, avec mineur » = 1 ménage (hh1 : enfant 10 ans).
+    out.compoChips = document.querySelectorAll('#statsCompoHHDetail button[onclick^="zoomCompo"]').length;
+    zoomCompo('withminor');
+    out.compoDrill = !!document.querySelector('#statsCompoTM #statsCompoTM-tm')
+      && document.getElementById('statsCompoTM').innerHTML.length > 0;
     // Table ménage (accordéon) : drapeaux pays + icônes sexe/état civil (Unicode, hors-ligne)
     renderCibles(res.outCibles);
     const hhHtml = document.getElementById('bodyCibles').innerHTML;
@@ -130,6 +142,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.contactBars === 3, `complétude des contacts : 3 barres → ${r.contactBars}`);
   A(/≥15/.test(r.chhTitle || '') && /interroger|survey|ondervragen|befragende/i.test(r.chhTitle || ''), `titre « à interroger » avec seuil dynamique → « ${r.chhTitle} »`);
   A(r.chhClickable && r.chhDrill, 'barres « à interroger » cliquables → treemap des nationalités');
+  A(r.dependChips === 3 && r.dependDrill, `ratio de dépendance : 3 puces cliquables → treemap par nationalité → ${r.dependChips} puces`);
+  A(r.compoChips === 2 && r.compoDrill, `composition des ménages : puces cliquables → treemap par nationalité → ${r.compoChips} puces`);
   A(/interroger|survey|ondervragen|befragende/i.test(r.chhBarLabel) && !/cible|target/i.test(r.chhBarLabel), `libellé de barre « à interroger » (plus « cible ») → « ${r.chhBarLabel} »`);
   A(r.hhFlagBE && r.hhFlagTR, 'table ménage : drapeaux pays (🇧🇪 / 🇹🇷) devant naissance/nationalité');
   A(r.hhSexeM && r.hhSexeF, 'table ménage : icônes de sexe ♂ / ♀');
