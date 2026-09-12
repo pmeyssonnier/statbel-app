@@ -294,6 +294,10 @@ export function renduResume() {
 
   statutsCfg.forEach(s => {
     const nb  = totauxParStatut[s.label] || 0;
+    // Filtre méthode actif (CAPI/CATI/CAWI) : on masque les KPI des statuts absents
+    // de la méthode choisie (aucun contact) — ils ne la concernent pas. En vue
+    // « toutes méthodes », tout le vocabulaire de statuts reste affiché (0 compris).
+    if (methOK && !nb) return;
     const pct = grandTotal ? Math.round(nb / grandTotal * 100) : 0;
     kpiHtml += `
     <div class="kpi-card" style="border-top-color:${s.color}">
