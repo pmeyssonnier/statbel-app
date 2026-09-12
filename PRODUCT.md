@@ -84,4 +84,4 @@ Ces invariants priment sur toute considération esthétique ou de confort :
 - Skills `statbel-app` (workflow contributeur) et `statbel-data` (métier LFS :
   n° de groupe, référent/cible/ménage, provinces, codes NIS pays).
 - `docs/architecture-convertisseur.md` — cartographie en régions du Convertisseur.
-- Suite `tests/**` (Playwright headless) — comportement de référence, 18 suites.
+- Suite `tests/**` (Playwright headless) — comportement de référence.

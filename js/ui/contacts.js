@@ -221,7 +221,7 @@ export function construireRappel(c, canal) {
   lignes.push(t('rappel_thanks'));
   const body    = lignes.filter(Boolean).join('\n');
   const subject = t(m === 'cawi' ? 'rappel_subject_cawi' : 'rappel_subject_cati');
-  let href = '';
+  let href;
   if (canal === 'mail') {
     href = 'mailto:' + encodeURIComponent(c.email || '').replace(/%40/g, '@')
          + '?subject=' + encodeURIComponent(subject)
