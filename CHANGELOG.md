@@ -13,6 +13,12 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Documentation
+- **RGPD adaptée aux sorties de données** (SW `statbel-v300`) : les sections Confidentialité
+  du manuel et du README précisent désormais les **deux seules sorties de données, déclenchées
+  par l'utilisateur** — les **rappels e-mail/SMS** (l'app pré-remplit l'appli mail/SMS de
+  l'appareil, qui transmet le message et, en CAWI, l'identifiant + mot de passe) et le
+  **géocodage** (l'adresse est envoyée aux géocodeurs publics belges, le mode point GPS
+  restant local). Sous-titre du manuel ajusté (« …sauf action explicite de votre part »).
 - **Mode d'emploi + README actualisés** (SW `statbel-v298`) : le manuel illustré
   (`docs/manuel.html`) et le `README.md` documentent désormais les enquêtes **CATI/CAWI**
   (pastille de méthode, statuts propres à chaque enquête, rappel e-mail/SMS avec lien +

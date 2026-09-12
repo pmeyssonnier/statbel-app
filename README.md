@@ -134,8 +134,9 @@ XML tokenisé, ZIP + CRC32) :
 
 ## Confidentialité (RGPD)
 
-- Toutes les données restent **dans le navigateur** (IndexedDB / localStorage) — **aucun serveur**. Les **identifiants d'accès web** (login / mot de passe CAWI) sont des données personnelles : stockées sur l'appareil, jamais versionnées, transmises uniquement à l'appli mail/SMS que *vous* ouvrez.
-- Géocodage par **services publics belges** (UrbIS/CIRB · Bruxelles, SPW · Wallonie, Geopunt · Flandre ; OSM/Nominatim en repli) — pas de transfert hors UE.
+- Toutes les données restent **dans le navigateur** (IndexedDB / localStorage) — **aucun serveur, aucune analytics**. Les seules sorties de données sont les deux actions ci-dessous, **déclenchées par vous**.
+- **Rappels e-mail / SMS** : ouvrir un rappel ne fait que **pré-remplir** l'appli mail ou SMS *de votre appareil* — l'app n'envoie rien elle-même. Le message, et pour le **CAWI** l'**identifiant et le mot de passe** d'accès web du ménage, sont alors transmis à cette appli tierce puis au destinataire que vous choisissez. À n'utiliser que pour joindre la personne concernée.
+- **Géocodage** : lorsqu'une adresse est géocodée, **cette adresse** (donnée personnelle) est envoyée aux **services publics belges** (UrbIS/CIRB · Bruxelles, SPW · Wallonie, Geopunt · Flandre ; OSM/Nominatim en repli) — **pas de transfert hors UE**. Le mode de navigation par **point GPS** garde votre position sur l'appareil.
 - ⚠️ **Aucune donnée personnelle n'est versionnée** : `.gitignore` en **liste blanche stricte**
   (seuls le code des apps — HTML, `css/`, `js/`, `vendor/`, `tests/` —, les fichiers PWA,
   `README.md` et `.gitignore`). Les CSV / JSON / vCard / xlsx d'enquêtés sont exclus.

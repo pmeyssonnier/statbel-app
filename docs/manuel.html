@@ -416,11 +416,12 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
   <section id="rgpd" class="module">
     <div class="sec-head">
       <div class="sec-num">06</div>
-      <div class="t"><h2>🔒 Confidentialité (RGPD)</h2><div class="file">les données ne quittent jamais l'appareil</div></div>
+      <div class="t"><h2>🔒 Confidentialité (RGPD)</h2><div class="file">les données restent sur l'appareil, sauf action explicite de votre part</div></div>
     </div>
     <ul class="feat">
-      <li><span class="mk">▸</span><span>Toutes les données restent <b>dans le navigateur</b> (IndexedDB / localStorage) — aucun serveur, aucune analytics.</span></li>
-      <li><span class="mk">▸</span><span>Le <b>géocodage</b> passe par les services publics belges (UrbIS · Bruxelles, SPW · Wallonie, Geopunt · Flandre), avec OSM en repli — pas de transfert hors UE.</span></li>
+      <li><span class="mk">▸</span><span>Toutes les données restent <b>dans le navigateur</b> (IndexedDB / localStorage) — aucun serveur, aucune analytics. Les seules sorties de données sont les deux actions ci-dessous, <b>déclenchées par vous</b>.</span></li>
+      <li><span class="mk">✉️</span><span><b>Rappels e-mail / SMS</b> : ouvrir un rappel <b>pré-remplit</b> l'appli mail ou SMS <i>de votre appareil</i> — l'app n'envoie rien elle-même. Le message (et, en CAWI, l'identifiant + le mot de passe d'accès web du ménage) est alors transmis à cette appli tierce puis au destinataire que vous choisissez. À n'utiliser que pour joindre la personne concernée.</span></li>
+      <li><span class="mk">▸</span><span>Le <b>géocodage</b> envoie <b>l'adresse</b> aux services publics belges (UrbIS · Bruxelles, SPW · Wallonie, Geopunt · Flandre), avec OSM en repli — pas de transfert hors UE. Le mode de navigation par <b>point GPS</b> garde votre position sur l'appareil.</span></li>
       <li><span class="mk">▸</span><span><b>Aucune bibliothèque externe</b> (zéro CDN) : tout est embarqué. Une politique de sécurité (CSP) verrouille chaque page sur son origine.</span></li>
       <li><span class="mk">▸</span><span>La <b>sauvegarde JSON</b> vous permet d'archiver et de transférer vos données vous-même, quand vous le décidez.</span></li>
     </ul>
