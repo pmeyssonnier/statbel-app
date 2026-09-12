@@ -55,6 +55,16 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       out.capi = await rowsFor('capi');
       out.cati = await rowsFor('cati');
       out.cawi = await rowsFor('cawi');
+      // KPI de statuts visibles selon la méthode : en « toutes méthodes » tout le
+      // vocabulaire reste affiché ; sous une méthode, les statuts absents sont masqués.
+      const statusKpisFor = async (meth) => {
+        setResumeMethode(meth);
+        await new Promise(res => setTimeout(res, 120));
+        return [...document.querySelectorAll('#resumeContainer .kpi-card .kpi-lbl')]
+          .map(e => e.textContent).filter(txt => /To do|Done/.test(txt));
+      };
+      out.kpiAll  = await statusKpisFor('all');   // attendu : To do + Done
+      out.kpiCati = await statusKpisFor('cati');  // CATI = 1 seul « To do » → Done masqué
       // Boutons de filtre + compteurs (retour sur « all »)
       setResumeMethode('all');
       await new Promise(res => setTimeout(res, 120));
@@ -74,6 +84,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.cati === 1, `CATI = 1 contact → ${r.cati}`);
   A(r.cawi === 1, `CAWI = 1 contact → ${r.cawi}`);
   A(r.hasCapiBtn && r.hasCatiBtn && r.hasCawiBtn, 'boutons de filtre méthode avec compteurs (CAPI 2 · CATI 1 · CAWI 1)');
+  const kpiAll = r.kpiAll || [], kpiCati = r.kpiCati || [];
+  A(kpiAll.some(x => /To do/.test(x)) && kpiAll.some(x => /Done/.test(x)), `« toutes méthodes » : KPI des 2 statuts affichés → ${kpiAll.length}`);
+  A(kpiCati.some(x => /To do/.test(x)) && !kpiCati.some(x => /Done/.test(x)), `CATI : KPI « Done » (absent de la méthode) masqué, « To do » conservé → ${JSON.stringify(kpiCati)}`);
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();

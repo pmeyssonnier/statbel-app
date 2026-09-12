@@ -12,6 +12,15 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Modifié
+- **Interviews — Résumé : masquer les KPI de statuts hors méthode filtrée** (Interviews 3.42 → 3.43,
+  SW `statbel-v309` → `statbel-v310`) : quand un filtre de méthode est actif (🏠 CAPI / 📞 CATI /
+  🌐 CAWI), les cartes KPI des statuts sans aucun contact dans cette méthode sont désormais **masquées**
+  (au lieu d'afficher « 0 »), pour ne montrer que les statuts qui la concernent réellement. En vue
+  **Toutes méthodes**, tout le vocabulaire de statuts reste affiché (0 compris). La barre de
+  progression, la légende et le donut masquaient déjà les statuts à 0 ; le comportement des KPI est
+  ainsi aligné.
+
 ### Ajouté
 - **Convertisseur — Statistiques : treemap par nationalité pour le ratio de dépendance et la
   composition des ménages** (Convertisseur 218 → 219, SW `statbel-v308` → `statbel-v309`) : ces deux
