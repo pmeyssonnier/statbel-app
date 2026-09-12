@@ -13,6 +13,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Documentation
+- **Manuel — accessibilité, navigation & cohérence** (SW `statbel-v301`) : suite à une revue
+  design du manuel illustré (`docs/manuel.html`). **Accessibilité** : les pastilles de statut
+  reçoivent enfin une palette éclaircie en **mode sombre** (auparavant illisibles, texte saturé
+  sur fond sombre) ; les 12 `alt` des captures — qui contenaient du HTML littéral et
+  doublonnaient la légende — passent en `alt=""` (la `figcaption` décrit déjà chaque figure) ;
+  ajout d'un focus clavier visible (`:focus-visible`) ; les sous-sections (« Les quatre vues »…)
+  deviennent des vrais titres `h3` (réintégrées à l'arbre de titres). **Navigation** : les
+  numéros du sommaire s'alignent enfin sur les badges de section (plus de décalage d'un cran),
+  et un bouton **retour au sommaire** (CSS pur, sans JS — CSP `script-src 'none'`) accompagne
+  la lecture d'une page longue. **Densité & repères** : l'outil PDF → GRP reçoit sa liste de
+  fonctionnalités (parité avec les autres outils) et le glossaire « Repères métier » explicite
+  **CAPI/CATI/CAWI**, `CD_WSH_CLCT_MTHD` et `TX_WEB_USER_ID`/`TX_WEB_USER_PSWRD`. Nettoyage :
+  `.pill.a` passe par un token, le titre « Principes » rejoint le système de styles.
 - **RGPD adaptée aux sorties de données** (SW `statbel-v300`) : les sections Confidentialité
   du manuel et du README précisent désormais les **deux seules sorties de données, déclenchées
   par l'utilisateur** — les **rappels e-mail/SMS** (l'app pré-remplit l'appli mail/SMS de
