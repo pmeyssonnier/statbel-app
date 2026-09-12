@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### PDF → GRP — accessibilité & contraste (revue design)
+- **Outil PDF → GRP rendu accessible** (SW `statbel-v305`) : suite à une critique design (score
+  ~32/40). **Clavier** : la zone de dépôt (`#dz`) devient un vrai bouton (`role="button"`,
+  `tabindex`, Entrée/Espace) — l'outil était **injoignable au clavier** ; `#file` étiqueté.
+  **États annoncés** : `#msg` et `#warn` reçoivent `aria-live` ; le focus va au résultat sur
+  succès et au message sur erreur. **Contraste (mode sombre)** : le bouton primaire (texte blanc
+  sur lavande, 2,31:1) passe en texte foncé, l'en-tête sombre repasse sur un fond indigo foncé
+  (fini le blanc sur lavande), `.err` et `--warn` deviennent thème-aware (nouveau `--err`,
+  `--warn` redéfini en sombre, token mort `--ok` retiré). **Tactile** : boutons ≥ 44 px, liens de
+  navigation agrandis. **Copie** : le message « valeurs sans code » ne renvoie plus à
+  `js/pdfgrp.js` (public développeur) mais aux tables de correspondance du Convertisseur ;
+  l'aperçu affiche le vrai nombre de lignes. Titre `h2` ajouté au bloc résultat.
+
 ### Planner — accessibilité, validation & clavier (revue design)
 - **Candidature, carte & agenda plus sûrs et accessibles** (Planner 194, SW `statbel-v304`) :
   suite à une critique design (score 26/40). **Formulaire de candidature** : les ~15 champs

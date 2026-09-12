@@ -12,9 +12,12 @@
 <meta name="theme-color" content="#1a237e">
 <style>
   :root{ --bg:#f4f6fb; --card:#fff; --ink:#1a2230; --mut:#66707f; --line:#e2e7f0;
-         --accent:#1a237e; --accent2:#3949ab; --ok:#2e7d32; --warn:#e65100; }
+         --accent:#1a237e; --accent2:#3949ab; --warn:#e65100; --err:#c62828; }
   @media (prefers-color-scheme: dark){ :root{ --bg:#12151c; --card:#1b2029; --ink:#e7ebf2;
-         --mut:#9aa4b2; --line:#2b323d; --accent:#7986cb; --accent2:#9fa8da; } }
+         --mut:#9aa4b2; --line:#2b323d; --accent:#7986cb; --accent2:#9fa8da; --warn:#ffb266; --err:#ff6b6b; }
+    body header{ background:#232a44; }   /* chrome sombre : texte blanc lisible (spécificité > règle de base) */
+    button:not(.sec){ color:#12151c; }   /* texte foncé sur la lavande → contraste AA */
+  }
   *{ box-sizing:border-box; }
   body{ margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
         background:var(--bg); color:var(--ink); }
@@ -22,7 +25,7 @@
   header h1{ font-size:17px; margin:0; font-weight:700; }
   header .nav{ margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
   header .nav a{ color:#fff; text-decoration:none; font-size:13px; opacity:.9; border:1px solid rgba(255,255,255,.35);
-                 border-radius:8px; padding:4px 9px; }
+                 border-radius:8px; padding:7px 11px; display:inline-flex; align-items:center; }
   header .nav a:hover{ opacity:1; background:rgba(255,255,255,.12); }
   main{ max-width:1000px; margin:22px auto; padding:0 16px; }
   .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
@@ -35,7 +38,7 @@
   #dz .n{ color:var(--mut); font-size:12px; margin-top:10px; }
   input[type=file]{ display:none; }
   .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
-  button{ font:inherit; font-weight:600; border:0; border-radius:10px; padding:10px 16px; cursor:pointer; color:#fff; background:var(--accent2); }
+  button{ font:inherit; font-weight:600; border:0; border-radius:10px; padding:10px 16px; min-height:44px; cursor:pointer; color:#fff; background:var(--accent2); }
   button.sec{ background:transparent; color:var(--accent2); border:1px solid var(--accent2); }
   button:disabled{ opacity:.5; cursor:default; }
   .stats{ display:flex; gap:18px; flex-wrap:wrap; margin:2px 0 14px; }
@@ -48,7 +51,9 @@
   th,td{ border-bottom:1px solid var(--line); padding:5px 8px; text-align:left; }
   th{ position:sticky; top:0; background:var(--card); font-weight:700; }
   .hidden{ display:none; }
-  .err{ color:#c62828; font-weight:600; }
+  .err{ color:var(--err); font-weight:600; }
+  .sr-only{ position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  #dz:focus-visible{ outline:2px solid var(--accent2); outline-offset:2px; }
 </style>
 </head>
 <body>
@@ -64,30 +69,31 @@
 
 <main>
   <div class="card">
-    <div id="dz">
-      <div class="ic">📂</div>
+    <div id="dz" role="button" tabindex="0" aria-label="Choisir ou déposer un listing GRP (PDF)">
+      <div class="ic" aria-hidden="true">📂</div>
       <div class="t">Glissez le listing GRP (PDF) ici</div>
       <div class="s">ou cliquez pour choisir un fichier</div>
       <div class="n">GRP_2026xxxxxxxxxxx.pdf — traitement 100 % local, hors-ligne</div>
-      <input type="file" id="file" accept=".pdf">
+      <input type="file" id="file" accept=".pdf" aria-label="Fichier PDF GRP" tabindex="-1">
     </div>
-    <p id="msg" class="note"></p>
+    <p id="msg" class="note" role="status" aria-live="polite" tabindex="-1"></p>
   </div>
 
-  <div class="card hidden" id="res">
+  <div class="card hidden" id="res" tabindex="-1">
+    <h2 class="sr-only">Résultat de l'extraction</h2>
     <div class="stats">
       <div class="stat"><b id="stMenages">0</b><span>ménages</span></div>
       <div class="stat"><b id="stPersonnes">0</b><span>personnes</span></div>
       <div class="stat"><b id="stGroupe">—</b><span>groupe</span></div>
     </div>
-    <div class="warn hidden" id="warn"></div>
+    <div class="warn hidden" id="warn" role="status" aria-live="polite"></div>
     <div class="btns">
       <button id="dlXlsx">⬇️ Télécharger .xlsx</button>
       <button id="dlCsv" class="sec">⬇️ Télécharger .csv</button>
     </div>
     <p class="note">Format GRP à 30 colonnes (identique à l'export Statbel). <b>DT_MB_BTH</b> (date de
        naissance) et <b>CD_MB_BTH_REFNIS</b> (commune de naissance) restent vides : absents du PDF
-       (il ne porte que l'âge et le pays). Aperçu des 25 premières lignes :</p>
+       (il ne porte que l'âge et le pays). Aperçu des <span id="prevCount">25</span> premières lignes :</p>
     <div class="tblwrap"><table id="preview"></table></div>
   </div>
 </main>
@@ -101,7 +107,7 @@
   var msg = document.getElementById('msg'), res = document.getElementById('res');
   var lastRows = null, lastAoa = null, lastName = 'GRP';
 
-  function setMsg(t, err){ msg.textContent = t || ''; msg.className = err ? 'note err' : 'note'; }
+  function setMsg(t, err){ msg.textContent = t || ''; msg.className = err ? 'note err' : 'note'; if (err) { try { msg.focus(); } catch(_){} } }
 
   function traiter(file){
     if (!file) return;
@@ -115,6 +121,7 @@
         lastName = 'GRP_' + (out.rows[0].NR_GRP || 'export');
         afficher(out);
         setMsg('');
+        try { res.focus(); } catch(_){}   // amène le lecteur d'écran / le clavier sur le résultat
       }).catch(function(err){ setMsg('Erreur de lecture du PDF : ' + err.message, true); });
     };
     reader.readAsArrayBuffer(file);
@@ -129,9 +136,10 @@
     var warn = document.getElementById('warn');
     var inc = out.unknown.nlty.concat(out.unknown.mrtl);
     if (inc.length){ warn.textContent = '⚠️ Valeurs sans code (colonnes laissées vides) : ' + inc.join(', ')
-                       + '. Complétez la table dans js/pdfgrp.js.'; warn.classList.remove('hidden'); }
+                       + '. Ces valeurs pourront être renseignées via les tables de correspondance du Convertisseur.'; warn.classList.remove('hidden'); }
     else warn.classList.add('hidden');
-    // aperçu (25 lignes)
+    // aperçu (jusqu'à 25 lignes)
+    var pc = document.getElementById('prevCount'); if (pc) pc.textContent = Math.min(25, rows.length);
     var cols = PDF_GRP_COLS, tbl = document.getElementById('preview');
     var html = '<tr>' + cols.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr>';
     rows.slice(0, 25).forEach(function(r){
@@ -160,6 +168,7 @@
   }
 
   dz.addEventListener('click', function(){ fileInput.click(); });
+  dz.addEventListener('keydown', function(e){ if (e.key==='Enter' || e.key===' ' || e.key==='Spacebar'){ e.preventDefault(); fileInput.click(); } });
   fileInput.addEventListener('change', function(e){ traiter(e.target.files[0]); e.target.value = ''; });
   dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('drag'); });
   dz.addEventListener('dragleave', function(){ dz.classList.remove('drag'); });
