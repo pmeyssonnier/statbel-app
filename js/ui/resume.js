@@ -13,6 +13,7 @@ import { renderCourbeAvancement, collecterVisites } from './stats.js';
 import { esc } from '../core/util.js';
 import { t, tf, labelNbEnquetes, localeApp } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
+import { classerMethode } from './contacts.js';
 
 // Vocabulaire agrégé pour un ensemble d'enquêtes : chaque enquête ayant désormais
 // ses propres statuts (settings.statutsParEnquete), le résumé multi-enquêtes prend
@@ -28,7 +29,10 @@ function statutsUnion(noms) {
 
 export function exporterResumeXLSX() {
   const wb = XLSX.utils.book_new();
-  const nomEnquetes = Object.keys(enquetes);
+  // Respecte les filtres affichés (périmètre + méthode) → export cohérent avec l'écran.
+  const scopeActive = resumeScope === 'active' && enqueteActive && enquetes[enqueteActive];
+  const nomEnquetes = scopeActive ? [enqueteActive] : Object.keys(enquetes);
+  const methOK = filtreMethode();
   const statutsCfg  = statutsUnion(nomEnquetes);
 
   // ── Feuille 1 : Tableau croisé ──────────────────────────────────
@@ -43,6 +47,7 @@ export function exporterResumeXLSX() {
     const cpt = {};
     statutsCfg.forEach(s => cpt[s.label] = 0);
     (enquetes[nom] || []).forEach(c => {
+      if (methOK && !methOK(c)) return;
       const st = c.statut || statutDefaut();
       if (cpt[st] !== undefined) cpt[st]++;
       else cpt[st] = 1;
@@ -60,6 +65,7 @@ export function exporterResumeXLSX() {
   const realiseSet = new Set(statutsCfg.filter(s => s.realise).map(s => s.label));
   let nbRealises = 0, nbInterroges = 0, nbTotalCibles = 0;
   nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
+    if (methOK && !methOK(c)) return;
     const n15 = parseInt(c.nb_cibles, 10), tm = parseInt(c.taille_menage, 10);
     const m = !isNaN(n15) ? n15 : (tm > 0 ? tm : 1);
     nbTotalCibles += m;
@@ -89,6 +95,7 @@ export function exporterResumeXLSX() {
     const cpt = {};
     statutsCfg.forEach(s => cpt[s.label] = 0);
     (enquetes[nom] || []).forEach(c => {
+      if (methOK && !methOK(c)) return;
       const st = c.statut || statutDefaut();
       if (cpt[st] !== undefined) cpt[st]++;
     });
@@ -149,6 +156,17 @@ export function exporterResumePDF() {
 let resumeScope = 'all';   // 'all' = toutes les enquêtes | 'active' = enquête sélectionnée
 export function setResumeScope(s) { resumeScope = s; renduResume(); }
 
+let resumeMethode = 'all'; // 'all' | 'capi' | 'cati' | 'cawi' (méthode de collecte)
+export function setResumeMethode(m) { resumeMethode = m; renduResume(); }
+
+// Méthode d'un contact : CAPI (face-à-face) = ni CATI ni CAWI. Réutilise le
+// classifieur de la fiche (contacts.js) pour rester cohérent avec les pastilles.
+function methodeContact(c) { return classerMethode(c && c.collect_method) || 'capi'; }
+// Prédicat de filtre courant (null = toutes les méthodes).
+function filtreMethode() {
+  return resumeMethode === 'all' ? null : (c => methodeContact(c) === resumeMethode);
+}
+
 export function renduResume() {
   const box = document.getElementById('resumeContainer');
   if (!box) return;
@@ -158,6 +176,12 @@ export function renduResume() {
   const scopeActive = resumeScope === 'active' && enqueteActive && enquetes[enqueteActive];
   const nomEnquetes = scopeActive ? [enqueteActive] : toutesEnq;
   const statutsCfg  = statutsUnion(nomEnquetes); // union des vocabulaires du périmètre
+
+  // ── Filtre par méthode de collecte (CAPI face-à-face / CATI / CAWI) ──
+  const methOK = filtreMethode();               // null = toutes méthodes
+  // Comptes par méthode dans le périmètre courant (pour les boutons de filtre)
+  const methCounts = { all: 0, capi: 0, cati: 0, cawi: 0 };
+  nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => { methCounts.all++; methCounts[methodeContact(c)]++; }));
 
   // Pour chaque statut, couleur et icône
   const statutMap = {};
@@ -188,6 +212,7 @@ export function renduResume() {
     matrice[nom] = {};
     statutsListe.forEach(s => matrice[nom][s] = 0);
     (enquetes[nom] || []).forEach(c => {
+      if (methOK && !methOK(c)) return;
       const st = c.statut || statutDefaut();
       if (!matrice[nom][st]) matrice[nom][st] = 0;
       matrice[nom][st]++;
@@ -210,7 +235,7 @@ export function renduResume() {
 
   // ── Sparklines : activité quotidienne par statut (lib partagée js/charts.js) ──
   // Série alignée sur les jours d'activité observés ; RDV futurs exclus.
-  const evtsSpark = collecterVisites(scopeActive ? enqueteActive : null).filter(e => !e.isRdv);
+  const evtsSpark = collecterVisites(scopeActive ? enqueteActive : null, methOK).filter(e => !e.isRdv);
   const joursSpark = [...new Set(evtsSpark.map(e => e.iso.slice(0, 10)))].sort();
   const serieStatut = label => {
     if (!joursSpark.length) return [];
@@ -229,6 +254,7 @@ export function renduResume() {
   // sur la taille du ménage quand le détail n'est pas importé (marqueur « * »).
   let nbInterroges = 0, nbTotalCibles = 0, interrogesExact = true;
   nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
+    if (methOK && !methOK(c)) return;
     const n15 = parseInt(c.nb_cibles, 10);
     let m;
     if (!isNaN(n15)) { m = n15; }
@@ -315,6 +341,7 @@ export function renduResume() {
   const frToIso = d => { const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(d || '').trim()); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
   const contactsRows = [];
   nomEnquetes.forEach(nom => (enquetes[nom] || []).forEach(c => {
+    if (methOK && !methOK(c)) return;
     const st = c.statut || statutDefaut();
     contactsRows.push({
       contact: `${c.nom || ''} ${c.prenom || ''}`.trim() || ('#' + (c.ordre || '')),
@@ -418,6 +445,12 @@ export function renduResume() {
             <button class="resume-scope-btn${resumeScope === 'all' ? ' actif' : ''}" onclick="setResumeScope('all')">🗂️ ${t('res_scope_all')} (${toutesEnq.length})</button>
             <button class="resume-scope-btn${resumeScope === 'active' ? ' actif' : ''}" onclick="setResumeScope('active')"${!enqueteActive ? ' disabled' : ''}>📋 ${enqueteActive ? esc(enqueteActive) : t('res_scope_active')}</button>
           </div>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap" role="group" aria-label="${esc(t('res_meth_all'))}">
+            <button class="resume-scope-btn${resumeMethode === 'all' ? ' actif' : ''}" onclick="setResumeMethode('all')">${t('res_meth_all')} (${methCounts.all})</button>
+            <button class="resume-scope-btn${resumeMethode === 'capi' ? ' actif' : ''}" onclick="setResumeMethode('capi')"${methCounts.capi ? '' : ' disabled'}>🏠 CAPI (${methCounts.capi})</button>
+            <button class="resume-scope-btn${resumeMethode === 'cati' ? ' actif' : ''}" onclick="setResumeMethode('cati')"${methCounts.cati ? '' : ' disabled'}>📞 CATI (${methCounts.cati})</button>
+            <button class="resume-scope-btn${resumeMethode === 'cawi' ? ' actif' : ''}" onclick="setResumeMethode('cawi')"${methCounts.cawi ? '' : ' disabled'}>🌐 CAWI (${methCounts.cawi})</button>
+          </div>
           <div style="font-size:11px;color:var(--text3);margin-top:4px">
             ${t('res_updated')} ${new Date().toLocaleTimeString(localeApp(), {hour:'2-digit',minute:'2-digit'})}
           </div>
@@ -445,7 +478,7 @@ export function renduResume() {
     </div>
     <div>
       <div class="resume-section-title">${t('cumul_title')}</div>
-      ${renderCourbeAvancement(scopeActive ? enqueteActive : null)}
+      ${renderCourbeAvancement(scopeActive ? enqueteActive : null, methOK)}
     </div>
     <div>
       <div class="resume-section-title">${t('res_table')}</div>

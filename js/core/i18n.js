@@ -104,6 +104,7 @@ export const I18N = {
   "cumul_title": { fr:"Avancement (Fait cumulés)", nl:"Voortgang (cumulatief voltooid)", en:"Progress (cumulative done)", de:"Fortschritt (kumuliert erledigt)" },
   "res_scope_all":    { fr:"Toutes les enquêtes", nl:"Alle onderzoeken", en:"All surveys", de:"Alle Erhebungen" },
   "res_scope_active": { fr:"Enquête active", nl:"Actief onderzoek", en:"Active survey", de:"Aktive Erhebung" },
+  "res_meth_all":     { fr:"Toutes méthodes", nl:"Alle methoden", en:"All methods", de:"Alle Methoden" },
   "field_statut":       { fr:"Statut",        nl:"Status",      en:"Status",       de:"Status"       },
   "field_date":         { fr:"Date",          nl:"Datum",       en:"Date",         de:"Datum"         },
   "field_prenom":       { fr:"Prénom",        nl:"Voornaam",    en:"First name",   de:"Vorname"       },
