@@ -90,9 +90,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     zoomDepend('active');
     out.dependDrill = !!document.querySelector('#statsDependTM #statsDependTM-tm')
       && document.getElementById('statsDependTM').innerHTML.length > 0;
-    // Composition des ménages : puces cliquables → treemap (réf. du ménage).
+    // Composition des ménages : donut cliquable (comme Sexe) → treemap (réf. du ménage).
     // « Multi, avec mineur » = 1 ménage (hh1 : enfant 10 ans).
-    out.compoChips = document.querySelectorAll('#statsCompoHHDetail button[onclick^="zoomCompo"]').length;
+    out.compoClickable = document.querySelectorAll('#statsCompoHH [onclick^="zoomCompo"]').length;
     zoomCompo('withminor');
     out.compoDrill = !!document.querySelector('#statsCompoTM #statsCompoTM-tm')
       && document.getElementById('statsCompoTM').innerHTML.length > 0;
@@ -143,7 +143,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(/≥15/.test(r.chhTitle || '') && /interroger|survey|ondervragen|befragende/i.test(r.chhTitle || ''), `titre « à interroger » avec seuil dynamique → « ${r.chhTitle} »`);
   A(r.chhClickable && r.chhDrill, 'barres « à interroger » cliquables → treemap des nationalités');
   A(r.dependChips === 3 && r.dependDrill, `ratio de dépendance : 3 puces cliquables → treemap par nationalité → ${r.dependChips} puces`);
-  A(r.compoChips === 2 && r.compoDrill, `composition des ménages : puces cliquables → treemap par nationalité → ${r.compoChips} puces`);
+  A(r.compoClickable > 0 && r.compoDrill, `composition : donut cliquable (segments/légende, comme Sexe) → treemap par nationalité → ${r.compoClickable} éléments cliquables`);
   A(/interroger|survey|ondervragen|befragende/i.test(r.chhBarLabel) && !/cible|target/i.test(r.chhBarLabel), `libellé de barre « à interroger » (plus « cible ») → « ${r.chhBarLabel} »`);
   A(r.hhFlagBE && r.hhFlagTR, 'table ménage : drapeaux pays (🇧🇪 / 🇹🇷) devant naissance/nationalité');
   A(r.hhSexeM && r.hhSexeF, 'table ménage : icônes de sexe ♂ / ♀');

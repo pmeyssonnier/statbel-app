@@ -14,13 +14,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ### Ajouté
 - **Convertisseur — Statistiques : treemap par nationalité pour le ratio de dépendance et la
-  composition des ménages** (Convertisseur 218, SW `statbel-v308`) : ces deux cartes s'appuient sur
-  le donut de la lib partagée (`js/charts.js`), non cliquable. Elles gagnent donc des **puces de
-  catégorie cliquables** sous le graphe — Ratio de dépendance : Jeunes (<15) / Actifs (15–64) /
-  Âgés (65+) ; Composition : Mono-personne / Multi avec mineur / Multi sans mineur. Un clic affiche
-  un **treemap des nationalités** (`renderTreemapNlty`) de la sous-population concernée (référent du
-  ménage pour la composition), avec en-tête, compte et bouton ✕ — même principe de drill-down que
-  les autres blocs Statistiques (âge, sexe, statut matrimonial, taille de ménage…). i18n fr/nl/en/de.
+  composition des ménages** (Convertisseur 218 → 219, SW `statbel-v308` → `statbel-v309`) : ces deux
+  cartes gagnent un **drill-down par nationalité** (treemap `renderTreemapNlty`) de la sous-population
+  concernée (référent du ménage pour la composition), avec en-tête, compte et bouton ✕ — même principe
+  que les autres blocs Statistiques (âge, sexe, statut matrimonial, taille de ménage…). i18n fr/nl/en/de.
+  - **Composition** : le donut passe au rendu **cliquable local** (`renderDonut`, comme la carte
+    Sexe) — un clic sur un segment ou sa ligne de légende ouvre le treemap ; catégories
+    Mono-personne / Multi avec mineur / Multi sans mineur.
+  - **Ratio de dépendance** : le donut de la lib partagée (`js/charts.js`) garde le **ratio au centre**
+    (donc non cliquable) ; le drill se fait via des **puces de catégorie cliquables** sous le graphe —
+    Jeunes (<15) / Actifs (15–64) / Âgés (65+).
 - **Interviews — Résumé : filtre par méthode de collecte** (Interviews 3.42, SW `statbel-v307`) :
   la vue Résumé gagne un filtre **Toutes méthodes / 🏠 CAPI / 📞 CATI / 🌐 CAWI**, sous le
   périmètre existant (Toutes / Enquête active) — les deux se combinent. Le filtre s'applique à
