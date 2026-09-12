@@ -1098,6 +1098,7 @@ const I18N = {
   txt_bracket: { fr:"Tranche {lbl}", nl:"Leeftijdsgroep {lbl}", en:"Bracket {lbl}", de:"Altersgruppe {lbl}" },
   txt_by_nationality: { fr:", par nationalité", nl:", per nationaliteit", en:", by nationality", de:", nach Nationalität" },
   txt_by_nationality_hh: { fr:", par nationalité (réf. du ménage)", nl:", per nationaliteit (referentiepersoon huishouden)", en:", by nationality (household reference)", de:", nach Nationalität (Referenzperson des Haushalts)" },
+  txt_drill_hint: { fr:"Cliquez une catégorie pour la répartition par nationalité :", nl:"Klik op een categorie voor de verdeling per nationaliteit:", en:"Click a category for the breakdown by nationality:", de:"Auf eine Kategorie klicken für die Aufschlüsselung nach Nationalität:" },
   word_person: { fr:["personne","personnes"], nl:["persoon","personen"], en:["person","people"], de:["Person","Personen"] },
   word_member: { fr:["membre","membres"], nl:["lid","leden"], en:["member","members"], de:["Mitglied","Mitglieder"] },
   txt_households_of_size: { fr:"Ménages de {n} membre(s)", nl:"Huishoudens van {n} lid/leden", en:"Households of {n} member(s)", de:"Haushalte mit {n} Mitglied(ern)" },
@@ -5770,6 +5771,46 @@ function zoomCibles(key) {
   renderTreemapNlty('statsCiblesHHTM', items);
 }
 
+// Puces de catégorie cliquables → treemap par nationalité. Utilisées par les blocs
+// dont le donut (lib partagée) n'est pas cliquable (Ratio de dépendance, Composition).
+function natDrillChips(cats, fn) {
+  return '<div style="font-size:10.5px;color:var(--text3);margin:0 0 5px">' + escHtml(t('txt_drill_hint')) + '</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">'
+    + cats.filter(c => c.value > 0).map(c =>
+        `<button type="button" onclick="${fn}('${c.key}')" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text2);cursor:pointer">`
+        + `<span style="width:9px;height:9px;border-radius:50%;background:${c.color};flex:none"></span>${escHtml(c.label)} (${c.value})</button>`).join('')
+    + '</div>';
+}
+// Rendu commun d'un treemap de nationalités (en-tête + ✕) dans un conteneur donné.
+// Les items acceptent .nationality (personnes) ou .nat (ménages : nationalité du référent).
+function natTreemapInto(tmId, titre, sub) {
+  const el = document.getElementById(tmId); if (!el) return;
+  if (!sub.length) { el.innerHTML = ''; return; }
+  const cnt = {};
+  sub.forEach(x => { const v = x.nationality != null ? x.nationality : x.nat; const n = paysNom(v) || v || '—'; cnt[n] = (cnt[n] || 0) + 1; });
+  const items = Object.entries(cnt).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
+      <b style="color:var(--text)">${escHtml(titre)}</b> — ${sub.length}${escHtml(t('txt_by_nationality'))}
+      <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('${tmId}').innerHTML=''">✕</button>
+    </div><div id="${tmId}-tm"></div>`;
+  renderTreemapNlty(tmId + '-tm', items);
+}
+
+// Ratio de dépendance : clic sur une tranche → nationalités des personnes de la tranche.
+let _dependPop = [];
+function zoomDepend(key) {
+  const rng = { young: [0, 14], active: [15, 64], old: [65, 999] }[key] || [0, 999];
+  const lbl = { young: t('lbl_dep_young'), active: t('lbl_dep_active'), old: t('lbl_dep_old') }[key] || '';
+  const sub = _dependPop.filter(r => { const a = parseInt(r.age, 10); return !isNaN(a) && a >= rng[0] && a <= rng[1]; });
+  natTreemapInto('statsDependTM', lbl, sub);
+}
+// Composition des ménages : clic sur un type → nationalités (du référent) des ménages du type.
+function zoomCompo(key) {
+  const pred = { mono: h => h.total === 1, withminor: h => h.total > 1 && h.minors > 0, nominor: h => h.total > 1 && h.minors === 0 }[key] || (() => false);
+  const lbl = { mono: t('lbl_hh_mono'), withminor: t('lbl_hh_with_minor'), nominor: t('lbl_hh_no_minor') }[key] || '';
+  natTreemapInto('statsCompoTM', lbl, _ciblesMenages.filter(pred));
+}
+
 // ════════════════════════════════════════════════════════════════════════
 //  STATISTIQUES (bascule Cibles / Tout le ménage)
 // ════════════════════════════════════════════════════════════════════════
@@ -5876,16 +5917,23 @@ function majMenagesCartes() {
     { label: t('lbl_hh_with_minor') + ' (<' + min + ')', value: avecMin, color: '#f9a825' },
     { label: t('lbl_hh_no_minor') + ' (≥' + min + ')', value: sansMin, color: '#2e7d32' },
   ];
+  // Le donut (lib partagée) n'est pas cliquable → puces de catégorie cliquables pour
+  // le drill-down par nationalité (référent du ménage) + conteneur de treemap.
+  const compoDrill = natDrillChips([
+    { key: 'mono',      label: t('lbl_hh_mono'),       value: mono,    color: '#0277bd' },
+    { key: 'withminor', label: t('lbl_hh_with_minor'), value: avecMin, color: '#f9a825' },
+    { key: 'nominor',   label: t('lbl_hh_no_minor'),   value: sansMin, color: '#2e7d32' },
+  ], 'zoomCompo') + '<div id="statsCompoTM"></div>';
   // Première utilisation de la lib partagée js/charts.js (donut à légende + total au centre).
   if (window.Charts) {
     elCompo.innerHTML = Charts.donut(compoItems, {
       total: nbMen, unitLabel: t('kpi_households').toLowerCase(), ariaLabel: t('card_hh_composition'),
       size: DONUT_SIZE, thick: DONUT_THICK,
     });
-    if (elDetail) elDetail.textContent = '';
+    if (elDetail) elDetail.innerHTML = compoDrill;
   } else {
     renderDonut('statsCompoHH', compoItems.filter(d => d.value > 0));
-    if (elDetail) elDetail.textContent = nbMen + ' ' + t('kpi_households').toLowerCase();
+    if (elDetail) elDetail.innerHTML = compoDrill;
   }
 }
 
@@ -5991,7 +6039,16 @@ const BLOC_DEFS = {
               const elDep = document.getElementById('statsDepend');
               if (window.Charts) elDep.innerHTML = Charts.donut(depItems, { total: dRatio != null ? dRatio : '—', unitLabel: t('lbl_dep_ratio'), ariaLabel: t('card_dependency'), size: DONUT_SIZE, thick: DONUT_THICK });
               else renderDonut('statsDepend', depItems.filter(d => d.value > 0));
-              const elDepD = document.getElementById('statsDependDetail'); if (elDepD) elDepD.textContent = dRatio != null ? tf('txt_dep_ratio', { n: dRatio }) : ''; } },
+              _dependPop = memD;   // pour le drill-down par nationalité
+              const elDepD = document.getElementById('statsDependDetail');
+              if (elDepD) {
+                const ratioTxt = dRatio != null ? `<div style="margin-bottom:6px">${escHtml(tf('txt_dep_ratio', { n: dRatio }))}</div>` : '';
+                elDepD.innerHTML = ratioTxt + natDrillChips([
+                  { key: 'young',  label: t('lbl_dep_young'),  value: dJeune, color: '#f9a825' },
+                  { key: 'active', label: t('lbl_dep_active'), value: dActif, color: '#2e7d32' },
+                  { key: 'old',    label: t('lbl_dep_old'),    value: dAge,   color: '#8d6e63' },
+                ], 'zoomDepend') + '<div id="statsDependTM"></div>';
+              } } },
   contact:{ i18n: 'card_contactability', el: 'statsContact', chart: 'bar',
             data: ctx => { const hhc = ctx.res.outCibles || []; const nHHc = hhc.length || 1; const aTel = r => r.gsm && String(r.gsm).trim(), aMail = r => r.email && String(r.email).trim();
               const cTel = hhc.filter(aTel).length, cMail = hhc.filter(aMail).length, cJoin = hhc.filter(r => aTel(r) || aMail(r)).length; const pctL = (key, n) => `${t(key)} — ${Math.round(n / nHHc * 100)} %`;
@@ -7016,7 +7073,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '217';
+const APP_VERSION = '218';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
