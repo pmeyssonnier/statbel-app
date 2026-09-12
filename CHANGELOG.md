@@ -13,6 +13,14 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Documentation
+- **Manuel — finitions post-critique** (SW `statbel-v302`) : suite à une re-critique
+  (score 24→28 / 32). **Mobile** : `overflow-wrap:anywhere` sur `.feat li` et `code` (les codes
+  longs comme `TX_WEB_USER_PSWRD` ne peuvent plus provoquer de défilement horizontal) ; le bouton
+  retour-haut est dégagé du pied de page (padding + opacité réduite hors survol). **Repérage** :
+  la section atteinte par une ancre est légèrement teintée (`section.module:target`, CSS pur —
+  pas de JS sous CSP). **Lisibilité** : les sous-titres `.subh` passent de 12 à 13 px (ne sont
+  plus plus petits que le corps). **Clôture** : une note finale « Vous êtes prêt » referme la
+  lecture (hors-ligne + sauvegarde JSON + retour au sommaire).
 - **Manuel — accessibilité, navigation & cohérence** (SW `statbel-v301`) : suite à une revue
   design du manuel illustré (`docs/manuel.html`). **Accessibilité** : les pastilles de statut
   reçoivent enfin une palette éclaircie en **mode sombre** (auparavant illisibles, texte saturé

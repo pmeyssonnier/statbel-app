@@ -96,7 +96,9 @@ img{display:block}
 @media(max-width:460px){.pgrid{grid-template-columns:1fr}}
 
 /* ── Section ── */
-section.module{padding:52px 0 8px;border-top:1px solid var(--line2);margin-top:36px}
+section.module{padding:52px 0 8px;border-top:1px solid var(--line2);margin-top:36px;scroll-margin-top:16px}
+section.module:target .sec-head{background:var(--surface2);border-radius:10px;padding:10px 12px;margin:0 -12px 8px}
+@media(prefers-reduced-motion:no-preference){section.module:target .sec-head{transition:background .2s}}
 .sec-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:8px}
 .sec-num{font-size:13px;font-weight:800;color:#fff;background:var(--accent);width:40px;height:40px;
   border-radius:11px;display:grid;place-items:center;flex:none;font-variant-numeric:tabular-nums}
@@ -123,8 +125,10 @@ figcaption b{color:var(--ink);font-weight:600}
 .feat li{display:flex;gap:11px;font-size:14.5px;color:var(--ink2);padding:3px 0;line-height:1.5}
 .feat li b{color:var(--ink);font-weight:600}
 .feat .mk{color:var(--accent);flex:none;font-weight:700;margin-top:1px}
+.feat li span{min-width:0;overflow-wrap:anywhere}
+code{overflow-wrap:anywhere}
 @media(max-width:640px){.feat{grid-template-columns:1fr}}
-.subh{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin:30px 0 4px}
+.subh{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:700;margin:30px 0 4px}
 
 /* callout */
 .note{background:var(--surface2);border:1px solid var(--line);border-left:3px solid var(--accent);
@@ -149,15 +153,15 @@ figcaption b{color:var(--ink);font-weight:600}
 @media(max-width:460px){.flow{grid-template-columns:1fr}}
 
 /* footer */
-footer{margin-top:56px;border-top:1px solid var(--line2);padding:30px 0 60px;color:var(--ink3);font-size:13px}
+footer{margin-top:56px;border-top:1px solid var(--line2);padding:30px 0 88px;color:var(--ink3);font-size:13px}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
 /* back-to-top (CSS-only, pas de JS — CSP script-src 'none') */
 .totop{position:fixed;right:16px;bottom:16px;z-index:5;width:44px;height:44px;border-radius:50%;
   background:var(--brand);color:#fff;display:grid;place-items:center;font-size:20px;line-height:1;
-  box-shadow:var(--shadow);border:1px solid var(--line);text-decoration:none}
-.totop:hover{background:var(--brandink)}
-@media(prefers-reduced-motion:no-preference){.totop{transition:background .15s}}
+  box-shadow:var(--shadow);border:1px solid var(--line);text-decoration:none;opacity:.88}
+.totop:hover,.totop:focus-visible{background:var(--brandink);opacity:1}
+@media(prefers-reduced-motion:no-preference){.totop{transition:background .15s,opacity .15s}}
 </style>
 
 </head>
@@ -464,6 +468,8 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
       <li><span class="mk">▸</span><span><b>Identifiants d'accès web</b> (<code>TX_WEB_USER_ID</code> / <code>TX_WEB_USER_PSWRD</code>) — l'identifiant et le mot de passe que le ménage utilise pour se connecter au portail CAWI.</span></li>
     </ul>
   </section>
+
+  <div class="note">✅ <b>Vous êtes prêt.</b> Tout fonctionne <b>hors-ligne</b>, sans compte ni serveur — en cas de doute, la <b>sauvegarde JSON</b> d'Interviews archive et restaure vos données quand vous le décidez. <a href="#sommaire">↑ Revenir au sommaire</a></div>
 </div>
 
 <a class="totop" href="#sommaire" aria-label="Revenir au sommaire" title="Revenir au sommaire">↑</a>
