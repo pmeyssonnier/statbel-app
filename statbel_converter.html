@@ -21,8 +21,8 @@
     }
   }
 </script>
-<!-- Leaflet (CDN) — utilisé uniquement par l'onglet « Planning » (carte des quartiers).
-     Le reste du convertisseur fonctionne hors-ligne. -->
+<!-- Leaflet (vendorisé, vendor/leaflet/) — utilisé uniquement par la carte des
+     quartiers de l'annexe « Planning ». Tout est hors-ligne, aucun CDN. -->
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="vendor/pdfjs/pdf.min.js"></script>
@@ -48,6 +48,8 @@
     --accent: var(--bleu);  /* couleur des textes d'accent (titres, valeurs) */
     --bar-h:  #1a237e;   /* barres hommes */
     --bar-f:  #c2185b;   /* barres femmes */
+    --violet: #6a1b9a;   /* bouton export « enquête » */
+    --warn-bg:#fff3e0; --warn-border:#ffb74d; --warn-text:#e65100;  /* encadrés d'alerte */
   }
   /* ── Thème sombre (gris-bleu ardoise, pas noir) ── */
   body.theme-dark {
@@ -65,6 +67,8 @@
     --accent: #aab4ff;
     --bar-h:  #7986cb;
     --bar-f:  #ef5e8c;
+    --violet: #b39ddb;
+    --warn-bg:#3a2f1a; --warn-border:#8c6d3f; --warn-text:#ffcc80;
   }
   body.theme-dark input, body.theme-dark select, body.theme-dark textarea {
     background: var(--blanc); color: var(--text); border-color: var(--border);
@@ -145,11 +149,18 @@
 
   /* ── Messages état ── */
   .loading { text-align: center; padding: 24px; color: var(--accent); font-size: 15px; }
-  .loading .spin { font-size: 28px; display: block; margin-bottom: 8px; }
+  .loading .spin { font-size: 28px; display: block; margin-bottom: 8px; animation: spin 1.1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .erreur {
     background: #ffebee; border: 1px solid #ef9a9a;
     border-radius: 10px; padding: 14px 16px; color: #b71c1c; font-size: 14px;
   }
+  /* Encadrés d'avertissement (structure/codes manquants) — thème-aware via tokens */
+  .avertissement { background: var(--warn-bg); border: 1px solid var(--warn-border);
+    border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; font-size: 12px; color: var(--warn-text); }
+  /* Réservé aux lecteurs d'écran (titres de repérage, libellés) */
+  .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
   /* ── Card ── */
   .card {
@@ -292,7 +303,7 @@
   .btn-dl .btn-sous  { font-size: 11px; opacity: 0.8; margin-top: 3px; }
   .btn-cibles  { background: var(--bleu); }
   .btn-membres { background: var(--bleuC); }
-  .btn-enquete { background: #6a1b9a; }
+  .btn-enquete { background: var(--violet); }
   .btn-rapport { background: var(--vert); }
 
   /* ── Reset ── */
@@ -500,24 +511,25 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 </header>
 
 <main class="container" id="contenu" role="main" tabindex="-1">
+  <h1 class="sr-only" data-i18n="app_h1">Convertisseur GRP Statbel</h1>
 
   <!-- Zone de dépôt -->
-  <div id="dropzone">
-    <div class="icon">📂</div>
+  <div id="dropzone" role="button" tabindex="0" data-i18n-aria="dz_aria" aria-label="Import a GRP file">
+    <div class="icon" aria-hidden="true">📂</div>
     <div class="titre" data-i18n="dz_title">Drag the GRP file here</div>
     <div class="sous" data-i18n="dz_sub">or click to select</div>
     <div class="note">CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx</div>
-    <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls,.pdf">
+    <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls,.pdf" tabindex="-1" data-i18n-aria="dz_aria" aria-label="Import a GRP file">
   </div>
 
   <!-- Chargement -->
-  <div id="loading" class="loading hidden">
+  <div id="loading" class="loading hidden" role="status" aria-live="polite">
     <span class="spin">⏳</span>
     <span id="loadingNom" data-i18n="loading_generic">Converting…</span>
   </div>
 
   <!-- Erreur -->
-  <div id="erreur" class="erreur hidden"></div>
+  <div id="erreur" class="erreur hidden" role="alert" tabindex="-1"></div>
 
   <!-- Résultats -->
   <div id="resultats" class="hidden">
@@ -532,15 +544,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px">
         <span class="card-titre" id="grpTitre" style="margin:0"></span>
         <label style="font-size:11px;color:var(--text2);font-weight:bold" data-i18n="lbl_location">📍 Location:</label>
-        <input id="locInput" type="text" placeholder="e.g. SCHAERBEEK" data-i18n-ph="ph_location" oninput="majLocalisation(this.value)"
+        <input id="locInput" type="text" placeholder="e.g. SCHAERBEEK" data-i18n-ph="ph_location" data-i18n-aria="aria_location" aria-label="Location" oninput="majLocalisation(this.value)"
           style="flex:1;min-width:160px;max-width:360px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
       </div>
       <div id="planningInfo"></div>
     </div>
 
     <!-- Alerte codes nationalité/pays manquants -->
-    <div id="structureWarn" class="hidden" style="background:#fff3e0;border:1px solid #ffb74d;border-radius:8px;padding:10px 14px;margin:0 0 12px;font-size:12px;color:#e65100"></div>
-    <div id="codesManquants" class="hidden" style="background:#fff3e0;border:1px solid #ffb74d;border-radius:8px;padding:10px 14px;margin:0 0 12px;font-size:12px;color:#e65100"></div>
+    <div id="structureWarn" class="avertissement hidden" role="status" aria-live="polite"></div>
+    <div id="codesManquants" class="avertissement hidden" role="status" aria-live="polite"></div>
 
     <!-- Panneau Aperçu : cibles + accordéon ménage -->
     <div class="panneau actif" id="pan-apercu">
@@ -602,76 +614,76 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
            Les visualisations larges (treemap, Sankey) occupent toute la largeur. -->
       <div class="stats-grid" id="statsBlocks">
         <div class="card blk-wide" data-block="nat">
-          <div class="card-titre"><span data-i18n="card_nationalities">🌍 Nationalities</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_area_headcount">(surface ∝ effectif)</span></div>
+          <h2 class="card-titre"><span data-i18n="card_nationalities">🌍 Nationalities</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_area_headcount">(surface ∝ effectif)</span></h2>
           <div id="statsTreemap"></div>
         </div>
         <div class="card" data-block="cont">
-          <div class="card-titre" data-i18n="card_by_continent">🌐 By continent</div>
+          <h2 class="card-titre" data-i18n="card_by_continent">🌐 By continent</h2>
           <div id="statsCont"></div>
         </div>
         <div class="card" data-block="eu">
-          <div class="card-titre" data-i18n="card_eu_noneu">🇪🇺 EU / non-EU</div>
+          <h2 class="card-titre" data-i18n="card_eu_noneu">🇪🇺 EU / non-EU</h2>
           <div id="statsEU"></div>
         </div>
         <div class="card" data-block="mrtl">
-          <div class="card-titre" data-i18n="card_marital">💍 Marital status</div>
+          <h2 class="card-titre" data-i18n="card_marital">💍 Marital status</h2>
           <div id="statsMrtl"></div>
           <div id="statsMrtlDetail" style="margin-top:8px"></div>
         </div>
         <div class="card" data-block="sexe">
-          <div class="card-titre" data-i18n="card_gender">⚧ Gender</div>
+          <h2 class="card-titre" data-i18n="card_gender">⚧ Gender</h2>
           <div id="statsSexe"></div>
           <div id="statsSexeDetail" style="margin-top:8px"></div>
         </div>
         <div class="card" data-block="birth">
-          <div class="card-titre"><span data-i18n="card_birthplace">🏙️ Place of birth</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_born_be">(born in Belgium, any nationality)</span></div>
+          <h2 class="card-titre"><span data-i18n="card_birthplace">🏙️ Place of birth</span> <span style="font-weight:normal;color:var(--text3);font-size:11px" data-i18n="hint_born_be">(born in Belgium, any nationality)</span></h2>
           <div id="statsCommune"></div>
         </div>
         <div class="card" data-block="age">
-          <div class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span data-i18n="card_age_pyramid">📊 Age pyramid</span>
-            <select id="pyrNlty" onchange="majPyramide()" style="margin-left:auto;font-weight:normal;padding:3px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
-          </div>
+          <h2 class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span data-i18n="card_age_pyramid">📊 Age pyramid</span>
+            <select id="pyrNlty" onchange="majPyramide()" data-i18n-aria="aria_pyr_nlty" aria-label="Filter pyramid by nationality" style="margin-left:auto;font-weight:normal;padding:3px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
+          </h2>
           <div id="statsAge"></div>
           <div id="statsAgeDetail" style="margin-top:8px"></div>
         </div>
         <div class="card" data-block="size">
-          <div class="card-titre" data-i18n="card_household_dist">👥 Household size distribution</div>
+          <h2 class="card-titre" data-i18n="card_household_dist">👥 Household size distribution</h2>
           <div id="statsTaille"></div>
           <div id="statsTailleDetail" style="margin-top:8px"></div>
         </div>
         <div class="card" data-block="chh">
-          <div class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <h2 class="card-titre" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span id="titreCiblesHH" data-i18n="card_targets_per_hh">🎯 Targets per household</span>
             <span id="kpiCiblesMoy" style="margin-left:auto;font-weight:normal;font-size:12px;color:var(--text2)"></span>
-          </div>
+          </h2>
           <div id="statsCiblesHH"></div>
           <div id="statsCiblesHHDetail" style="margin-top:8px"></div>
         </div>
         <div class="card" data-block="compo">
-          <div class="card-titre" data-i18n="card_hh_composition">🏠 Household composition</div>
+          <h2 class="card-titre" data-i18n="card_hh_composition">🏠 Household composition</h2>
           <div id="statsCompoHH"></div>
           <div id="statsCompoHHDetail" style="margin-top:8px;font-size:11px;color:var(--text2)"></div>
         </div>
         <div class="card" data-block="ageLFS">
-          <div class="card-titre" data-i18n="card_age_lfs">📊 Tranches d'âge</div>
+          <h2 class="card-titre" data-i18n="card_age_lfs">📊 Tranches d'âge</h2>
           <div id="statsAgeLFS"></div>
           <div id="statsAgeLFSDetail" style="margin-top:8px"></div>
         </div>
         <div class="card" data-block="depend">
-          <div class="card-titre" data-i18n="card_dependency">⚖️ Ratio de dépendance</div>
+          <h2 class="card-titre" data-i18n="card_dependency">⚖️ Ratio de dépendance</h2>
           <div id="statsDepend"></div>
           <div id="statsDependDetail" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
         </div>
         <div class="card" data-block="contact">
-          <div class="card-titre" data-i18n="card_contactability">📞 Complétude des contacts</div>
+          <h2 class="card-titre" data-i18n="card_contactability">📞 Complétude des contacts</h2>
           <div id="statsContact"></div>
         </div>
         <div class="card blk-wide" data-block="sankey">
-          <div class="card-titre" data-i18n="card_sankey">🔀 Flux Nationalité → Sexe → Âge</div>
+          <h2 class="card-titre" data-i18n="card_sankey">🔀 Flux Nationalité → Sexe → Âge</h2>
           <div id="statsSankey"></div>
         </div>
         <div class="card blk-wide" data-block="sankeyHH">
-          <div class="card-titre" data-i18n="card_sankey_hh">🔀 Ménages : taille → à interroger → âge dominant</div>
+          <h2 class="card-titre" data-i18n="card_sankey_hh">🔀 Ménages : taille → à interroger → âge dominant</h2>
           <div id="statsSankeyHH"></div>
         </div>
       </div>
@@ -791,14 +803,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
     <div class="lk-pan" id="lkpan-nlty">
       <div id="paysFiltres" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px">
-        <select id="filtrePaysCont" onchange="filtrerPays()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
-        <select id="filtrePaysUE" onchange="filtrerPays()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+        <select id="filtrePaysCont" onchange="filtrerPays()" data-i18n-aria="aria_filter_continent" aria-label="Filter by continent" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
+        <select id="filtrePaysUE" onchange="filtrerPays()" data-i18n-aria="aria_filter_eu" aria-label="Filter by EU / non-EU" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px">
           <option value="" data-i18n="opt_eu_and_noneu">EU &amp; non-EU</option>
           <option value="eu" data-i18n="opt_eu_only">EU only</option>
           <option value="non" data-i18n="opt_noneu">Non-EU</option>
         </select>
         <span style="position:relative;flex:1;min-width:140px;display:flex">
-          <input id="filtrePays" type="text" placeholder="Search NIS, ISO or name…" data-i18n-ph="ph_search_country" oninput="filtrerPays()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
+          <input id="filtrePays" type="text" placeholder="Search NIS, ISO or name…" data-i18n-ph="ph_search_country" data-i18n-aria="ph_search_country" aria-label="Search NIS, ISO or name" oninput="filtrerPays()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
           <button id="filtrePaysClear" onclick="effacerRecherchePays()" title="Clear" data-i18n-title="btn_clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
         </span>
         <span id="paysCount" style="align-self:center;font-size:11px;color:var(--text2)"></span>
@@ -808,11 +820,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
     <div class="lk-pan" id="lkpan-commune">
       <div id="communeFiltres" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px">
-        <select id="filtreRegion" onchange="majProvinces();filtrerCommunes()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
-        <select id="filtreProvince" onchange="majDistricts();filtrerCommunes()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
-        <select id="filtreDistrict" onchange="filtrerCommunes()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
+        <select id="filtreRegion" onchange="majProvinces();filtrerCommunes()" data-i18n-aria="aria_filter_region" aria-label="Filter by region" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
+        <select id="filtreProvince" onchange="majDistricts();filtrerCommunes()" data-i18n-aria="aria_filter_province" aria-label="Filter by province" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
+        <select id="filtreDistrict" onchange="filtrerCommunes()" data-i18n-aria="aria_filter_district" aria-label="Filter by district" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
         <span style="position:relative;flex:1;min-width:140px;display:flex">
-          <input id="filtreCommune" type="text" placeholder="Search REFNIS or name…" data-i18n-ph="ph_search_commune" oninput="filtrerCommunes()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
+          <input id="filtreCommune" type="text" placeholder="Search REFNIS or name…" data-i18n-ph="ph_search_commune" data-i18n-aria="ph_search_commune" aria-label="Search REFNIS or name" oninput="filtrerCommunes()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
           <button id="filtreCommuneClear" onclick="effacerRechercheCommune()" title="Clear" data-i18n-title="btn_clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
         </span>
         <span id="communeCount" style="align-self:center;font-size:11px;color:var(--text2)"></span>
@@ -870,6 +882,15 @@ const I18N = {
   // ── Zone de dépôt / chargement ────────────────────────────────────
   dz_title: { fr:"Glissez le fichier GRP ici", nl:"Sleep het GRP-bestand hierheen", en:"Drag the GRP file here", de:"GRP-Datei hierher ziehen" },
   dz_sub:   { fr:"ou cliquez pour sélectionner", nl:"of klik om te selecteren", en:"or click to select", de:"oder klicken zum Auswählen" },
+  dz_aria:  { fr:"Importer un fichier GRP", nl:"Een GRP-bestand importeren", en:"Import a GRP file", de:"Eine GRP-Datei importieren" },
+  app_h1:   { fr:"Convertisseur GRP Statbel", nl:"Statbel GRP-omzetter", en:"Statbel GRP Converter", de:"Statbel GRP-Konverter" },
+  aria_location:         { fr:"Localisation", nl:"Locatie", en:"Location", de:"Standort" },
+  aria_pyr_nlty:         { fr:"Filtrer la pyramide par nationalité", nl:"Piramide filteren op nationaliteit", en:"Filter pyramid by nationality", de:"Pyramide nach Nationalität filtern" },
+  aria_filter_continent: { fr:"Filtrer par continent", nl:"Filteren op continent", en:"Filter by continent", de:"Nach Kontinent filtern" },
+  aria_filter_eu:        { fr:"Filtrer par UE / hors-UE", nl:"Filteren op EU / niet-EU", en:"Filter by EU / non-EU", de:"Nach EU / Nicht-EU filtern" },
+  aria_filter_region:    { fr:"Filtrer par région", nl:"Filteren op gewest", en:"Filter by region", de:"Nach Region filtern" },
+  aria_filter_province:  { fr:"Filtrer par province", nl:"Filteren op provincie", en:"Filter by province", de:"Nach Provinz filtern" },
+  aria_filter_district:  { fr:"Filtrer par arrondissement", nl:"Filteren op arrondissement", en:"Filter by district", de:"Nach Bezirk filtern" },
   loading_generic: { fr:"Conversion…", nl:"Bezig met converteren…", en:"Converting…", de:"Konvertierung läuft…" },
   loading_converting: { fr:"Conversion de {name}…", nl:"{name} wordt geconverteerd…", en:"Converting {name}…", de:"{name} wird konvertiert…" },
 
@@ -5904,13 +5925,13 @@ const KPI_DEFS = {
   men:  { i18n: 'kpi_households',  color: 'var(--bleuC)', val: c => c.nbHH },
   pop:  { i18n: 'kpi_pop_total',   color: '#00897b',      val: c => c.popN },
   size: { i18n: 'kpi_avg_hh_size', color: 'var(--vert)',  val: c => c.nbHH ? (c.membres / c.nbHH).toFixed(1) : '—' },
-  age:  { i18n: 'kpi_avg_age',     color: 'var(--gold)',  val: c => c.ageMoy != null ? c.ageMoy + ' ans' : '—' },
+  age:  { i18n: 'kpi_avg_age',     color: 'var(--gold)',  val: c => c.ageMoy != null ? c.ageMoy + ' ' + t('age_years') : '—' },
   h:    { i18n: 'kpi_pct_men',     color: 'var(--bar-h)', tint: 'var(--bar-h)', val: c => c.popN ? Math.round(c.kM / c.popN * 100) + ' %' : '—' },
   f:    { i18n: 'kpi_pct_women',   color: 'var(--bar-f)', tint: 'var(--bar-f)', val: c => c.popN ? Math.round(c.kF / c.popN * 100) + ' %' : '—' },
   cib:  { i18n: 'kpi_targets_min', color: '#5e35b1',      val: c => c.nbCibles15, dyn: () => tf('kpi_targets_min', { n: ageMinCible() }) },
   etr:  { i18n: 'kpi_pct_foreign', color: '#00838f',      val: c => c.popN ? Math.round(c.nEtr / c.popN * 100) + ' %' : '—' },
   min:  { i18n: 'kpi_pct_minors',  color: '#8d6e63',      val: c => c.membres ? Math.round(c.nMin / c.membres * 100) + ' %' : '—', dyn: () => tf('kpi_pct_minors_dyn', { n: ageMinCible() }) },
-  med:  { i18n: 'kpi_age_median',  color: '#ef6c00',      val: c => c.ageMed != null ? c.ageMed + ' ans' : '—' },
+  med:  { i18n: 'kpi_age_median',  color: '#ef6c00',      val: c => c.ageMed != null ? c.ageMed + ' ' + t('age_years') : '—' },
   // Indemnité POTENTIELLE : montant maximal payé par Statbel si toute l'enquête
   // est réalisée. Même règle que le Résumé d'Interviews (ménages × quota ménage
   // + cibles ≥ âge min × quota personne), mais sur la totalité du groupe (rien
@@ -5979,6 +6000,9 @@ const BLOC_DEFS = {
   sankeyHH: { i18n: 'card_sankey_hh', render: ctx => renderSankeyMenage('statsSankeyHH', ctx.res) },
 };
 const BLOC_ALL = ['nat', 'cont', 'eu', 'mrtl', 'sexe', 'birth', 'age', 'ageLFS', 'depend', 'size', 'chh', 'compo', 'contact', 'sankey', 'sankeyHH'];
+// Défaut allégé (nouveaux utilisateurs) : 6 blocs cœur affichés d'emblée ; le reste
+// reste activable via « Personnaliser ». Les préférences déjà enregistrées priment.
+const BLOC_ON_DEFAUT = ['nat', 'sexe', 'age', 'size', 'mrtl', 'eu'];
 
 // Aiguilleur de rendu : type de graphe → primitive, sur la forme d'item native du graphe.
 const RENDERERS = {
@@ -6062,7 +6086,7 @@ const HH_COL_ALL = ['num', 'prenom', 'nom', 'age', 'birth_date', 'sexe', 'birth_
 // Registres exposés au panneau générique (config = liste ordonnée {id, on}).
 const PERSO = {
   kpi:   { defs: KPI_DEFS,     all: KPI_ALL,     onDef: KPI_ON_DEFAUT, key: 'statbel_conv_kpi',    hint: 'perso_hint',       apply: () => renderKPIs(_kpiCtx) },
-  blocs: { defs: BLOC_DEFS,    all: BLOC_ALL,    onDef: BLOC_ALL,      key: 'statbel_conv_blocs',  hint: 'perso_hint_blocs', apply: () => renderBlocsOrder() },
+  blocs: { defs: BLOC_DEFS,    all: BLOC_ALL,    onDef: BLOC_ON_DEFAUT, key: 'statbel_conv_blocs',  hint: 'perso_hint_blocs', apply: () => renderBlocsOrder() },
   cols:  { defs: COL_DEFS,     all: COL_ALL,     onDef: COL_ON_DEFAUT, key: 'statbel_conv_cols',   hint: 'perso_hint_cols',  sub: 'perso_sub_apercu',  apply: () => rerenderCibles() },
   hh:    { defs: HH_COL_DEFS,  all: HH_COL_ALL,  onDef: HH_COL_ALL,    key: 'statbel_conv_hhcols', hint: 'perso_hint_hh',    sub: 'perso_sub_menage',  apply: () => rerenderCibles() },
 };
@@ -6353,6 +6377,15 @@ function renderBarres100(elId, items, clickFn) {
 }
 
 // Treemap (squarified) en SVG — items: [{ label, value }]
+// Encre lisible sur une tuile de couleur : blanc sur fond foncé, encre foncée sur
+// fond clair (ex. ambre #f9a825 où le blanc échouait le contraste AA).
+function inkOn(hex) {
+  const c = String(hex).replace('#', '');
+  if (c.length < 6) return '#fff';
+  const r = parseInt(c.slice(0, 2), 16), g = parseInt(c.slice(2, 4), 16), b = parseInt(c.slice(4, 6), 16);
+  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;   // luminance approx (0–255)
+  return L > 150 ? '#1a1a1a' : '#fff';
+}
 function renderTreemapNlty(elId, items) {
   const el = document.getElementById(elId);
   if (!items.length) { el.innerHTML = '<div style="color:var(--text2);font-size:12px">—</div>'; return; }
@@ -6393,6 +6426,8 @@ function renderTreemapNlty(elId, items) {
   }
   const svg = rects.map((r) => {
     const col = PALETTE[data.indexOf(r.d) % PALETTE.length];
+    const ink = inkOn(col);
+    const inkStroke = ink === '#fff' ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.5)';
     const cx = (r.x + r.w / 2).toFixed(2), cy = r.y + r.h / 2;
     const name = String(r.d.label), val = '(' + r.d.value + ')';
     // police adaptée à la tuile ; largeur de texte estimée ≈ 0,5·fs·nbCar
@@ -6400,13 +6435,13 @@ function renderTreemapNlty(elId, items) {
     const fitName = (name.length * fs * 0.5) <= r.w * 0.92 && r.h >= fs * 2.3;     // nom + effectif (2 lignes)
     let txt = '';
     if (fitName) {
-      txt = `<text x="${cx}" y="${(cy - fs * 0.45).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="${fs.toFixed(2)}">${escHtml(name)}</text>`
-        + `<text x="${cx}" y="${(cy + fs * 0.75).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="${(fs * 0.85).toFixed(2)}" opacity="0.9">${escHtml(val)}</text>`;
+      txt = `<text x="${cx}" y="${(cy - fs * 0.45).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" fill="${ink}" font-size="${fs.toFixed(2)}">${escHtml(name)}</text>`
+        + `<text x="${cx}" y="${(cy + fs * 0.75).toFixed(2)}" text-anchor="middle" dominant-baseline="middle" fill="${ink}" font-size="${(fs * 0.85).toFixed(2)}" opacity="0.9">${escHtml(val)}</text>`;
     } else {
       // tuile trop petite : on force au moins l'effectif (léger débordement accepté), police >= 1
       const num = '' + r.d.value;
       const fsv = Math.max(1, Math.min(fs, r.w * 1.7 / num.length));
-      txt = `<text x="${cx}" y="${cy.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="${fsv.toFixed(2)}" style="paint-order:stroke" stroke="rgba(0,0,0,0.25)" stroke-width="0.15">${escHtml(num)}</text>`;
+      txt = `<text x="${cx}" y="${cy.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" fill="${ink}" font-size="${fsv.toFixed(2)}" style="paint-order:stroke" stroke="${inkStroke}" stroke-width="0.15">${escHtml(num)}</text>`;
     }
     return `<g><rect x="${r.x.toFixed(2)}" y="${r.y.toFixed(2)}" width="${r.w.toFixed(2)}" height="${r.h.toFixed(2)}" fill="${col}" stroke="#fff" stroke-width="0.4"><title>${escHtml(name)} : ${r.d.value}</title></rect>${txt}</g>`;
   }).join('');
@@ -6864,6 +6899,7 @@ function traiterFichier(file) {
       const el = document.getElementById('erreur');
       el.textContent = tf('al_generic_error', { msg: err.message });
       el.classList.remove('hidden');
+      try { el.focus(); } catch (_) {}   // amène le lecteur d'écran + le clavier sur l'erreur
     }
   };
   if (estExcel || estPdf) reader.readAsArrayBuffer(file);
@@ -6879,6 +6915,13 @@ dz.addEventListener('drop', e => {
   traiterFichier(e.dataTransfer.files[0]);
 });
 dz.addEventListener('click', () => document.getElementById('fileInput').click());
+// Accessibilité clavier : la zone de dépôt est un bouton (role=button, tabindex=0)
+dz.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    document.getElementById('fileInput').click();
+  }
+});
 
 document.getElementById('fileInput').addEventListener('change', e => {
   traiterFichier(e.target.files[0]);
@@ -6973,7 +7016,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '216';
+const APP_VERSION = '217';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

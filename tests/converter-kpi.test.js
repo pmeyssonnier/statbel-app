@@ -82,17 +82,17 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // ── Blocs d'analyse ───────────────────────────────────────────────
     localStorage.removeItem('statbel_conv_blocs');
     persoTab('blocs');
-    out.blocDefaut = getCfg('blocs').length + '/' + getCfg('blocs').filter(x => x.on).length;   // 15/15 par défaut
+    out.blocDefaut = getCfg('blocs').length + '/' + getCfg('blocs').filter(x => x.on).length;   // 15 dispo / 6 cœur par défaut
     // Libellé dynamique du KPI « Cibles ≥N » selon l'âge min courant
     _ui.ageMinCible = 16;
     out.cibLabel16 = KPI_DEFS.cib.dyn();   // « Cibles ≥16 ans »
     out.minLabel16 = KPI_DEFS.min.dyn();   // « % mineurs (<16) » — suit aussi l'âge cible
-    // Masquer le bloc Sankey → carte cachée dans le DOM + persistée
-    const idxSankey = getCfg('blocs').findIndex(x => x.id === 'sankey');
-    persoToggle('blocs', idxSankey);
-    const sankeyCard = document.querySelector('#statsBlocks [data-block="sankey"]');
-    out.sankeyHidden = sankeyCard && sankeyCard.style.display === 'none';
-    out.blocPersisted = (JSON.parse(localStorage.getItem('statbel_conv_blocs')).find(x => x.id === 'sankey') || {}).on === false;
+    // Masquer un bloc affiché par défaut (sexe) → carte cachée dans le DOM + persistée
+    const idxSexe = getCfg('blocs').findIndex(x => x.id === 'sexe');
+    persoToggle('blocs', idxSexe);
+    const sexeCard = document.querySelector('#statsBlocks [data-block="sexe"]');
+    out.sankeyHidden = sexeCard && sexeCard.style.display === 'none';
+    out.blocPersisted = (JSON.parse(localStorage.getItem('statbel_conv_blocs')).find(x => x.id === 'sexe') || {}).on === false;
     // Réordonner : monter le 2e bloc → l'ordre DOM suit
     persoMove('blocs', 1, -1);
     const domOrder = [...document.querySelectorAll('#statsBlocks [data-block]')].map(el => el.getAttribute('data-block'));
@@ -148,7 +148,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
 
   A(r.def === 'men,pop,size,age,h,f,paie', `défaut = 7 KPI ordonnés (dont indemnité) → ${r.def}`);
   A(r.total === 11, `registre complet (11 KPI, dont l'indemnité potentielle) → ${r.total}`);
-  A(r.nTiles === 7 && r.vals.startsWith('26|66|2.5|46 ans|50 %|50 %'), `rendu des valeurs depuis le contexte → ${r.vals}`);
+  // L'unité d'âge suit désormais la langue de l'UI (clé i18n age_years), on ne fige donc pas « ans ».
+  A(r.nTiles === 7 && /^26\|66\|2\.5\|46 [^|]+\|50 %\|50 %/.test(r.vals), `rendu des valeurs depuis le contexte → ${r.vals}`);
   A(r.minFormula === '12 %', `% mineurs calculé sur le ménage complet (8/66) → ${r.minFormula}`);
   A(/470/.test(r.paieValue || ''), `KPI indemnité potentielle = 26×10€ + 42×5€ = 470 € → "${r.paieValue}"`);
   A(/26/.test(r.paieTip || '') && /42/.test(r.paieTip || ''), `titre de l'indemnité détaille la formule → "${r.paieTip}"`);
@@ -159,10 +160,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(/%$/.test((r.etrValue || '').trim()), `KPI % né·es à l'étranger calculé → ${r.etrValue}`);
   A(r.reordered, 'réordonner (↑) échange bien les deux premiers KPI');
   A(r.reset === 'men,pop,size,age,h,f,paie', 'Réinitialiser rétablit le défaut');
-  A(r.blocDefaut === '15/15', `blocs : 15 cartes, toutes affichées par défaut → ${r.blocDefaut}`);
+  A(r.blocDefaut === '15/6', `blocs : 15 disponibles, 6 cœur affichés par défaut → ${r.blocDefaut}`);
   A(/16/.test(r.cibLabel16 || ''), `KPI « Cibles » suit l'âge min (≥16) → « ${r.cibLabel16} »`);
   A(/16/.test(r.minLabel16 || ''), `KPI « % mineurs » suit l'âge min (<16) → « ${r.minLabel16} »`);
-  A(r.sankeyHidden && r.blocPersisted, 'masquer un bloc cache la carte (DOM) et persiste');
+  A(r.sankeyHidden && r.blocPersisted, 'masquer un bloc affiché cache la carte (DOM) et persiste');
   A(r.blocDomMatchesCfg, 'réordonner un bloc réordonne les cartes dans le DOM');
   A(r.blocXCount === 15, `croix ✕ injectée dans les 15 blocs → ${r.blocXCount}`);
   A(r.blocXHidden && r.blocXPersisted, 'croix ✕ masque le bloc (carte cachée + config persistée)');
