@@ -12,6 +12,22 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — accessibilité & UX (revue design)
+- **Accessibilité et allègement** (Convertisseur 217, SW `statbel-v303`) : suite à une critique
+  design (score 30/40). **Clavier** : la zone de dépôt devient un vrai bouton (`role="button"`,
+  `tabindex`, Entrée/Espace) — l'action principale n'est plus réservée à la souris ; `#fileInput`
+  étiqueté. **États annoncés** : `#loading` (`role="status"`) et `#erreur` (`role="alert"` + focus)
+  sont lus par les lecteurs d'écran, et le spinner ⏳ **tourne** enfin (`@keyframes spin`, neutralisé
+  par `prefers-reduced-motion`). **Contraste** : les encadrés d'alerte passent par des tokens
+  thème-aware (`--warn-*`, lisibles en sombre au lieu d'un aplat orange), le bouton export « enquête »
+  passe par un token (`--violet`), et les libellés du treemap adoptent une encre selon la luminance
+  de la tuile (fini le blanc sur ambre ≈1,97:1). **Étiquetage** : `aria-label` traduits sur les
+  sélects/inputs de filtres, et un `h1` de repérage + les titres de cartes stats en `h2`.
+  **i18n** : « âge moyen/médian » n'affiche plus « ans » en dur (clé `age_years`). **Densité** :
+  la vue Statistiques n'ouvre plus 15 blocs d'un coup — 6 blocs cœur par défaut (nouveaux
+  utilisateurs), le reste activable via Personnaliser ; les préférences enregistrées priment.
+  Commentaire « Leaflet (CDN) » corrigé (la lib est vendorée).
+
 ### Documentation
 - **Manuel — finitions post-critique** (SW `statbel-v302`) : suite à une re-critique
   (score 24→28 / 32). **Mobile** : `overflow-wrap:anywhere` sur `.feat li` et `code` (les codes
