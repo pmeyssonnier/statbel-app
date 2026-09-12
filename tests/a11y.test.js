@@ -79,7 +79,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.cardIconHidden, 'barre de statut (carte) : emoji marqué décoratif (aria-hidden)');
   A(r.editAllPressed, 'mode édition : tous les boutons de statut portent aria-pressed');
   A(r.editActivePressed === 'true', `mode édition : le statut actif est aria-pressed="true"`);
-  A(r.histDelLabel === 'Supprimer cette entrée', `bouton icône dynamique nommé → « ${r.histDelLabel} »`);
+  // Le libellé suit la langue de l'UI (routé via t()) : on vérifie la présence d'un nom accessible, pas une langue.
+  A(!!r.histDelLabel && r.histDelLabel.trim().length > 2, `bouton icône dynamique nommé → « ${r.histDelLabel} »`);
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();

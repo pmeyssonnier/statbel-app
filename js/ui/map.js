@@ -30,7 +30,7 @@ export function toggleMaPosition() {
   if (maPosition) {
     maPosition=null;
     if (markerMoi && leafletMap) leafletMap.removeLayer(markerMoi);
-    markerMoi=null; btn.classList.remove('active'); btn.textContent='🎯'; btn.title='Ma position';
+    markerMoi=null; btn.classList.remove('active'); btn.textContent='🎯'; btn.title=t('title_mypos');
     rendu(); return;
   }
   if (!navigator.geolocation) { afficherToast(t('toast_geo_unsupported'),4000); return; }
@@ -43,11 +43,11 @@ export function toggleMaPosition() {
 }
 
 export function demanderPosition(btn) {
-  btn.textContent='⏳'; btn.title='Localisation en cours...';
+  btn.textContent='⏳'; btn.title=t('title_mypos_loading');
   navigator.geolocation.getCurrentPosition(
     pos => {
       maPosition={lat:pos.coords.latitude,lng:pos.coords.longitude};
-      btn.textContent='🎯'; btn.classList.add('active'); btn.title='Position active';
+      btn.textContent='🎯'; btn.classList.add('active'); btn.title=t('title_mypos_active');
       afficherToast(t('toast_geo_ok'),2000);
       if (vueActive==='carte') { placerMarqueurMoi(); afficherMarqueurs(); }
       rendu();
@@ -67,7 +67,7 @@ export function placerMarqueurMoi() {
   markerMoi = L.marker([maPosition.lat,maPosition.lng],{
     icon:L.divIcon({className:'',html:'<div class="marker-moi"></div>',iconSize:[20,20],iconAnchor:[10,10],popupAnchor:[0,-14]}),
     zIndexOffset:1000
-  }).addTo(leafletMap).bindPopup('<div style="font-weight:bold;color:#1a73e8;">📍 Ma position</div>');
+  }).addTo(leafletMap).bindPopup('<div style="font-weight:bold;color:#1a73e8;">📍 ' + esc(t('title_mypos')) + '</div>');
 }
 
 export function recentrerCarte() {
@@ -141,12 +141,12 @@ export function afficherMarqueurs() {
         <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statutLabel(statut))}</span>
         ${dateStatut ? `<span style="font-size:12px;color:#666">${esc(dateStatut)}</span>` : ''}
       </div>
-      <div style="margin-top:8px"><button onclick="ouvrirFicheDepuisCarte(${idx})" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ Éditer la fiche</button></div>`;
+      <div style="margin-top:8px"><button onclick="ouvrirFicheDepuisCarte(${idx})" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ ${esc(t('map_editcard'))}</button></div>`;
     // Largeur du popup adaptée à l'écran (téléphone/tablette)
     const vw = window.innerWidth || 360;
     const popMax = Math.min(340, vw - 40);
     const popMin = Math.min(280, popMax);
-    L.marker([lat,lng],{icon}).addTo(markersLayer).bindPopup(popup,{maxWidth:popMax,minWidth:popMin});
+    L.marker([lat,lng],{icon, title:'N° '+c.ordre+' — '+statutLabel(statut)}).addTo(markersLayer).bindPopup(popup,{maxWidth:popMax,minWidth:popMin});
   }
 
   function zoomSurMarqueurs() {

@@ -149,11 +149,11 @@
 <a class="skip-link" href="#contenu" data-i18n="skip_link">Aller au contenu</a>
 
 <!-- Écran de verrouillage PIN -->
-<div id="lockScreen">
-  <div class="lock-icon">🔒</div>
+<div id="lockScreen" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+  <div class="lock-icon" aria-hidden="true">🔒</div>
   <div class="lock-title" id="lockTitle">Entrez le code PIN</div>
   <div class="lock-dots" id="lockDots"></div>
-  <div class="lock-error-msg" id="lockErrorMsg">&nbsp;</div>
+  <div class="lock-error-msg" id="lockErrorMsg" role="alert">&nbsp;</div>
   <div class="lock-keypad" id="lockKeypad"></div>
   <div class="lock-footer hidden" id="lockSetupHint" data-i18n="pin_setup_hint">Ce code sera demandé à chaque ouverture de l'application.</div>
 </div>
@@ -177,12 +177,12 @@
       <h1 aria-label="Statbel Interviews"><span aria-hidden="true">📋</span></h1>
     </div>
     <div class="header-mid">
-      <select id="surveySelect" onchange="changerEnquete(this.value)"></select>
+      <select id="surveySelect" onchange="changerEnquete(this.value)" data-i18n-aria="aria_survey" aria-label="Enquête active"></select>
     </div>
     <div class="header-col3">
       <span class="net-indicator" role="status" title=""></span>
       <span id="saveState" class="save-state" role="status" title=""></span>
-      <div class="view-toggle" role="group">
+      <div class="view-toggle" role="group" data-i18n-aria="aria_views" aria-label="Vues">
         <button class="btn-view active" id="btnListe" data-tip="Liste" data-i18n-tip="tip_list" data-i18n-aria="tip_list" onclick="setView('liste')">☰</button>
         <button class="btn-view" id="btnCarte" data-tip="Carte" data-i18n-tip="tip_map" data-i18n-aria="tip_map" onclick="setView('carte')">🗺️</button>
         <button class="btn-view" id="btnRdv" data-tip="Suivi" data-i18n-tip="tip_track" data-i18n-aria="tip_track" onclick="setView('rdv')">📅</button>
@@ -212,7 +212,7 @@
       </div>
     </div>
   </div>
-  <input type="file" id="importFile" accept=".csv,.xlsx,.xls"
+  <input type="file" id="importFile" accept=".csv,.xlsx,.xls" data-i18n-aria="menu_import" aria-label="Importer CSV / Excel"
     style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden"
     onchange="importerFichier(event)">
 </header>
@@ -220,7 +220,7 @@
 <!-- Contenu principal (landmark main + cible du lien d'évitement) -->
 <main id="contenu" tabindex="-1">
 <div class="search-bar">
-  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" oninput="debounce(rendu)" autocomplete="off">
+  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" data-i18n-aria="ph_search" aria-label="Rechercher" oninput="debounce(rendu)" autocomplete="off">
 </div>
 
 <div id="backupBanner" class="backup-banner hidden">
@@ -238,7 +238,7 @@
   <div id="map"></div>
   <button onclick="recentrerCarte()" title="Recentrer sur les contacts" data-i18n-title="title_recenter" data-i18n-aria="title_recenter"
     class="btn-view" style="position:absolute;top:10px;right:10px;z-index:500;background:white;color:#1a237e;box-shadow:0 2px 6px rgba(0,0,0,0.2);">⊙</button>
-  <div id="geocodeProgress">⏳ Géocodage <span id="geocodeCount"></span></div>
+  <div id="geocodeProgress" role="status" aria-live="polite">⏳ Géocodage <span id="geocodeCount"></span></div>
   <div class="map-legend" id="mapLegend"></div>
   <div id="mapOfflineMsg" class="map-offline hidden">📡 <span class="map-offline-txt"></span></div>
 </div>
@@ -246,7 +246,7 @@
 <div id="rdvContainer" style="display:none; padding:10px 12px; flex-direction:column; gap:10px;">
   <h2 class="rdv-title" id="rdvTitle">📅 Suivi des interviews</h2>
   <div class="rdv-search">
-    <input type="search" id="rdvSearch" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" oninput="debounce(renduRdv)" autocomplete="off">
+    <input type="search" id="rdvSearch" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" data-i18n-aria="ph_search" aria-label="Rechercher" oninput="debounce(renduRdv)" autocomplete="off">
   </div>
   <div class="filters" id="rdvFilters" style="padding:0;border:none;background:none;"></div>
   <div id="rdvListe"></div>
@@ -267,8 +267,8 @@
       <span id="importExcluded" style="font-size:11px;color:#b71c1c;"></span>
     </label>
     <div id="importExclusDetail"></div>
-    <label style="display:block;margin-top:12px;font-size:13px;font-weight:600;" data-i18n="lbl_survey_name">Nom de l'enquête</label>
-    <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" oninput="majComparaisonImport()">
+    <label for="inputNomEnquete" style="display:block;margin-top:12px;font-size:13px;font-weight:600;" data-i18n="lbl_survey_name">Nom de l'enquête</label>
+    <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" data-i18n-aria="lbl_survey_name" aria-label="Nom de l'enquête" oninput="majComparaisonImport()">
     <div class="modal-btns">
       <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerModal()">Annuler</button>
       <button class="btn-primary" id="btnConfirmerImport" onclick="confirmerImport()">Importer</button>
@@ -278,8 +278,8 @@
 
 <div class="modal-overlay" id="modalRename">
   <div class="modal">
-    <h2>Renommer l'enquête</h2>
-    <input type="text" id="inputRename" placeholder="Ex: 2026-12305 - GD RUE AU BOIS"
+    <h2 data-i18n="rename_title">Renommer l'enquête</h2>
+    <input type="text" id="inputRename" placeholder="Ex: 2026-12305 - GD RUE AU BOIS" data-i18n-ph="ph_rename" data-i18n-aria="rename_title" aria-label="Renommer l'enquête"
       onkeydown="if(event.key==='Enter')confirmerRename()">
     <div class="modal-btns">
       <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerRename()">Annuler</button>
@@ -297,7 +297,7 @@
       <div style="margin-top:8px;">
         <div class="set-row">
           <label data-i18n="lbl_lang">🌐 Langue</label>
-          <select id="setLang" onchange="changerLangue(this.value)">
+          <select id="setLang" onchange="changerLangue(this.value)" data-i18n-aria="lbl_lang" aria-label="Langue">
             <option value="fr">🇫🇷 Français</option>
             <option value="nl">🇳🇱 Nederlands</option>
             <option value="en">🇬🇧 English</option>
@@ -306,7 +306,7 @@
         </div>
         <div class="set-row">
           <label data-i18n="lbl_theme">🎨 Thème</label>
-          <select id="setTheme" onchange="settings.theme=this.value;saveSettings();appliquerTheme()">
+          <select id="setTheme" onchange="settings.theme=this.value;saveSettings();appliquerTheme()" data-i18n-aria="lbl_theme" aria-label="Thème">
             <option value="light" data-i18n="opt_theme_light">Clair</option>
             <option value="dark" data-i18n="opt_theme_dark">Sombre</option>
             <option value="auto" data-i18n="opt_theme_auto">Automatique (système)</option>
@@ -314,7 +314,7 @@
         </div>
         <div class="set-row">
           <label data-i18n="lbl_font">🔤 Police de caractères</label>
-          <select id="setFontFamily" onchange="settings.fontFamily=this.value;saveSettings();appliquerPolice()">
+          <select id="setFontFamily" onchange="settings.fontFamily=this.value;saveSettings();appliquerPolice()" data-i18n-aria="lbl_font" aria-label="Police de caractères">
             <option value="system" data-i18n="opt_font_system">Police système (par défaut)</option>
             <option value="arial">Arial</option>
             <option value="georgia">Georgia</option>
@@ -324,7 +324,7 @@
         </div>
         <div class="set-row">
           <label data-i18n="lbl_size">🔍 Taille du texte</label>
-          <select id="setFontSize" onchange="settings.fontSize=this.value;saveSettings();appliquerPolice()">
+          <select id="setFontSize" onchange="settings.fontSize=this.value;saveSettings();appliquerPolice()" data-i18n-aria="lbl_size" aria-label="Taille du texte">
             <option value="small" data-i18n="opt_size_small">Petite</option>
             <option value="normal" data-i18n="opt_size_normal">Normale (par défaut)</option>
             <option value="large" data-i18n="opt_size_large">Grande</option>
@@ -339,7 +339,7 @@
       <div style="margin-top:8px;">
         <div class="set-row">
           <label data-i18n="lbl_provider">🌍 Région / fournisseur géo</label>
-          <select id="setProvider" onchange="changerProvider(this.value)">
+          <select id="setProvider" onchange="changerProvider(this.value)" data-i18n-aria="lbl_provider" aria-label="Région / fournisseur géo">
             <option value="auto" data-i18n="opt_prov_auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
             <option value="bruxelles" data-i18n="opt_prov_bxl">Bruxelles (UrbIS — CIRB)</option>
             <option value="wallonie" data-i18n="opt_prov_wal">Wallonie (SPW + IGN)</option>
@@ -351,14 +351,14 @@
         </div>
         <div class="set-row" id="setStyleRow">
           <label data-i18n="lbl_basemap">🗺️ Fond de carte</label>
-          <select id="setMapStyle" onchange="settings.mapStyle=this.value;saveSettings();rafraichirFond()">
+          <select id="setMapStyle" onchange="settings.mapStyle=this.value;saveSettings();rafraichirFond()" data-i18n-aria="lbl_basemap" aria-label="Fond de carte">
             <option value="gray" data-i18n="opt_map_gray">Sobre (niveaux de gris)</option>
             <option value="color" data-i18n="opt_map_color">Couleur</option>
           </select>
         </div>
         <div class="set-row">
           <label data-i18n="lbl_nav">🧭 Liens de navigation</label>
-          <select id="setNav" onchange="settings.navMode=this.value;saveSettings();rendu()">
+          <select id="setNav" onchange="settings.navMode=this.value;saveSettings();rendu()" data-i18n-aria="lbl_nav" aria-label="Liens de navigation">
             <option value="coords" data-i18n="opt_nav_coords">Coordonnées GPS (respect vie privée)</option>
             <option value="adresse" data-i18n="opt_nav_addr">Adresse postale complète</option>
           </select>
@@ -389,14 +389,14 @@
           <button class="btn-secondary" data-i18n="btn_backup" onclick="exporterBackup()">⬇️ Sauvegarder tout (JSON)</button>
           <button class="btn-secondary" data-i18n="btn_restore" onclick="document.getElementById('restoreFile').click()">⬆️ Restaurer</button>
           <span style="display:inline-flex;gap:4px;align-items:center;">
-            <select id="viderCacheScope" style="max-width:220px;"></select>
+            <select id="viderCacheScope" data-i18n-aria="aria_cache_scope" aria-label="Portée du cache de coordonnées à vider" style="max-width:220px;"></select>
             <button class="btn-secondary" data-i18n="btn_clearcache" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
           </span>
           <button class="btn-secondary" data-i18n="btn_nongeo" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
         </div>
         <div class="set-row" style="margin-top:10px;">
           <label data-i18n="lbl_csvsep">↔️ Séparateur d'export CSV</label>
-          <select id="setCsvSep" onchange="settings.csvSep=this.value;saveSettings()">
+          <select id="setCsvSep" onchange="settings.csvSep=this.value;saveSettings()" data-i18n-aria="lbl_csvsep" aria-label="Séparateur d'export CSV">
             <option value="auto" data-i18n="opt_csvsep_auto">Auto (réglages régionaux)</option>
             <option value="," data-i18n="opt_csvsep_comma">Virgule ( , )</option>
             <option value=";" data-i18n="opt_csvsep_semi">Point-virgule ( ; ) — Excel FR/NL</option>
@@ -404,17 +404,17 @@
         </div>
         <div class="set-row" style="margin-top:10px;">
           <label data-i18n="lbl_cawi_url">🔗 Lien enquête web (CAWI)</label>
-          <input type="url" id="setCawiUrl" inputmode="url" placeholder="https://…" style="width:100%;max-width:360px"
+          <input type="url" id="setCawiUrl" inputmode="url" placeholder="https://…" data-i18n-aria="lbl_cawi_url" aria-label="Lien enquête web (CAWI)" style="width:100%;max-width:360px"
                  oninput="settings.cawiUrl=this.value.trim();saveSettings()">
         </div>
         <div class="set-row" style="margin-top:10px;">
           <label data-i18n="lbl_pay_household">💶 Indemnité par ménage réalisé (€)</label>
-          <input type="number" id="setPayHousehold" min="0" step="0.01" inputmode="decimal" style="width:110px"
+          <input type="number" id="setPayHousehold" min="0" step="0.01" inputmode="decimal" data-i18n-aria="lbl_pay_household" aria-label="Indemnité par ménage réalisé (€)" style="width:110px"
                  onchange="settings.paieMenage=Math.max(0,parseFloat(this.value)||0);saveSettings()">
         </div>
         <div class="set-row">
           <label data-i18n="lbl_pay_person">💶 Indemnité par personne ≥15 interrogée (€)</label>
-          <input type="number" id="setPayPerson" min="0" step="0.01" inputmode="decimal" style="width:110px"
+          <input type="number" id="setPayPerson" min="0" step="0.01" inputmode="decimal" data-i18n-aria="lbl_pay_person" aria-label="Indemnité par personne ≥15 interrogée (€)" style="width:110px"
                  onchange="settings.paiePersonne=Math.max(0,parseFloat(this.value)||0);saveSettings()">
         </div>
         <small id="dataStats"></small>
@@ -428,7 +428,7 @@
       <div class="set-row" style="margin-top:8px;">
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
           <button class="btn-secondary" id="btnPinToggle" onclick="ouvrirGestionPin()">Définir un code PIN</button>
-          <select id="setPinTimeout" onchange="settings.pinTimeout=parseInt(this.value);saveSettings()" style="max-width:200px;">
+          <select id="setPinTimeout" onchange="settings.pinTimeout=parseInt(this.value);saveSettings()" data-i18n-aria="aria_pin_timeout" aria-label="Délai de re-verrouillage" style="max-width:200px;">
             <option value="0" data-i18n="opt_pin_never">Re-verrouiller : jamais (sauf fermeture)</option>
             <option value="1" data-i18n="opt_pin_1">Re-verrouiller après 1 min</option>
             <option value="5" data-i18n="opt_pin_5">Re-verrouiller après 5 min</option>
@@ -448,14 +448,14 @@
     </div>
   </div>
 </div>
-<input type="file" id="restoreFile" accept=".json"
+<input type="file" id="restoreFile" accept=".json" data-i18n-aria="btn_restore" aria-label="Restaurer une sauvegarde"
   style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden"
   onchange="importerBackup(event)">
 <!-- Sélecteur de date partagé pour le calendrier de l'historique -->
-<input type="date" id="histDatePicker"
+<input type="date" id="histDatePicker" data-i18n-aria="aria_hist_date" aria-label="Date de l'entrée d'historique"
   style="position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0;">
 <!-- Sélecteur date+heure partagé pour le RDV d'une entrée d'historique -->
-<input type="datetime-local" id="histRdvPicker"
+<input type="datetime-local" id="histRdvPicker" data-i18n-aria="aria_hist_rdv" aria-label="Date et heure du rendez-vous"
   style="position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0;">
 
 <!-- Modal détail sauvegarde / restauration -->

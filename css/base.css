@@ -23,6 +23,9 @@
     --app-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     --app-font-size: 14px;
     --focus-ring: #0b57d0;
+    --rdv-bg: #e3f2fd;
+    --rdv-border: #90caf9;
+    --rdv-label: #1565c0;
   }
   body.dark {
     --bg:       #121212;
@@ -47,7 +50,13 @@
     --modal-bg: #1e1e2e;
     --legend-bg: #1e1e2e;
     --focus-ring: #8ab4f8;
+    --rdv-bg: #17324a;
+    --rdv-border: #2e5c85;
+    --rdv-label: #8fc4f0;
   }
+  /* Bloc RDV de la fiche (édition) — dark-aware via tokens */
+  .edit-rdv-box { background: var(--rdv-bg); padding: 8px; border-radius: 8px; border: 1px solid var(--rdv-border); }
+  .edit-rdv-box > label { color: var(--rdv-label); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--app-font); font-size: var(--app-font-size); background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
 
@@ -91,7 +100,7 @@
   .btn-view, .btn-ico {
     background: rgba(255,255,255,0.15); color:white;
     border: 1px solid rgba(255,255,255,0.35);
-    width: 36px; height: 36px;
+    width: 40px; height: 40px;
     border-radius:7px; font-size:15px;
     cursor:pointer; white-space:nowrap; line-height:1;
     display:inline-flex; align-items:center; justify-content:center;
@@ -259,7 +268,7 @@
   .s-btn.actif  { opacity: 1; border-color: currentColor; }
   /* Barre de statut verrouillée (carte) : les boutons n'appliquent pas le statut,
      ils ouvrent l'édition. Seul le statut courant est mis en avant. */
-  .statut-bar-lock .s-btn:not(.actif) { opacity: 0.32; }
+  .statut-bar-lock .s-btn:not(.actif) { opacity: 0.45; }
   .statut-lock { cursor: pointer; opacity: 0.5; font-size: 14px; align-self: center; padding: 0 6px; }
   .statut-lock:active { transform: scale(0.9); }
   .s-btn.sf  { color: #546e7a; border-color: #90a4ae; background: var(--badge-bg); }
@@ -288,6 +297,11 @@
   .btn-vcard:hover { background:#bbdefb; }
   .btn-rappel { background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; padding:8px 12px; border-radius:8px; font-size:13px; cursor:pointer; white-space:nowrap; }
   .btn-rappel:hover { background:#c8e6c9; }
+  /* Variantes sombres (sinon aplats clairs éblouissants sur fond sombre) */
+  body.dark .btn-vcard { background:#17324a; color:#c5d9f0; border-color:#2e5c85; }
+  body.dark .btn-vcard:hover { background:#1e3f5c; }
+  body.dark .btn-rappel { background:#1b3a24; color:#b7e0bd; border-color:#3a6b45; }
+  body.dark .btn-rappel:hover { background:#244a2f; }
   .btn-edit {
     position: absolute; top: 50%; right: 0; transform: translateY(-50%);
     background: transparent; color: var(--text3);
