@@ -180,16 +180,20 @@
   }
   .historique-cal {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
-    font-size: 13px; line-height: 1; padding: 2px 3px; border-radius: 4px;
+    font-size: 14px; line-height: 1; border-radius: 6px;
+    min-width: 40px; min-height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
   }
   .historique-cal:hover { background: var(--badge-bg); }
   .historique-del {
     margin-left: auto; flex-shrink: 0;
     background: none; border: none; cursor: pointer;
-    color: var(--text3); font-size: 13px; line-height: 1;
-    padding: 2px 4px; border-radius: 4px;
+    color: var(--text3); font-size: 14px; line-height: 1; border-radius: 6px;
+    min-width: 40px; min-height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
   }
   .historique-del:hover { background: #ffebee; color: #b71c1c; }
+  body.dark .historique-del:hover { background: #3a2326; color: #ffb4ad; }
 
   .email-wrap { position: relative; flex: 1; min-width: 0; width: 100%; }
   .email-wrap input { width: 100%; }

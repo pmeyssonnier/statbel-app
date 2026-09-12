@@ -326,16 +326,16 @@ export function buildEditForm(i) {
             style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;min-height:60px">${esc(c.notes||'')}</textarea>
         </div>
         ${def.rdv ? `
-        <div class="edit-row" style="background:#e3f2fd;padding:8px;border-radius:8px;border:1px solid #90caf9;">
-          <label style="color:#1565c0;">${t('ed_rdv')}</label>
+        <div class="edit-row edit-rdv-box">
+          <label>${t('ed_rdv')}</label>
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="text" inputmode="numeric" id="edit-rdv-date-${i}" value="${dateISOToFr((c.rdv||'').split(' ')[0]||'')}"
               placeholder="jj/mm/aaaa" maxlength="10" oninput="this.value=formatDateFrSaisie(this.value)" onchange="changerRdvDH(${i})"
-              style="flex:1;border-color:#90caf9;background:#fff;">
-            <button type="button" class="historique-cal" title="Ouvrir le calendrier" aria-label="Ouvrir le calendrier" onclick="ouvrirCalendrierRdv(${i})" style="font-size:16px;">📅</button>
+              style="flex:1;">
+            <button type="button" class="historique-cal" title="${esc(t('hist_open_cal'))}" aria-label="${esc(t('hist_open_cal'))}" onclick="ouvrirCalendrierRdv(${i})" style="font-size:16px;">📅</button>
             <input type="text" inputmode="numeric" id="edit-rdv-heure-${i}" value="${(c.rdv||'').split(' ')[1]||''}"
               placeholder="hh:mm" maxlength="5" oninput="this.value=formatHeureSaisie(this.value)" onchange="changerRdvDH(${i})"
-              style="width:70px;border-color:#90caf9;background:#fff;text-align:center;">
+              style="width:70px;text-align:center;">
           </div>
         </div>` : ''}
         ${classerMethode(c.collect_method) ? `
@@ -346,7 +346,7 @@ export function buildEditForm(i) {
         </div>` : ''}
         <div class="edit-btns">
           <button class="btn-cancel-edit" onclick="toggleEdit(${i})">${t('btn_close')}</button>
-          <button class="btn-vcard" onclick="exporterVCard(${i})" title="Exporter contact" aria-label="Exporter la fiche (vCard)">📇 vCard</button>
+          <button class="btn-vcard" onclick="exporterVCard(${i})" title="${esc(t('vcard_export'))}" aria-label="${esc(t('vcard_export'))}">📇 vCard</button>
           <button class="btn-save-edit" onclick="sauverEdit(${i})">${t('ed_save')}</button>
         </div>
   `;
@@ -445,7 +445,7 @@ export function rendu() {
       </div>
       ${(() => { const d = ligneDemographie(c); return d ? `<div class="card-demo">👤 ${d}</div>` : ''; })()}
       <div class="card-adresse-row">
-        <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank">📍 ${esc(c.adresse)}</a>
+        <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank" rel="noopener">📍 ${esc(c.adresse)}</a>
         ${distanceBadge(c.adresse)}
       </div>
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
@@ -497,10 +497,10 @@ export function buildHistoriqueHTML(c, i) {
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
       <select class="hist-statut" onchange="modifierStatutHistorique(${i},${idx},this.value)">${opts}</select>
-      <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1" title="Cliquez sur 📅 pour modifier la date">
-      <button class="historique-cal" title="Modifier la date" aria-label="Modifier la date" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
+      <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1" title="${esc(t('hist_date_tip'))}">
+      <button class="historique-cal" title="${esc(t('hist_edit_date'))}" aria-label="${esc(t('hist_edit_date'))}" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
       ${rdvField}
-      <button class="historique-del" title="Supprimer cette entrée" aria-label="Supprimer cette entrée" onclick="supprimerHistorique(${i},${idx})">✕</button>
+      <button class="historique-del" title="${esc(t('hist_del_entry'))}" aria-label="${esc(t('hist_del_entry'))}" onclick="supprimerHistorique(${i},${idx})">✕</button>
     </div>`;
   }).join('');
   return `<div class="historique-wrap" id="hist-${i}">
@@ -579,7 +579,7 @@ export function buildRdvCard(c, i, today, def) {
     </div>
     ${(() => { const d = ligneDemographie(c); return d ? `<div class="card-demo">👤 ${d}</div>` : ''; })()}
     <div class="card-adresse-row">
-      <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank">📍 ${esc(c.adresse)}</a>
+      <a class="card-adresse" href="${mapsUrl(c.adresse)}" target="_blank" rel="noopener">📍 ${esc(c.adresse)}</a>
       ${distHtml}
     </div>
     ${(() => { const mb = methodeBadge(c); const tb = c.gsm ? telBE(c.gsm) : null; const tel = c.gsm ? `<a class="badge badge-tel" href="tel:${esc(tb?tb.e164:c.gsm)}">📞 ${esc(tb?tb.disp:c.gsm)}</a>` : ''; return (mb || tel) ? `<div class="card-badges" style="margin-top:4px">${mb}${tel}</div>` : ''; })()}

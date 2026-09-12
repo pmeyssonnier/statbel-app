@@ -12,6 +12,23 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — accessibilité, i18n & mobile (revue design)
+- **Accessibilité, 4 langues et confort tactile** (Interviews 3.41, SW `statbel-v306`) : suite à une
+  critique design (score 34/40). **Noms accessibles** : les ~22 contrôles jusqu'ici anonymes
+  (recherches, sélecteur d'enquête, tous les sélects/champs des Réglages, sélecteurs de fichiers,
+  champs Import/Renommer) reçoivent un `aria-label` traduit (`data-i18n-aria`). **États annoncés** :
+  le toast, `#geocodeProgress` et l'erreur de code PIN passent en régions live (`role="status"`/
+  `"alert"` + `aria-live`). **Dialogue** : l'écran de verrouillage devient `role="dialog"`
+  `aria-modal` `aria-labelledby`. **Carte** : chaque marqueur porte désormais son **statut** dans
+  l'info-bulle/`title` (indice non-coloré, en plus de la couleur du pin). **i18n** : les chaînes FR
+  codées en dur (titres carte/`#btnGeo`, popup « Éditer la fiche », calendrier/vCard/suppression
+  d'historique, modale Renommer) sont routées via `t()` → fr/nl/en/de. **Tactile** : boutons de vue
+  36 → 40 px, boutons de ligne d'historique 40 px, statuts inactifs plus lisibles. **Couleur** :
+  bloc RDV et boutons vCard/rappel deviennent thème-aware (fini les aplats clairs en sombre).
+  **Mode sombre** : par défaut sur **« Automatique (système) »** — l'appli suit désormais l'OS
+  (`prefers-color-scheme`) tant qu'aucun thème n'est choisi manuellement. Divers : `rel="noopener"`
+  sur les liens d'adresse.
+
 ### PDF → GRP — accessibilité & contraste (revue design)
 - **Outil PDF → GRP rendu accessible** (SW `statbel-v305`) : suite à une critique design (score
   ~32/40). **Clavier** : la zone de dépôt (`#dz`) devient un vrai bouton (`role="button"`,
