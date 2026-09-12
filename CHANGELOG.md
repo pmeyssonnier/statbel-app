@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Interviews — Résumé : filtre par méthode de collecte** (Interviews 3.42, SW `statbel-v307`) :
+  la vue Résumé gagne un filtre **Toutes méthodes / 🏠 CAPI / 📞 CATI / 🌐 CAWI**, sous le
+  périmètre existant (Toutes / Enquête active) — les deux se combinent. Le filtre s'applique à
+  **tout le Résumé** : KPI, répartition (donut), barres de progression, tableau par enquête,
+  activité (sparklines + courbe d'avancement) et **exports XLSX/PDF** cohérents avec l'écran.
+  Chaque bouton affiche son **compte** dans le périmètre courant (désactivé si 0). La méthode est
+  déduite de `CD_WSH_CLCT_MTHD` (via `classerMethode`) ; **CAPI** = ni CATI ni CAWI (face-à-face).
+  L'export XLSX respecte désormais aussi le **périmètre** affiché (auparavant : toujours toutes
+  les enquêtes).
+
 ### Interviews — accessibilité, i18n & mobile (revue design)
 - **Accessibilité, 4 langues et confort tactile** (Interviews 3.41, SW `statbel-v306`) : suite à une
   critique design (score 34/40). **Noms accessibles** : les ~22 contrôles jusqu'ici anonymes

@@ -20,11 +20,12 @@ import { statutLabel } from '../data/canon.js';
 // triés chronologiquement. Base commune du graphe et du journal.
 // Source : historique daté + état courant « terminé » non encore dans l'historique.
 // enqFilter : si fourni, ne collecte que les visites de cette enquête.
-export function collecterVisites(enqFilter) {
+export function collecterVisites(enqFilter, methOK) {
   const ev = [];
   Object.entries(enquetes).forEach(([enq, arr]) => {
     if (enqFilter && enq !== enqFilter) return;
     arr.forEach(c => {
+      if (methOK && !methOK(c)) return;   // filtre optionnel par méthode de collecte (Résumé)
       const dCur = statutDef(c.statut || '');
 
       // ── Historique des passages (done ET en cours), daté du jour de visite ──
@@ -151,9 +152,10 @@ export function renderProgressionGlobale(enqFilter) {
 }
 
 /** Courbe autonome (Résumé) : % de Fait cumulés dans le temps (SVG, axe % + infobulles) */
-export function renderCourbeAvancement(enqFilter) {
-  const events = collecterVisites(enqFilter).filter(e => !e.isRdv && e.statut === 'Done');
-  const cs = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
+export function renderCourbeAvancement(enqFilter, methOK) {
+  const events = collecterVisites(enqFilter, methOK).filter(e => !e.isRdv && e.statut === 'Done');
+  const csAll = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
+  const cs = methOK ? csAll.filter(c => methOK(c)) : csAll;
   const total = cs.length;
   const parJour = {};
   events.forEach(e => { const j = e.iso.slice(0, 10); parJour[j] = (parJour[j] || 0) + 1; });

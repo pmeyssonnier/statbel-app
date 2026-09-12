@@ -38,7 +38,7 @@ import {
   renderRdvFilters, filtrerRdv, renduRdv,
 } from './ui/rdv.js';
 import {
-  exporterResumeXLSX, exporterResumePDF, setResumeScope, renduResume,
+  exporterResumeXLSX, exporterResumePDF, setResumeScope, setResumeMethode, renduResume,
 } from './ui/resume.js';
 import {
   majBackupBanner, fermerBackupBanner, buildBackupDetailHTML, fermerBackupDetail,
@@ -100,7 +100,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.41';
+const APP_VERSION = '3.42';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1066,7 +1066,7 @@ Object.assign(window, {
   emailSuggest, choisirSuggestion, fermerSuggestions, emailKeydown, exporterResumeXLSX,
   exporterResumePDF, collecterVisites, renderActiviteQuotidienne, renderProgressionGlobale,
   renderCourbeAvancement, dessinerCourbeProgression, renderEvenementsChrono,
-  setResumeScope, renduResume, _pinHash, pinEstActif, renderLockDots, renderLockKeypad,
+  setResumeScope, setResumeMethode, renduResume, _pinHash, pinEstActif, renderLockDots, renderLockKeypad,
   pinToucheAppuyee, pinAfficherErreur, pinValiderSaisie, ouvrirLockScreen,
   fermerLockScreen, ouvrirGestionPin, fermerModalPin, pinChanger, pinDesactiver, majPinUI,
   pinVerifierAuDemarrage, pinSurveillerInactivite, migrerVersAnglais, init
