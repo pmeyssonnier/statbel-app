@@ -32,12 +32,18 @@ Suivi des contacts à interviewer dans le cadre des enquêtes Statbel.
 - **📊 Résumé** — KPI, progression globale, **courbe d'avancement**, tableau par enquête/statut, périmètre **Toutes / Enquête active**, export **Excel / PDF**.
 
 ### Suivi des interviews
-- **Statuts personnalisables** (libellé, couleur, icône, « terminé », « rendez-vous »).
+- **Statuts personnalisables** (libellé, couleur, icône, « terminé », « rendez-vous », « réalisé »), **propres à chaque enquête** : une enquête **CAPI** (face-à-face) et une enquête **CATI/CAWI** ne partagent pas leur vocabulaire. Le préréglage (CAPI ou « feuille de contact » CATI/CAWI) est **déduit automatiquement** de la méthode de collecte à l'import, et reste modifiable.
 - **Historique** par contact : ajout/édition d'entrées (statut + date, heure, RDV), suppression ; statut/date courants = dernière entrée.
+
+### Enquêtes CATI / CAWI
+- **Pastille 📞 CATI / 🌐 CAWI** sur chaque fiche, d'après la méthode de collecte (`CD_WSH_CLCT_MTHD`) transmise par le Convertisseur.
+- **Rappel ✉️ e-mail / 💬 SMS** depuis la fiche d'un contact CATI/CAWI : ouvre l'appli mail ou SMS de l'appareil avec un message prérempli. Pour le **CAWI**, il inclut le **lien du portail, l'identifiant et le mot de passe** d'accès web ; pour le **CATI**, un rappel de disponibilité. Aucun envoi automatique. Le lien du portail est configurable dans les Paramètres.
+- **Identifiants d'accès web** (`TX_WEB_USER_ID` / `TX_WEB_USER_PSWRD`) importés et conservés à l'export — donnée personnelle, reste sur l'appareil.
+- **Téléphone** affiché au format belge `+32 xxx xx xx xx` (lien d'appel / SMS en E.164 `+32…`).
 
 ### Import / Export
 - Import **CSV / Excel** ; séparateur auto-détecté (`,` ou `;`).
-- **Aperçu d'import** : lignes lues / à importer / rejetées (motifs), colonnes reconnues/ignorées.
+- **Aperçu d'import** : lignes lues / à importer / rejetées (motifs), colonnes reconnues/ignorées (dont la **méthode de collecte** et les **identifiants d'accès web**, conservés à l'export — round-trip).
 - **Contrôles de cohérence** (code pays, date de naissance, sexe, statut) ; valeurs incohérentes **barrées en rouge**.
 - **Correction automatique des codes pays** : ISO-2 → ISO-3 et alias fréquents.
 - **Comparaison avant écrasement** : ajouts / modifications / suppressions / inchangés, avec détail des changements d'historique.
@@ -92,6 +98,8 @@ l'app Interviews.
 - Aperçu des cibles, **statistiques**, **planning** ; carte Leaflet.
 - Multilingue **FR / NL / EN / DE** (langue partagée avec l'app Interviews).
 - Tables de correspondance (lookup) et apparence configurables.
+- **Lecture Excel robuste** : les identifiants numériques longs (ex. identifiant d'accès web) sont préservés en entier — plus de troncature en notation scientifique (`2.02612E+11`).
+- Transmet la **méthode de collecte** (`CD_WSH_CLCT_MTHD`) et les **identifiants d'accès web** (`TX_WEB_USER_ID` / `TX_WEB_USER_PSWRD`) au CSV importable par Interviews.
 
 ---
 
@@ -126,7 +134,7 @@ XML tokenisé, ZIP + CRC32) :
 
 ## Confidentialité (RGPD)
 
-- Toutes les données restent **dans le navigateur** (IndexedDB / localStorage) — **aucun serveur**.
+- Toutes les données restent **dans le navigateur** (IndexedDB / localStorage) — **aucun serveur**. Les **identifiants d'accès web** (login / mot de passe CAWI) sont des données personnelles : stockées sur l'appareil, jamais versionnées, transmises uniquement à l'appli mail/SMS que *vous* ouvrez.
 - Géocodage par **services publics belges** (UrbIS/CIRB · Bruxelles, SPW · Wallonie, Geopunt · Flandre ; OSM/Nominatim en repli) — pas de transfert hors UE.
 - ⚠️ **Aucune donnée personnelle n'est versionnée** : `.gitignore` en **liste blanche stricte**
   (seuls le code des apps — HTML, `css/`, `js/`, `vendor/`, `tests/` —, les fichiers PWA,

@@ -12,6 +12,15 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Documentation
+- **Mode d'emploi + README actualisés** (SW `statbel-v298`) : le manuel illustré
+  (`docs/manuel.html`) et le `README.md` documentent désormais les enquêtes **CATI/CAWI**
+  (pastille de méthode, statuts propres à chaque enquête, rappel e-mail/SMS avec lien +
+  identifiant + mot de passe, identifiants d'accès web importés, téléphone `+32`), le
+  réglage « Lien enquête web (CAWI) », et la lecture Excel robuste du Convertisseur
+  (identifiants numériques longs préservés). Bump du cache pour que le manuel à jour
+  atteigne les PWA installées hors-ligne.
+
 ### Ajouté
 - **Interviews — rappel e-mail / SMS pour les contacts CATI/CAWI** (Interviews 3.39,
   SW `statbel-v296`) : dans la fiche d'un contact dont la méthode est CATI ou CAWI, deux
