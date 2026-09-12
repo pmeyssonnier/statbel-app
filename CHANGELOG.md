@@ -12,6 +12,23 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — accessibilité, validation & clavier (revue design)
+- **Candidature, carte & agenda plus sûrs et accessibles** (Planner 194, SW `statbel-v304`) :
+  suite à une critique design (score 26/40). **Formulaire de candidature** : les ~15 champs
+  reçoivent un `<label for=>` associé (auparavant 12 champs sans nom accessible), les blocs
+  téléphones/e-mails et le groupe radio passent en `<fieldset><legend>`, le canvas de signature
+  gagne `role="img"` + `aria-label` et un **statut annoncé** « signature saisie/vide ». Types
+  de champs corrigés (`email`/`tel`/`inputmode`). **Validation bloquante** : la génération du
+  `.docx` officiel est désormais **refusée** si le nom, le prénom, l'adresse **ou la signature**
+  manquent — messages d'erreur inline sous les champs + focus, au lieu d'un `.docx` vide ou non
+  signé ; l'échec de génération s'affiche inline (fini l'`alert` brut). **Clavier** : la barre
+  d'onglets suit le modèle WAI-ARIA (flèches/Home/End + roving tabindex) et affiche un **libellé
+  texte** ≥640 px ; les cases-jour de la vue **Mois** sont focusables avec `aria-label` (date +
+  vagues). **Vue Année** : ajout du **numéro de vague** dans les cases (indice non-coloré, pour
+  les daltoniens). **États annoncés** : `aria-live` sur le toast et les statuts de géocodage/comptage.
+  **Tokens** : violet candidature (`--cand`) et rouge d'erreur (`--danger`) tokenisés (fini les
+  hex en dur, adaptés au mode sombre).
+
 ### Convertisseur — accessibilité & UX (revue design)
 - **Accessibilité et allègement** (Convertisseur 217, SW `statbel-v303`) : suite à une critique
   design (score 30/40). **Clavier** : la zone de dépôt devient un vrai bouton (`role="button"`,

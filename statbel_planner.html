@@ -73,6 +73,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   --v2:#0e7c4a; --v2l:#d4f0e2;
   --v3:#7b22cc; --v3l:#eedeff;
   --v4:#cc4400; --v4l:#ffe8d8;
+  --cand:#7b22cc; --cand2:#6a1fb0;   /* accent candidature (.docx) */
+  --danger:#c62828;                  /* erreurs / requis */
   --shadow: 0 2px 12px rgba(26,31,46,.09);
   --radius: 10px;
   --font: 'Segoe UI', system-ui, Arial, sans-serif;
@@ -341,6 +343,7 @@ select[multiple]{height:120px}
     --v2:#43c78d; --v2l:#123528;
     --v3:#c58cff; --v3l:#2c1f42;
     --v4:#ff8a4d; --v4l:#3a2214;
+    --cand:#c58cff; --cand2:#b06fff; --danger:#ef6f6f;
     --shadow:0 2px 12px rgba(0,0,0,.5);
   }
 }
@@ -376,9 +379,26 @@ select[multiple]{height:120px}
 .cand-comm{ flex:1; min-width:0; font-size:13px; font-weight:600; color:var(--ink); display:flex; flex-direction:column; }
 .cand-comm .cand-q{ font-size:11px; font-weight:400; color:var(--ink3); }
 .cand-cnt{ font-size:12px; color:var(--ink2); white-space:nowrap; flex:none; }
-.cand-del{ appearance:none; border:1px solid var(--border); background:var(--card); color:#c62828;
+.cand-del{ appearance:none; border:1px solid var(--border); background:var(--card); color:var(--danger);
   font-size:13px; padding:3px 9px; border-radius:6px; cursor:pointer; flex:none; }
 .cand-del:hover{ background:var(--card2); }
+
+/* ── Accessibilité & candidature ──────────────────────────────── */
+.sr-only{ position:absolute!important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.cand-fs{ border:0; padding:0; margin:0 0 10px; min-width:0; }
+.cand-fs > legend{ font-size:12px; font-weight:700; color:var(--ink2); margin-bottom:6px; padding:0; }
+.champ-erreur{ border-color:var(--danger)!important; }
+.cand-field .err-msg{ display:none; color:var(--danger); font-size:11px; margin-top:3px; }
+.cand-field .err-msg.show{ display:block; }
+.cand-err{ color:var(--danger); font-size:12px; font-weight:600; margin-top:6px; }
+/* Onglets d'en-tête : libellé texte visible ≥640px (icône seule en dessous) */
+.month-day:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+.tab-lbl{ display:none; }
+@media (min-width:640px){
+  #hdrTabs .btn-ico{ width:auto; padding:0 12px; }
+  #hdrTabs .tab-lbl{ display:inline; margin-left:6px; font-size:13px; font-weight:600; }
+}
 </style>
 </head>
 <body>
@@ -395,9 +415,9 @@ select[multiple]{height:120px}
     </div>
     <div class="header-col3">
       <div class="view-toggle" id="hdrTabs" role="tablist" aria-label="Sections du planner">
-        <button class="btn-ico active" id="tab-planning"    role="tab" aria-selected="true"  aria-controls="pane-planning"    data-tip="Planning"    aria-label="Planning"    onclick="setTab('planning')">🗺️</button>
-        <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      aria-label="Agenda"      onclick="setTab('agenda')">📅<span class="tab-count" id="agendaCount" hidden></span></button>
-        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝<span class="tab-count" id="candCount" hidden></span></button>
+        <button class="btn-ico active" id="tab-planning"    role="tab" aria-selected="true"  aria-controls="pane-planning"    data-tip="Planning"    aria-label="Planning"    onclick="setTab('planning')">🗺️<span class="tab-lbl">Planning</span></button>
+        <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      aria-label="Agenda"      onclick="setTab('agenda')">📅<span class="tab-lbl">Agenda</span><span class="tab-count" id="agendaCount" hidden></span></button>
+        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝<span class="tab-lbl">Candidature</span><span class="tab-count" id="candCount" hidden></span></button>
       </div>
       <div class="kebab-wrap">
         <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" aria-label="Plus d'options">⋮</button>
@@ -466,7 +486,7 @@ select[multiple]{height:120px}
         <input id="planSearch" type="text" placeholder="Rechercher groupe / quartier…" oninput="filtrerPlanning()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
         <button id="planSearchClear" onclick="effacerRecherchePlan()" title="Effacer" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
       </span>
-      <span id="planCount" style="align-self:center;font-size:11px;color:var(--text2)"></span>
+      <span id="planCount" aria-live="polite" style="align-self:center;font-size:11px;color:var(--text2)"></span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
       <label style="font-size:12px;color:var(--text2);font-weight:bold">📍 Vérifier une adresse :</label>
@@ -474,10 +494,10 @@ select[multiple]{height:120px}
       <button class="btn-reset" onclick="verifierAdresse()">Localiser</button>
       <button class="btn-reset" onclick="effacerAdresseCheck()">✕</button>
       <button class="btn-reset" title="Vider le cache et recalculer la position des quartiers affichés" onclick="rafraichirGeocodage()">🔄 Recalculer</button>
-      <span id="planAdrStatus" style="align-self:center;font-size:11px;color:var(--text2)"></span>
+      <span id="planAdrStatus" aria-live="polite" style="align-self:center;font-size:11px;color:var(--text2)"></span>
     </div>
     <div id="planMap" style="height:340px;border-radius:8px;margin:0 0 10px;background:var(--card2);position:relative;z-index:0"></div>
-    <div id="planGeoStatus" style="font-size:11px;color:var(--text2);margin:0 0 6px"></div>
+    <div id="planGeoStatus" role="status" aria-live="polite" style="font-size:11px;color:var(--text2);margin:0 0 6px"></div>
     <div class="ref-scroll" style="max-height:340px"><table class="ref-table" id="refPlanning"></table></div>
   </div>
 
@@ -555,7 +575,7 @@ select[multiple]{height:120px}
       <div class="view-controls" style="margin-left:auto">
         <button class="nav-btn" onclick="exportXls()" title="Exporter la liste en Excel" style="border-color:#0e7c4a;color:#0e7c4a;font-weight:600">⬇️ Excel</button>
         <button class="nav-btn" onclick="exportCsvApp()" title="Export CSV pour enquetes_statbel.html" style="border-color:#1a237e;color:#1a237e;font-weight:600">⬇️ CSV App</button>
-        <button class="nav-btn" onclick="exportIcs()" title="Exporter vers Google Agenda / iCal" style="border-color:#7b22cc;color:#7b22cc;font-weight:600">📅 iCal</button>
+        <button class="nav-btn" onclick="exportIcs()" title="Exporter vers Google Agenda / iCal" style="border-color:var(--cand);color:var(--cand);font-weight:600">📅 iCal</button>
         <button class="nav-btn" onclick="exportChevauchements()" title="Exporter les chevauchements" style="border-color:#f57f17;color:#f57f17;font-weight:600">⚠️ Chevauch.</button>
       </div>
     </div>
@@ -583,24 +603,24 @@ select[multiple]{height:120px}
         Associe chaque information à une colonne du fichier (1 ligne = 1 mission/interrogation).
       </p>
       <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;font-size:13px">
-        <label>Nom du planning</label>
+        <label for="mapNom">Nom du planning</label>
         <input id="mapNom" type="text" placeholder="ex. EU-SILC 2026 vague 1" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-        <label>Type d'enquête</label>
+        <label for="mapType">Type d'enquête</label>
         <select id="mapType" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
           <option>EFT / LFS</option><option>EU-SILC</option><option>HBS</option>
           <option>TIC</option><option>Voyages &amp; Vacances</option><option>Santé</option>
           <option>Recensement / spéciale</option><option>Autre</option>
         </select>
-        <label><span>Commune</span> <span style="color:#c62828">*</span></label>      <select id="mapCommune"  class="map-col"></select>
-        <label>Quartier / adresse</label>                                     <select id="mapQuartier" class="map-col"></select>
-        <label>Province</label>                                               <select id="mapProvince" class="map-col"></select>
-        <label>Groupe / code</label>                                          <select id="mapGroup"    class="map-col"></select>
-        <label>Vague</label>                                                  <select id="mapWave"     class="map-col"></select>
-        <label>Semaine de réf.</label>                                        <select id="mapWeek"     class="map-col"></select>
-        <label>Date début</label>                                             <select id="mapStart"    class="map-col"></select>
-        <label>Date fin</label>                                               <select id="mapStop"     class="map-col"></select>
+        <label for="mapCommune"><span>Commune</span> <span style="color:var(--danger)">*</span></label> <select id="mapCommune"  class="map-col"></select>
+        <label for="mapQuartier">Quartier / adresse</label>                   <select id="mapQuartier" class="map-col"></select>
+        <label for="mapProvince">Province</label>                             <select id="mapProvince" class="map-col"></select>
+        <label for="mapGroup">Groupe / code</label>                          <select id="mapGroup"    class="map-col"></select>
+        <label for="mapWave">Vague</label>                                    <select id="mapWave"     class="map-col"></select>
+        <label for="mapWeek">Semaine de réf.</label>                          <select id="mapWeek"     class="map-col"></select>
+        <label for="mapStart">Date début</label>                              <select id="mapStart"    class="map-col"></select>
+        <label for="mapStop">Date fin</label>                                 <select id="mapStop"     class="map-col"></select>
       </div>
-      <p id="mapErreur" style="color:#c62828;font-size:12px;margin:10px 0 0;display:none"></p>
+      <p id="mapErreur" style="color:var(--danger);font-size:12px;margin:10px 0 0;display:none"></p>
       <div style="text-align:right;margin-top:16px">
         <button class="btn-reset" style="margin:0 6px 0 0" onclick="fermerMappingPlanning()">Annuler</button>
         <button class="btn-reset" style="margin:0" onclick="confirmerMappingPlanning()">✅ Importer</button>
@@ -618,28 +638,34 @@ select[multiple]{height:120px}
     </p>
 
     <div class="cand-grid">
-      <div class="cand-field cand-wide"><label>Enquête — sigle + période (ex. EFT 2026-T3)</label>
+      <div class="cand-field cand-wide"><label for="candSurvey">Enquête — sigle + période (ex. EFT 2026-T3)</label>
         <input type="text" id="candSurvey" placeholder="EFT 2026-Q4" value="EFT 2026-T3"
           style="font-size:16px;font-weight:700;padding:12px 14px;letter-spacing:.3px"></div>
-      <div class="cand-field"><label>Nom</label><input type="text" id="candNom"></div>
-      <div class="cand-field"><label>Prénom</label><input type="text" id="candPrenom"></div>
-      <div class="cand-field cand-wide"><label>Adresse</label><input type="text" id="candAdresse"></div>
-      <div class="cand-field"><label>Code postal</label><input type="text" id="candCp"></div>
-      <div class="cand-field"><label>Commune</label><input type="text" id="candCommune"></div>
+      <div class="cand-field"><label for="candNom">Nom</label><input type="text" id="candNom" autocomplete="family-name"><span class="err-msg" id="err-candNom"></span></div>
+      <div class="cand-field"><label for="candPrenom">Prénom</label><input type="text" id="candPrenom" autocomplete="given-name"><span class="err-msg" id="err-candPrenom"></span></div>
+      <div class="cand-field cand-wide"><label for="candAdresse">Adresse</label><input type="text" id="candAdresse" autocomplete="street-address"><span class="err-msg" id="err-candAdresse"></span></div>
+      <div class="cand-field"><label for="candCp">Code postal</label><input type="text" id="candCp" inputmode="numeric" autocomplete="postal-code"></div>
+      <div class="cand-field"><label for="candCommune">Commune</label><input type="text" id="candCommune" autocomplete="address-level2"></div>
+    </div>
 
-      <div class="cand-field"><label>Tél. privé</label><input type="text" id="candTelPrive"></div>
-      <div class="cand-field"><label>Heures limites d'appel (privé)</label><input type="text" id="candHeuresPrive" placeholder="ex. 18h–20h"></div>
-      <div class="cand-field"><label>Tél. portable</label><input type="text" id="candTelPort"></div>
-      <div class="cand-field"><label>Heures limites d'appel (portable)</label><input type="text" id="candHeuresPort"></div>
-      <div class="cand-field"><label>Tél. bureau</label><input type="text" id="candTelBur"></div>
-      <div class="cand-field"><label>Heures limites d'appel (bureau)</label><input type="text" id="candHeuresBur"></div>
+    <fieldset class="cand-fs">
+      <legend>Téléphones &amp; e-mails</legend>
+      <div class="cand-grid">
+        <div class="cand-field"><label for="candTelPrive">Tél. privé</label><input type="tel" inputmode="tel" id="candTelPrive"></div>
+        <div class="cand-field"><label for="candHeuresPrive">Heures limites d'appel (privé)</label><input type="text" id="candHeuresPrive" placeholder="ex. 18h–20h"></div>
+        <div class="cand-field"><label for="candTelPort">Tél. portable</label><input type="tel" inputmode="tel" id="candTelPort"></div>
+        <div class="cand-field"><label for="candHeuresPort">Heures limites d'appel (portable)</label><input type="text" id="candHeuresPort"></div>
+        <div class="cand-field"><label for="candTelBur">Tél. bureau</label><input type="tel" inputmode="tel" id="candTelBur"></div>
+        <div class="cand-field"><label for="candHeuresBur">Heures limites d'appel (bureau)</label><input type="text" id="candHeuresBur"></div>
+        <div class="cand-field"><label for="candEmailPrive">E-mail privé</label><input type="email" id="candEmailPrive" autocomplete="email"></div>
+        <div class="cand-field"><label for="candEmailBur">E-mail bureau</label><input type="email" id="candEmailBur"></div>
+      </div>
+    </fieldset>
 
-      <div class="cand-field"><label>E-mail privé</label><input type="text" id="candEmailPrive"></div>
-      <div class="cand-field"><label>E-mail bureau</label><input type="text" id="candEmailBur"></div>
-
-      <div class="cand-field"><label>Nombre de groupes souhaités <span class="cand-auto">auto</span></label>
+    <div class="cand-grid">
+      <div class="cand-field"><label for="candNbGroupes">Nombre de groupes souhaités <span class="cand-auto">auto</span></label>
         <input type="text" id="candNbGroupes" readonly title="Automatique — égal au nombre de groupes sélectionnés"></div>
-      <div class="cand-field"><label>Date <span class="cand-auto">auto</span></label>
+      <div class="cand-field"><label for="candDate">Date <span class="cand-auto">auto</span></label>
         <input type="text" id="candDate" readonly title="Automatique — date du jour"></div>
     </div>
 
@@ -653,19 +679,21 @@ select[multiple]{height:120px}
       </div>
     </div>
 
-    <div style="margin-top:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px">Case à cocher du formulaire</div>
+    <fieldset class="cand-fs" style="margin-top:10px">
+      <legend>Case à cocher du formulaire</legend>
       <div style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink2)">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="groupes" checked> Nombre de groupes souhaités</label>
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="pas"> Pas intéressé(e) pour effectuer les enquêtes de cette vague</label>
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="plus"> N'est plus intéressé(e) pour effectuer des enquêtes</label>
       </div>
-    </div>
+    </fieldset>
 
     <div style="margin-top:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px">Signature</div>
-      <canvas id="candSigCanvas" width="480" height="100"
+      <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px" id="candSigLbl">Signature</div>
+      <canvas id="candSigCanvas" width="480" height="100" role="img" aria-labelledby="candSigLbl"
+        aria-label="Zone de signature — dessinez votre signature à la souris ou au doigt"
         style="border:1px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:480px;height:100px;cursor:crosshair;display:block"></canvas>
+      <span id="candSigStatus" class="sr-only" aria-live="polite">Signature vide</span>
       <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button type="button" onclick="candSigClear()" style="padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer">✕ Effacer la signature</button>
         <span style="font-size:11px;color:var(--ink3)">Signez à la souris ou au doigt — la signature est intégrée au .docx.</span>
@@ -673,9 +701,10 @@ select[multiple]{height:120px}
     </div>
 
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button onclick="genererCandidature()" style="padding:9px 18px;border-radius:8px;border:1px solid #7b22cc;background:#7b22cc;color:#fff;font-size:13px;font-weight:700;cursor:pointer">⬇️ Générer la candidature (.docx)</button>
+      <button onclick="genererCandidature()" style="padding:9px 18px;border-radius:8px;border:1px solid var(--cand);background:var(--cand);color:#fff;font-size:13px;font-weight:700;cursor:pointer">⬇️ Générer la candidature (.docx)</button>
       <span style="font-size:11px;color:var(--ink3)">Formulaire de candidature rempli — s'ouvre dans Word / LibreOffice</span>
     </div>
+    <div id="candErr" class="cand-err" role="alert" hidden></div>
    </div>
   </section><!-- /pane-candidature -->
 
@@ -1208,9 +1237,12 @@ function renderMois() {
       const v = vagueForDate(row, cur);
       return v ? [{ row, v }] : [];
     });
-    html += `<div class="month-day${isToday?' today':''}">
-      <div class="day-num">${d}</div>
-      <div class="day-events">
+    const lbl = `${d} ${MOIS_FR[mo]} ${yr}` + (events.length
+      ? ` — ${events.length} vague(s) : ` + events.map(e => `${e.row.numero} V${e.v.idx}`).join(', ')
+      : ' — aucune vague');
+    html += `<div class="month-day${isToday?' today':''}" tabindex="0" aria-label="${esc(lbl)}">
+      <div class="day-num" aria-hidden="true">${d}</div>
+      <div class="day-events" aria-hidden="true">
         ${events.slice(0,4).map(({row,v}) => `
           <div class="day-ev ${VAGUE_COLORS[v.idx-1]}" title="${row.numero} — ${row.quartier}">
             ${row.numero} V${v.idx}
@@ -1291,7 +1323,8 @@ function renderAnnee() {
         html += `<div title="${fmtDate(cur)}${v?' — V'+v.idx:''}"
           style="height:10px;border-radius:2px;background:${bg};border:${brd};
                  ${isT?'outline:1px solid var(--accent);outline-offset:1px;':''}
-                 cursor:default">
+                 display:flex;align-items:center;justify-content:center;cursor:default">
+          ${v?`<span style="font-size:7px;font-weight:700;line-height:1;color:var(--ink)">${v.idx}</span>`:''}
         </div>`;
       }
       html += '</div></div>';
@@ -1608,6 +1641,7 @@ function afficherToast(msg) {
   let t = document.getElementById('lfs-toast');
   if (!t) {
     t = document.createElement('div'); t.id='lfs-toast';
+    t.setAttribute('role','status'); t.setAttribute('aria-live','polite');
     t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
       'background:var(--ink);color:#fff;padding:10px 22px;border-radius:20px;'+
       'font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none';
@@ -2959,8 +2993,33 @@ function updateCandidaturePreview(){
   if(nb) nb.value=String(total);
 }
 
+// Erreurs de validation de la candidature (document officiel).
+function candClearErreurs(){
+  document.querySelectorAll('#pane-candidature .champ-erreur').forEach(el=>{ el.classList.remove('champ-erreur'); el.removeAttribute('aria-invalid'); });
+  document.querySelectorAll('#pane-candidature .err-msg.show').forEach(el=>{ el.classList.remove('show'); el.textContent=''; });
+  const ge=document.getElementById('candErr'); if(ge){ ge.hidden=true; ge.textContent=''; }
+}
+function candMarquerErreur(suffix,msg){
+  const el=candEl(suffix); if(el){ el.classList.add('champ-erreur'); el.setAttribute('aria-invalid','true'); }
+  const em=document.getElementById('err-cand'+suffix); if(em){ em.textContent=msg; em.classList.add('show'); }
+}
+function candErrGlobale(msg){ const ge=document.getElementById('candErr'); if(ge){ ge.textContent=msg; ge.hidden=false; } }
 function genererCandidature(){
   const g=candEl;
+  // Document officiel : bloquer la génération si des champs requis ou la signature manquent.
+  candClearErreurs();
+  let premierFautif=null;
+  [['Nom','le nom'],['Prenom','le prénom'],['Adresse','l’adresse']].forEach(([sfx,lib])=>{
+    const el=g(sfx);
+    if(!el || !el.value.trim()){ candMarquerErreur(sfx,'Veuillez renseigner '+lib+'.'); if(!premierFautif) premierFautif=el; }
+  });
+  let msgGlobal='';
+  if(!candSigData){ msgGlobal='La signature est obligatoire : dessinez-la avant de générer le document.'; if(!premierFautif) premierFautif=document.getElementById('candSigCanvas'); }
+  if(premierFautif || msgGlobal){
+    candErrGlobale(msgGlobal || 'Veuillez corriger les champs indiqués avant de générer la candidature.');
+    if(premierFautif){ try{ premierFautif.focus(); }catch(_){} }
+    return;
+  }
   const data={
     nom:g('Nom').value, prenom:g('Prenom').value, adresse:g('Adresse').value,
     cp:g('Cp').value, commune:g('Commune').value,
@@ -2997,7 +3056,7 @@ function genererCandidature(){
     setTimeout(()=>URL.revokeObjectURL(url),1500);
     candSaveInfos();
     afficherToast('📝 Candidature générée !');
-  }catch(e){ alert('Erreur lors de la génération : '+e.message); }
+  }catch(e){ candErrGlobale('Erreur lors de la génération : '+e.message); }
 }
 
 // La candidature est désormais un onglet plein (plus de modale) : on bascule dessus.
@@ -3012,7 +3071,7 @@ function setTab(name){
   TABS.forEach(n=>{
     const t=document.getElementById('tab-'+n), pane=document.getElementById('pane-'+n);
     const on=(n===name);
-    if(t){ t.classList.toggle('active', on); t.setAttribute('aria-selected', on?'true':'false'); }
+    if(t){ t.classList.toggle('active', on); t.setAttribute('aria-selected', on?'true':'false'); t.tabIndex = on?0:-1; }
     if(pane) pane.hidden=!on;
   });
   // Planning : (ré)initialise la carte Leaflet (invalidateSize sur conteneur affiché).
@@ -3038,18 +3097,21 @@ function candSigInit(){
     return { x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height) }; };
   const start=e=>{ e.preventDefault(); candSigDrawing=true; const p=pos(e); candSigCtx.beginPath(); candSigCtx.moveTo(p.x,p.y); };
   const move =e=>{ if(!candSigDrawing) return; e.preventDefault(); const p=pos(e); candSigCtx.lineTo(p.x,p.y); candSigCtx.stroke(); };
-  const end  =()=>{ if(!candSigDrawing) return; candSigDrawing=false; candSigData=c.toDataURL('image/png'); candSaveSig(); };
+  const end  =()=>{ if(!candSigDrawing) return; candSigDrawing=false; candSigData=c.toDataURL('image/png'); candSaveSig(); candSigStatus(true);
+    const ge=document.getElementById('candErr'); if(ge && !ge.hidden){ ge.hidden=true; ge.textContent=''; } };
   c.addEventListener('pointerdown',start); c.addEventListener('pointermove',move);
   window.addEventListener('pointerup',end); c.addEventListener('pointerleave',end);
   candSigInited=true;
 }
+function candSigStatus(has){ const s=document.getElementById('candSigStatus'); if(s) s.textContent = has ? 'Signature saisie' : 'Signature vide'; }
 function candSigClear(){
   const c=document.getElementById('candSigCanvas');
   if(c&&candSigCtx) candSigCtx.clearRect(0,0,c.width,c.height);
-  candSigData=null; candSaveSig();
+  candSigData=null; candSaveSig(); candSigStatus(false);
 }
 function candSigLoad(dataUrl){
   candSigData=dataUrl||null;
+  candSigStatus(!!candSigData);
   const c=document.getElementById('candSigCanvas');
   if(!c||!candSigCtx||!dataUrl) return;
   const img=new Image();
@@ -3065,8 +3127,27 @@ function candSaveSig(){
 // ══════════════════════════════════════════════════════════════════════
 candLoadInfos();
 
+// Navigation clavier de la barre d'onglets (WAI-ARIA tablist : flèches / Home / End + roving tabindex).
+(function initTablistKeys(){
+  const bar=document.getElementById('hdrTabs'); if(!bar) return;
+  const tabs=()=>Array.from(bar.querySelectorAll('[role="tab"]'));
+  const t0=tabs(); t0.forEach(el=>{ if(!el.hasAttribute('tabindex')) el.tabIndex=(el.getAttribute('aria-selected')==='true'?0:-1); });
+  bar.addEventListener('keydown',e=>{
+    const t=tabs(); const i=t.indexOf(document.activeElement); if(i<0) return;
+    let j=null;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown') j=(i+1)%t.length;
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp') j=(i-1+t.length)%t.length;
+    else if(e.key==='Home') j=0;
+    else if(e.key==='End') j=t.length-1;
+    if(j===null) return;
+    e.preventDefault();
+    t.forEach((el,k)=>el.tabIndex=(k===j?0:-1));
+    t[j].focus();
+  });
+})();
+
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '193';
+const APP_VERSION = '194';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
