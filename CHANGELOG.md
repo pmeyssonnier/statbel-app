@@ -35,6 +35,10 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
   l'utilisateur. Nouveau test `tests/rappel.test.js`.
 
 ### Corrigé
+- **Interviews — correctif lint** (Interviews 3.40, SW `statbel-v299`) : suppression d'une
+  affectation morte (`no-useless-assignment`) dans `construireRappel` — `href` est désormais
+  déclaré sans valeur initiale, affecté dans chaque branche. Aucun changement de comportement ;
+  la CI ESLint repasse au vert.
 - **Convertisseur — identifiants numériques longs cassés en notation scientifique**
   (Convertisseur 216, SW `statbel-v297`) : à la lecture d'un fichier source **Excel**,
   un identifiant numérique long en format « Standard » (ex. `TX_WEB_USER_ID`) était rendu
