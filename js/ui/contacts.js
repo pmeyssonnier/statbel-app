@@ -233,16 +233,17 @@ export function ouvrirEdit(i) {
 // N'APPLIQUENT PAS le statut : ils ouvrent le formulaire d'édition. Le statut ne se
 // change qu'en mode édition → évite les changements accidentels au toucher.
 export function statutBarHTML(i, statut, editable) {
-  return statutDefs().map((s, si) => {
+  return statutDefs().map((s) => {
     const on = s.label === statut;
     const style = `color:${s.color};${on ? `border-color:${s.color};background:${s.color}22;` : ''}`;
-    const act = editable ? `changerStatut(${i},statutDefs()[${si}].label)` : `ouvrirEdit(${i})`;
     const cls = `s-btn${on ? ' actif' : ''}${editable ? '' : ' s-btn-lock'}`;
     const ttl = editable ? '' : ` title="${esc(t('lock_status_edit'))}"`;
     // a11y : l'emoji est décoratif (le libellé texte porte le sens) ; l'état actif
     // d'un bouton éditable est exposé via aria-pressed.
     const press = editable ? ` aria-pressed="${on}"` : '';
-    return `<button class="${cls}" style="${style}"${ttl}${press} onclick="event.stopPropagation();${act}"><span aria-hidden="true">${esc(s.icon)}</span> ${esc(statutLabel(s.label))}</button>`;
+    // Délégation : éditable → changerStatut(i,label) ; verrouillé → ouvrirEdit(i).
+    // La carte n'ayant pas de handler de clic propre, aucun stopPropagation requis.
+    return `<button class="${cls}" style="${style}"${ttl}${press} data-act="statutBtn" data-i="${i}" data-editable="${editable ? 1 : 0}" data-label="${esc(s.label)}"><span aria-hidden="true">${esc(s.icon)}</span> ${esc(statutLabel(s.label))}</button>`;
   }).join('');
 }
 
@@ -264,17 +265,13 @@ export function buildEditForm(i) {
           <div class="edit-row" style="flex:0.45">
             <label>${t('ed_gsm')}</label>
             <input type="tel" placeholder="+32 4xx xx xx xx" value="${esc(c.gsm||'')}"
-              oninput="changerGsm(${i},this)" style="max-width:150px"
-              ondblclick="if(this.value)window.location.href='tel:'+this.value">
+              data-act="editGsm" data-i="${i}" style="max-width:150px">
           </div>
           <div class="edit-row" style="flex:1">
             <label>${t('ed_email')}</label>
             <div class="email-wrap">
               <input type="email" placeholder="${t('ph_email')}" value="${esc(c.email||'')}"
-                oninput="changerEmail(${i},this.value);emailSuggest(this,'esug-${i}')"
-                onkeydown="emailKeydown(event,'esug-${i}')"
-                onblur="setTimeout(()=>fermerSuggestions('esug-${i}'),150)"
-                ondblclick="if(this.value)window.location.href='mailto:'+this.value"
+                data-act="editEmail" data-i="${i}"
                 autocomplete="off">
               <div class="email-suggestions" id="esug-${i}"></div>
             </div>
@@ -282,7 +279,7 @@ export function buildEditForm(i) {
         </div>
         <div class="edit-row">
           <label>${t('ed_notes')}</label>
-          <textarea placeholder="${t('ph_notes')}" oninput="changerNotes(${i},this.value)"
+          <textarea placeholder="${t('ph_notes')}" data-act="editNotes" data-i="${i}"
             style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;min-height:60px">${esc(c.notes||'')}</textarea>
         </div>
         ${def.rdv ? `
@@ -290,24 +287,24 @@ export function buildEditForm(i) {
           <label>${t('ed_rdv')}</label>
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="text" inputmode="numeric" id="edit-rdv-date-${i}" value="${dateISOToFr((c.rdv||'').split(' ')[0]||'')}"
-              placeholder="jj/mm/aaaa" maxlength="10" oninput="this.value=formatDateFrSaisie(this.value)" onchange="changerRdvDH(${i})"
+              placeholder="jj/mm/aaaa" maxlength="10" data-act="editRdvDate" data-i="${i}"
               style="flex:1;">
-            <button type="button" class="historique-cal" title="${esc(t('hist_open_cal'))}" aria-label="${esc(t('hist_open_cal'))}" onclick="ouvrirCalendrierRdv(${i})" style="font-size:16px;">📅</button>
+            <button type="button" class="historique-cal" title="${esc(t('hist_open_cal'))}" aria-label="${esc(t('hist_open_cal'))}" data-act="ouvrirCalendrierRdv" data-i="${i}" style="font-size:16px;">📅</button>
             <input type="text" inputmode="numeric" id="edit-rdv-heure-${i}" value="${(c.rdv||'').split(' ')[1]||''}"
-              placeholder="hh:mm" maxlength="5" oninput="this.value=formatHeureSaisie(this.value)" onchange="changerRdvDH(${i})"
+              placeholder="hh:mm" maxlength="5" data-act="editRdvHeure" data-i="${i}"
               style="width:70px;text-align:center;">
           </div>
         </div>` : ''}
         ${classerMethode(c.collect_method) ? `
         <div class="edit-row" style="flex-direction:row;gap:8px;flex-wrap:wrap;align-items:center">
           <label style="flex-basis:100%">${t('rappel_titre')}</label>
-          ${c.email ? `<button type="button" class="btn-rappel" onclick="envoyerRappel(${i},'mail')" title="${esc(t('btn_rappel_mail'))}">✉️ ${esc(t('btn_rappel_mail'))}</button>` : ''}
-          ${c.gsm   ? `<button type="button" class="btn-rappel" onclick="envoyerRappel(${i},'sms')" title="${esc(t('btn_rappel_sms'))}">💬 ${esc(t('btn_rappel_sms'))}</button>` : ''}
+          ${c.email ? `<button type="button" class="btn-rappel" data-act="envoyerRappel" data-i="${i}" data-canal="mail" title="${esc(t('btn_rappel_mail'))}">✉️ ${esc(t('btn_rappel_mail'))}</button>` : ''}
+          ${c.gsm   ? `<button type="button" class="btn-rappel" data-act="envoyerRappel" data-i="${i}" data-canal="sms" title="${esc(t('btn_rappel_sms'))}">💬 ${esc(t('btn_rappel_sms'))}</button>` : ''}
         </div>` : ''}
         <div class="edit-btns">
-          <button class="btn-cancel-edit" onclick="toggleEdit(${i})">${t('btn_close')}</button>
-          <button class="btn-vcard" onclick="exporterVCard(${i})" title="${esc(t('vcard_export'))}" aria-label="${esc(t('vcard_export'))}">📇 vCard</button>
-          <button class="btn-save-edit" onclick="sauverEdit(${i})">${t('ed_save')}</button>
+          <button class="btn-cancel-edit" data-act="toggleEdit" data-i="${i}">${t('btn_close')}</button>
+          <button class="btn-vcard" data-act="exporterVCard" data-i="${i}" title="${esc(t('vcard_export'))}" aria-label="${esc(t('vcard_export'))}">📇 vCard</button>
+          <button class="btn-save-edit" data-act="sauverEdit" data-i="${i}">${t('ed_save')}</button>
         </div>
   `;
 }
@@ -360,11 +357,11 @@ export function exporterVCard(i) {
 export function renderFilters() {
   const all = contacts(), total = all.length, cpt = {};
   all.forEach(c => { const s = c.statut||statutDefaut(); cpt[s]=(cpt[s]||0)+1; });
-  let html = `<button class="filter-btn${filtreActif==='Tous'?' active':''}" onclick="filtrer('Tous')">${t('f_all')}${total>0?' ('+total+')':''}</button>`;
-  statutDefs().forEach((s, si) => {
+  let html = `<button class="filter-btn${filtreActif==='Tous'?' active':''}" data-act="filtrer" data-label="Tous">${t('f_all')}${total>0?' ('+total+')':''}</button>`;
+  statutDefs().forEach((s) => {
     const n = cpt[s.label] || 0;
     const on = filtreActif === s.label;
-    html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" onclick="filtrer(statutDefs()[${si}].label)">${s.icon} ${esc(statutLabel(s.label))}${n>0?' ('+n+')':''}</button>`;
+    html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" data-act="filtrer" data-label="${esc(s.label)}">${s.icon} ${esc(statutLabel(s.label))}${n>0?' ('+n+')':''}</button>`;
   });
   document.querySelector('.filters').innerHTML = html;
   document.getElementById('filters') && (document.getElementById('filters').innerHTML = html);
@@ -377,7 +374,7 @@ export function rendu() {
   liste.innerHTML = '';
   const all = contacts();
   if (all.length === 0) {
-    liste.innerHTML = `<div class="empty-state">${t('empty_state')}<button onclick="document.getElementById('importFile').click()">${t('menu_import')}</button></div>`;
+    liste.innerHTML = `<div class="empty-state">${t('empty_state')}<button data-act="declencherImport">${t('menu_import')}</button></div>`;
     return;
   }
   const q = (document.getElementById('searchInput')?.value||'').toLowerCase().trim();
@@ -401,7 +398,7 @@ export function rendu() {
       <div class="card-top">
         <span class="card-ordre">N° ${esc(c.ordre)}</span>
         <div class="card-name">${esc(c.prenom)} ${esc(c.nom)}</div>
-        <button class="btn-edit" onclick="toggleEdit(${i})" title="${esc(t('aria_edit'))}" aria-label="${esc(t('aria_edit'))}">🖊️</button>
+        <button class="btn-edit" data-act="toggleEdit" data-i="${i}" title="${esc(t('aria_edit'))}" aria-label="${esc(t('aria_edit'))}">🖊️</button>
       </div>
       ${(() => { const d = ligneDemographie(c); return d ? `<div class="card-demo">👤 ${d}</div>` : ''; })()}
       <div class="card-adresse-row">
@@ -411,7 +408,7 @@ export function rendu() {
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
       <div class="card-statut">
         <div class="statut-bar statut-bar-lock">${statutBarHTML(i, statut, false)}</div>
-        <span class="statut-lock" title="${esc(t('lock_status_edit'))}" onclick="event.stopPropagation();ouvrirEdit(${i})">🔒</span>
+        <span class="statut-lock" title="${esc(t('lock_status_edit'))}" data-act="ouvrirEdit" data-i="${i}">🔒</span>
         ${dateStatut ? `<span class="card-statut-date">${esc(dateStatut)}</span>` : ''}
       </div>
       ${!coordsCache(c.adresse) ? `<div class="no-coords">${t('no_coords')}</div>` : ''}
@@ -452,21 +449,21 @@ export function buildHistoriqueHTML(c, i) {
     if (def.rdv) {
       const p = (h.rdv ? h.rdv + ' ' : ' ').split(' ');
       const rdvFr = h.rdv ? (dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : '')) : '';
-      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" onchange="modifierRdvHistorique(${i},${idx},this.value)" title="Date/heure du RDV"><button class="historique-cal" title="Calendrier RDV" aria-label="Calendrier du rendez-vous" onclick="ouvrirCalendrierRdvHist(${i},${idx},'${esc(h.rdv || '')}')">📅</button>`;
+      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" data-act="histRdv" data-i="${i}" data-idx="${idx}" title="Date/heure du RDV"><button class="historique-cal" title="Calendrier RDV" aria-label="Calendrier du rendez-vous" data-act="ouvrirCalendrierRdvHist" data-i="${i}" data-idx="${idx}" data-rdv="${esc(h.rdv || '')}">📅</button>`;
     }
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>
-      <select class="hist-statut" onchange="modifierStatutHistorique(${i},${idx},this.value)">${opts}</select>
+      <select class="hist-statut" data-act="histStatut" data-i="${i}" data-idx="${idx}">${opts}</select>
       <input type="text" class="historique-date" value="${esc(h.date)}" readonly tabindex="-1" title="${esc(t('hist_date_tip'))}">
-      <button class="historique-cal" title="${esc(t('hist_edit_date'))}" aria-label="${esc(t('hist_edit_date'))}" onclick="ouvrirCalendrierHist(${i},${idx},'${esc(h.date)}')">📅</button>
+      <button class="historique-cal" title="${esc(t('hist_edit_date'))}" aria-label="${esc(t('hist_edit_date'))}" data-act="ouvrirCalendrierHist" data-i="${i}" data-idx="${idx}" data-date="${esc(h.date)}">📅</button>
       ${rdvField}
-      <button class="historique-del" title="${esc(t('hist_del_entry'))}" aria-label="${esc(t('hist_del_entry'))}" onclick="supprimerHistorique(${i},${idx})">✕</button>
+      <button class="historique-del" title="${esc(t('hist_del_entry'))}" aria-label="${esc(t('hist_del_entry'))}" data-act="supprimerHistorique" data-i="${i}" data-idx="${idx}">✕</button>
     </div>`;
   }).join('');
   return `<div class="historique-wrap" id="hist-${i}">
     <div class="historique-title">${t('hist_title')} (${hist.length})</div>
     ${lignes}
-    <button class="btn-secondary" style="align-self:flex-start;font-size:12px;padding:4px 10px;margin-top:4px;" onclick="ajouterHistorique(${i})">${t('hist_add')}</button>
+    <button class="btn-secondary" style="align-self:flex-start;font-size:12px;padding:4px 10px;margin-top:4px;" data-act="ajouterHistorique" data-i="${i}">${t('hist_add')}</button>
   </div>`;
 }
 
@@ -535,7 +532,7 @@ export function buildRdvCard(c, i, today, def) {
     <div class="card-top" style="padding-right:32px;position:relative;">
       <span class="card-ordre">N° ${esc(c.ordre)}</span>
       <div class="card-name">${esc(c.prenom)} ${esc(c.nom)}</div>
-      <button class="btn-edit" onclick="setView('liste');setTimeout(()=>{const el=ouvrirEdit(${i});if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},150)">🖊️</button>
+      <button class="btn-edit" data-act="editDepuisRdv" data-i="${i}">🖊️</button>
     </div>
     ${(() => { const d = ligneDemographie(c); return d ? `<div class="card-demo">👤 ${d}</div>` : ''; })()}
     <div class="card-adresse-row">
@@ -579,7 +576,7 @@ export function emailSuggest(input, sugId) {
   const avant=val.slice(0,at+1), apres=val.slice(at+1).toLowerCase();
   const filtres=EMAIL_DOMAINES.filter(d=>d.startsWith(apres));
   if (!filtres.length){fermerSuggestions(sugId);return;}
-  box.innerHTML=filtres.map((d,idx)=>`<button class="email-sug-item" data-idx="${idx}" onmousedown="choisirSuggestion(event,'${sugId}','${avant}${d}')">${avant}${d}</button>`).join('');
+  box.innerHTML=filtres.map((d,idx)=>`<button class="email-sug-item" data-idx="${idx}" data-act="choisirSuggestion" data-sugid="${esc(sugId)}" data-val="${esc(avant+d)}">${avant}${d}</button>`).join('');
   box.classList.add('open');
 }
 

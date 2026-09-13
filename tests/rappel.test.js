@@ -79,12 +79,12 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       uid: cawi.web_user_id, pwd: cawi.web_user_pwd,
       mailHref: mail.href, mailBody: mail.body, mailSubject: mail.subject,
       smsHref: sms.href, smsBody: sms.body,
-      cawiFormHasMail: /envoyerRappel\(0,'mail'\)/.test(cawiForm),
-      cawiFormHasSms:  /envoyerRappel\(0,'sms'\)/.test(cawiForm),
+      cawiFormHasMail: /data-act="envoyerRappel"[^>]*data-canal="mail"/.test(cawiForm),
+      cawiFormHasSms:  /data-act="envoyerRappel"[^>]*data-canal="sms"/.test(cawiForm),
       csvHasCredHeader: /TX_WEB_USER_ID/.test(csvOut) && /TX_WEB_USER_PSWRD/.test(csvOut),
       csvHasCredValue:  csvOut.split('\n').some(l => /user12345/.test(l) && /pXXssWord9/.test(l)),
       catiBody: catiMail.body, catiSubject: catiMail.subject,
-      capiFormHasRappel: /envoyerRappel\(/.test(capiForm),
+      capiFormHasRappel: /data-act="envoyerRappel"/.test(capiForm),
     };
   });
 

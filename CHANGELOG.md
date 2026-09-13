@@ -12,6 +12,20 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Modifié
+- **Interviews — délégation d'événements des fiches contact (lot 5 du chantier `onclick`)**
+  (Interviews 3.57 → 3.58, SW `statbel-v325` → `statbel-v326`) : les 31 handlers inline de
+  `js/ui/contacts.js` (le module le plus dense) — barre de statut, formulaire d'édition (GSM, e-mail
+  avec suggestions, notes, RDV date/heure), boutons rappel/vCard/sauver, filtres, historique
+  (statut, dates, RDV, ajout/suppression), suggestions e-mail — passent de `on*=` inline à `data-act`
+  routé par `js/core/actions.js`. Le routeur gère désormais aussi `dblclick`, `mousedown` et
+  `focusout` (variante propagée de `blur`, qui ne « bulle » pas). La carte n'ayant pas de handler de
+  clic propre, la délégation cible naturellement le bouton le plus proche → les `event.stopPropagation()`
+  deviennent inutiles et sont retirés. Actions enregistrées dans `js/app.js`. **`index.html` et
+  l'ensemble des modules JS ne contiennent plus aucun handler inline.** Aucun changement de
+  comportement visible ; pont `window` inchangé (allègement au lot 6, avec le durcissement CSP).
+  Nouveau test `tests/contacts-delegation.test.js`.
+
 ### Corrigé
 - **Interviews — cohérence HTML/JS du Service Worker (navigation cache-first)** (Interviews
   3.56 → 3.57, SW `statbel-v324` → `statbel-v325`) : le SW servait `index.html` **frais (réseau)**

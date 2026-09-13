@@ -80,8 +80,10 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     // démographiques (nom, adresse, ménage) — ils sont affichés en tête de fiche.
     const ef = document.getElementById('edit-0').innerHTML;
     out.no_demo_fields = !/edit-prenom-0|edit-nom-0|edit-rue-0|edit-cpville-0|edit-hhsize-0|edit-hh15-0/.test(ef);
-    out.edit_essentials = /class="statut-bar"/.test(ef) && /changerGsm\(0/.test(ef)
-      && /changerEmail\(0/.test(ef) && /changerNotes\(0/.test(ef) && /historique/i.test(ef);
+    out.edit_essentials = /class="statut-bar"/.test(ef)
+      && /data-act="editGsm" data-i="0"/.test(ef)
+      && /data-act="editEmail" data-i="0"/.test(ef)
+      && /data-act="editNotes" data-i="0"/.test(ef) && /historique/i.test(ef);
     // Statut non dupliqué : en édition, la barre verrouillée de la carte est masquée
     out.editingHidesTop = (() => {
       const card = document.getElementById('edit-0').closest('.card');

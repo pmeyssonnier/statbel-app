@@ -18,7 +18,10 @@
  */
 
 // Registre : { type d'événement → { nom d'action → fonction(el, event) } }.
-const _actions = { click: {}, change: {}, input: {}, keydown: {} };
+// `focusout` est utilisé plutôt que `blur` car ce dernier ne « bulle » pas
+// (la délégation sur `document` ne le verrait pas) ; `focusout` en est la
+// variante propagée.
+const _actions = { click: {}, change: {}, input: {}, keydown: {}, dblclick: {}, mousedown: {}, focusout: {} };
 
 // Enregistre (ou complète) les actions d'un type d'événement. Appelé par chaque
 // module d'écran au fil de la migration.
@@ -46,7 +49,7 @@ export function installerDelegation(doc = document) {
     const el = cible && cible.closest ? cible.closest('[data-act]') : null;
     if (el) _dispatch(type, el, event);
   };
-  ['click', 'change', 'input', 'keydown'].forEach(type => doc.addEventListener(type, relai(type)));
+  ['click', 'change', 'input', 'keydown', 'dblclick', 'mousedown', 'focusout'].forEach(type => doc.addEventListener(type, relai(type)));
 }
 
 // Réinitialise le registre — réservé aux tests (isolation entre cas).
