@@ -16,9 +16,11 @@ import {
 import {
   importerFichier, ouvrirModalImport, preparerImport, renderExclus,
   majComparaisonImport, renderImportApercu, confirmerImport, fermerModal,
-  _contactKey, apparieurAnciens, diffHistorique, recordEnErreur, raisonsErreur,
-  _diffContacts, buildCompareHTML, valeurIncoherente,
+  recordEnErreur, raisonsErreur, buildCompareHTML, valeurIncoherente,
 } from './features/import.js';
+import {
+  apparieurAnciens, diffHistorique, _diffContacts,
+} from './data/reimport.js';
 import {
   toggleMaPosition, demanderPosition, placerMarqueurMoi, recentrerCarte,
   changerStatutCarte, ouvrirFicheDepuisCarte, renderLegend, initCarte,
@@ -91,7 +93,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.46';
+const APP_VERSION = '3.47';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1038,7 +1040,7 @@ Object.assign(window, {
   tPlural, appliquerLangue, changerLangue, localeApp, nomJourCourt, labelNbEnquetes,
   ouvrirSettings, fermerSettings, renderAide, ouvrirAide, fermerAide, majSettingsUI,
   changerProvider, regionDominante, fondEffectif, rafraichirFond, buildBackupDetailHTML,
-  _contactKey, apparieurAnciens, jourValide, valeurIncoherente, diffHistorique,
+  apparieurAnciens, jourValide, valeurIncoherente, diffHistorique,
   recordEnErreur, raisonsErreur, _diffContacts, buildCompareHTML, fermerBackupDetail,
   renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
   exporterBackup, majLastBackupInfo, majKebabBackupInfo, majComparaisonRestore, importerBackup,

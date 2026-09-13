@@ -4,13 +4,14 @@
  * import avec comparaison avant/après (réutilise l'appariement/le diff de
  * features/import), et sérialisation EN↔interne (KEYMAP). Extrait de app.js.
  *
- * Imports : buildCompareHTML, apparieurAnciens (import) ; normaliserPays
- * (canon) ; esc (util) ; t, tf, localeApp (i18n) ; GEO_PROVIDERS (geocoding).
+ * Imports : buildCompareHTML (import) ; apparieurAnciens (data/reimport) ;
+ * normaliserPays (canon) ; esc (util) ; t, tf, localeApp (i18n) ; GEO_PROVIDERS (geocoding).
  * L'orchestration (enquetes, settings, validerSettings, migrerVersAnglais,
  * sauver, refreshSelect, rendu, majSettingsUI, appliquerTheme, afficherToast,
  * GEO, rafraichirFond, leafletMap) est globale (pont).
  */
-import { buildCompareHTML, apparieurAnciens } from './import.js';
+import { buildCompareHTML } from './import.js';
+import { apparieurAnciens } from '../data/reimport.js';
 import { normaliserPays } from '../data/canon.js';
 import { esc } from '../core/util.js';
 import { t, tf, localeApp } from '../core/i18n.js';
