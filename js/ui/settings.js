@@ -64,6 +64,12 @@ export function ouvrirSettings() {
   document.getElementById('setFontSize').value   = settings.fontSize;
   { const e = document.getElementById('setCsvSep'); if (e) e.value = settings.csvSep || 'auto'; }
   { const e = document.getElementById('setCawiUrl'); if (e) e.value = settings.cawiUrl || ''; }
+  { const e = document.getElementById('setReminderSignature'); if (e) e.value = settings.reminderSignature || ''; }
+  { const e = document.getElementById('setReminderSignatureShort'); if (e) e.value = settings.reminderSignatureShort || ''; }
+  const rt = settings.reminderTemplates || {};
+  document.querySelectorAll('[data-reminder-field]').forEach(e => {
+    e.value = rt[e.dataset.reminderField] || '';
+  });
   { const e = document.getElementById('setPayHousehold'); if (e) e.value = settings.paieMenage || ''; }
   { const e = document.getElementById('setPayPerson'); if (e) e.value = settings.paiePersonne || ''; }
   document.getElementById('setProvider').value = settings.provider;
