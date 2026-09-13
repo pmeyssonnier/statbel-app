@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v324';
+const CACHE = 'statbel-v325';
 
 // Ressources CRITIQUES : indispensables au fonctionnement hors-ligne. Si l'une
 // manque, l'installation doit ÉCHOUER (ne pas activer un cache incomplet qui
@@ -114,12 +114,21 @@ self.addEventListener('fetch', e => {
   if (estGeo) return; // laisse le réseau gérer (pas d'interception)
 
   if (req.mode === 'navigate') {
-    // Navigation : on récupère toujours la page fraîche depuis le réseau en
-    // contournant le cache HTTP du navigateur (sinon une ancienne page peut
-    // être servie). Repli hors-ligne sur la page demandée puis sur index.html.
+    // Navigation « cache d'abord » : la page HTML et les scripts/CSS proviennent
+    // ainsi TOUJOURS du même cache, donc de la MÊME version. Auparavant l'index
+    // était récupéré frais (réseau) tandis que les scripts restaient servis « cache
+    // d'abord » : pendant la fenêtre de mise à jour (nouveau SW « en attente »), un
+    // index.html neuf pouvait être servi avec un app.js encore périmé → HTML/JS
+    // désynchronisés (depuis la migration onclick→data-act : boutons sans routeur
+    // enregistré → interface figée). Le popup « Mise à jour disponible » reste servi
+    // (il vit dans l'index.html en cache, présent dans toutes les versions) et le
+    // cycle SW (nouveau cache → « Poser » → SKIP_WAITING → activate/claim → reload)
+    // fait basculer HTML ET scripts atomiquement vers la nouvelle version. Repli
+    // réseau si l'URL demandée n'est pas en cache (1er lancement, lien profond).
     e.respondWith(
-      fetch(new Request(req.url, { cache: 'reload' }))
-        .catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
+      caches.match(req)
+        .then(r => r || caches.match('./index.html'))
+        .then(r => r || fetch(req))
     );
     return;
   }
