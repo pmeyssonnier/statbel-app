@@ -200,7 +200,15 @@ export function methodeBadge(c) {
 export function envoyerRappel(i, canal) {
   const c = contacts()[i];
   if (!c) return;
-  const { href } = construireRappel({ contact: c, canal, cawiUrl: settings.cawiUrl });
+  const { href } = construireRappel({
+    contact: c,
+    canal,
+    cawiUrl: settings.cawiUrl,
+    surveyName: enqueteActive,
+    templates: settings.reminderTemplates,
+    signature: settings.reminderSignature,
+    shortSignature: settings.reminderSignatureShort,
+  });
   window.location.href = href;
   if (typeof afficherToast === 'function') afficherToast(t('toast_rappel'));
 }
