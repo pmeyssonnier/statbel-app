@@ -13,10 +13,11 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Documentation
-- **Manuel — déverrouillage par empreinte** (`docs/manuel.html`) : la carte « Langue & apparence », la
-  légende de l'écran Paramètres et la section Confidentialité (RGPD) mentionnent désormais le
-  déverrouillage par empreinte / Face ID en complément du code PIN, avec la nuance « porte d'accès,
-  pas un chiffrement » et le repli PIN. Changement documentaire seul (pas de bump de version).
+- **Manuel & README — déverrouillage par empreinte** (`docs/manuel.html`, `README.md`) : le manuel
+  (carte « Langue & apparence », légende de l'écran Paramètres, section Confidentialité RGPD) et le
+  README (section Interface + table des modules `js/ui/`, avec le nouveau module `biometrie`) mentionnent
+  désormais le déverrouillage par empreinte / Face ID en complément du code PIN, avec la nuance « porte
+  d'accès, pas un chiffrement » et le repli PIN. Changement documentaire seul (pas de bump de version).
 
 ### Ajouté
 - **Interviews — déverrouillage par empreinte / Face ID (complément du code PIN)**
