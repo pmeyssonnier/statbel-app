@@ -1652,6 +1652,39 @@ function afficherToast(msg) {
   t._timer=setTimeout(()=>{t.style.opacity='0';},2200);
 }
 
+// Toast « action » : message + bouton « Ouvrir » pour rouvrir le dernier fichier
+// généré sans aller fouiller le dossier Téléchargements (surtout utile sur mobile,
+// où le lien blob déclenche « Ouvrir avec… »). Une page web ne peut PAS lancer
+// Word elle-même ; ce lien ne fait que ré-adresser l'URL blob, la plateforme
+// décide de l'ouverture. L'URL blob est gardée vivante jusqu'à la fermeture du
+// toast (✕ ou expiration ~9 s), puis révoquée pour libérer la mémoire.
+function afficherToastFichier(msg, url, nomFichier){
+  const anc=document.getElementById('lfs-toast-file');
+  if(anc){ clearTimeout(anc._timer); if(anc._url){ try{URL.revokeObjectURL(anc._url);}catch(_){} } anc.remove(); }
+  const t=document.createElement('div'); t.id='lfs-toast-file'; t._url=url;
+  t.setAttribute('role','status'); t.setAttribute('aria-live','polite');
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
+    'display:flex;align-items:center;gap:12px;max-width:92vw;'+
+    'background:var(--ink);color:#fff;padding:9px 12px 9px 18px;border-radius:22px;'+
+    'font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s;'+
+    'box-shadow:0 4px 16px rgba(0,0,0,.28)';
+  const span=document.createElement('span'); span.textContent=msg; span.style.whiteSpace='nowrap';
+  const lien=document.createElement('a');
+  lien.href=url; lien.target='_blank'; lien.rel='noopener';
+  lien.textContent='Ouvrir'; lien.setAttribute('aria-label','Ouvrir le fichier '+nomFichier);
+  lien.style.cssText='color:#fff;background:var(--cand);padding:5px 13px;border-radius:14px;'+
+    'text-decoration:none;font-weight:700;white-space:nowrap';
+  const fermer=document.createElement('button');
+  fermer.type='button'; fermer.textContent='✕'; fermer.setAttribute('aria-label','Fermer');
+  fermer.style.cssText='background:none;border:none;color:#fff;font-size:15px;cursor:pointer;line-height:1;padding:0 2px';
+  const detruire=()=>{ clearTimeout(t._timer); if(t._url){ try{URL.revokeObjectURL(t._url);}catch(_){} t._url=null; } t.style.opacity='0'; setTimeout(()=>t.remove(),220); };
+  fermer.addEventListener('click', detruire);
+  t.append(span, lien, fermer);
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity='1'; });
+  t._timer=setTimeout(detruire, 9000);
+}
+
 // Démarrage : charger les plannings du Convertisseur. La sauvegarde/restauration
 // se fait via le menu ⋮ (plus de bannière verte au démarrage).
 (function init() {
@@ -3048,14 +3081,17 @@ function genererCandidature(){
     const bytes=candGenerateDocxBytes(data);
     const blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
     const who=(data.nom||data.prenom)?('_'+(data.nom+data.prenom).replace(/[^A-Za-z0-9]/g,'')):'';
     const slug=(survey||'EFT').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');
-    a.href=url; a.download='Candidature_'+slug+who+'.docx';
+    const nomFichier='Candidature_'+slug+who+'.docx';
+    const a=document.createElement('a');
+    a.href=url; a.download=nomFichier;
     document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1500);
     candSaveInfos();
-    afficherToast('📝 Candidature générée !');
+    // Le .docx part dans les Téléchargements. On propose un lien « Ouvrir » (qui
+    // maintient l'URL blob vivante jusqu'à fermeture du toast) pour éviter d'aller
+    // le rechercher à la main — surtout utile sur mobile.
+    afficherToastFichier('📝 Candidature générée', url, nomFichier);
   }catch(e){ candErrGlobale('Erreur lors de la génération : '+e.message); }
 }
 
@@ -3147,7 +3183,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '194';
+const APP_VERSION = '195';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
