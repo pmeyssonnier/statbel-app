@@ -13,7 +13,7 @@ import { renderCourbeAvancement, collecterVisites } from './stats.js';
 import { esc } from '../core/util.js';
 import { t, tf, labelNbEnquetes, localeApp } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
-import { classerMethode } from './contacts.js';
+import { classerMethode } from '../data/collect-method.js';
 
 // Vocabulaire agrégé pour un ensemble d'enquêtes : chaque enquête ayant désormais
 // ses propres statuts (settings.statutsParEnquete), le résumé multi-enquêtes prend

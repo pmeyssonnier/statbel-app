@@ -19,6 +19,7 @@ import { t, tf, tPlural, nomJourCourt } from '../core/i18n.js';
 import { statutLabel, paysAffiche, etatCivilGenre, maritalCanon,
          MARITAL_I18N, PAYS_I18N } from '../data/canon.js';
 import { coordsCache } from '../data/idb.js';
+import { classerMethode } from '../data/collect-method.js';
 // Note : formatHeureSaisie / ajouterHistorique sont appelés depuis des handlers
 // inline (oninput/onclick) → résolus via le pont window, pas besoin de les importer ici.
 
@@ -185,19 +186,10 @@ export function ligneDemographie(c) {
 // sur la ligne des canaux de contact (à côté du téléphone/e-mail).
 export function methodeBadge(c) {
   if (!c || !c.collect_method) return '';
-  const u = String(c.collect_method).toUpperCase();
-  if (/CATI|T[ÉE]L|PHONE|TELEPH/.test(u))            return '<span class="badge badge-cati">📞 CATI</span>';
-  if (/CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(u)) return '<span class="badge badge-cawi">🌐 CAWI</span>';
+  const m = classerMethode(c.collect_method);
+  if (m === 'cati') return '<span class="badge badge-cati">📞 CATI</span>';
+  if (m === 'cawi') return '<span class="badge badge-cawi">🌐 CAWI</span>';
   return `<span class="badge">📋 ${esc(c.collect_method)}</span>`;
-}
-
-// Classe la méthode de collecte (mêmes regex que methodeBadge) → 'cawi' | 'cati' | ''.
-// Sert à décider si l'on propose un rappel et quel message composer.
-export function classerMethode(v) {
-  const u = String(v || '').toUpperCase();
-  if (/CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(u)) return 'cawi';
-  if (/CATI|T[ÉE]L|PHONE|TELEPH/.test(u))            return 'cati';
-  return '';
 }
 
 // Construit un message de rappel prérempli pour un contact CATI/CAWI.

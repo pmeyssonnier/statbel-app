@@ -11,6 +11,7 @@
 import { esc } from '../core/util.js';
 import { t, tf } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
+import { estCatiCawi } from '../data/collect-method.js';
 
 
 
@@ -265,18 +266,13 @@ function poserPresetStatuts(key) {
   rafraichirStatutsVues();
 }
 
-// Normalise une méthode de collecte brute (CD_WSH_CLCT_MTHD) → true si CATI ou CAWI.
-// Regex alignée sur collecteInfo() du Convertisseur.
-function methodeCatiCawi(v) {
-  return /CATI|T[ÉE]L|PHONE|TELEPH|CAWI|WEB|INTERNET|ONLINE|EN\s?LIGNE/.test(String(v || '').toUpperCase());
-}
-
 // Déduit le préréglage de statuts d'une enquête NEUVE d'après la méthode de
 // collecte des fiches importées : ≥1 fiche CATI/CAWI → préréglage « feuille de
 // contact CATI » ; sinon aucune méthode (vague 1 CAPI) → défaut CAPI (no-op).
 // L'enquête active doit déjà être l'enquête créée (enqueteActive = nom).
+// La classification CATI/CAWI vient du module métier unique collect-method.js.
 export function deduirePresetStatuts(nom, rows) {
-  if (!(rows || []).some(c => methodeCatiCawi(c && c.collect_method))) return;
+  if (!(rows || []).some(c => estCatiCawi(c && c.collect_method))) return;
   poserPresetStatuts('cati');
   if (typeof afficherToast === 'function')
     afficherToast(tf('toast_preset_auto', { name: t(STATUT_PRESETS.cati.i18nLabel) }), 5000);

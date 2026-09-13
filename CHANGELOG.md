@@ -13,6 +13,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Interviews — module métier unique « méthode de collecte »** (Interviews 3.43 → 3.44,
+  SW `statbel-v311` → `statbel-v312`) : la classification CAPI / CATI / CAWI vivait en double
+  (`classerMethode` dans `ui/contacts.js`, `methodeCatiCawi` dans `ui/settings.js`) plus une 3ᵉ copie
+  inline dans le badge de fiche. Elle est désormais centralisée dans `js/data/collect-method.js`
+  (fonctions **pures** `classerMethode` / `estCatiCawi`, source unique des regex). Effets : fin de la
+  dépendance `ui/resume.js → ui/contacts.js` (le Résumé importe maintenant le module métier) ;
+  `contacts.js`/`settings.js` réutilisent la même logique ; `classerMethode` retiré du pont `window`
+  (inutilisé). Ajout d'un test **pur** (sans navigateur) `tests/collect-method.test.js` couvrant la
+  classification et vérifiant que la copie du Convertisseur (mono-fichier `file://`, non importable)
+  reste alignée sur les mêmes regex. Refactor sans changement de comportement visible.
 - **Convertisseur — Statistiques : mutualiser les drill-downs par nationalité** (Convertisseur
   219 → 220, SW `statbel-v310` → `statbel-v311`) : les six fonctions de drill-down préexistantes
   (tranche d'âge, sexe, statut matrimonial, taille de ménage, tranches LFS, cibles par ménage)
