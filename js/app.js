@@ -57,7 +57,11 @@ import {
   pinAfficherErreur, pinValiderSaisie, ouvrirLockScreen, fermerLockScreen,
   ouvrirGestionPin, fermerModalPin, pinChanger, pinDesactiver, majPinUI,
   pinVerifierAuDemarrage, pinSurveillerInactivite,
+  pinTenterBio, toggleBioUnlock, majBioUI,
 } from './ui/pin.js';
+import {
+  bioPlateformeDispo, bioEnrolee, bioEnroler, bioVerifier, bioDesactiver,
+} from './ui/biometrie.js';
 import {
   collecterVisites, renderActiviteQuotidienne, renderProgressionGlobale,
   renderCourbeAvancement, dessinerCourbeProgression, renderEvenementsChrono,
@@ -93,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.60';
+const APP_VERSION = '3.61';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -108,6 +112,7 @@ const SETTINGS_DEFAULTS = {
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
   pinFails:   0,          // échecs PIN consécutifs (temporisation anti-essais)
   pinLockUntil: 0,        // horodatage jusqu'auquel la saisie PIN est gelée (0 = libre)
+  bioCredId:  '',         // identifiant (public) de la clé WebAuthn pour le déverrouillage par empreinte ('' = non enrôlé)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
   fontSize:   'normal',   // 'small' | 'normal' (défaut/système) | 'large' | 'xlarge'
   csvSep:     'auto',     // séparateur d'export CSV : 'auto' (régional) | ',' | ';'
@@ -978,12 +983,14 @@ function enregistrerActionsReglages() {
     setPayPerson:    el => { settings.paiePersonne = Math.max(0, parseFloat(el.value) || 0); saveSettings(); },
     modifierStatut:  el => modifierStatut(+el.dataset.idx, el.dataset.field, el.type === 'checkbox' ? el.checked : el.value),
     importerBackup:  (el, e) => importerBackup(e),
+    toggleBioUnlock: el => toggleBioUnlock(el),
   });
   registerActions('input', {
     setCawiUrl:      el => { settings.cawiUrl = el.value.trim(); saveSettings(); },
   });
   registerActions('click', {
     ouvrirGestionPin:       () => ouvrirGestionPin(),
+    pinTenterBio:           () => pinTenterBio(),
     fermerSettings:         () => fermerSettings(),
     ajouterStatut:          () => ajouterStatut(),
     supprimerStatut:        el => supprimerStatut(+el.dataset.idx),
@@ -1231,7 +1238,9 @@ Object.assign(window, {
   setResumeScope, setResumeMethode, renduResume, _pinHash, pinEstActif, renderLockDots, renderLockKeypad,
   pinToucheAppuyee, pinAfficherErreur, pinValiderSaisie, ouvrirLockScreen,
   fermerLockScreen, ouvrirGestionPin, fermerModalPin, pinChanger, pinDesactiver, majPinUI,
-  pinVerifierAuDemarrage, pinSurveillerInactivite, migrerVersAnglais, init
+  pinVerifierAuDemarrage, pinSurveillerInactivite, migrerVersAnglais, init,
+  pinTenterBio, toggleBioUnlock, majBioUI,
+  bioPlateformeDispo, bioEnrolee, bioEnroler, bioVerifier, bioDesactiver
 });
 
 init();

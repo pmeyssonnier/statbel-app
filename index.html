@@ -43,6 +43,10 @@
   <div class="lock-dots" id="lockDots"></div>
   <div class="lock-error-msg" id="lockErrorMsg" role="alert">&nbsp;</div>
   <div class="lock-keypad" id="lockKeypad"></div>
+  <button class="lock-bio hidden" id="lockBio" data-act="pinTenterBio" data-i18n-aria="bio_unlock" aria-label="Déverrouiller par empreinte">
+    <span class="lock-bio-ring"><span class="lock-bio-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/><path d="M5 19.5C5.5 18 6 15 6 12c0-.7.12-1.37.34-2"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .13-5.35 0-6"/><path d="M9 6.8a6 6 0 0 1 9 5.2c0 .47 0 1.17-.02 2"/></svg></span></span>
+    <span class="lock-bio-label" id="lockBioLabel" data-i18n="bio_label">Empreinte</span>
+  </button>
   <div class="lock-footer hidden" id="lockSetupHint" data-i18n="pin_setup_hint">Ce code sera demandé à chaque ouverture de l'application.</div>
 </div>
 
@@ -325,6 +329,13 @@
           </select>
         </div>
         <small id="pinStatusHint">Protège l'accès à l'application (données nominatives) par un code à 4 chiffres.</small>
+        <div class="set-row hidden" id="bioRow" style="margin-top:10px;">
+          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;">
+            <input type="checkbox" id="setBioUnlock" data-act="toggleBioUnlock">
+            <span data-i18n="bio_setting_label">Déverrouillage par empreinte / Face ID</span>
+          </label>
+          <small id="bioStatusHint" data-i18n="bio_setting_hint">Raccourci de confort — le code PIN reste demandé en repli. Enrôlé sur cet appareil.</small>
+        </div>
       </div>
     </details>
 
