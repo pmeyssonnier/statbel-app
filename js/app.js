@@ -93,7 +93,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.54';
+const APP_VERSION = '3.55';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1040,6 +1040,32 @@ function enregistrerActionsChrome() {
   });
 }
 
+// Actions déléguées des vues Carte / Suivi(RDV) / Import (lot 3 du chantier
+// onclick). Paramètres portés par data-* (le navigateur décode les entités à la
+// lecture, donc `esc()` à l'écriture est un round-trip sûr).
+function enregistrerActionsVues() {
+  registerActions('change', {
+    importerFichier: (el, e) => importerFichier(e),
+    majComparaisonImport: () => majComparaisonImport(),
+  });
+  registerActions('input', {
+    rechercherRdv: () => debounce(renduRdv),
+    majComparaisonImport: () => majComparaisonImport(),
+  });
+  registerActions('click', {
+    // Carte
+    recentrerCarte:         () => recentrerCarte(),
+    ouvrirFicheDepuisCarte: el => ouvrirFicheDepuisCarte(+el.dataset.idx),
+    // Suivi (RDV)
+    filtrerRdv:           el => filtrerRdv(el.dataset.label),
+    filtrerActiviteJour:  el => filtrerActiviteJour(el.dataset.jour),
+    // Import
+    fermerModal:     () => fermerModal(),
+    confirmerImport: () => confirmerImport(),
+    toggleCompare:   el => document.getElementById(el.dataset.target).classList.toggle('hidden'),
+  });
+}
+
 async function init() {
   chargerSettings();
   appliquerTheme();
@@ -1048,6 +1074,7 @@ async function init() {
   installerDelegation();   // routeur de délégation (data-act) — coexiste avec les onclick restants
   enregistrerActionsReglages();
   enregistrerActionsChrome();
+  enregistrerActionsVues();
 
   // Persistance du stockage : demande au navigateur de ne pas purger IndexedDB/
   // localStorage (sinon iOS/Safari peut tout effacer après 7 jours d'inactivité,

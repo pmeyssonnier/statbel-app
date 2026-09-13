@@ -384,7 +384,7 @@ export function buildCompareHTML(src, meta) {
           ${unch ? `<span class="cs-unch">✅ ${unch} ${tPlural('cmp_w_unch',unch)}</span>` : ''}
         </div>
         ${hasChanges ? `
-          <div class="compare-toggle" onclick="document.getElementById('${blockId}').classList.toggle('hidden')">${t('cmp_toggle')}</div>
+          <div class="compare-toggle" data-act="toggleCompare" data-target="${blockId}">${t('cmp_toggle')}</div>
           <div class="compare-rows hidden" id="${blockId}">${rowsHtml}</div>
         ` : ''}
       </div>`;

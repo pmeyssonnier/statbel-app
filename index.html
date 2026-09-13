@@ -214,7 +214,7 @@
   </div>
   <input type="file" id="importFile" accept=".csv,.xlsx,.xls" data-i18n-aria="menu_import" aria-label="Importer CSV / Excel"
     style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden"
-    onchange="importerFichier(event)">
+    data-act="importerFichier">
 </header>
 
 <!-- Contenu principal (landmark main + cible du lien d'évitement) -->
@@ -236,7 +236,7 @@
 
 <div id="mapContainer">
   <div id="map"></div>
-  <button onclick="recentrerCarte()" title="Recentrer sur les contacts" data-i18n-title="title_recenter" data-i18n-aria="title_recenter"
+  <button data-act="recentrerCarte" title="Recentrer sur les contacts" data-i18n-title="title_recenter" data-i18n-aria="title_recenter"
     class="btn-view" style="position:absolute;top:10px;right:10px;z-index:500;background:white;color:#1a237e;box-shadow:0 2px 6px rgba(0,0,0,0.2);">⊙</button>
   <div id="geocodeProgress" role="status" aria-live="polite">⏳ Géocodage <span id="geocodeCount"></span></div>
   <div class="map-legend" id="mapLegend"></div>
@@ -246,7 +246,7 @@
 <div id="rdvContainer" style="display:none; padding:10px 12px; flex-direction:column; gap:10px;">
   <h2 class="rdv-title" id="rdvTitle">📅 Suivi des interviews</h2>
   <div class="rdv-search">
-    <input type="search" id="rdvSearch" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" data-i18n-aria="ph_search" aria-label="Rechercher" oninput="debounce(renduRdv)" autocomplete="off">
+    <input type="search" id="rdvSearch" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" data-i18n-aria="ph_search" aria-label="Rechercher" data-act="rechercherRdv" autocomplete="off">
   </div>
   <div class="filters" id="rdvFilters" style="padding:0;border:none;background:none;"></div>
   <div id="rdvListe"></div>
@@ -262,16 +262,16 @@
     <div id="importCompareWrap" class="hidden" style="overflow-y:auto;margin-top:6px;"></div>
     <div id="importIncertains"></div>
     <label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-size:13px;cursor:pointer;">
-      <input type="checkbox" id="chkOnlyValid" checked onchange="majComparaisonImport()">
+      <input type="checkbox" id="chkOnlyValid" checked data-act="majComparaisonImport">
       <span data-i18n="lbl_only_valid">N'importer que les enregistrements corrects</span>
       <span id="importExcluded" style="font-size:11px;color:#b71c1c;"></span>
     </label>
     <div id="importExclusDetail"></div>
     <label for="inputNomEnquete" style="display:block;margin-top:12px;font-size:13px;font-weight:600;" data-i18n="lbl_survey_name">Nom de l'enquête</label>
-    <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" data-i18n-aria="lbl_survey_name" aria-label="Nom de l'enquête" oninput="majComparaisonImport()">
+    <input type="text" id="inputNomEnquete" placeholder="Ex: Statbel LFS 2026-12305" data-i18n-aria="lbl_survey_name" aria-label="Nom de l'enquête" data-act="majComparaisonImport">
     <div class="modal-btns">
-      <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerModal()">Annuler</button>
-      <button class="btn-primary" id="btnConfirmerImport" onclick="confirmerImport()">Importer</button>
+      <button class="btn-secondary" data-i18n="btn_cancel" data-act="fermerModal">Annuler</button>
+      <button class="btn-primary" id="btnConfirmerImport" data-act="confirmerImport">Importer</button>
     </div>
   </div>
 </div>

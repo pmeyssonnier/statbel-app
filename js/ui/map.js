@@ -141,7 +141,7 @@ export function afficherMarqueurs() {
         <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statutLabel(statut))}</span>
         ${dateStatut ? `<span style="font-size:12px;color:#666">${esc(dateStatut)}</span>` : ''}
       </div>
-      <div style="margin-top:8px"><button onclick="ouvrirFicheDepuisCarte(${idx})" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ ${esc(t('map_editcard'))}</button></div>`;
+      <div style="margin-top:8px"><button data-act="ouvrirFicheDepuisCarte" data-idx="${idx}" style="width:100%;padding:8px;background:#1a237e;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🖊️ ${esc(t('map_editcard'))}</button></div>`;
     // Largeur du popup adaptée à l'écran (téléphone/tablette)
     const vw = window.innerWidth || 360;
     const popMax = Math.min(340, vw - 40);
