@@ -58,11 +58,15 @@ export function apparieurAnciens(oldArr) {
         // concorde (nom, prénom, naissance ou adresse). Si l'ordre concorde mais que tout
         // le reste diffère (n° peut-être réutilisé pour une autre personne), on N'apparie
         // PAS -> pas de transfert de suivi ; on signale pour validation humaine.
-        const signaux = [sig(o.nom, neu.nom), sig(o.prenom, neu.prenom),
-                         sig(o.birth_date, neu.birth_date), sig(o.adresse, neu.adresse, normAdr)];
-        const positifs = signaux.filter(s => s > 0).length;
-        const conflits = signaux.filter(s => s < 0).length;
-        if (positifs >= 1 || conflits === 0) return take(o);
+        const identite = [sig(o.nom, neu.nom), sig(o.prenom, neu.prenom),
+                          sig(o.birth_date, neu.birth_date)];
+        const adresse = sig(o.adresse, neu.adresse, normAdr);
+        const identitePositive = identite.some(s => s > 0);
+        const identiteEnConflit = identite.some(s => s < 0);
+        // Une adresse concordante ne doit jamais, à elle seule, neutraliser une
+        // identité entièrement divergente : plusieurs ménages/personnes peuvent
+        // partager ou conserver la même adresse entre deux imports.
+        if (identitePositive || (!identiteEnConflit && adresse >= 0)) return take(o);
         incertains.push({ neu, old: o });
       }
     }
