@@ -10,17 +10,12 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script>
-  // PWA : enregistre le même service worker que l'app enquête, pour que
-  // l'entrée par cette page déclenche aussi la mise à jour du cache.
-  if (location.protocol === 'https:' || location.protocol === 'http:') {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
-      });
-    }
-  }
-</script>
+<!-- Amorçage PWA partagé : enregistrement du service worker + bannière « Mise à
+     jour disponible » (opt-in). Réutilise js/boot.js (autonome, indépendant de
+     l'app enquête) pour que cette page mono-fichier propose elle aussi la pose de
+     mise à jour — sans quoi, en navigation « cache d'abord », elle resterait figée
+     sur l'ancienne version tant qu'on ne l'aurait pas posée depuis Interviews. -->
+<script src="js/boot.js"></script>
 <!-- Leaflet (vendorisé, vendor/leaflet/) — utilisé uniquement par la carte des
      quartiers de l'annexe « Planning ». Tout est hors-ligne, aucun CDN. -->
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
@@ -7014,7 +7009,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '220';
+const APP_VERSION = '221';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

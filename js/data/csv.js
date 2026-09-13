@@ -162,11 +162,23 @@ export function parseCSV(text) {
       ...(histArr.length ? { historique: histArr } : {}),
     });
   });
+  // Garde-fou : un identifiant / mot de passe web arrivant en NOTATION SCIENTIFIQUE
+  // (ex. « 2.02612E+11 ») est un ID numérique long cassé par un tableur — la précision
+  // est déjà perdue, on ne peut PAS le reconstruire ici. On le SIGNALE (sans bloquer
+  // l'import du reste) pour que l'enquêteur réimporte depuis le .xlsx d'origine via le
+  // Convertisseur à jour, plutôt que d'envoyer un login CAWI inutilisable à un répondant.
+  const RE_SCI = /^[+-]?\d+(?:\.\d+)?[eE][+-]?\d+$/;
+  const idsCorrompus = [];
+  rows.forEach(r => {
+    const champ = RE_SCI.test(r.web_user_id || '') ? 'web_user_id'
+                : RE_SCI.test(r.web_user_pwd || '') ? 'web_user_pwd' : null;
+    if (champ) idsCorrompus.push({ ordre: r.ordre || '—', valeur: r[champ] });
+  });
   // Les coordonnées ne sont PAS écrites ici : elles ne le seront qu'à la
   // confirmation de l'import (sinon un simple aperçu puis Annuler modifierait
   // déjà le cache). On les retourne pour application dans confirmerImport().
   const rejetees = motifs.sansIdentite + motifs.adresseVide + motifs.doublonOrdre;
-  return { rows, coords: coordsAImporter, stats: { lues: bodyRows.length, importees: rows.length, rejetees, motifs, rejets, reconnues, nonReconnues } };
+  return { rows, coords: coordsAImporter, stats: { lues: bodyRows.length, importees: rows.length, rejetees, motifs, rejets, reconnues, nonReconnues, idsCorrompus } };
 }
 
 export function csvCell(v) {

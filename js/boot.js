@@ -11,9 +11,15 @@
   // PWA : actif uniquement quand l'app est servie en http(s) (ex. GitHub Pages).
   // En file:// on ne fait rien (service workers indisponibles, manifeste inutile).
   if (location.protocol === 'https:' || location.protocol === 'http:') {
-    const m = document.createElement('link');
-    m.rel = 'manifest'; m.href = 'manifest.webmanifest';
-    document.head.appendChild(m);
+    // Manifeste : injecté seulement si la page n'en déclare pas déjà un en statique.
+    // (index.html laisse boot.js l'ajouter ; les mono-fichiers Convertisseur/Planner,
+    // qui réutilisent ce script pour le popup de mise à jour, ont un <link rel="manifest">
+    // statique → on évite un doublon.)
+    if (!document.querySelector('link[rel="manifest"]')) {
+      const m = document.createElement('link');
+      m.rel = 'manifest'; m.href = 'manifest.webmanifest';
+      document.head.appendChild(m);
+    }
     // (apple-touch-icon est désormais déclaré en statique dans le <head>)
     if ('serviceWorker' in navigator) {
       // Mise à jour de la PWA installée en OPT-IN : quand une nouvelle version est

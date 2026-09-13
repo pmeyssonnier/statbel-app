@@ -179,6 +179,11 @@ export function renderImportApercu(s) {
       <div><div style="font-size:22px;font-weight:700;color:#2e7d32;">${s.importees}</div><div style="font-size:11px;color:#888;">${t('ip_to_import')}</div></div>
       <div><div style="font-size:22px;font-weight:700;color:${s.rejetees?'#b71c1c':'#888'};">${s.rejetees}</div><div style="font-size:11px;color:#888;">${t('ip_rejected')}</div></div>
     </div>
+    ${(s.idsCorrompus && s.idsCorrompus.length) ? `
+      <div role="alert" style="background:#fdecea;border:1px solid #f5c6cb;border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:12px;color:#b71c1c;">
+        <div style="font-weight:700;margin-bottom:2px;">⚠️ ${esc(tf('ip_id_corrupt_title', { n: s.idsCorrompus.length }))}</div>
+        <div>${esc(tf('ip_id_corrupt_body', { ex: s.idsCorrompus[0].valeur }))}</div>
+      </div>` : ''}
     ${(() => {
       const m = s.motifs || {};
       const det = [];
