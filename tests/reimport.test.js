@@ -56,6 +56,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(m({ adresse: 'Rue Inconnue' }) === null, 'adresse inconnue → nouveau contact');
   }
 
+  // ── anti-collision : les champs de la clé doivent être séparés ──────
+  // « ab »+« c » et « a »+« bc » ne doivent PAS produire la même clé d'appariement
+  // (sinon faux match silencieux). Même naissance pour forcer la voie nom+prénom+naissance.
+  {
+    const m = apparieurAnciens([{ nom: 'ab', prenom: 'c', birth_date: '1980-01-01', adresse: 'Rue X' }]);
+    const r = m({ nom: 'a', prenom: 'bc', birth_date: '1980-01-01', adresse: 'Rue Y' });
+    A(r === null, 'nom/prénom concaténés (ab|c vs a|bc) → pas de fausse collision');
+  }
+
   // ── diffHistorique : unch / mod / add / rem ─────────────────────────
   {
     const d = diffHistorique(

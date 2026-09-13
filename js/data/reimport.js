@@ -1,11 +1,12 @@
 /*
- * js/data/reimport.js — Moteur PUR de réimport : appariement & diff.
+ * js/data/reimport.js — Moteur de réimport : appariement & diff.
  *
- * Cœur métier du réimport, isolé de l'UI et de l'état applicatif. Toutes ces
- * fonctions sont PURES : aucune lecture de `enquetes`, `settings`, `enqueteActive`,
- * du DOM, de localStorage/IndexedDB, ni d'i18n. Elles reçoivent leurs entrées en
- * paramètres et renvoient des structures de données → testables sans navigateur
- * (tests/reimport.test.js).
+ * Cœur métier du réimport, isolé de l'UI et de l'état applicatif : aucune lecture
+ * de `enquetes`, `settings`, `enqueteActive`, du DOM, de localStorage/IndexedDB, ni
+ * d'i18n. Tout arrive en paramètres → testable sans navigateur (tests/reimport.test.js).
+ * `diffHistorique`, `_diffContacts` et `_contactKey` sont pures ; `apparieurAnciens`
+ * renvoie un matcher AUTONOME à état interne (contacts déjà appariés, incertains) le
+ * temps d'une passe de réimport — autonome, pas « pur » au sens strict.
  *
  * L'orchestration (modale, aperçu, confirmation, lecture de l'existant) et la
  * validation de cohérence liée au vocabulaire de statuts actif restent dans
@@ -36,15 +37,18 @@ export function apparieurAnciens(oldArr) {
   const incertains = [];   // { neu, old } : n° d'ordre concordant mais identité divergente
   const norm    = s => (s == null ? '' : String(s)).trim().toLowerCase();
   const normAdr = s => norm(s).replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim();
+  // Clé composite : jointure des champs par un séparateur qui ne peut apparaître
+  // dans les valeurs normalisées (U+0001). Sans lui, « ab »+« c » et « a »+« bc »
+  // produiraient la même clé → faux appariement silencieux.
+  const cle = (...parts) => parts.join('');
   const byOrdre = new Map(), byNPB = new Map(), byNPA = new Map(), byAdr = new Map();
   const add = (m, k, c) => { if (!k) return; const l = m.get(k); if (l) l.push(c); else m.set(k, [c]); };
   (oldArr || []).forEach(c => {
     const ord = norm(c.ordre), nom = norm(c.nom), pre = norm(c.prenom);
     add(byOrdre, ord, c);
     if (nom || pre) {
-      const np = nom + '' + pre;
-      add(byNPB, np + '' + norm(c.birth_date), c);   // clé nulle ignorée par add() si naissance vide
-      add(byNPA, np + '' + normAdr(c.adresse), c);
+      add(byNPB, cle(nom, pre, norm(c.birth_date)), c);   // recherchée seulement si la naissance est renseignée (cf. match)
+      add(byNPA, cle(nom, pre, normAdr(c.adresse)), c);
     } else {
       add(byAdr, normAdr(c.adresse), c);                   // ni ordre ni identité → adresse seule
     }
@@ -72,11 +76,10 @@ export function apparieurAnciens(oldArr) {
       }
     }
     if (nom || pre) {
-      const np = nom + '' + pre;
       const bd = norm(neu.birth_date);
-      let c = bd ? firstFree(byNPB.get(np + '' + bd)) : null;
+      let c = bd ? firstFree(byNPB.get(cle(nom, pre, bd))) : null;
       if (c) return take(c);
-      c = firstFree(byNPA.get(np + '' + normAdr(neu.adresse)));
+      c = firstFree(byNPA.get(cle(nom, pre, normAdr(neu.adresse))));
       if (c) return take(c);
     } else {
       const c = firstFree(byAdr.get(normAdr(neu.adresse)));
