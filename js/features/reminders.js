@@ -38,6 +38,121 @@ Bien cordialement,
   smsCawi: 'Bonjour {{prenom}}, enquête {{enquete}} de Statbel : {{lien}} – ID : {{identifiant}} – MDP : {{mot_de_passe}}. Merci, {{signature_courte}}',
 });
 
+export const RAPPEL_TEMPLATES_NL = Object.freeze({
+  mailSubject: 'Herinnering – Enquête {{enquete}} van Statbel',
+  mailCati: `Beste {{prenom}},
+
+Ik wil u eraan herinneren dat uw huishouden werd geselecteerd om deel te nemen aan de enquête {{enquete}} van Statbel.
+
+{{rendez_vous}}
+Als dit moment u niet past, kunt u mij rechtstreeks antwoorden.
+
+Alvast bedankt voor uw deelname.
+
+Met vriendelijke groeten,
+{{signature}}`,
+  mailCawi: `Beste {{prenom}},
+
+Uw huishouden werd geselecteerd om deel te nemen aan de enquête {{enquete}} van Statbel.
+
+Link: {{lien}}
+Gebruikersnaam: {{identifiant}}
+Wachtwoord: {{mot_de_passe}}
+
+Alvast bedankt voor uw deelname.
+
+Met vriendelijke groeten,
+{{signature}}`,
+  smsCati: 'Beste {{prenom}}, herinnering Statbel voor de enquête {{enquete}}. {{rendez_vous}} Bedankt, {{signature_courte}}',
+  smsCawi: 'Beste {{prenom}}, enquête {{enquete}} van Statbel: {{lien}} – ID: {{identifiant}} – WW: {{mot_de_passe}}. Bedankt, {{signature_courte}}',
+});
+
+export const RAPPEL_TEMPLATES_EN = Object.freeze({
+  mailSubject: 'Reminder – {{enquete}} survey by Statbel',
+  mailCati: `Hello {{prenom}},
+
+I would like to remind you that your household has been selected to take part in the {{enquete}} survey organised by Statbel.
+
+{{rendez_vous}}
+If this time does not suit you, you can reply to me directly.
+
+Thank you in advance for your participation.
+
+Kind regards,
+{{signature}}`,
+  mailCawi: `Hello {{prenom}},
+
+Your household has been selected to take part in the {{enquete}} survey organised by Statbel.
+
+Link: {{lien}}
+Username: {{identifiant}}
+Password: {{mot_de_passe}}
+
+Thank you in advance for your participation.
+
+Kind regards,
+{{signature}}`,
+  smsCati: 'Hello {{prenom}}, Statbel reminder for the {{enquete}} survey. {{rendez_vous}} Thank you, {{signature_courte}}',
+  smsCawi: 'Hello {{prenom}}, {{enquete}} survey by Statbel: {{lien}} – ID: {{identifiant}} – PW: {{mot_de_passe}}. Thank you, {{signature_courte}}',
+});
+
+export const RAPPEL_TEMPLATES_DE = Object.freeze({
+  mailSubject: 'Erinnerung – Erhebung {{enquete}} von Statbel',
+  mailCati: `Guten Tag {{prenom}},
+
+ich möchte Sie daran erinnern, dass Ihr Haushalt für die Teilnahme an der von Statbel durchgeführten Erhebung {{enquete}} ausgewählt wurde.
+
+{{rendez_vous}}
+Falls Ihnen dieser Zeitpunkt nicht passt, können Sie mir direkt antworten.
+
+Vielen Dank im Voraus für Ihre Teilnahme.
+
+Mit freundlichen Grüßen,
+{{signature}}`,
+  mailCawi: `Guten Tag {{prenom}},
+
+Ihr Haushalt wurde für die Teilnahme an der von Statbel durchgeführten Erhebung {{enquete}} ausgewählt.
+
+Link: {{lien}}
+Benutzername: {{identifiant}}
+Passwort: {{mot_de_passe}}
+
+Vielen Dank im Voraus für Ihre Teilnahme.
+
+Mit freundlichen Grüßen,
+{{signature}}`,
+  smsCati: 'Guten Tag {{prenom}}, Statbel-Erinnerung zur Erhebung {{enquete}}. {{rendez_vous}} Danke, {{signature_courte}}',
+  smsCawi: 'Guten Tag {{prenom}}, Erhebung {{enquete}} von Statbel: {{lien}} – ID: {{identifiant}} – PW: {{mot_de_passe}}. Danke, {{signature_courte}}',
+});
+
+// Modèles proposés par langue (fr/nl/en/de). Les jetons {{var}} sont identiques
+// dans toutes les langues ; seule la prose est traduite.
+const RAPPEL_TEMPLATES = Object.freeze({
+  fr: RAPPEL_TEMPLATES_FR,
+  nl: RAPPEL_TEMPLATES_NL,
+  en: RAPPEL_TEMPLATES_EN,
+  de: RAPPEL_TEMPLATES_DE,
+});
+
+// Signatures par défaut : le nom reste identique, seul le rôle est localisé.
+const SIGNATURE_DEFAUT = Object.freeze({
+  fr: 'Pierre Meyssonnier – Enquêteur Statbel',
+  nl: 'Pierre Meyssonnier – Statbel-enquêteur',
+  en: 'Pierre Meyssonnier – Statbel interviewer',
+  de: 'Pierre Meyssonnier – Statbel-Befrager',
+});
+const SIGNATURE_COURTE_DEFAUT = 'Pierre – Statbel';
+
+// Renvoie les modèles + signatures proposés pour la langue active (repli FR).
+export function modelesRappelDefaut(lang) {
+  const l = RAPPEL_TEMPLATES[lang] ? lang : 'fr';
+  return {
+    templates: { ...RAPPEL_TEMPLATES[l] },
+    signature: SIGNATURE_DEFAUT[l],
+    signatureShort: SIGNATURE_COURTE_DEFAUT,
+  };
+}
+
 const TEMPLATE_KEYS = Object.keys(RAPPEL_TEMPLATES_FR);
 
 // Remplace uniquement les variables connues. Une variable absente devient vide,
@@ -74,7 +189,7 @@ export function construireRappel({
   const variables = {
     prenom: c.prenom || '',
     enquete: surveyName || '',
-    rendez_vous: c.rdv ? 'Rendez-vous prévu : ' + c.rdv : '',
+    rendez_vous: c.rdv ? tf('rappel_rdv', { rdv: c.rdv }) : '',
     lien: (cawiUrl || '').trim(),
     identifiant: c.web_user_id || '',
     mot_de_passe: c.web_user_pwd || '',

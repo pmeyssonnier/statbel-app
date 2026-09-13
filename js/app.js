@@ -36,7 +36,7 @@ import {
   fermerSuggestions, emailKeydown, allerAFiche, toggleKebab,
   envoyerRappel,
 } from './ui/contacts.js';
-import { construireRappel, RAPPEL_TEMPLATES_FR } from './features/reminders.js';
+import { construireRappel, modelesRappelDefaut } from './features/reminders.js';
 import {
   filtrerActiviteJour, ouvrirFicheEvtIdx, rdvTitreStatut,
   renderRdvFilters, filtrerRdv, renduRdv,
@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.64';
+const APP_VERSION = '3.65';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1022,9 +1022,10 @@ function majChampsModelesRappel() {
 }
 
 function chargerModelesRappel() {
-  settings.reminderTemplates = { ...RAPPEL_TEMPLATES_FR };
-  if (!settings.reminderSignature) settings.reminderSignature = 'Pierre Meyssonnier – Enquêteur Statbel';
-  if (!settings.reminderSignatureShort) settings.reminderSignatureShort = 'Pierre – Statbel';
+  const propose = modelesRappelDefaut(settings.lang);
+  settings.reminderTemplates = propose.templates;
+  if (!settings.reminderSignature) settings.reminderSignature = propose.signature;
+  if (!settings.reminderSignatureShort) settings.reminderSignatureShort = propose.signatureShort;
   saveSettings();
   majChampsModelesRappel();
   apercuModelesRappel();

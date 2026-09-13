@@ -52,10 +52,24 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
       canal:'sms', templates:settings.reminderTemplates,
     }).body;
 
+    // En langue non francophone, « Charger les modèles proposés » remplit la
+    // version traduite ; la ligne rendez-vous suit aussi la langue active.
+    settings.lang = 'nl';
+    settings.reminderSignature = '';
+    settings.reminderSignatureShort = '';
+    document.querySelector('[data-act="loadReminderTemplates"]').click();
+    const nlSubject = settings.reminderTemplates.mailSubject;
+    const nlSig = settings.reminderSignature;
+    const nlRdv = construireRappel({
+      contact:{ prenom:'Alice', collect_method:'CATI', rdv:'18/09/2026', gsm:'0470123456' },
+      canal:'sms', templates:settings.reminderTemplates,
+      signature:settings.reminderSignature, shortSignature:settings.reminderSignatureShort,
+    }).body;
+
     return {
       loaded, preview, body:built.body, href:built.href,
       storedSms:stored.reminderTemplates && stored.reminderTemplates.smsCati,
-      reset, fallback,
+      reset, fallback, nlSubject, nlSig, nlRdv,
       inline:document.querySelectorAll('#modalSettings [onclick],[oninput],[onchange]').length,
     };
   });
@@ -72,6 +86,9 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['modèle persisté', r.storedSms === 'Bonjour {{prenom}} — {{enquete}} — {{signature_courte}}'],
     ['réinitialisation', r.reset === 0],
     ['repli i18n conservé', /Bonjour Alice/.test(r.fallback)],
+    ['modèles proposés en NL', /Herinnering/.test(r.nlSubject)],
+    ['signature par défaut NL', /Statbel-enquêteur/.test(r.nlSig)],
+    ['rendez-vous localisé NL', /Geplande afspraak/.test(r.nlRdv)],
     ['aucun handler inline', r.inline === 0],
     ['aucune erreur de page', perr.length === 0],
   ];
