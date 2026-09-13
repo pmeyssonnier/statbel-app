@@ -92,7 +92,7 @@ export function apparieurAnciens(oldArr) {
 const _CHAMPS_COMPARES = [
   'prenom','nom','adresse','statut','date','gsm','email','notes',
   'sexe','birth_date','age','birth_country','nationality','marital_status',
-  'taille_menage','rdv'
+  'taille_menage','nb_cibles','collect_method','web_user_id','web_user_pwd','rdv'
 ];
 
 // Détail des changements d'historique : appariement par statut (ordre des dates),
@@ -132,7 +132,7 @@ export function _diffContacts(a, b) {
     if (va !== vb) diffs.push({ champ, avant: va, apres: vb });
   });
   // Historique : signaler tout changement (perte/modification d'entrées)
-  const sig = h => (Array.isArray(h) ? h : []).map(e => `${e.statut}@${e.date}${e.rdv ? '/' + e.rdv : ''}`).join('|');
+  const sig = h => (Array.isArray(h) ? h : []).map(e => `${e.statut}@${e.date}@${e.heure || ''}@${e.rdv || ''}`).join('|');
   const sa = sig(a.historique), sb = sig(b.historique);
   if (sa !== sb) diffs.push({
     champ: 'historique',
