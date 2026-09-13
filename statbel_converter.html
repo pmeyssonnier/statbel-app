@@ -5771,8 +5771,9 @@ function zoomCibles(key) {
   renderTreemapNlty('statsCiblesHHTM', items);
 }
 
-// Puces de catégorie cliquables → treemap par nationalité. Utilisées par les blocs
-// dont le donut (lib partagée) n'est pas cliquable (Ratio de dépendance, Composition).
+// Puces de catégorie cliquables → treemap par nationalité. Utilisées par le Ratio
+// de dépendance, dont le donut (lib partagée) affiche le ratio au centre et n'est
+// donc pas cliquable (la Composition, elle, utilise le donut cliquable renderDonut).
 function natDrillChips(cats, fn) {
   return '<div style="font-size:10.5px;color:var(--text3);margin:0 0 5px">' + escHtml(t('txt_drill_hint')) + '</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">'
