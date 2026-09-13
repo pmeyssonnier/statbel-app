@@ -5,6 +5,7 @@ import {
   formaterGsm, formatHeureSaisie, calcAge, jourValide,
   csvGuard, csvDeguard,
 } from './core/util.js';
+import { installerDelegation } from './core/actions.js';
 import {
   GEO_PROVIDERS, changerProvider,
 } from './features/geocoding.js';
@@ -92,7 +93,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.51';
+const APP_VERSION = '3.52';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -963,6 +964,7 @@ async function init() {
   appliquerTheme();
   appliquerPolice();
   appliquerLangue();
+  installerDelegation();   // routeur de délégation (data-act) — coexiste avec les onclick restants
 
   // Persistance du stockage : demande au navigateur de ne pas purger IndexedDB/
   // localStorage (sinon iOS/Safari peut tout effacer après 7 jours d'inactivité,
