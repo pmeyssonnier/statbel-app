@@ -94,6 +94,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       '_diffContacts : détecte adresse + statut + historique');
     A(diffs.length === 3, `_diffContacts : 3 changements → ${diffs.length}`);
     A(_diffContacts({ nom: 'A' }, { nom: 'A' }).length === 0, '_diffContacts : fiches identiques → aucun diff');
+    const metier = _diffContacts(
+      { nom: 'A', nb_cibles: 1, collect_method: 'CAPI', web_user_id: 'old', web_user_pwd: 'p1',
+        historique: [{ statut: 'Done', date: '01/01/2026', heure: '09:00' }] },
+      { nom: 'A', nb_cibles: 2, collect_method: 'CAWI', web_user_id: 'new', web_user_pwd: 'p2',
+        historique: [{ statut: 'Done', date: '01/01/2026', heure: '10:00' }] },
+    );
+    ['nb_cibles','collect_method','web_user_id','web_user_pwd','historique'].forEach(champ =>
+      A(metier.some(d => d.champ === champ), `_diffContacts : détecte ${champ}`));
+
   }
 
   console.log(fails ? `\nÉCHEC (${fails})` : '\nTOUS LES TESTS PASSENT');
