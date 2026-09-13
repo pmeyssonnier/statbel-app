@@ -8,6 +8,7 @@
  * afficherToast, fermerSettings) sont des globaux (pont de compatibilité).
  */
 import { t, tf } from '../core/i18n.js';
+import { bioPlateformeDispo, bioEnrolee, bioEnroler, bioVerifier, bioDesactiver } from './biometrie.js';
 
 // ══════════════════════════════════════════════════════════════════════
 //  VERROUILLAGE PAR CODE PIN
@@ -179,13 +180,7 @@ export function pinValiderSaisie() {
 
   // Mode vérification normale
   if (_pinHash(_pinSaisie) === settings.pinCode) {
-    _pinSaisie = '';
-    _pinVerrouille = false;
-    _pinDernierActivite = Date.now();
-    settings.pinFails = 0;
-    settings.pinLockUntil = 0;
-    saveSettings();
-    fermerLockScreen();
+    _pinDeverrouiller();
   } else {
     _pinSaisie = '';
     settings.pinFails = (settings.pinFails || 0) + 1;
@@ -196,6 +191,79 @@ export function pinValiderSaisie() {
     setTimeout(renderLockDots, 200);
     if (delai) pinDemarrerTempo(); // remplace le message par le compte à rebours
   }
+}
+
+// Étapes communes d'un déverrouillage réussi (PIN correct OU biométrie validée) :
+// on remet les compteurs à zéro et on ferme l'écran de verrouillage.
+function _pinDeverrouiller() {
+  _pinSaisie = '';
+  _pinVerrouille = false;
+  _pinDernierActivite = Date.now();
+  settings.pinFails = 0;
+  settings.pinLockUntil = 0;
+  saveSettings();
+  fermerLockScreen();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  DÉVERROUILLAGE BIOMÉTRIQUE (complément du PIN)
+// ══════════════════════════════════════════════════════════════════════
+
+// Affiche/masque le bouton empreinte de l'écran de verrouillage et, si tout est
+// prêt (clé enrôlée + authentificateur dispo + pas de gel PIN), invite la biométrie
+// automatiquement à l'ouverture. `actif` = false en mode définition de code.
+async function majLockBio(actif) {
+  const bloc = document.getElementById('lockBio');
+  if (!bloc) return;
+  const montrer = !!actif && bioEnrolee() && await bioPlateformeDispo();
+  bloc.classList.toggle('hidden', !montrer);
+  if (montrer && pinTempoRestante() === 0) {
+    setTimeout(() => pinTenterBio(true), 350);   // invite auto (léger délai d'affichage)
+  }
+}
+
+// Tente le déverrouillage biométrique. `auto` = invite automatique à l'ouverture :
+// en cas d'échec on retombe SILENCIEUSEMENT sur le pavé PIN (pas de message
+// d'erreur intempestif) ; sur un appui manuel du bouton, on affiche le repli.
+export async function pinTenterBio(auto) {
+  if (_pinModeSetup || pinTempoRestante() > 0 || !bioEnrolee()) return;
+  const scr = document.getElementById('lockScreen');
+  const lbl = document.getElementById('lockBioLabel');
+  if (scr) scr.classList.add('bio-scanning');
+  if (lbl) lbl.textContent = t('bio_verifying');
+  const ok = await bioVerifier();
+  if (scr) scr.classList.remove('bio-scanning');
+  if (lbl) lbl.textContent = t('bio_label');
+  if (ok) { _pinDeverrouiller(); return; }
+  if (!auto) {
+    const err = document.getElementById('lockErrorMsg');
+    if (err) err.textContent = t('bio_failed');
+  }
+}
+
+// Réglages → interrupteur « Déverrouillage par empreinte ». Enrôle (invite système)
+// à l'activation, oublie la clé à la désactivation.
+export async function toggleBioUnlock(el) {
+  if (el && el.checked) {
+    const ok = await bioEnroler();
+    if (ok) afficherToast(t('toast_bio_on'), 2500);
+    else { if (el) el.checked = false; afficherToast(t('toast_bio_fail'), 3000); }
+  } else {
+    bioDesactiver();
+    afficherToast(t('toast_bio_off'), 2000);
+  }
+  await majBioUI();
+}
+
+// Met à jour la ligne « empreinte » des Réglages : visible seulement si un PIN est
+// actif ET un authentificateur de plateforme est disponible ; coche = clé enrôlée.
+export async function majBioUI() {
+  const row = document.getElementById('bioRow');
+  if (!row) return;
+  const dispo = pinEstActif() && await bioPlateformeDispo();
+  row.classList.toggle('hidden', !dispo);
+  const chk = document.getElementById('setBioUnlock');
+  if (chk) chk.checked = bioEnrolee();
 }
 
 export function ouvrirLockScreen(modeSetup) {
@@ -210,6 +278,8 @@ export function ouvrirLockScreen(modeSetup) {
   renderLockKeypad();
   renderLockDots();
   document.getElementById('lockScreen').classList.add('open');
+  // Bouton empreinte : visible + invite auto uniquement hors mode définition de code.
+  majLockBio(!modeSetup);
   // Reprise du gel si une temporisation est encore en cours (ex. rechargement
   // pendant le délai) — hors mode définition de code.
   if (!modeSetup && pinTempoRestante() > 0) pinDemarrerTempo();
@@ -245,6 +315,7 @@ export function pinChanger() {
 // Modale PIN → « Désactiver le verrouillage »
 export function pinDesactiver() {
   settings.pinCode = '';
+  bioDesactiver();   // le verrou biométrique n'a plus de sens sans PIN
   saveSettings();
   fermerModalPin();
   afficherToast(t('toast_pin_off'), 2000);
@@ -264,6 +335,7 @@ export function majPinUI() {
   }
   const sel = document.getElementById('setPinTimeout');
   if (sel) sel.value = String(settings.pinTimeout ?? 5);
+  majBioUI();   // la ligne « empreinte » dépend de l'état du PIN
 }
 
 // Vérifie au chargement si l'app doit démarrer verrouillée

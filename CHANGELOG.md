@@ -13,6 +13,18 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Interviews — déverrouillage par empreinte / Face ID (complément du code PIN)**
+  (Interviews `3.60` → `3.61`, SW `statbel-v330` → `statbel-v331`) : nouveau module `js/ui/biometrie.js`
+  (WebAuthn, authentificateur de plateforme). Une fois un **PIN défini**, un interrupteur des Réglages
+  « Déverrouillage par empreinte / Face ID » enrôle l'appareil ; l'écran de verrouillage affiche alors
+  un bouton empreinte et **invite la biométrie automatiquement à l'ouverture**. Un succès déverrouille
+  comme un PIN correct ; un échec/annulation **retombe silencieusement sur le pavé PIN**. Le **PIN reste
+  le repli obligatoire** (biométrie indisponible sur un autre appareil, données du site vidées, navigateur
+  sans capteur). 100 % **hors-ligne** : vérification faite par l'OS, sans serveur (le succès de l'assertion
+  `userVerification:'required'` suffit — pas de backend à interroger). Comme le PIN, c'est une **porte
+  d'accès, pas un chiffrement** des données au repos. Détection défensive (masqué si l'API/capteur manque
+  ou hors contexte sécurisé). Clés i18n fr/nl/en/de. Test `tests/biometrie.test.js` (authentificateur
+  virtuel via CDP : disponibilité, enrôlement, déverrouillage, repli PIN, désactivation).
 - **Convertisseur — garde-fou : enquête mémorisée avec identifiants en notation scientifique**
   (Convertisseur `221` → `222`, SW `statbel-v329` → `statbel-v330`) : le correctif `cellTexte`
   (v216) ne répare les ID numériques longs qu'à l'**import**. Une enquête importée avant, restaurée

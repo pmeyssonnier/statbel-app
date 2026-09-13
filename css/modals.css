@@ -256,6 +256,33 @@
     margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.65);
     text-align: center; cursor: pointer; text-decoration: underline;
   }
+  /* ── Déverrouillage par empreinte (complément du PIN) ─────────────── */
+  .lock-bio {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    margin-top: 2px; background: none; border: none; color: #fff; cursor: pointer;
+    font-family: inherit;
+  }
+  .lock-bio.hidden { display: none; }
+  .lock-bio-ring {
+    width: 54px; height: 54px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.25s, background 0.25s, transform 0.15s;
+  }
+  .lock-bio:active .lock-bio-ring { transform: scale(0.96); }
+  .lock-bio-ico { width: 28px; height: 28px; color: #fff; transition: color 0.25s; }
+  .lock-bio-ico svg { width: 100%; height: 100%; display: block; }
+  .lock-bio-label { font-size: 11.5px; color: rgba(255,255,255,0.72); }
+  #lockScreen.bio-scanning .lock-bio-ring { border-color: #69f0ae; animation: bioPulse 1s ease-out infinite; }
+  #lockScreen.bio-scanning .lock-bio-ico { color: #69f0ae; }
+  #lockScreen.bio-scanning .lock-bio-label { color: #69f0ae; }
+  @keyframes bioPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(105,240,174,0.45); }
+    100% { box-shadow: 0 0 0 14px rgba(105,240,174,0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #lockScreen.bio-scanning .lock-bio-ring { animation: none; }
+  }
   .lock-shake { animation: lockShake 0.4s; }
   @keyframes lockShake {
     10%,90% { transform: translateX(-1px); }
