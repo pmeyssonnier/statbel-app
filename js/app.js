@@ -5,7 +5,7 @@ import {
   formaterGsm, formatHeureSaisie, calcAge, jourValide,
   csvGuard, csvDeguard,
 } from './core/util.js';
-import { installerDelegation } from './core/actions.js';
+import { installerDelegation, registerActions } from './core/actions.js';
 import {
   GEO_PROVIDERS, changerProvider,
 } from './features/geocoding.js';
@@ -93,7 +93,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.52';
+const APP_VERSION = '3.53';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -959,12 +959,49 @@ function migrerVersAnglais() {
   if (chg) { saveSettings(); sauver(); }
 }
 
+// Actions déléguées de l'écran Réglages (lot 1 du chantier onclick). Enregistrées
+// ici car l'orchestrateur importe déjà tous les symboles concernés (évite un
+// import circulaire depuis settings.js). `el` est l'élément portant data-act ;
+// pour les <select>/<input>, la valeur est lue sur `el` (value/checked).
+function enregistrerActionsReglages() {
+  registerActions('change', {
+    changerLangue:   el => changerLangue(el.value),
+    setTheme:        el => { settings.theme = el.value;      saveSettings(); appliquerTheme(); },
+    setFontFamily:   el => { settings.fontFamily = el.value; saveSettings(); appliquerPolice(); },
+    setFontSize:     el => { settings.fontSize = el.value;   saveSettings(); appliquerPolice(); },
+    changerProvider: el => changerProvider(el.value),
+    setMapStyle:     el => { settings.mapStyle = el.value;   saveSettings(); rafraichirFond(); },
+    setNav:          el => { settings.navMode = el.value;    saveSettings(); rendu(); },
+    setCsvSep:       el => { settings.csvSep = el.value;     saveSettings(); },
+    setPinTimeout:   el => { settings.pinTimeout = parseInt(el.value); saveSettings(); },
+    setPayHousehold: el => { settings.paieMenage = Math.max(0, parseFloat(el.value) || 0);   saveSettings(); },
+    setPayPerson:    el => { settings.paiePersonne = Math.max(0, parseFloat(el.value) || 0); saveSettings(); },
+    modifierStatut:  el => modifierStatut(+el.dataset.idx, el.dataset.field, el.type === 'checkbox' ? el.checked : el.value),
+    importerBackup:  (el, e) => importerBackup(e),
+  });
+  registerActions('input', {
+    setCawiUrl:      el => { settings.cawiUrl = el.value.trim(); saveSettings(); },
+  });
+  registerActions('click', {
+    ouvrirGestionPin:       () => ouvrirGestionPin(),
+    fermerSettings:         () => fermerSettings(),
+    ajouterStatut:          () => ajouterStatut(),
+    supprimerStatut:        el => supprimerStatut(+el.dataset.idx),
+    appliquerPresetStatuts: el => appliquerPresetStatuts(el.dataset.preset),
+    exporterBackup:         () => exporterBackup(),
+    declencherRestore:      () => document.getElementById('restoreFile').click(),
+    viderCacheCoords:       () => viderCacheCoords(),
+    listerNonGeocodees:     () => listerNonGeocodees(),
+  });
+}
+
 async function init() {
   chargerSettings();
   appliquerTheme();
   appliquerPolice();
   appliquerLangue();
   installerDelegation();   // routeur de délégation (data-act) — coexiste avec les onclick restants
+  enregistrerActionsReglages();
 
   // Persistance du stockage : demande au navigateur de ne pas purger IndexedDB/
   // localStorage (sinon iOS/Safari peut tout effacer après 7 jours d'inactivité,

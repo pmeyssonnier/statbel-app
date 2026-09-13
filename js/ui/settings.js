@@ -149,13 +149,13 @@ export function renderStatutsEditor() {
   const arr = statutsActifs();
   box.innerHTML = arr.map((s, i) => `
     <div class="statut-edit-row">
-      <input type="color" value="${s.color}" onchange="modifierStatut(${i},'color',this.value)" title="${t('ed_color')}">
-      <input type="text" class="se-icon" value="${esc(s.icon)}" maxlength="2" onchange="modifierStatut(${i},'icon',this.value)" title="${t('ed_icon')}">
-      <input type="text" class="se-label" value="${esc(statutLabel(s.label))}" onchange="modifierStatut(${i},'label',this.value)" title="${t('ed_label')}">
-      <label class="se-flag" title="${esc(t('flag_done_title'))}"><input type="checkbox" ${s.done?'checked':''} onchange="modifierStatut(${i},'done',this.checked)"> ✓</label>
-      <label class="se-flag" title="${esc(t('flag_realise_title'))}"><input type="checkbox" ${s.realise?'checked':''} onchange="modifierStatut(${i},'realise',this.checked)"> 🎤</label>
-      <label class="se-flag" title="${esc(t('flag_rdv_title'))}"><input type="checkbox" ${s.rdv?'checked':''} onchange="modifierStatut(${i},'rdv',this.checked)"> 📅</label>
-      <button class="se-del" onclick="supprimerStatut(${i})" title="${t('del_status_title')}" aria-label="${esc(t('del_status_title'))}"${arr.length<=1?' disabled':''}>🗑️</button>
+      <input type="color" value="${s.color}" data-act="modifierStatut" data-idx="${i}" data-field="color" title="${t('ed_color')}">
+      <input type="text" class="se-icon" value="${esc(s.icon)}" maxlength="2" data-act="modifierStatut" data-idx="${i}" data-field="icon" title="${t('ed_icon')}">
+      <input type="text" class="se-label" value="${esc(statutLabel(s.label))}" data-act="modifierStatut" data-idx="${i}" data-field="label" title="${t('ed_label')}">
+      <label class="se-flag" title="${esc(t('flag_done_title'))}"><input type="checkbox" ${s.done?'checked':''} data-act="modifierStatut" data-idx="${i}" data-field="done"> ✓</label>
+      <label class="se-flag" title="${esc(t('flag_realise_title'))}"><input type="checkbox" ${s.realise?'checked':''} data-act="modifierStatut" data-idx="${i}" data-field="realise"> 🎤</label>
+      <label class="se-flag" title="${esc(t('flag_rdv_title'))}"><input type="checkbox" ${s.rdv?'checked':''} data-act="modifierStatut" data-idx="${i}" data-field="rdv"> 📅</label>
+      <button class="se-del" data-act="supprimerStatut" data-idx="${i}" title="${t('del_status_title')}" aria-label="${esc(t('del_status_title'))}"${arr.length<=1?' disabled':''}>🗑️</button>
     </div>`).join('');
 }
 
