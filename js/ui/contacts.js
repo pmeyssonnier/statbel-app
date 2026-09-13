@@ -233,7 +233,7 @@ export function ouvrirEdit(i) {
 // N'APPLIQUENT PAS le statut : ils ouvrent le formulaire d'édition. Le statut ne se
 // change qu'en mode édition → évite les changements accidentels au toucher.
 export function statutBarHTML(i, statut, editable) {
-  return statutDefs().map((s, si) => {
+  return statutDefs().map((s) => {
     const on = s.label === statut;
     const style = `color:${s.color};${on ? `border-color:${s.color};background:${s.color}22;` : ''}`;
     const cls = `s-btn${on ? ' actif' : ''}${editable ? '' : ' s-btn-lock'}`;
@@ -358,7 +358,7 @@ export function renderFilters() {
   const all = contacts(), total = all.length, cpt = {};
   all.forEach(c => { const s = c.statut||statutDefaut(); cpt[s]=(cpt[s]||0)+1; });
   let html = `<button class="filter-btn${filtreActif==='Tous'?' active':''}" data-act="filtrer" data-label="Tous">${t('f_all')}${total>0?' ('+total+')':''}</button>`;
-  statutDefs().forEach((s, si) => {
+  statutDefs().forEach((s) => {
     const n = cpt[s.label] || 0;
     const on = filtreActif === s.label;
     html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" data-act="filtrer" data-label="${esc(s.label)}">${s.icon} ${esc(statutLabel(s.label))}${n>0?' ('+n+')':''}</button>`;
