@@ -19,7 +19,7 @@ import {
   recordEnErreur, raisonsErreur, buildCompareHTML, valeurIncoherente,
 } from './features/import.js';
 import {
-  _contactKey, apparieurAnciens, diffHistorique, _diffContacts,
+  apparieurAnciens, diffHistorique, _diffContacts,
 } from './data/reimport.js';
 import {
   toggleMaPosition, demanderPosition, placerMarqueurMoi, recentrerCarte,
@@ -1040,7 +1040,7 @@ Object.assign(window, {
   tPlural, appliquerLangue, changerLangue, localeApp, nomJourCourt, labelNbEnquetes,
   ouvrirSettings, fermerSettings, renderAide, ouvrirAide, fermerAide, majSettingsUI,
   changerProvider, regionDominante, fondEffectif, rafraichirFond, buildBackupDetailHTML,
-  _contactKey, apparieurAnciens, jourValide, valeurIncoherente, diffHistorique,
+  apparieurAnciens, jourValide, valeurIncoherente, diffHistorique,
   recordEnErreur, raisonsErreur, _diffContacts, buildCompareHTML, fermerBackupDetail,
   renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
   exporterBackup, majLastBackupInfo, majKebabBackupInfo, majComparaisonRestore, importerBackup,

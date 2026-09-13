@@ -11,12 +11,8 @@ let fails = 0;
 const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg); } else console.log('✓ ' + msg); };
 
 (async () => {
-  const { _contactKey, apparieurAnciens, diffHistorique, _diffContacts } =
+  const { apparieurAnciens, diffHistorique, _diffContacts } =
     await import('../js/data/reimport.js');
-
-  // ── _contactKey ─────────────────────────────────────────────────────
-  A(_contactKey({ ordre: '1', nom: 'Martin', prenom: 'Alice' }) === '1|martin|alice', '_contactKey : ordre|nom|prenom');
-  A(_contactKey({ adresse: 'Rue X' }) === 'adr:rue x', '_contactKey : repli adresse');
 
   // ── apparieurAnciens : priorité 1 (ordre unique + ≥1 concordance) ────
   {

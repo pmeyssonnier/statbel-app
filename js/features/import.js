@@ -236,8 +236,8 @@ export function fermerModal() {
 }
 
 // ── Comparaison données existantes vs fichier à restaurer ──────────────
-// L'appariement/diff (apparieurAnciens, diffHistorique, _diffContacts, _contactKey)
-// vit dans le moteur PUR data/reimport.js (importé ci-dessus). Ici : la validation
+// L'appariement/diff (apparieurAnciens, diffHistorique, _diffContacts) vit dans le
+// moteur data/reimport.js (importé ci-dessus). Ici : la validation
 // de cohérence (liée au vocabulaire de statuts actif + i18n) et l'orchestration.
 
 export function valeurIncoherente(champ, val) {

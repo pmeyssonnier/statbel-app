@@ -4,7 +4,7 @@
  * Cœur métier du réimport, isolé de l'UI et de l'état applicatif : aucune lecture
  * de `enquetes`, `settings`, `enqueteActive`, du DOM, de localStorage/IndexedDB, ni
  * d'i18n. Tout arrive en paramètres → testable sans navigateur (tests/reimport.test.js).
- * `diffHistorique`, `_diffContacts` et `_contactKey` sont pures ; `apparieurAnciens`
+ * `diffHistorique` et `_diffContacts` sont pures ; `apparieurAnciens`
  * renvoie un matcher AUTONOME à état interne (contacts déjà appariés, incertains) le
  * temps d'une passe de réimport — autonome, pas « pur » au sens strict.
  *
@@ -12,15 +12,6 @@
  * validation de cohérence liée au vocabulaire de statuts actif restent dans
  * js/features/import.js, qui consomme ce moteur.
  */
-
-// Identifie un contact par une clé stable : ordre + nom + prénom (repli adresse).
-export function _contactKey(c) {
-  const ordre  = (c.ordre || '').toString().trim();
-  const nom    = (c.nom || '').toString().trim().toLowerCase();
-  const prenom = (c.prenom || '').toString().trim().toLowerCase();
-  if (ordre || nom || prenom) return `${ordre}|${nom}|${prenom}`;
-  return `adr:${(c.adresse || '').toString().trim().toLowerCase()}`;
-}
 
 // Appariement hiérarchique d'un nouveau contact avec un ancien, pour préserver
 // le suivi (historique / statut / date / RDV) même si le nom/prénom a été
@@ -37,10 +28,10 @@ export function apparieurAnciens(oldArr) {
   const incertains = [];   // { neu, old } : n° d'ordre concordant mais identité divergente
   const norm    = s => (s == null ? '' : String(s)).trim().toLowerCase();
   const normAdr = s => norm(s).replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim();
-  // Clé composite : jointure des champs par un séparateur qui ne peut apparaître
-  // dans les valeurs normalisées (U+0001). Sans lui, « ab »+« c » et « a »+« bc »
-  // produiraient la même clé → faux appariement silencieux.
-  const cle = (...parts) => parts.join('');
+  // Clé composite : jointure des champs par un séparateur (U+0001) qui n'apparaît
+  // pas dans les données réelles (noms/adresses/dates issus de CSV/XLSX). Sans lui,
+  // « ab »+« c » et « a »+« bc » produiraient la même clé → faux appariement silencieux.
+  const cle = (...parts) => parts.join('\u0001');
   const byOrdre = new Map(), byNPB = new Map(), byNPA = new Map(), byAdr = new Map();
   const add = (m, k, c) => { if (!k) return; const l = m.get(k); if (l) l.push(c); else m.set(k, [c]); };
   (oldArr || []).forEach(c => {
