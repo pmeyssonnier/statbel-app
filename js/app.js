@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.62';
+const APP_VERSION = '3.63';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -306,6 +306,18 @@ function setupA11y() {
   const fond = () => [...document.body.children].filter(el => !el.classList.contains('modal-overlay'));
   const modalesOuvertes = () => [...document.querySelectorAll('.modal-overlay.open')];
 
+  // La modale « du dessus » = celle empilée le plus haut à l'écran (z-index effectif),
+  // départage par l'ordre DOM à z-index égal. NE PAS se fier à l'ordre DOM seul : #modalPin
+  // (z-index 300) s'ouvre PAR-DESSUS #modalSettings (200) tout en le précédant dans le DOM
+  // → l'ordre DOM désignait alors modalSettings comme « active » et marquait la modale
+  // pourtant visible (modalPin) « inert », rendant ses boutons (et le clic sur le fond) morts.
+  const zIndexDe = m => { const z = parseInt(getComputedStyle(m).zIndex, 10); return isNaN(z) ? 0 : z; };
+  const modaleActive = () => {
+    let actif = null, meilleur = -Infinity;
+    modalesOuvertes().forEach(m => { const z = zIndexDe(m); if (z >= meilleur) { meilleur = z; actif = m; } });
+    return actif;
+  };
+
   // Éléments réellement focusables et visibles dans un conteneur donné.
   const focusables = (root) => [...root.querySelectorAll(
     'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]),' +
@@ -315,8 +327,7 @@ function setupA11y() {
   // Neutralise/réactive l'arrière-plan et les modales sous la pile selon la
   // modale active (celle du dessus). Empilement rare mais géré proprement.
   function majArrierePlan() {
-    const ouverts = modalesOuvertes();
-    const actif = ouverts[ouverts.length - 1] || null;
+    const actif = modaleActive();
     fond().forEach(el => { if (actif) el.setAttribute('inert', ''); else el.removeAttribute('inert'); });
     overlays.forEach(m => { if (actif && m !== actif) m.setAttribute('inert', ''); else m.removeAttribute('inert'); });
   }
@@ -359,9 +370,8 @@ function setupA11y() {
   // Piège de focus : Tab / Maj+Tab bouclent à l'intérieur de la modale du dessus.
   document.addEventListener('keydown', e => {
     if (e.key !== 'Tab') return;
-    const ouverts = modalesOuvertes();
-    if (!ouverts.length) return;
-    const m = ouverts[ouverts.length - 1];
+    const m = modaleActive();
+    if (!m) return;
     const f = focusables(m);
     if (!f.length) { e.preventDefault(); return; }
     const premier = f[0], dernier = f[f.length - 1], actif = document.activeElement;
@@ -378,9 +388,8 @@ function setupA11y() {
   // Fermeture par Échap (comportement historique conservé).
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    const ouverts = modalesOuvertes();
-    if (!ouverts.length) return;
-    fermerModale(ouverts[ouverts.length - 1]);
+    const m = modaleActive();
+    if (m) fermerModale(m);
   });
 
   // Fermeture par clic/tap sur le FOND (hors de la carte modale). Indispensable

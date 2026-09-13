@@ -12,6 +12,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Corrigé
+- **Interviews — popup PIN figé par-dessus les Paramètres (`inert` selon le z-index, plus l'ordre DOM)**
+  (Interviews `3.62` → `3.63`, SW `statbel-v332` → `statbel-v333`) : la modale « Verrouillage par code PIN »
+  (`#modalPin`, `z-index:300`) s'ouvre **par-dessus** les Paramètres (`#modalSettings`, `z-index:200`) mais
+  la **précède dans le DOM**. `setupA11y()` déterminait la modale « du dessus » par l'ordre DOM et marquait
+  donc `inert` la modale pourtant **visible** (modalPin) → boutons et clic sur le fond **morts** : impossible
+  de sortir du popup. La modale active est désormais choisie par **z-index effectif** (départage par l'ordre
+  DOM à z-index égal), pour toutes les neutralisations (`inert`), le piège de focus (Tab) et la fermeture par
+  Échap. Régression réelle (pas un cache). Couvert par `tests/modal-backdrop.test.js` (scénario empilé).
+
 ### Ajouté
 - **Interviews — fermeture des modales par tap sur le fond (backdrop)**
   (Interviews `3.61` → `3.62`, SW `statbel-v331` → `statbel-v332`) : un clic/tap sur le fond (hors de la
