@@ -57,12 +57,12 @@ export function renderRdvFilters() {
 
   const total = eligible.reduce((acc, s) => acc + (cpt[s.label]||0), 0);
   const on0   = filtreRdv === 'Tous';
-  let html = `<button class="filter-btn${on0?' active':''}" onclick="filtrerRdv('Tous')">${t('f_all')} (${total})</button>`;
+  let html = `<button class="filter-btn${on0?' active':''}" data-act="filtrerRdv" data-label="Tous">${t('f_all')} (${total})</button>`;
 
   eligible.forEach(s => {
     const n  = cpt[s.label] || 0;
     const on = filtreRdv === s.label;
-    html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" onclick="filtrerRdv('${s.label.replace(/'/g,"\\'")}')">
+    html += `<button class="filter-btn" style="border-color:${s.color};color:${on?'#fff':s.color};background:${on?s.color:'var(--filter-bg)'}" data-act="filtrerRdv" data-label="${esc(s.label)}">
       ${s.icon} ${esc(statutLabel(s.label))}${n > 0 ? ' ('+n+')' : ''}
     </button>`;
   });
@@ -109,7 +109,7 @@ export function renduRdv() {
   let jourBadge = '';
   if (_activiteJour) {
     const [jy, jm, jd] = _activiteJour.split('-');
-    jourBadge = ` <span style="cursor:pointer;color:var(--filter-text);font-weight:600;" onclick="filtrerActiviteJour('${_activiteJour}')">— ${jd}/${jm}/${jy} ✕</span>`;
+    jourBadge = ` <span style="cursor:pointer;color:var(--filter-text);font-weight:600;" data-act="filtrerActiviteJour" data-jour="${esc(_activiteJour)}">— ${jd}/${jm}/${jy} ✕</span>`;
   }
   journalEl.innerHTML = `<div class="rdv-section-title">🕐 ${t('res_events')} (${evtFiltered.length})${jourBadge}</div>`
     + renderEvenementsChrono(enqAct, true, filtreRdv, q, _activiteJour);

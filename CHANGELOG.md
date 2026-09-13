@@ -13,6 +13,27 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Interviews — délégation d'événements des vues Carte / Suivi / Import (lot 3 du chantier
+  `onclick`)** (Interviews 3.54 → 3.55, SW `statbel-v322` → `statbel-v323`) : les 12 derniers
+  handlers inline de `index.html` (import CSV, bouton recentrer la carte, recherche RDV, modale
+  d'aperçu d'import) et ceux générés par `js/ui/map.js`, `js/ui/rdv.js`, `js/features/import.js`
+  passent de `on*=` inline à `data-act` routé par `js/core/actions.js`. **`index.html` ne contient
+  plus aucun handler inline.** Les paramètres (index de fiche, libellé de filtre, jour, bloc de
+  comparaison) sont portés par `data-*` (le navigateur décode les entités à la lecture → `esc()` à
+  l'écriture est un round-trip sûr). Actions enregistrées dans `js/app.js`. Aucun changement de
+  comportement visible ; pont `window` inchangé. Nouveau test `tests/vues-delegation.test.js`.
+  Restent à migrer les modules `js/ui/resume.js`/`stats.js` (lot 4) et `js/ui/contacts.js` (lot 5)
+  avant le durcissement CSP.
+- **Interviews — délégation d'événements du chrome (lot 2 du chantier `onclick`)** (Interviews
+  3.53 → 3.54, SW `statbel-v321` → `statbel-v322`) : ~32 handlers inline de l'**en-tête**, de la
+  **barre d'outils**, de la **bascule de vues**, du **menu kebab**, de la **bannière de sauvegarde**
+  et des **modales génériques** (PIN, Renommer, Sauvegarde-détail, Aide, liste des adresses non
+  géocodées) passent de `on*=` inline à `data-act` routé par `js/core/actions.js`. Le routeur gère
+  désormais aussi l'événement **`keydown`** (validation « Entrée » de la modale Renommer). Les
+  entrées du menu kebab, qui referment le menu après leur action, sont des actions nommées dédiées.
+  Actions enregistrées dans `js/app.js`. Aucun changement de comportement visible ; pont `window`
+  inchangé. Nouveau test navigateur `tests/chrome-delegation.test.js` (bascule de vues, ouverture
+  kebab, 0 handler inline dans le chrome) + couverture `keydown` dans `tests/actions.test.js`.
 - **Interviews — délégation d'événements de l'écran Réglages (lot 1 du chantier `onclick`)**
   (Interviews 3.52 → 3.53, SW `statbel-v320` → `statbel-v321`) : les **29 handlers inline** de la
   modale Réglages (`index.html`) et de l'éditeur de statuts (`js/ui/settings.js`) — `onchange` des
