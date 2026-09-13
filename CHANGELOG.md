@@ -52,6 +52,11 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
   README (section Interface + table des modules `js/ui/`, avec le nouveau module `biometrie`) mentionnent
   désormais le déverrouillage par empreinte / Face ID en complément du code PIN, avec la nuance « porte
   d'accès, pas un chiffrement » et le repli PIN. Changement documentaire seul (pas de bump de version).
+- **Manuel — guide des rappels e-mail / SMS (CAWI & CATI)** (`docs/manuel.html`) : nouvelle sous-section de
+  la partie Interviews expliquant l'envoi d'un rappel (fiche → boutons ✉️ / 💬 → appli mail/SMS préremplie),
+  l'adaptation automatique du message selon la méthode de collecte (CAWI avec lien/identifiant/mot de passe,
+  CATI avec rendez-vous), le SMS sans objet, la préparation du lien CAWI et la note de confidentialité.
+  Changement documentaire seul (pas de bump de version).
 
 ### Ajouté
 - **Interviews — déverrouillage par empreinte / Face ID (complément du code PIN)**

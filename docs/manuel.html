@@ -300,6 +300,17 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
       <li><span class="mk">▸</span><span><b>Correction automatique</b> des codes pays (ISO-2 → ISO-3, alias fréquents).</span></li>
       <li><span class="mk">▸</span><span><b>Données dérivées</b> : pays et état civil localisés, âge, taille du ménage.</span></li>
     </ul>
+
+    <h3 class="subh">📨 Rappels e-mail / SMS (CAWI &amp; CATI)</h3>
+    <ul class="feat">
+      <li><span class="mk">▸</span><span><b>Où</b> : sur la <b>fiche d'un contact</b>, sous « Rappel au contact » — bouton <b>✉️ Rappel e-mail</b> (si un e-mail est présent) et <b>💬 Rappel SMS</b> (si un GSM est présent).</span></li>
+      <li><span class="mk">▸</span><span><b>Comment</b> : le bouton <b>ouvre l'appli mail / SMS de votre appareil, préremplie</b> (destinataire, objet, message). <b>Vous</b> relisez et envoyez — Interviews n'envoie rien lui-même.</span></li>
+      <li><span class="mk">▸</span><span><b>Le message s'adapte à la méthode de collecte</b> du contact (colonne <code>CD_WSH_CLCT_MTHD</code>) : <b>CAWI</b> → enquête en ligne, avec <b>lien + identifiant + mot de passe</b> ; <b>CATI</b> → rappel d'entretien téléphonique (avec le <b>rendez-vous</b> s'il est saisi). <b>CAPI</b> ou méthode inconnue reprend la variante téléphone.</span></li>
+      <li><span class="mk">▸</span><span><b>SMS</b> = même corps de message que l'e-mail, mais <b>sans objet</b>. La <b>langue</b> du message suit celle de l'app (FR / NL / EN / DE).</span></li>
+      <li><span class="mk">▸</span><span><b>À préparer</b> : le <b>lien CAWI</b> dans <b>Paramètres › 🔗 Lien enquête web (CAWI)</b> — sans lui, la ligne « Lien » est omise ; l'identifiant et le mot de passe proviennent des colonnes <code>TX_WEB_USER_ID</code> / <code>TX_WEB_USER_PSWRD</code> du fichier importé.</span></li>
+    </ul>
+    <div class="note">📋 <b>Contenu type.</b> <b>CAWI</b> — « Bonjour {prénom}, Nous vous rappelons de compléter votre enquête Statbel en ligne : Lien / Identifiant / Mot de passe. Merci de votre participation. » &nbsp;·&nbsp; <b>CATI</b> — « Bonjour {prénom}, Nous vous rappelons votre participation à l'enquête Statbel par téléphone. Rendez-vous prévu : {date}. Merci de votre participation. » <i>(les lignes vides — lien, identifiants, rendez-vous absent — sont automatiquement omises.)</i></div>
+    <div class="note">⚠️ <b>Confidentialité.</b> En CAWI, le message contient l'<b>identifiant et le mot de passe</b> d'accès web du ménage : ils sont transmis à l'appli mail / SMS puis au destinataire. À n'utiliser que pour <b>joindre la personne concernée</b>. Tout reste <b>hors-ligne</b>, aucun envoi automatique.</div>
   </section>
 
   <!-- CONVERTISSEUR -->
