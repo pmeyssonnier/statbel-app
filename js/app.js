@@ -93,7 +93,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.57';
+const APP_VERSION = '3.58';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1078,6 +1078,59 @@ function enregistrerActionsResume() {
   });
 }
 
+// Actions déléguées des fiches contact / liste / historique (lot 5 du chantier
+// onclick) — le module le plus dense. Index de fiche = data-i, index d'historique
+// = data-idx ; les valeurs (libellé, canal, date, RDV) passent par data-*.
+// Plusieurs contrôles portent un même data-act avec des handlers pour DES TYPES
+// d'événements différents (ex. le champ RDV : `input` reformate, `change`
+// enregistre ; le champ e-mail : input/keydown/focusout/dblclick).
+function enregistrerActionsContacts() {
+  registerActions('click', {
+    statutBtn:  el => el.dataset.editable === '1' ? changerStatut(+el.dataset.i, el.dataset.label) : ouvrirEdit(+el.dataset.i),
+    ouvrirEdit: el => ouvrirEdit(+el.dataset.i),
+    toggleEdit: el => toggleEdit(+el.dataset.i),
+    sauverEdit: el => sauverEdit(+el.dataset.i),
+    exporterVCard: el => exporterVCard(+el.dataset.i),
+    envoyerRappel: el => envoyerRappel(+el.dataset.i, el.dataset.canal),
+    filtrer:    el => filtrer(el.dataset.label),
+    declencherImport: () => document.getElementById('importFile').click(),
+    ouvrirCalendrierRdv:     el => ouvrirCalendrierRdv(+el.dataset.i),
+    ouvrirCalendrierRdvHist: el => ouvrirCalendrierRdvHist(+el.dataset.i, +el.dataset.idx, el.dataset.rdv),
+    ouvrirCalendrierHist:    el => ouvrirCalendrierHist(+el.dataset.i, +el.dataset.idx, el.dataset.date),
+    supprimerHistorique:     el => supprimerHistorique(+el.dataset.i, +el.dataset.idx),
+    ajouterHistorique:       el => ajouterHistorique(+el.dataset.i),
+    editDepuisRdv: el => { setView('liste'); const i = +el.dataset.i; setTimeout(() => { const ed = ouvrirEdit(i); if (ed) ed.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); },
+  });
+  registerActions('input', {
+    editGsm:     el => changerGsm(+el.dataset.i, el),
+    editEmail:   el => { changerEmail(+el.dataset.i, el.value); emailSuggest(el, 'esug-' + el.dataset.i); },
+    editNotes:   el => changerNotes(+el.dataset.i, el.value),
+    editRdvDate: el => { el.value = formatDateFrSaisie(el.value); },
+    editRdvHeure: el => { el.value = formatHeureSaisie(el.value); },
+  });
+  registerActions('change', {
+    editRdvDate:  el => changerRdvDH(+el.dataset.i),
+    editRdvHeure: el => changerRdvDH(+el.dataset.i),
+    histRdv:      el => modifierRdvHistorique(+el.dataset.i, +el.dataset.idx, el.value),
+    histStatut:   el => modifierStatutHistorique(+el.dataset.i, +el.dataset.idx, el.value),
+  });
+  registerActions('keydown', {
+    editEmail: (el, e) => emailKeydown(e, 'esug-' + el.dataset.i),
+  });
+  registerActions('dblclick', {
+    editGsm:   el => { if (el.value) window.location.href = 'tel:' + el.value; },
+    editEmail: el => { if (el.value) window.location.href = 'mailto:' + el.value; },
+  });
+  registerActions('focusout', {
+    editEmail: el => { const id = 'esug-' + el.dataset.i; setTimeout(() => fermerSuggestions(id), 150); },
+  });
+  registerActions('mousedown', {
+    // La suggestion se choisit au mousedown (avant le focusout du champ) ; l'action
+    // fait preventDefault pour garder le focus. Cf. choisirSuggestion.
+    choisirSuggestion: (el, e) => choisirSuggestion(e, el.dataset.sugid, el.dataset.val),
+  });
+}
+
 async function init() {
   chargerSettings();
   appliquerTheme();
@@ -1088,6 +1141,7 @@ async function init() {
   enregistrerActionsChrome();
   enregistrerActionsVues();
   enregistrerActionsResume();
+  enregistrerActionsContacts();
 
   // Persistance du stockage : demande au navigateur de ne pas purger IndexedDB/
   // localStorage (sinon iOS/Safari peut tout effacer après 7 jours d'inactivité,
