@@ -31,7 +31,7 @@ import {
   exporterVCard, renderFilters, rendu, distanceBadge, haversine, formatDist,
   buildHistoriqueHTML, majCarteStatut, buildRdvCard, emailSuggest, choisirSuggestion,
   fermerSuggestions, emailKeydown, allerAFiche, toggleKebab,
-  classerMethode, construireRappel, envoyerRappel,
+  construireRappel, envoyerRappel,
 } from './ui/contacts.js';
 import {
   filtrerActiviteJour, ouvrirFicheEvtIdx, rdvTitreStatut,
@@ -100,7 +100,7 @@ const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.43';
+const APP_VERSION = '3.44';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1044,7 +1044,7 @@ Object.assign(window, {
   ouvrirModalImport, preparerImport, renderExclus, majComparaisonImport,
   renderImportApercu, confirmerImport, fermerModal, csvGuard, csvDeguard, csvCell,
   sepRegionalAuto, sepCSVexport, genererCSV, exporterCSV, exporterVCard, renderFilters,
-  classerMethode, construireRappel, envoyerRappel,
+  construireRappel, envoyerRappel,
   rendu, haversine, formatDist, distanceBadge, afficherToast, toggleMaPosition,
   demanderPosition, placerMarqueurMoi, recentrerCarte, changerStatutCarte,
   ouvrirFicheDepuisCarte, renderLegend, initCarte, redessinerCourbeApresLayout,
