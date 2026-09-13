@@ -12,6 +12,22 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Sécurité
+- **Interviews — CSP durcie : `script-src 'self'` sans `'unsafe-inline'` (lot 6 du chantier `onclick`)**
+  (Interviews 3.58 → 3.59, SW `statbel-v326` → `statbel-v327`) : aboutissement du chantier de
+  délégation. Le dernier bloc `<script>` inline d'`index.html` (amorçage PWA + popup de mise à jour)
+  est externalisé dans **`js/boot.js`** (script classique, autonome, ajouté à `APP_CRITICAL`), et
+  `'unsafe-inline'` est **retiré de `script-src`**. Combiné à la disparition de tous les handlers
+  `on*=` inline (lots 1→5), le navigateur bloque désormais **toute** exécution de script inline
+  (défense en profondeur contre l'injection, pour une app manipulant des données personnelles).
+  `style-src 'unsafe-inline'` est conservé (styles inline hors périmètre). Nouveau test garde-fou
+  **pur** `tests/no-inline-handlers.test.js` : refuse tout handler inline (statique ou généré),
+  tout `<script>` inline, et toute réapparition de `'unsafe-inline'` dans `script-src`. Le test
+  existant `csp.test.js` (écoute des `securitypolicyviolation`) confirme 0 violation sous la CSP
+  stricte. Note : le pont de compatibilité `window` est **conservé** — il ne sert plus aux handlers
+  inline mais reste requis par le harnais de tests headless (qui pilote l'app via les globals) ; son
+  allègement supposerait de migrer les tests vers des imports ES (chantier distinct).
+
 ### Modifié
 - **Interviews — délégation d'événements des fiches contact (lot 5 du chantier `onclick`)**
   (Interviews 3.57 → 3.58, SW `statbel-v325` → `statbel-v326`) : les 31 handlers inline de
