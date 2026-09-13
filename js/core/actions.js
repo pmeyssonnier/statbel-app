@@ -18,7 +18,7 @@
  */
 
 // Registre : { type d'événement → { nom d'action → fonction(el, event) } }.
-const _actions = { click: {}, change: {}, input: {} };
+const _actions = { click: {}, change: {}, input: {}, keydown: {} };
 
 // Enregistre (ou complète) les actions d'un type d'événement. Appelé par chaque
 // module d'écran au fil de la migration.
@@ -46,7 +46,7 @@ export function installerDelegation(doc = document) {
     const el = cible && cible.closest ? cible.closest('[data-act]') : null;
     if (el) _dispatch(type, el, event);
   };
-  ['click', 'change', 'input'].forEach(type => doc.addEventListener(type, relai(type)));
+  ['click', 'change', 'input', 'keydown'].forEach(type => doc.addEventListener(type, relai(type)));
 }
 
 // Réinitialise le registre — réservé aux tests (isolation entre cas).

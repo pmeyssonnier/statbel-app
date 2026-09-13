@@ -51,6 +51,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(chg === 1 && clic === 0, 'dispatch : le même nom est routé selon le type (change ≠ click)');
   }
 
+  // ── type keydown pris en charge (ex. « Entrée » pour valider) ────────
+  {
+    _resetActions();
+    let key = null;
+    registerActions('keydown', { valider: (el, e) => { if (e.key === 'Enter') key = e.key; } });
+    _dispatch('keydown', { dataset: { act: 'valider' } }, { key: 'Enter' });
+    A(key === 'Enter', 'dispatch : keydown routé, événement (key) transmis');
+  }
+
   // ── registerActions complète sans écraser les autres actions ────────
   {
     _resetActions();

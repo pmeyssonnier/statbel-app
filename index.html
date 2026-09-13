@@ -164,9 +164,9 @@
     <h2 data-i18n="pin_modal_title">🔒 Verrouillage par code PIN</h2>
     <p style="font-size:13px;margin-bottom:14px;" data-i18n="pin_modal_q">Un code PIN est déjà actif. Que veux-tu faire ?</p>
     <div class="modal-btns" style="flex-direction:column;gap:8px;align-items:stretch;">
-      <button class="btn-primary" data-i18n="pin_change" onclick="pinChanger()">🔁 Changer le code</button>
-      <button class="btn-secondary" data-i18n="pin_disable" onclick="pinDesactiver()" style="color:#b71c1c;">🔓 Désactiver le verrouillage</button>
-      <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerModalPin()">Annuler</button>
+      <button class="btn-primary" data-i18n="pin_change" data-act="pinChanger">🔁 Changer le code</button>
+      <button class="btn-secondary" data-i18n="pin_disable" data-act="pinDesactiver" style="color:#b71c1c;">🔓 Désactiver le verrouillage</button>
+      <button class="btn-secondary" data-i18n="btn_cancel" data-act="fermerModalPin">Annuler</button>
     </div>
   </div>
 </div>
@@ -177,37 +177,37 @@
       <h1 aria-label="Statbel Interviews"><span aria-hidden="true">📋</span></h1>
     </div>
     <div class="header-mid">
-      <select id="surveySelect" onchange="changerEnquete(this.value)" data-i18n-aria="aria_survey" aria-label="Enquête active"></select>
+      <select id="surveySelect" data-act="changerEnquete" data-i18n-aria="aria_survey" aria-label="Enquête active"></select>
     </div>
     <div class="header-col3">
       <span class="net-indicator" role="status" title=""></span>
       <span id="saveState" class="save-state" role="status" title=""></span>
       <div class="view-toggle" role="group" data-i18n-aria="aria_views" aria-label="Vues">
-        <button class="btn-view active" id="btnListe" data-tip="Liste" data-i18n-tip="tip_list" data-i18n-aria="tip_list" onclick="setView('liste')">☰</button>
-        <button class="btn-view" id="btnCarte" data-tip="Carte" data-i18n-tip="tip_map" data-i18n-aria="tip_map" onclick="setView('carte')">🗺️</button>
-        <button class="btn-view" id="btnRdv" data-tip="Suivi" data-i18n-tip="tip_track" data-i18n-aria="tip_track" onclick="setView('rdv')">📅</button>
-        <button class="btn-view" id="btnResume" data-tip="Résumé" data-i18n-tip="tip_summary" data-i18n-aria="tip_summary" onclick="setView('resume')">📊</button>
+        <button class="btn-view active" id="btnListe" data-tip="Liste" data-i18n-tip="tip_list" data-i18n-aria="tip_list" data-act="setView" data-view="liste">☰</button>
+        <button class="btn-view" id="btnCarte" data-tip="Carte" data-i18n-tip="tip_map" data-i18n-aria="tip_map" data-act="setView" data-view="carte">🗺️</button>
+        <button class="btn-view" id="btnRdv" data-tip="Suivi" data-i18n-tip="tip_track" data-i18n-aria="tip_track" data-act="setView" data-view="rdv">📅</button>
+        <button class="btn-view" id="btnResume" data-tip="Résumé" data-i18n-tip="tip_summary" data-i18n-aria="tip_summary" data-act="setView" data-view="resume">📊</button>
       </div>
-      <button class="btn-ico" id="btnGeo" onclick="toggleMaPosition()" title="Ma position" data-i18n-title="title_mypos" data-i18n-aria="title_mypos">🎯</button>
+      <button class="btn-ico" id="btnGeo" data-act="toggleMaPosition" title="Ma position" data-i18n-title="title_mypos" data-i18n-aria="title_mypos">🎯</button>
       <div class="kebab-wrap">
-        <button class="btn-ico" id="btnKebab" onclick="toggleKebab()" title="Plus d'options" data-i18n-title="title_more" data-i18n-aria="title_more" aria-haspopup="menu" aria-expanded="false">⋮</button>
+        <button class="btn-ico" id="btnKebab" data-act="toggleKebab" title="Plus d'options" data-i18n-title="title_more" data-i18n-aria="title_more" aria-haspopup="menu" aria-expanded="false">⋮</button>
         <div class="kebab-menu" id="kebabMenu">
-          <button class="kebab-item" data-i18n="menu_rename" onclick="renommerEnquete();toggleKebab()">✏️ Renommer cette enquête</button>
-          <button class="kebab-item danger" data-i18n="menu_delete" onclick="supprimerEnquete();toggleKebab()">🗑️ Supprimer cette enquête</button>
+          <button class="kebab-item" data-i18n="menu_rename" data-act="menuRenommer">✏️ Renommer cette enquête</button>
+          <button class="kebab-item danger" data-i18n="menu_delete" data-act="menuSupprimer">🗑️ Supprimer cette enquête</button>
           <hr class="kebab-sep">
-          <button class="kebab-item" data-i18n="menu_import" onclick="document.getElementById('importFile').click();toggleKebab()">⬆️ Importer CSV / Excel</button>
-          <button class="kebab-item" data-i18n="menu_export" onclick="exporterCSV();toggleKebab()">⬇️ Exporter CSV</button>
+          <button class="kebab-item" data-i18n="menu_import" data-act="menuImport">⬆️ Importer CSV / Excel</button>
+          <button class="kebab-item" data-i18n="menu_export" data-act="menuExport">⬇️ Exporter CSV</button>
           <hr class="kebab-sep">
           <div class="kebab-info" id="kebabBackupInfo"></div>
-          <button class="kebab-item" data-i18n="menu_backup" onclick="exporterBackup();toggleKebab()">💾 Sauvegarder tout (JSON)</button>
-          <button class="kebab-item" data-i18n="menu_restore" onclick="document.getElementById('restoreFile').click();toggleKebab()">⬆️ Restaurer une sauvegarde</button>
+          <button class="kebab-item" data-i18n="menu_backup" data-act="menuBackup">💾 Sauvegarder tout (JSON)</button>
+          <button class="kebab-item" data-i18n="menu_restore" data-act="menuRestore">⬆️ Restaurer une sauvegarde</button>
           <hr class="kebab-sep">
-          <button class="kebab-item" data-i18n="menu_converter" onclick="location.href='statbel_converter.html'">🔄 Convertisseur d'enquête</button>
-          <button class="kebab-item" data-i18n="menu_planner" onclick="location.href='statbel_planner.html'">🗓️ Planning Statbel</button>
+          <button class="kebab-item" data-i18n="menu_converter" data-act="menuConverter">🔄 Convertisseur d'enquête</button>
+          <button class="kebab-item" data-i18n="menu_planner" data-act="menuPlanner">🗓️ Planning Statbel</button>
           <hr class="kebab-sep">
-          <button class="kebab-item" data-i18n="menu_settings" onclick="ouvrirSettings();toggleKebab()">⚙️ Paramètres</button>
-          <button class="kebab-item" data-i18n="menu_help" onclick="ouvrirAide();toggleKebab()">❓ Aide</button>
-          <button class="kebab-item" data-i18n="menu_manual" onclick="window.open('docs/manuel.html','_blank','noopener');toggleKebab()">📘 Manuel d'utilisation</button>
+          <button class="kebab-item" data-i18n="menu_settings" data-act="menuSettings">⚙️ Paramètres</button>
+          <button class="kebab-item" data-i18n="menu_help" data-act="menuHelp">❓ Aide</button>
+          <button class="kebab-item" data-i18n="menu_manual" data-act="menuManual">📘 Manuel d'utilisation</button>
         </div>
       </div>
     </div>
@@ -220,14 +220,14 @@
 <!-- Contenu principal (landmark main + cible du lien d'évitement) -->
 <main id="contenu" tabindex="-1">
 <div class="search-bar">
-  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" data-i18n-aria="ph_search" aria-label="Rechercher" oninput="debounce(rendu)" autocomplete="off">
+  <input type="search" id="searchInput" placeholder="Rechercher par nom, prénom, adresse ou téléphone…" data-i18n-ph="ph_search" data-i18n-aria="ph_search" aria-label="Rechercher" data-act="rechercher" autocomplete="off">
 </div>
 
 <div id="backupBanner" class="backup-banner hidden">
   <span class="bk-ico">💾</span>
   <span class="bk-msg"></span>
-  <button class="bk-save" onclick="exporterBackup()" data-i18n="bkbanner_save">Sauvegarder</button>
-  <button class="bk-close" onclick="fermerBackupBanner()" title="Masquer" aria-label="Masquer">✕</button>
+  <button class="bk-save" data-act="exporterBackup" data-i18n="bkbanner_save">Sauvegarder</button>
+  <button class="bk-close" data-act="fermerBackupBanner" title="Masquer" aria-label="Masquer">✕</button>
 </div>
 
 <div class="filters"></div>
@@ -280,10 +280,10 @@
   <div class="modal">
     <h2 data-i18n="rename_title">Renommer l'enquête</h2>
     <input type="text" id="inputRename" placeholder="Ex: 2026-12305 - GD RUE AU BOIS" data-i18n-ph="ph_rename" data-i18n-aria="rename_title" aria-label="Renommer l'enquête"
-      onkeydown="if(event.key==='Enter')confirmerRename()">
+      data-act="confirmerRenameEnter">
     <div class="modal-btns">
-      <button class="btn-secondary" data-i18n="btn_cancel" onclick="fermerRename()">Annuler</button>
-      <button class="btn-primary" data-i18n="btn_rename" onclick="confirmerRename()">Renommer</button>
+      <button class="btn-secondary" data-i18n="btn_cancel" data-act="fermerRename">Annuler</button>
+      <button class="btn-primary" data-i18n="btn_rename" data-act="confirmerRename">Renommer</button>
     </div>
   </div>
 </div>
@@ -467,13 +467,13 @@
       <input type="checkbox" id="chkPreserveHist" checked> <span data-i18n="bk_preserve_hist">Préserver l'historique et les RDV existants</span>
     </label>
     <label id="backupOnlyValidRow" class="hidden" style="display:flex;align-items:center;gap:7px;font-size:13px;margin:4px 0 0;cursor:pointer;">
-      <input type="checkbox" id="chkRestoreOnlyValid" checked onchange="majComparaisonRestore()">
+      <input type="checkbox" id="chkRestoreOnlyValid" checked data-act="majComparaisonRestore">
       <span data-i18n="lbl_restore_only_valid">Ne restaurer que les enregistrements corrects</span>
       <span id="restoreExcluded" style="font-size:11px;color:#b71c1c;"></span>
     </label>
     <div id="restoreExclusDetail"></div>
     <div class="modal-btns" id="modalBackupBtns">
-      <button class="btn-secondary" onclick="fermerBackupDetail()">Annuler</button>
+      <button class="btn-secondary" data-act="fermerBackupDetail">Annuler</button>
       <button class="btn-primary"   id="btnBackupConfirm">Confirmer</button>
     </div>
   </div>
@@ -484,7 +484,7 @@
     <h2 data-i18n="aide_title">❓ Aide — Statbel Interviews</h2>
     <div class="aide-body" id="aideBody"></div>
     <div class="modal-btns">
-      <button class="btn-primary" data-i18n="aide_ok" onclick="fermerAide()">Compris</button>
+      <button class="btn-primary" data-i18n="aide_ok" data-act="fermerAide">Compris</button>
     </div>
   </div>
 </div>

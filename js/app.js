@@ -93,7 +93,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.53';
+const APP_VERSION = '3.54';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -904,10 +904,10 @@ function renderNonGeo() {
   const opts = `<option value="Tous"${_nonGeoFiltre === 'Tous' ? ' selected' : ''}>Toutes les enquêtes (${_nonGeoAll.length})</option>` +
     enqs.map(e => `<option value="${esc(e)}"${e === _nonGeoFiltre ? ' selected' : ''}>${esc(e)} (${cnt(e)})</option>`).join('');
   box.innerHTML =
-    `<select class="nongeo-filtre" onchange="_nonGeoFiltre=this.value;renderNonGeo()">${opts}</select>
+    `<select class="nongeo-filtre" data-act="nonGeoFiltre">${opts}</select>
      <div class="nongeo-head">${items.length} adresse(s) non géocodée(s) — cliquez pour ouvrir la fiche :</div>` +
     items.map(({enq, idx, c}) =>
-      `<button class="nongeo-item" onclick="allerAFiche('${enq.replace(/'/g,"\\'")}',${idx})">
+      `<button class="nongeo-item" data-act="allerAFiche" data-enq="${esc(enq)}" data-idx="${idx}">
         <span class="nongeo-ref">${esc(enq)} › N°${esc(c.ordre)}</span>
         <span class="nongeo-name">${esc(c.prenom)} ${esc(c.nom)}</span>
         <span class="nongeo-adr">📍 ${esc(c.adresse||'(adresse vide)')}</span>
@@ -995,6 +995,51 @@ function enregistrerActionsReglages() {
   });
 }
 
+// Actions déléguées du « chrome » : en-tête, barre d'outils, bascule de vues,
+// menu kebab, bannière de sauvegarde, et modales génériques (PIN, Renommer,
+// Sauvegarde-détail, Aide, liste des non-géocodées). Lot 2 du chantier onclick.
+function enregistrerActionsChrome() {
+  registerActions('change', {
+    changerEnquete: el => changerEnquete(el.value),
+    majComparaisonRestore: () => majComparaisonRestore(),
+    nonGeoFiltre: el => { _nonGeoFiltre = el.value; renderNonGeo(); },
+  });
+  registerActions('input', {
+    rechercher: () => debounce(rendu),
+  });
+  registerActions('keydown', {
+    confirmerRenameEnter: (el, e) => { if (e.key === 'Enter') confirmerRename(); },
+  });
+  registerActions('click', {
+    // Barre d'outils + bascule de vues
+    setView:          el => setView(el.dataset.view),
+    toggleMaPosition: () => toggleMaPosition(),
+    toggleKebab:      () => toggleKebab(),
+    // Menu kebab (chaque entrée referme le menu après son action)
+    menuRenommer:  () => { renommerEnquete(); toggleKebab(); },
+    menuSupprimer: () => { supprimerEnquete(); toggleKebab(); },
+    menuImport:    () => { document.getElementById('importFile').click(); toggleKebab(); },
+    menuExport:    () => { exporterCSV(); toggleKebab(); },
+    menuBackup:    () => { exporterBackup(); toggleKebab(); },
+    menuRestore:   () => { document.getElementById('restoreFile').click(); toggleKebab(); },
+    menuConverter: () => { location.href = 'statbel_converter.html'; },
+    menuPlanner:   () => { location.href = 'statbel_planner.html'; },
+    menuSettings:  () => { ouvrirSettings(); toggleKebab(); },
+    menuHelp:      () => { ouvrirAide(); toggleKebab(); },
+    menuManual:    () => { window.open('docs/manuel.html', '_blank', 'noopener'); toggleKebab(); },
+    // Bannière de sauvegarde + modales génériques
+    fermerBackupBanner: () => fermerBackupBanner(),
+    pinChanger:      () => pinChanger(),
+    pinDesactiver:   () => pinDesactiver(),
+    fermerModalPin:  () => fermerModalPin(),
+    confirmerRename: () => confirmerRename(),
+    fermerRename:    () => fermerRename(),
+    fermerBackupDetail: () => fermerBackupDetail(),
+    fermerAide:      () => fermerAide(),
+    allerAFiche:     el => allerAFiche(el.dataset.enq, +el.dataset.idx),
+  });
+}
+
 async function init() {
   chargerSettings();
   appliquerTheme();
@@ -1002,6 +1047,7 @@ async function init() {
   appliquerLangue();
   installerDelegation();   // routeur de délégation (data-act) — coexiste avec les onclick restants
   enregistrerActionsReglages();
+  enregistrerActionsChrome();
 
   // Persistance du stockage : demande au navigateur de ne pas purger IndexedDB/
   // localStorage (sinon iOS/Safari peut tout effacer après 7 jours d'inactivité,
