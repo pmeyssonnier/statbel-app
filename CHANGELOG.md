@@ -13,6 +13,14 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Interviews — modèles de rappel proposés en 4 langues**
+  (Interviews `3.64` → `3.65`, SW `statbel-v334` → `statbel-v335`) :
+  « Charger les modèles proposés » remplit désormais les cinq modèles (objet
+  e-mail, e-mails CATI/CAWI et SMS CATI/CAWI) et la signature par défaut dans la
+  **langue active de l'application** (fr/nl/en/de), avec repli sur le français.
+  La ligne « rendez-vous » insérée dans les modèles personnalisés est également
+  localisée (plus de texte français figé en NL/EN/DE). Test
+  `tests/reminder-templates.test.js` étendu à un chargement non francophone.
 - **Interviews — prototype de modèles personnalisables pour les rappels**
   (Interviews `3.63` → `3.64`, SW `statbel-v333` → `statbel-v334`) :
   les Paramètres permettent de charger, modifier, prévisualiser et réinitialiser

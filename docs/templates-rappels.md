@@ -19,6 +19,11 @@ le message avant son envoi.
 4. Déplier **✉️ Modèles de rappel — prototype**.
 5. Cliquer sur **Charger les modèles proposés**.
 
+Les modèles proposés se chargent dans la **langue active de l’application**
+(français, néerlandais, anglais ou allemand). Pour obtenir les modèles dans une
+autre langue, changez d’abord la langue dans les Paramètres, puis rechargez les
+modèles proposés.
+
 Cinq modèles sont disponibles :
 
 - objet de l’e-mail ;
@@ -154,7 +159,8 @@ e-mail ou SMS utilisée après l’ouverture du message.
 
 ## Limites du prototype
 
-- Les modèles proposés sont actuellement rédigés en français.
+- Les modèles proposés existent en français, néerlandais, anglais et allemand ;
+  le modèle chargé suit la langue active de l’application.
 - Les variables inconnues ou mal orthographiées sont remplacées par une valeur
   vide.
 - Un SMS long peut être découpé en plusieurs SMS par l’opérateur.
