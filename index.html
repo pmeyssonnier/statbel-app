@@ -299,6 +299,61 @@
           <input type="url" id="setCawiUrl" inputmode="url" placeholder="https://…" data-i18n-aria="lbl_cawi_url" aria-label="Lien enquête web (CAWI)" style="width:100%;max-width:360px"
                  data-act="setCawiUrl">
         </div>
+        <details class="set-accordion" style="margin-top:12px;">
+          <summary>✉️ Modèles de rappel — prototype</summary>
+          <div style="margin-top:10px;">
+            <p class="hint">Les champs vides conservent le message automatique traduit actuel. Variables disponibles :
+              <code>{{prenom}}</code>, <code>{{enquete}}</code>, <code>{{rendez_vous}}</code>,
+              <code>{{lien}}</code>, <code>{{identifiant}}</code>, <code>{{mot_de_passe}}</code>,
+              <code>{{signature}}</code> et <code>{{signature_courte}}</code>.
+            </p>
+            <div class="set-row">
+              <label for="setReminderSignature">Signature e-mail</label>
+              <input type="text" id="setReminderSignature" maxlength="200"
+                     placeholder="Pierre Meyssonnier – Enquêteur Statbel"
+                     data-act="setReminderIdentity" data-field="reminderSignature">
+            </div>
+            <div class="set-row">
+              <label for="setReminderSignatureShort">Signature SMS</label>
+              <input type="text" id="setReminderSignatureShort" maxlength="80"
+                     placeholder="Pierre – Statbel"
+                     data-act="setReminderIdentity" data-field="reminderSignatureShort">
+            </div>
+            <div class="set-row">
+              <label for="setReminderMailSubject">Objet de l’e-mail</label>
+              <input type="text" id="setReminderMailSubject" maxlength="300"
+                     data-reminder-field="mailSubject" data-act="setReminderTemplate"
+                     placeholder="Rappel – Enquête {{enquete}} de Statbel">
+            </div>
+            <div class="set-row">
+              <label for="setReminderMailCati">E-mail CATI</label>
+              <textarea id="setReminderMailCati" rows="7" maxlength="4000"
+                        data-reminder-field="mailCati" data-act="setReminderTemplate"></textarea>
+            </div>
+            <div class="set-row">
+              <label for="setReminderMailCawi">E-mail CAWI</label>
+              <textarea id="setReminderMailCawi" rows="8" maxlength="4000"
+                        data-reminder-field="mailCawi" data-act="setReminderTemplate"></textarea>
+            </div>
+            <div class="set-row">
+              <label for="setReminderSmsCati">SMS CATI</label>
+              <textarea id="setReminderSmsCati" rows="3" maxlength="1000"
+                        data-reminder-field="smsCati" data-act="setReminderTemplate"></textarea>
+            </div>
+            <div class="set-row">
+              <label for="setReminderSmsCawi">SMS CAWI</label>
+              <textarea id="setReminderSmsCawi" rows="3" maxlength="1000"
+                        data-reminder-field="smsCawi" data-act="setReminderTemplate"></textarea>
+            </div>
+            <div class="modal-btns" style="justify-content:flex-start;">
+              <button class="btn-secondary" type="button" data-act="loadReminderTemplates">Charger les modèles proposés</button>
+              <button class="btn-secondary" type="button" data-act="previewReminderTemplates">Aperçu</button>
+              <button class="btn-secondary" type="button" data-act="resetReminderTemplates">Réinitialiser</button>
+            </div>
+            <pre id="reminderTemplatePreview" class="hidden" aria-live="polite"
+                 style="white-space:pre-wrap;max-height:280px;overflow:auto;padding:10px;border:1px solid var(--border);border-radius:8px;"></pre>
+          </div>
+        </details>
         <div class="set-row" style="margin-top:10px;">
           <label data-i18n="lbl_pay_household">💶 Indemnité par ménage réalisé (€)</label>
           <input type="number" id="setPayHousehold" min="0" step="0.01" inputmode="decimal" data-i18n-aria="lbl_pay_household" aria-label="Indemnité par ménage réalisé (€)" style="width:110px"
