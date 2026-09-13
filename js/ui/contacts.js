@@ -15,11 +15,12 @@
 import { esc, formaterGsm, telBE, calcAge, todayStr, nowHHMM,
          dateFrToISO, dateISOToFr, composeAdresse, parseAdresse,
          correspondRecherche } from '../core/util.js';
-import { t, tf, tPlural, nomJourCourt } from '../core/i18n.js';
+import { t, tPlural, nomJourCourt } from '../core/i18n.js';
 import { statutLabel, paysAffiche, etatCivilGenre, maritalCanon,
          MARITAL_I18N, PAYS_I18N } from '../data/canon.js';
 import { coordsCache } from '../data/idb.js';
 import { classerMethode } from '../data/collect-method.js';
+import { construireRappel } from '../features/reminders.js';
 // Note : formatHeureSaisie / ajouterHistorique sont appelés depuis des handlers
 // inline (oninput/onclick) → résolus via le pont window, pas besoin de les importer ici.
 
@@ -192,47 +193,14 @@ export function methodeBadge(c) {
   return `<span class="badge">📋 ${esc(c.collect_method)}</span>`;
 }
 
-// Construit un message de rappel prérempli pour un contact CATI/CAWI.
-// Fonction PURE (aucun effet de bord) → testable : renvoie {subject, body, href}.
-// canal ∈ 'mail' | 'sms'. Le corps CAWI n'inclut que les lignes réellement
-// renseignées (lien configuré, identifiant, mot de passe) ; le CATI est un simple
-// rappel de disponibilité, sans identifiants web.
-export function construireRappel(c, canal) {
-  const m = classerMethode(c && c.collect_method);
-  const lignes = [ tf('rappel_hello', { name: (c && c.prenom) || '' }) ];
-  if (m === 'cawi') {
-    lignes.push(t('rappel_intro_cawi'));
-    const url = (settings.cawiUrl || '').trim();
-    if (url)          lignes.push(t('rappel_lbl_link')  + ' : ' + url);
-    if (c.web_user_id)  lignes.push(t('rappel_lbl_login') + ' : ' + c.web_user_id);
-    if (c.web_user_pwd) lignes.push(t('rappel_lbl_pwd')   + ' : ' + c.web_user_pwd);
-  } else {
-    lignes.push(t('rappel_intro_cati'));
-    if (c && c.rdv) lignes.push(tf('rappel_rdv', { rdv: c.rdv }));
-  }
-  lignes.push(t('rappel_thanks'));
-  const body    = lignes.filter(Boolean).join('\n');
-  const subject = t(m === 'cawi' ? 'rappel_subject_cawi' : 'rappel_subject_cati');
-  let href;
-  if (canal === 'mail') {
-    href = 'mailto:' + encodeURIComponent(c.email || '').replace(/%40/g, '@')
-         + '?subject=' + encodeURIComponent(subject)
-         + '&body='    + encodeURIComponent(body);
-  } else {
-    const tb  = c.gsm ? telBE(c.gsm) : null;
-    const num = tb ? tb.e164 : (c.gsm || '');
-    // « ?&body= » : forme compatible iOS et Android (le sujet n'existe pas en SMS).
-    href = 'sms:' + num + '?&body=' + encodeURIComponent(body);
-  }
-  return { subject, body, href };
-}
-
 // Ouvre l'appli mail/SMS de l'appareil avec le rappel prérempli (aucune donnée
-// n'est transmise sans action de l'utilisateur).
+// n'est transmise sans action de l'utilisateur). La construction du message est
+// déléguée au module pur features/reminders.js ; ici on fournit le contact
+// courant et le lien CAWI configuré (settings.cawiUrl).
 export function envoyerRappel(i, canal) {
   const c = contacts()[i];
   if (!c) return;
-  const { href } = construireRappel(c, canal);
+  const { href } = construireRappel({ contact: c, canal, cawiUrl: settings.cawiUrl });
   window.location.href = href;
   if (typeof afficherToast === 'function') afficherToast(t('toast_rappel'));
 }

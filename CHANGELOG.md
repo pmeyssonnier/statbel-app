@@ -13,6 +13,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Interviews — R6 : rappels CATI/CAWI dans un module découplé** (Interviews 3.44 → 3.45,
+  SW `statbel-v312` → `statbel-v313`) : `construireRappel` (construction du message e-mail/SMS
+  prérempli) quitte `ui/contacts.js` pour le module `js/features/reminders.js`. Elle devient une
+  fonction **sans lecture de l'état applicatif** : le lien CAWI (`cawiUrl`) est reçu **en paramètre**
+  au lieu d'être lu dans `settings` (`construireRappel({ contact, canal, cawiUrl })`). `envoyerRappel`
+  reste côté UI (`contacts.js`) — elle fournit le contact courant et `settings.cawiUrl`, puis délègue.
+  Le test `tests/rappel.test.js` passe désormais `cawiUrl` explicitement (plus de dépendance au
+  global). Couplage `contacts.js` : −1 lecture de `settings` dans la logique de rappel. Refactor sans
+  changement de comportement visible (la dette i18n/`settings.lang`, partagée par tout le dépôt, reste
+  hors périmètre).
 - **Interviews — module métier unique « méthode de collecte »** (Interviews 3.43 → 3.44,
   SW `statbel-v311` → `statbel-v312`) : la classification CAPI / CATI / CAWI vivait en double
   (`classerMethode` dans `ui/contacts.js`, `methodeCatiCawi` dans `ui/settings.js`) plus une 3ᵉ copie
