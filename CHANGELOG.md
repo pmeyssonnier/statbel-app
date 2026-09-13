@@ -13,6 +13,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Interviews — R3 : logique des statuts dans un module pur** (Interviews 3.45 → 3.46,
+  SW `statbel-v313` → `statbel-v314`) : le modèle par défaut (`STATUTS_DEFAULTS`, `STATUT_COULEURS`,
+  `cloneStatuts`) et la **résolution du vocabulaire par enquête** quittent `js/app.js` pour
+  `js/data/statuses.js`. Les fonctions de résolution y sont **pures** : elles reçoivent la liste de
+  statuts (ou la map par enquête + le nom) en **paramètres**, sans lire `settings` ni `enqueteActive`
+  (`resoudreStatuts`, `statutDefautDe`, `statutDefDe`, `semerStatutsParEnquete`). `app.js` conserve de
+  fines **enveloppes globales** de signature inchangée (`statutDefaut()`, `statutDef(label)`,
+  `statutsActifs()`, `migrerStatutsParEnquete()`…) qui lisent l'état et délèguent — aucun site d'appel
+  (ni handler inline) n'est modifié. Nouveau test **pur** (sans navigateur) `tests/statuses.test.js`.
+  Couplage : la logique métier des statuts ne lit plus aucun global ; l'état reste concentré dans
+  l'orchestrateur. Refactor sans changement de comportement visible.
 - **Interviews — R6 : rappels CATI/CAWI dans un module découplé** (Interviews 3.44 → 3.45,
   SW `statbel-v312` → `statbel-v313`) : `construireRappel` (construction du message e-mail/SMS
   prérempli) quitte `ui/contacts.js` pour le module `js/features/reminders.js`. Elle devient une

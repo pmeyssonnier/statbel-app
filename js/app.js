@@ -77,31 +77,21 @@ import {
   maritalCanon, etatCivilGenre, paysNom, normaliserPays, paysAffiche,
   statutCanon, statutLabel, PAYS_I18N, MARITAL_I18N,
 } from './data/canon.js';
+import {
+  STATUT_COULEURS, cloneStatuts,
+  resoudreStatuts, statutDefautDe, statutDefDe, semerStatutsParEnquete,
+} from './data/statuses.js';
 
 
 // ── Statuts par défaut ───────────────────────────────────────────────
 // done : marque l'entretien terminé → remplit automatiquement la date
 // rdv  : statut « rendez-vous » → active la date/heure et la vue 📅
-// Libellés = identifiants canoniques EN (langue pivot). L'affichage est traduit
-// via statutLabel(). Migration des anciennes données FR → EN au chargement.
-// done = « traité » (plus à revisiter) ; realise = interview RÉALISÉE (les cibles
-// ≥15 sont interrogées). Un refus/absent/déménagé est « traité » mais non réalisé.
-const STATUTS_DEFAULTS = [
-  { label:'To do',       color:'#90a4ae', icon:'✕',  done:false, rdv:false, realise:false },
-  { label:'In progress', color:'#f9a825', icon:'⏳', done:false, rdv:true,  realise:false },
-  { label:'Done',        color:'#2e7d32', icon:'✓',  done:true,  rdv:false, realise:true  },
-  { label:'Absent',      color:'#a1887f', icon:'⊘',  done:true,  rdv:false, realise:false },
-  { label:'Refusal',     color:'#c62828', icon:'✗',  done:true,  rdv:false, realise:false },
-  { label:'Moved',       color:'#6a1b9a', icon:'📦', done:true,  rdv:false, realise:false },
-];
-// Palette contrastée par défaut (clé = label EN) — appliquée aux statuts standards
-// lors de la migration pour bien distinguer les segments du graphe.
-const STATUT_COULEURS = { 'To do':'#90a4ae', 'In progress':'#f9a825', 'Done':'#2e7d32', 'Absent':'#a1887f', 'Refusal':'#c62828', 'Moved':'#6a1b9a', 'Impossible':'#d81b60' };
-const cloneStatuts = () => STATUTS_DEFAULTS.map(s => Object.assign({}, s));
+// STATUTS_DEFAULTS / STATUT_COULEURS / cloneStatuts + résolveurs purs vivent dans
+// js/data/statuses.js (importés ci-dessus). Ici : enveloppes globales liées à l'état.
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.45';
+const APP_VERSION = '3.46';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -250,32 +240,22 @@ function validerStatuts(arr) {
 // Repli : le modèle global settings.statuts (nouvelle enquête pas encore semée,
 // ou aucune enquête active). Ne jamais lire settings.statuts en direct pour un
 // rendu/comptage lié à une enquête → passer par ces accesseurs.
-function statutsPourEnquete(nom) {
-  const m = settings.statutsParEnquete;
-  return (nom && m && Array.isArray(m[nom]) && m[nom].length) ? m[nom] : settings.statuts;
-}
+// Enveloppes globales : elles lisent l'état (settings, enqueteActive) puis délèguent
+// aux résolveurs PURS de data/statuses.js. Signatures inchangées (appelées partout,
+// y compris via handlers inline / pont window).
+function statutsPourEnquete(nom) { return resoudreStatuts(settings.statuts, settings.statutsParEnquete, nom); }
 function statutsActifs()    { return statutsPourEnquete(enqueteActive); }
 function statutDefs()       { return statutsActifs(); }
-function statutDefaut()     { return (statutsActifs()[0] || {label:'To do'}).label; }
-function statutDef(label)   {
-  const arr = statutsActifs();
-  return arr.find(s => s.label === label)
-      || arr[0]
-      || { label, color:'#90a4ae', icon:'•', done:false, rdv:false };
-}
+function statutDefaut()     { return statutDefautDe(statutsActifs()); }
+function statutDef(label)   { return statutDefDe(statutsActifs(), label); }
 
 // Sème le vocabulaire de chaque enquête existante depuis le modèle global, une
 // seule fois (idempotent). Ne touche JAMAIS les statuts des contacts : on copie
-// simplement la liste que toutes les enquêtes partageaient déjà.
+// simplement la liste que toutes les enquêtes partageaient déjà. La logique de
+// semis est pure (data/statuses.js) ; ici on fournit l'état et on persiste.
 function migrerStatutsParEnquete() {
   const m = settings.statutsParEnquete || (settings.statutsParEnquete = {});
-  let chg = false;
-  Object.keys(enquetes).forEach(nom => {
-    if (!Array.isArray(m[nom]) || !m[nom].length) {
-      m[nom] = settings.statuts.map(s => ({ ...s }));   // clone profond
-      chg = true;
-    }
-  });
+  const chg = semerStatutsParEnquete(m, settings.statuts, Object.keys(enquetes));
   if (!settings.statutsScopeV || chg) { settings.statutsScopeV = 1; saveSettings(); }
 }
 
