@@ -31,6 +31,9 @@ forcer le rafraîchissement des fichiers hors-ligne.
 📘 **[Manuel d'utilisation illustré](docs/manuel.html)** (`docs/manuel.html`) — présentation de chaque
 module avec captures d'écran ; fichier HTML autonome, ouvrable hors-ligne par double-clic.
 
+✉️ **[Note d’utilisation des modèles de rappel](docs/templates-rappels.md)** — configuration,
+variables disponibles, exemples CATI/CAWI et précautions avant envoi.
+
 ---
 
 ## 📋 Interviews (`index.html`)
