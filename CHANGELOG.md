@@ -56,6 +56,8 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
   la partie Interviews expliquant l'envoi d'un rappel (fiche → boutons ✉️ / 💬 → appli mail/SMS préremplie),
   l'adaptation automatique du message selon la méthode de collecte (CAWI avec lien/identifiant/mot de passe,
   CATI avec rendez-vous), le SMS sans objet, la préparation du lien CAWI et la note de confidentialité.
+  Complétée pour couvrir le **prototype de modèles personnalisables** (Paramètres › ✉️ Modèles de rappel,
+  variables `{{…}}`, aperçu) et le comportement de repli, avec renvoi vers `docs/templates-rappels.md`.
   Changement documentaire seul (pas de bump de version).
 
 ### Ajouté
