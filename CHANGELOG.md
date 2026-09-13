@@ -13,6 +13,31 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Convertisseur — garde-fou : enquête mémorisée avec identifiants en notation scientifique**
+  (Convertisseur `221` → `222`, SW `statbel-v329` → `statbel-v330`) : le correctif `cellTexte`
+  (v216) ne répare les ID numériques longs qu'à l'**import**. Une enquête importée avant, restaurée
+  depuis IndexedDB au démarrage, garde ses identifiants cassés (`2.02612E+11`) → re-télécharger son
+  CSV ressort des logins CAWI inutilisables. `afficher()` détecte désormais ce cas et montre un
+  avertissement `role="alert"` invitant à **ré-importer le `.xlsx` d'origine** (glisser-déposer) pour
+  ré-analyser l'enquête avec le correctif. Clés i18n fr/nl/en/de. Test `tests/converter-sci-id-warn.test.js`.
+- **Convertisseur & Planner — bannière « Mise à jour disponible » (mono-fichiers)**
+  (Convertisseur `220` → `222`, Planner `195` → `196`, Interviews `3.59` → `3.60`, SW
+  `statbel-v328` → `statbel-v330`) : depuis le passage de la navigation en *cache-first*,
+  une page mono-fichier restait figée sur l'ancienne version en cache tant que la mise à
+  jour n'avait pas été « posée » **depuis Interviews** — la seule page dotée du popup. Les
+  deux pages **réutilisent désormais `js/boot.js`** (l'amorçage PWA autonome d'Interviews) :
+  elles proposent le **même popup opt-in** « Mise à jour disponible → Poser » et se mettent
+  donc à jour toutes seules. `js/boot.js` gagne un garde anti-doublon du `<link rel="manifest">`
+  (les mono-fichiers en déclarent un en statique). Enregistrements SW inline supprimés des deux
+  pages. Test garde-fou pur `tests/monofile-sw-update.test.js`.
+- **Interviews — garde-fou d'import : identifiant web en notation scientifique**
+  (Interviews `3.59` → `3.60`) : un `TX_WEB_USER_ID`/`TX_WEB_USER_PSWRD` numérique long cassé
+  par un tableur en `2.02612E+11` a **perdu sa précision** — irréparable. `parseCSV` le détecte
+  (`stats.idsCorrompus`) et l'aperçu d'import affiche un **avertissement `role="alert"`** invitant
+  à réimporter depuis le `.xlsx` d'origine via le Convertisseur à jour, plutôt que d'envoyer un
+  login CAWI inutilisable à un répondant. Non bloquant (le reste de l'import se poursuit). Couvre
+  aussi l'import `.xlsx` direct dans Interviews. Clés i18n fr/nl/en/de. Test
+  `tests/import-id-corrompu.test.js`.
 - **Planner — lien « Ouvrir » après génération de la candidature `.docx`**
   (Planner `194` → `195`, SW `statbel-v327` → `statbel-v328`) : à la fin de
   `genererCandidature()`, le fichier est toujours téléchargé, mais un toast d'action

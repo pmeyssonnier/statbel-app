@@ -215,6 +215,8 @@ export const I18N = {
   "ip_rejected": { fr:"rejetées", nl:"geweigerd", en:"rejected", de:"abgelehnt" },
   "ip_ignored": { fr:"⚠️ Lignes ignorées : {det}.", nl:"⚠️ Genegeerde regels: {det}.", en:"⚠️ Ignored lines: {det}.", de:"⚠️ Ignorierte Zeilen: {det}." },
   "ip_detail": { fr:"Détail des lignes ignorées ({n})", nl:"Detail van genegeerde regels ({n})", en:"Details of ignored lines ({n})", de:"Detail der ignorierten Zeilen ({n})" },
+  "ip_id_corrupt_title": { fr:"{n} identifiant(s) web corrompu(s)", nl:"{n} beschadigde web-ID('s)", en:"{n} corrupted web ID(s)", de:"{n} beschädigte Web-Kennung(en)" },
+  "ip_id_corrupt_body": { fr:"Notation scientifique (ex. « {ex} ») : la précision est perdue, ces logins CAWI sont inutilisables. Réimportez depuis le fichier .xlsx d'origine via le Convertisseur à jour.", nl:"Wetenschappelijke notatie (bv. « {ex} »): de precisie is verloren, deze CAWI-logins zijn onbruikbaar. Herimporteer vanuit het originele .xlsx-bestand via de bijgewerkte Omzetter.", en:"Scientific notation (e.g. \"{ex}\"): precision is lost, these CAWI logins are unusable. Re-import from the original .xlsx file via the up-to-date Converter.", de:"Wissenschaftliche Notation (z. B. „{ex}“): Die Genauigkeit ist verloren, diese CAWI-Logins sind unbrauchbar. Importieren Sie erneut aus der ursprünglichen .xlsx-Datei über den aktualisierten Konverter." },
   "ip_line": { fr:"ligne", nl:"regel", en:"line", de:"Zeile" },
   "ip_cols_ok": { fr:"Colonnes reconnues", nl:"Herkende kolommen", en:"Recognized columns", de:"Erkannte Spalten" },
   "ip_cols_ko": { fr:"Colonnes ignorées", nl:"Genegeerde kolommen", en:"Ignored columns", de:"Ignorierte Spalten" },

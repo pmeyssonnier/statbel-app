@@ -16,14 +16,10 @@
 <!-- Lib de composants partagée (window.Charts) + styles du tableau triable -->
 <link rel="stylesheet" href="css/charts.css">
 <script src="js/charts.js"></script>
-<script>
-  // PWA : enregistre le service worker partagé (hors-ligne), comme les autres pages.
-  if (location.protocol === 'https:' || location.protocol === 'http:') {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-    }
-  }
-</script>
+<!-- Amorçage PWA partagé : service worker + bannière « Mise à jour disponible »
+     (opt-in). Réutilise js/boot.js (autonome) pour que cette page mono-fichier
+     propose elle aussi la pose de mise à jour (cf. Convertisseur). -->
+<script src="js/boot.js"></script>
 <!-- Leaflet (vendorisé, hors-ligne) — carte de la section Planning déplacée depuis le Convertisseur. -->
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <script src="vendor/leaflet/leaflet.js"></script>
@@ -3183,7 +3179,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '195';
+const APP_VERSION = '196';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
