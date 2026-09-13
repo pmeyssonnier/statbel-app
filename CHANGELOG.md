@@ -13,6 +13,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Interviews — délégation d'événements de la vue Résumé (lot 4 du chantier `onclick`)**
+  (Interviews 3.55 → 3.56, SW `statbel-v323` → `statbel-v324`) : les 10 handlers générés par
+  `js/ui/resume.js` (filtres de portée `all`/`active`, filtres de méthode `all`/CAPI/CATI/CAWI,
+  exports XLSX/PDF) et `js/ui/stats.js` (colonne d'activité quotidienne, brique d'événement de la
+  frise) passent de `onclick` à `data-act` routé par `js/core/actions.js`. La colonne d'activité
+  réutilise son `data-iso` existant (déjà lu ailleurs pour le cumul de progression) : l'action
+  `filtrerActiviteJour` lit désormais `data-iso` **ou** `data-jour`. Actions enregistrées dans
+  `js/app.js`. Aucun changement de comportement visible ; pont `window` inchangé. Nouveau test
+  `tests/resume-delegation.test.js`. Après ce lot, seul `js/ui/contacts.js` (lot 5) reste à migrer
+  avant le durcissement CSP.
 - **Interviews — délégation d'événements des vues Carte / Suivi / Import (lot 3 du chantier
   `onclick`)** (Interviews 3.54 → 3.55, SW `statbel-v322` → `statbel-v323`) : les 12 derniers
   handlers inline de `index.html` (import CSV, bouton recentrer la carte, recherche RDV, modale

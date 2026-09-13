@@ -446,22 +446,22 @@ export function renduResume() {
         <div>
           <div class="resume-title">${t('res_title')} — ${labelNbEnquetes(nomEnquetes.length)}</div>
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <button class="resume-scope-btn${resumeScope === 'all' ? ' actif' : ''}" onclick="setResumeScope('all')">🗂️ ${t('res_scope_all')} (${toutesEnq.length})</button>
-            <button class="resume-scope-btn${resumeScope === 'active' ? ' actif' : ''}" onclick="setResumeScope('active')"${!enqueteActive ? ' disabled' : ''}>📋 ${enqueteActive ? esc(enqueteActive) : t('res_scope_active')}</button>
+            <button class="resume-scope-btn${resumeScope === 'all' ? ' actif' : ''}" data-act="setResumeScope" data-scope="all">🗂️ ${t('res_scope_all')} (${toutesEnq.length})</button>
+            <button class="resume-scope-btn${resumeScope === 'active' ? ' actif' : ''}" data-act="setResumeScope" data-scope="active"${!enqueteActive ? ' disabled' : ''}>📋 ${enqueteActive ? esc(enqueteActive) : t('res_scope_active')}</button>
           </div>
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap" role="group" aria-label="${esc(t('res_meth_all'))}">
-            <button class="resume-scope-btn${resumeMethode === 'all' ? ' actif' : ''}" onclick="setResumeMethode('all')">${t('res_meth_all')} (${methCounts.all})</button>
-            <button class="resume-scope-btn${resumeMethode === 'capi' ? ' actif' : ''}" onclick="setResumeMethode('capi')"${methCounts.capi ? '' : ' disabled'}>🏠 CAPI (${methCounts.capi})</button>
-            <button class="resume-scope-btn${resumeMethode === 'cati' ? ' actif' : ''}" onclick="setResumeMethode('cati')"${methCounts.cati ? '' : ' disabled'}>📞 CATI (${methCounts.cati})</button>
-            <button class="resume-scope-btn${resumeMethode === 'cawi' ? ' actif' : ''}" onclick="setResumeMethode('cawi')"${methCounts.cawi ? '' : ' disabled'}>🌐 CAWI (${methCounts.cawi})</button>
+            <button class="resume-scope-btn${resumeMethode === 'all' ? ' actif' : ''}" data-act="setResumeMethode" data-meth="all">${t('res_meth_all')} (${methCounts.all})</button>
+            <button class="resume-scope-btn${resumeMethode === 'capi' ? ' actif' : ''}" data-act="setResumeMethode" data-meth="capi"${methCounts.capi ? '' : ' disabled'}>🏠 CAPI (${methCounts.capi})</button>
+            <button class="resume-scope-btn${resumeMethode === 'cati' ? ' actif' : ''}" data-act="setResumeMethode" data-meth="cati"${methCounts.cati ? '' : ' disabled'}>📞 CATI (${methCounts.cati})</button>
+            <button class="resume-scope-btn${resumeMethode === 'cawi' ? ' actif' : ''}" data-act="setResumeMethode" data-meth="cawi"${methCounts.cawi ? '' : ' disabled'}>🌐 CAWI (${methCounts.cawi})</button>
           </div>
           <div style="font-size:11px;color:var(--text3);margin-top:4px">
             ${t('res_updated')} ${new Date().toLocaleTimeString(localeApp(), {hour:'2-digit',minute:'2-digit'})}
           </div>
         </div>
         <div class="resume-export-bar">
-          <button class="btn-export btn-export-xlsx" onclick="exporterResumeXLSX()">${t('btn_xlsx')}</button>
-          <button class="btn-export btn-export-pdf"  onclick="exporterResumePDF()">${t('btn_pdf')}</button>
+          <button class="btn-export btn-export-xlsx" data-act="exporterResumeXLSX">${t('btn_xlsx')}</button>
+          <button class="btn-export btn-export-pdf"  data-act="exporterResumePDF">${t('btn_pdf')}</button>
         </div>
       </div>
       <div class="resume-print-header" style="margin-top:8px;font-size:11px;color:#666;">

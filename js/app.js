@@ -93,7 +93,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.55';
+const APP_VERSION = '3.56';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1058,11 +1058,23 @@ function enregistrerActionsVues() {
     ouvrirFicheDepuisCarte: el => ouvrirFicheDepuisCarte(+el.dataset.idx),
     // Suivi (RDV)
     filtrerRdv:           el => filtrerRdv(el.dataset.label),
-    filtrerActiviteJour:  el => filtrerActiviteJour(el.dataset.jour),
+    filtrerActiviteJour:  el => filtrerActiviteJour(el.dataset.iso ?? el.dataset.jour), // badge RDV → data-jour ; colonne d'activité → data-iso (déjà lu ailleurs)
     // Import
     fermerModal:     () => fermerModal(),
     confirmerImport: () => confirmerImport(),
     toggleCompare:   el => document.getElementById(el.dataset.target).classList.toggle('hidden'),
+  });
+}
+
+// Actions déléguées de la vue Résumé (lot 4 du chantier onclick) : filtres de
+// portée/méthode, exports XLSX/PDF, briques d'événements de la frise.
+function enregistrerActionsResume() {
+  registerActions('click', {
+    setResumeScope:    el => setResumeScope(el.dataset.scope),
+    setResumeMethode:  el => setResumeMethode(el.dataset.meth),
+    exporterResumeXLSX: () => exporterResumeXLSX(),
+    exporterResumePDF:  () => exporterResumePDF(),
+    ouvrirFicheEvtIdx:  el => ouvrirFicheEvtIdx(+el.dataset.idx),
   });
 }
 
@@ -1075,6 +1087,7 @@ async function init() {
   enregistrerActionsReglages();
   enregistrerActionsChrome();
   enregistrerActionsVues();
+  enregistrerActionsResume();
 
   // Persistance du stockage : demande au navigateur de ne pas purger IndexedDB/
   // localStorage (sinon iOS/Safari peut tout effacer après 7 jours d'inactivité,

@@ -119,7 +119,7 @@ export function renderActiviteQuotidienne(enqFilter, statutFilter) {
     }).join('');
     const [y, m, dd] = iso.split('-');
     const sel = (_activiteJour === iso) ? ' activite-col-sel' : (_activiteJour ? ' activite-col-dim' : '');
-    return `<div class="activite-col${sel}" data-iso="${iso}" title="${dd}/${m}/${y} — ${tot} ${tPlural('res_visits', tot)}" onclick="filtrerActiviteJour('${iso}')">
+    return `<div class="activite-col${sel}" data-iso="${iso}" title="${dd}/${m}/${y} — ${tot} ${tPlural('res_visits', tot)}" data-act="filtrerActiviteJour">
       <div class="activite-bars">${segs}</div>
       <div class="activite-lbl">${dd}/${m}</div>
     </div>`;
@@ -316,7 +316,7 @@ export function renderEvenementsChrono(enqFilter, modeRdv, statutFilter, searchF
       // Événement RDV : libellé « 📅 RDV » ; sinon icône + statut
       const statutCell = e.isRdv ? `📅 ${esc(t('rdv_label'))}` : `${esc(d.icon)} ${esc(statutLabel(e.statut))}`;
       const col = e.isRdv ? '#1565c0' : d.color;
-      return `<div class="evt-brique" onclick="ouvrirFicheEvtIdx(${i})">
+      return `<div class="evt-brique" data-act="ouvrirFicheEvtIdx" data-idx="${i}">
         <span class="eb-date">${esc(dateLabel)}</span>
         <span class="eb-statut" style="color:${col}">${statutCell}</span>
         <span class="eb-nom">${esc(e.prenom)} ${esc(e.nom)}</span>
