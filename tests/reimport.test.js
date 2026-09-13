@@ -31,6 +31,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(m.restants().length === 1, 'l\'ancien non apparié reste dans restants');
   }
 
+  // ── même ordre + même adresse, mais identité divergente → incertain ─
+  // L'adresse commune ne doit pas transférer le suivi à un autre référent.
+  {
+    const m = apparieurAnciens([{ ordre: '3', nom: 'Ancien', prenom: 'Alice', birth_date: '1980-01-01', adresse: 'Rue Commune 1' }]);
+    const r = m({ ordre: '3', nom: 'Nouveau', prenom: 'Bob', birth_date: '1990-02-02', adresse: 'Rue Commune 1' });
+    A(r === null, 'ordre+adresse concordants mais identité divergente → non apparié');
+    A(m.incertains().length === 1, 'changement de référent à la même adresse signalé comme incertain');
+  }
+
   // ── priorité 2 : nom + prénom + date de naissance (adresse changée) ──
   {
     const m = apparieurAnciens([{ nom: 'Neyt', prenom: 'Carla', birth_date: '1975-03-03', adresse: 'Rue C 3' }]);
