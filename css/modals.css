@@ -248,6 +248,7 @@
   .lock-key:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .lock-key:active { background: rgba(255,255,255,0.3); }
   .lock-key.empty { visibility: hidden; cursor: default; }
+  .lock-keypad.disabled { opacity: 0.4; pointer-events: none; }  /* temporisation : saisie gelée */
   .lock-error-msg {
     font-size: 13px; color: #ff8a80; min-height: 18px; text-align: center;
   }
