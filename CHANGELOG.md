@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Corrigé
+- **Interviews — cohérence HTML/JS du Service Worker (navigation cache-first)** (Interviews
+  3.56 → 3.57, SW `statbel-v324` → `statbel-v325`) : le SW servait `index.html` **frais (réseau)**
+  alors que les scripts restaient servis **« cache d'abord »**. Pendant la fenêtre de mise à jour
+  (nouveau SW « en attente »), un `index.html` neuf pouvait donc être servi avec un `app.js` encore
+  périmé → **HTML et JS désynchronisés**. Depuis la migration `onclick`→`data-act`, ce décalage
+  devenait visible : les boutons portaient `data-act` mais l'ancien `app.js` n'enregistrait aucune
+  action → **interface figée** (onglets sans effet). La navigation est désormais **cache-first** :
+  HTML et scripts proviennent toujours de la même version du cache. Le popup « Mise à jour
+  disponible » reste servi (il vit dans l'`index.html` en cache, présent dans toutes les versions)
+  et le cycle SW (nouveau cache → « Poser » → `SKIP_WAITING` → `activate`/`claim` → reload) fait
+  basculer HTML **et** scripts **atomiquement** vers la nouvelle version.
+
 ### Modifié
 - **Interviews — délégation d'événements de la vue Résumé (lot 4 du chantier `onclick`)**
   (Interviews 3.55 → 3.56, SW `statbel-v323` → `statbel-v324`) : les 10 handlers générés par
