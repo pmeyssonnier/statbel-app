@@ -13,6 +13,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Interviews — R4 : moteur de réimport pur** (Interviews 3.46 → 3.47, SW `statbel-v314` →
+  `statbel-v315`) : le cœur métier de l'appariement/diff du réimport quitte `js/features/import.js`
+  pour un module **pur** `js/data/reimport.js` — `apparieurAnciens` (appariement hiérarchique qui
+  préserve l'historique/statut/RDV), `diffHistorique`, `_diffContacts`, `_contactKey`. Ces fonctions
+  ne lisent **aucun** état applicatif (`enquetes`, `settings`, `enqueteActive`), ni DOM, ni stockage,
+  ni i18n → testables sans navigateur. `import.js` conserve l'orchestration (modale, aperçu,
+  confirmation) et la validation de cohérence (`valeurIncoherente`/`recordEnErreur`/`raisonsErreur`,
+  liées au vocabulaire de statuts actif + i18n — hors périmètre R4) ; il consomme le moteur.
+  `features/backup.js` importe désormais `apparieurAnciens` depuis `data/reimport.js`. Nouveau test
+  **pur** (sans navigateur) `tests/reimport.test.js` couvrant les 4 priorités d'appariement, les
+  incertains, et les diffs. Refactor sans changement de comportement visible.
 - **Interviews — R3 : logique des statuts dans un module pur** (Interviews 3.45 → 3.46,
   SW `statbel-v313` → `statbel-v314`) : le modèle par défaut (`STATUTS_DEFAULTS`, `STATUT_COULEURS`,
   `cloneStatuts`) et la **résolution du vocabulaire par enquête** quittent `js/app.js` pour

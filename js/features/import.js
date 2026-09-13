@@ -1,12 +1,14 @@
 /*
  * js/features/import.js — Import de fichiers (CSV/XLSX) et appariement/comparaison.
  * Lecture + parsing, modale de nommage, aperçu et comparaison avec l'existant
- * (ajouts/suppressions/modifs), confirmation. Inclut l'appariement hiérarchique
- * des anciens contacts (préservation de l'historique) et la construction du HTML
- * de comparaison, partagés avec la restauration de sauvegarde. Extrait de app.js.
+ * (ajouts/suppressions/modifs), confirmation, et la construction du HTML de
+ * comparaison, partagée avec la restauration de sauvegarde. Le moteur PUR
+ * d'appariement/diff (préservation de l'historique) vit dans data/reimport.js.
+ * Extrait de app.js.
  *
  * Imports : parseCSV (csv) ; esc, jourValide (util) ; t/tf/tPlural/champLabel
- * (i18n) ; statutLabel, PAYS_I18N (canon) ; saveCoords (idb). Le reste
+ * (i18n) ; statutLabel, PAYS_I18N (canon) ; saveCoords (idb) ; apparieurAnciens,
+ * diffHistorique, _diffContacts (data/reimport). Le reste
  * (enquetes, statutDefs, statutDefaut, renderNonTraduits, renderCoherence,
  * refreshSelect, rendu, XLSX) est global (pont).
  */
@@ -15,6 +17,7 @@ import { esc, jourValide } from '../core/util.js';
 import { t, tf, tPlural, champLabel } from '../core/i18n.js';
 import { statutLabel, PAYS_I18N } from '../data/canon.js';
 import { saveCoords } from '../data/idb.js';
+import { apparieurAnciens, diffHistorique, _diffContacts } from '../data/reimport.js';
 
 
 
@@ -233,91 +236,9 @@ export function fermerModal() {
 }
 
 // ── Comparaison données existantes vs fichier à restaurer ──────────────
-// Identifie un contact par une clé stable : ordre + nom + prénom (fallback adresse)
-export function _contactKey(c) {
-  const ordre  = (c.ordre || '').toString().trim();
-  const nom    = (c.nom || '').toString().trim().toLowerCase();
-  const prenom = (c.prenom || '').toString().trim().toLowerCase();
-  if (ordre || nom || prenom) return `${ordre}|${nom}|${prenom}`;
-  return `adr:${(c.adresse || '').toString().trim().toLowerCase()}`;
-}
-
-// Appariement hiérarchique d'un nouveau contact avec un ancien, pour préserver
-// le suivi (historique / statut / date / RDV) même si le nom/prénom a été
-// corrigé, l'ordre changé, etc. Priorité :
-//   1. numéro d'ordre (s'il existe et est UNIQUE côté ancien)
-//   2. nom + prénom + date de naissance
-//   3. nom + prénom + adresse normalisée
-//   4. adresse seule (uniquement pour les contacts sans ordre ni nom ni prénom)
-//   sinon → nouveau contact
-// Chaque ancien contact ne peut être apparié qu'une seule fois.
-// Retourne une fonction match(neu) → ancien|null, dotée de .restants().
-export function apparieurAnciens(oldArr) {
-  const used = new Set();
-  const incertains = [];   // { neu, old } : n° d'ordre concordant mais identité divergente
-  const norm    = s => (s == null ? '' : String(s)).trim().toLowerCase();
-  const normAdr = s => norm(s).replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim();
-  const byOrdre = new Map(), byNPB = new Map(), byNPA = new Map(), byAdr = new Map();
-  const add = (m, k, c) => { if (!k) return; const l = m.get(k); if (l) l.push(c); else m.set(k, [c]); };
-  (oldArr || []).forEach(c => {
-    const ord = norm(c.ordre), nom = norm(c.nom), pre = norm(c.prenom);
-    add(byOrdre, ord, c);
-    if (nom || pre) {
-      const np = nom + '' + pre;
-      add(byNPB, np + '' + norm(c.birth_date), c);   // clé nulle ignorée par add() si naissance vide
-      add(byNPA, np + '' + normAdr(c.adresse), c);
-    } else {
-      add(byAdr, normAdr(c.adresse), c);                   // ni ordre ni identité → adresse seule
-    }
-  });
-  const firstFree = l => { if (l) for (const c of l) if (!used.has(c)) return c; return null; };
-  const take = c => { if (c) used.add(c); return c; };
-  // Signal de cohérence d'un champ : +1 concordant, -1 conflit, 0 indeterminé (vide d'un côté).
-  const sig = (a, b, f = norm) => { const x = f(a), y = f(b); if (!x || !y) return 0; return x === y ? 1 : -1; };
-  const match = function (neu) {
-    const ord = norm(neu.ordre), nom = norm(neu.nom), pre = norm(neu.prenom);
-    if (ord) {
-      const l = byOrdre.get(ord);
-      if (l && l.length === 1 && !used.has(l[0])) {
-        const o = l[0];
-        // Le n° d'ordre seul ne suffit plus : on exige qu'AU MOINS un autre identifiant
-        // concorde (nom, prénom, naissance ou adresse). Si l'ordre concorde mais que tout
-        // le reste diffère (n° peut-être réutilisé pour une autre personne), on N'apparie
-        // PAS -> pas de transfert de suivi ; on signale pour validation humaine.
-        const signaux = [sig(o.nom, neu.nom), sig(o.prenom, neu.prenom),
-                         sig(o.birth_date, neu.birth_date), sig(o.adresse, neu.adresse, normAdr)];
-        const positifs = signaux.filter(s => s > 0).length;
-        const conflits = signaux.filter(s => s < 0).length;
-        if (positifs >= 1 || conflits === 0) return take(o);
-        incertains.push({ neu, old: o });
-      }
-    }
-    if (nom || pre) {
-      const np = nom + '' + pre;
-      const bd = norm(neu.birth_date);
-      let c = bd ? firstFree(byNPB.get(np + '' + bd)) : null;
-      if (c) return take(c);
-      c = firstFree(byNPA.get(np + '' + normAdr(neu.adresse)));
-      if (c) return take(c);
-    } else {
-      const c = firstFree(byAdr.get(normAdr(neu.adresse)));
-      if (c) return take(c);
-    }
-    return null;
-  };
-  match.restants = () => (oldArr || []).filter(c => !used.has(c));
-  match.incertains = () => incertains;
-  return match;
-}
-
-// Champs comparés pour détecter une "modification" (les champs purement
-// d'horodatage ou de cache ne sont pas pris en compte)
-const _CHAMPS_COMPARES = [
-  'prenom','nom','adresse','statut','date','gsm','email','notes',
-  'sexe','birth_date','age','birth_country','nationality','marital_status',
-  'taille_menage','rdv'
-];
-
+// L'appariement/diff (apparieurAnciens, diffHistorique, _diffContacts, _contactKey)
+// vit dans le moteur PUR data/reimport.js (importé ci-dessus). Ici : la validation
+// de cohérence (liée au vocabulaire de statuts actif + i18n) et l'orchestration.
 
 export function valeurIncoherente(champ, val) {
   const v = (val == null ? '' : val).toString().trim();
@@ -331,33 +252,6 @@ export function valeurIncoherente(champ, val) {
     return !jourValide(y, m, d);
   }
   return false;
-}
-
-// Détail des changements d'historique : appariement par statut (ordre des dates),
-// retourne { mod:[{statut,avant,apres}], add:[{statut,date}], rem:[{statut,date}] }.
-export function diffHistorique(oldH, newH) {
-  const groupe = arr => {
-    const g = {};
-    (arr || []).forEach(e => { (g[e.statut] = g[e.statut] || []).push(e.date || ''); });
-    return g;
-  };
-  const go = groupe(oldH), gn = groupe(newH);
-  const statuts = [...new Set([...Object.keys(go), ...Object.keys(gn)])];
-  const res = { unch: [], mod: [], add: [], rem: [] };
-  statuts.forEach(st => {
-    const od = (go[st] || []), nd = (gn[st] || []);
-    const n = Math.max(od.length, nd.length);
-    for (let i = 0; i < n; i++) {
-      const a = od[i], b = nd[i];
-      if (a !== undefined && b !== undefined) {
-        if (a !== b) res.mod.push({ statut: st, avant: a, apres: b });
-        else res.unch.push({ statut: st, date: a });
-      }
-      else if (a !== undefined) res.rem.push({ statut: st, date: a });
-      else res.add.push({ statut: st, date: b });
-    }
-  });
-  return res;
 }
 
 // Vrai si l'enregistrement contient au moins une valeur incohérente (pays/date/sexe/statut)
@@ -379,24 +273,6 @@ export function raisonsErreur(c) {
   add('sexe',          c.sexe,          'cohr_sex');
   add('statut',        c.statut,        'cohr_status');
   return r;
-}
-
-export function _diffContacts(a, b) {
-  const diffs = [];
-  _CHAMPS_COMPARES.forEach(champ => {
-    const va = (a[champ] ?? '').toString();
-    const vb = (b[champ] ?? '').toString();
-    if (va !== vb) diffs.push({ champ, avant: va, apres: vb });
-  });
-  // Historique : signaler tout changement (perte/modification d'entrées)
-  const sig = h => (Array.isArray(h) ? h : []).map(e => `${e.statut}@${e.date}${e.rdv ? '/' + e.rdv : ''}`).join('|');
-  const sa = sig(a.historique), sb = sig(b.historique);
-  if (sa !== sb) diffs.push({
-    champ: 'historique',
-    avant: `${(a.historique || []).length}`,
-    apres: `${(b.historique || []).length}`,
-  });
-  return diffs;
 }
 
 // Construit le HTML de comparaison entre les enquêtes existantes (enquetes)
