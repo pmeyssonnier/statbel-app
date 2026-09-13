@@ -13,6 +13,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Interviews — routeur de délégation d'événements (lot 0 du chantier `onclick`)** (Interviews
+  3.51 → 3.52, SW `statbel-v319` → `statbel-v320`) : nouveau module **`js/core/actions.js`**
+  (`registerActions`, `installerDelegation`, dispatch pur `_dispatch`) posant un écouteur unique par
+  type d'événement (`click`/`change`/`input`) sur `document` ; au déclenchement, il remonte au plus
+  proche élément `data-act` et appelle l'action enregistrée. Installé dans `init()`, il **coexiste**
+  avec les `onclick` inline restants (aucun handler migré à ce stade). Infrastructure du chantier de
+  suppression des scripts inline (voir `docs/chantier-delegation-onclick.md`) qui permettra, en fin
+  de parcours, d'alléger le pont `window` et de retirer `'unsafe-inline'` de la CSP. Test **pur**
+  `tests/actions.test.js` (dispatch, séparation par type, action inconnue ignorée, fusion des
+  enregistrements). Aucun changement de comportement visible.
 - **Interviews — temporisation anti-essais du code PIN** (Interviews 3.50 → 3.51,
   SW `statbel-v318` → `statbel-v319`) : après **3 échecs consécutifs**, la saisie du PIN est
   **gelée** un court instant, croissant à chaque nouvel échec (30 s → 1 min → 2 min → 5 min).
