@@ -148,8 +148,14 @@ export async function charger() {
 
 /** Cache de coordonnées — localStorage (accès synchrone requis dans le rendu) */
 export function coordsCache(adresse) {
-  const raw = localStorage.getItem('coords_' + adresseSansBoite(adresse));
-  return raw ? JSON.parse(raw) : null;
+  const cle = 'coords_' + adresseSansBoite(adresse);
+  const raw = localStorage.getItem(cle);
+  if (!raw) return null;
+  // Garde : une valeur corrompue (JSON invalide) ne doit pas faire planter le
+  // rendu carte/fiches NI l'export CSV (coordsCache y est appelé en chemin chaud).
+  // On purge la clé fautive → l'adresse sera simplement re-géocodée proprement.
+  try { return JSON.parse(raw); }
+  catch (e) { localStorage.removeItem(cle); return null; }
 }
 export function saveCoords(adresse, lat, lng) {
   localStorage.setItem('coords_' + adresseSansBoite(adresse), JSON.stringify({ lat, lng }));

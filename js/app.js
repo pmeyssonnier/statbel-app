@@ -71,7 +71,7 @@ import {
   sauver, charger, coordsCache, saveCoords,
 } from './data/idb.js';
 import {
-  parseCSVRows, parseCSV, splitLine, csvCell,
+  parseCSVRows, parseCSV, csvCell,
   sepRegionalAuto, sepCSVexport, genererCSV,
 } from './data/csv.js';
 import {
@@ -92,7 +92,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.49';
+const APP_VERSION = '3.50';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1022,7 +1022,7 @@ Object.assign(window, {
   calcAge, maritalCanon, etatCivilGenre, paysNom, normaliserPays, paysAffiche,
   detecterNonTraduits, renderNonTraduits, detecterIncoherences, renderCoherence,
   statutCanon, statutLabel, ligneDemographie, toggleEdit, ouvrirEdit, buildEditForm,
-  sauverEdit, filtrer, champLabel, parseCSVRows, parseCSV, splitLine, importerFichier,
+  sauverEdit, filtrer, champLabel, parseCSVRows, parseCSV, importerFichier,
   ouvrirModalImport, preparerImport, renderExclus, majComparaisonImport,
   renderImportApercu, confirmerImport, fermerModal, csvGuard, csvDeguard, csvCell,
   sepRegionalAuto, sepCSVexport, genererCSV, exporterCSV, exporterVCard, renderFilters,

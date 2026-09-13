@@ -12,6 +12,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Corrigé
+- **Interviews — robustesse `coordsCache` + nettoyage code mort** (Interviews 3.49 → 3.50,
+  SW `statbel-v317` → `statbel-v318`) : `coordsCache()` (`js/data/idb.js`) protège désormais son
+  `JSON.parse` — une valeur de cache corrompue ne peut plus interrompre le rendu (carte, fiches)
+  ni l'export CSV (chemins chauds où la fonction est appelée) ; la clé fautive est **auto-purgée**
+  et l'adresse sera simplement re-géocodée. Suppression de `splitLine()` mort dans
+  `js/data/csv.js` (le vrai parseur robuste est `parseCSVRows` ; le Convertisseur garde sa propre
+  copie autonome) et de son pont `window` dans `js/app.js`. Nouvelles assertions dans
+  `tests/robustesse.test.js` (JSON corrompu non fatal + auto-purge de la clé).
+
 ### Modifié
 - **Interviews — R7 : sérialisation backup dans un module pur** (Interviews 3.47 → 3.48,
   SW `statbel-v315` → `statbel-v316`) : la conversion modèle interne (FR) ↔ pivot anglais

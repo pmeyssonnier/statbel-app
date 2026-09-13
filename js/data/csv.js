@@ -169,17 +169,6 @@ export function parseCSV(text) {
   return { rows, coords: coordsAImporter, stats: { lues: bodyRows.length, importees: rows.length, rejetees, motifs, rejets, reconnues, nonReconnues } };
 }
 
-export function splitLine(line, sep) {
-  const result = []; let cur='', inQ=false;
-  for (const c of line) {
-    if (c==='"') inQ=!inQ;
-    else if (c===sep && !inQ) { result.push(cur.trim()); cur=''; }
-    else cur+=c;
-  }
-  result.push(cur.trim());
-  return result;
-}
-
 export function csvCell(v) {
   const str = csvGuard((v||'').toString().trim());
   const escaped = str.replace(/"/g,'""');
