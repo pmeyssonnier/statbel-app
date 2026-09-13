@@ -3,9 +3,10 @@
  *
  *   1. Import d'un CSV « cibles » CAWI (avec TX_WEB_USER_ID / TX_WEB_USER_PSWRD) :
  *      - les identifiants web sont reconnus et stockés (web_user_id / web_user_pwd) ;
- *      - construireRappel(c,'mail') → href mailto: dont le corps contient le lien
- *        configuré (settings.cawiUrl), l'identifiant et le mot de passe ;
- *      - construireRappel(c,'sms')  → href sms: avec l'E.164 et le même corps ;
+ *      - construireRappel({contact,canal:'mail',cawiUrl}) → href mailto: dont le corps
+ *        contient le lien CAWI (passé EN PARAMÈTRE, plus lu depuis settings), l'identifiant
+ *        et le mot de passe ;
+ *      - construireRappel({…,canal:'sms'})  → href sms: avec l'E.164 et le même corps ;
  *      - buildEditForm émet les deux boutons de rappel (e-mail + SMS) ;
  *      - round-trip : genererCSV ré-émet TX_WEB_USER_ID / TX_WEB_USER_PSWRD.
  *   2. Import CATI (méthode téléphonique) : le corps est un rappel « par téléphone »,
@@ -47,15 +48,17 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     Object.keys(enquetes).forEach(k => delete enquetes[k]);
     settings.statutsParEnquete = {};
     settings.lang = 'fr';   // message déterministe (headless = en-US sinon)
-    settings.cawiUrl = 'https://blaise.economie.fgov.be/lfspanel2026/';
+    // cawiUrl est désormais passé EXPLICITEMENT à construireRappel (la fonction pure
+    // ne lit plus settings) → on le fournit en paramètre, sans dépendre du global.
+    const CAWI_URL = 'https://blaise.economie.fgov.be/lfspanel2026/';
 
     // 1. Enquête CAWI — identifiants web présents
     importer('Lot CAWI',
       'order,first_name,last_name,address,status,CD_WSH_CLCT_MTHD,TX_WEB_USER_ID,TX_WEB_USER_PSWRD,phone,email\n' +
       '1,Alice,Martin,Rue 1,To do,CAWI,user12345,pXXssWord9,465812582,alice@example.be\n');
     const cawi = enquetes['Lot CAWI'][0];
-    const mail = construireRappel(cawi, 'mail');
-    const sms  = construireRappel(cawi, 'sms');
+    const mail = construireRappel({ contact: cawi, canal: 'mail', cawiUrl: CAWI_URL });
+    const sms  = construireRappel({ contact: cawi, canal: 'sms',  cawiUrl: CAWI_URL });
     const cawiForm = buildEditForm(0);        // enquête active = Lot CAWI
     const csvOut = genererCSV();
 
@@ -64,7 +67,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       'order,first_name,last_name,address,status,CD_WSH_CLCT_MTHD,TX_WEB_USER_ID,TX_WEB_USER_PSWRD,phone,email\n' +
       '1,Bob,Durand,Rue 2,To do,CATI,catiuser,catipwd,499112233,bob@example.be\n');
     const cati = enquetes['Lot CATI'][0];
-    const catiMail = construireRappel(cati, 'mail');
+    const catiMail = construireRappel({ contact: cati, canal: 'mail', cawiUrl: CAWI_URL });
 
     // 3. Enquête CAPI — aucune méthode
     importer('Lot CAPI',
