@@ -13,6 +13,15 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Convertisseur — Statistiques : mutualiser les drill-downs par nationalité** (Convertisseur
+  219 → 220, SW `statbel-v310` → `statbel-v311`) : les six fonctions de drill-down préexistantes
+  (tranche d'âge, sexe, statut matrimonial, taille de ménage, tranches LFS, cibles par ménage)
+  recopiaient chacune le même bloc « compter par nationalité → trier → en-tête + ✕ → treemap ».
+  Elles passent désormais toutes par le helper commun `natTreemapInto` (introduit pour la dépendance
+  et la composition), soit ~40 lignes dédupliquées et une seule logique à maintenir. **Correctif
+  i18n** au passage : le drill-down par taille de ménage affichait un titre **en dur en français**
+  (« Ménages de N membre(s) ») — il est maintenant traduit en 4 langues (`txt_households_of_size`).
+  Aucun changement de comportement visible par ailleurs.
 - **Interviews — Résumé : masquer les KPI de statuts hors méthode filtrée** (Interviews 3.42 → 3.43,
   SW `statbel-v309` → `statbel-v310`) : quand un filtre de méthode est actif (🏠 CAPI / 📞 CATI /
   🌐 CAWI), les cartes KPI des statuts sans aucun contact dans cette méthode sont désormais **masquées**
