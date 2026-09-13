@@ -62,7 +62,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.titreSansLFS = !/LFS/.test(document.querySelector('[data-block="ageLFS"] .card-titre').textContent);
     // Drill-down : clic sur la tranche 0–14 → treemap nationalités
     zoomAgeLFS('0_14');
-    out.drillTreemap = !!document.getElementById('statsAgeLFSTM')
+    out.drillTreemap = !!document.getElementById('statsAgeLFSDetail-tm')
       && document.getElementById('statsAgeLFSDetail').innerHTML.length > 0;
     // Fermeture du drill
     document.getElementById('statsAgeLFSDetail').innerHTML = '';
@@ -82,7 +82,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.chhClickable = !!document.querySelector('#statsCiblesHH .bar-row[onclick]');
     out.chhBarLabel = (document.querySelector('#statsCiblesHH .bar-lbl') || {}).textContent || '';
     zoomCibles('1');
-    out.chhDrill = !!document.getElementById('statsCiblesHHTM')
+    out.chhDrill = !!document.getElementById('statsCiblesHHDetail-tm')
       && document.getElementById('statsCiblesHHDetail').innerHTML.length > 0;
     // Ratio de dépendance : puces cliquables → treemap des nationalités de la tranche.
     // « Actifs » (15–64) = 2 personnes (FRA 40, BEL 30).
