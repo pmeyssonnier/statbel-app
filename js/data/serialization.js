@@ -10,9 +10,10 @@
  * restauration) reste dans js/features/backup.js, qui consomme ce module.
  */
 
-// Clés de champs : modèle interne (FR) ↔ pivot anglais (export/backup/CSV).
+// Clés de champs : modèle interne (FR) → pivot anglais (export/backup). Source
+// unique ; le sens inverse (KEYMAP_IN) est DÉRIVÉ pour éviter toute divergence.
 const KEYMAP_OUT = { prenom:'first_name', nom:'last_name', adresse:'address', ordre:'order', sexe:'sex', statut:'status', historique:'history', taille_menage:'household_size', gsm:'mobile_number', rdv:'appointment' };
-const KEYMAP_IN  = { first_name:'prenom', last_name:'nom', address:'adresse', order:'ordre', sex:'sexe', status:'statut', history:'historique', household_size:'taille_menage', mobile_number:'gsm', appointment:'rdv' };
+const KEYMAP_IN  = Object.fromEntries(Object.entries(KEYMAP_OUT).map(([fr, en]) => [en, fr]));
 
 // Renomme les clés d'un objet selon `map` (les clés absentes de la map sont conservées).
 export function renommerCles(c, map) { const o = {}; for (const k in c) o[map[k] || k] = c[k]; return o; }

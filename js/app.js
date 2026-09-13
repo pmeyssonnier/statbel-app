@@ -47,9 +47,6 @@ import {
   majBackupBanner, fermerBackupBanner, buildBackupDetailHTML, fermerBackupDetail,
   exporterBackup, majLastBackupInfo, majKebabBackupInfo, majComparaisonRestore, importerBackup,
 } from './features/backup.js';
-import {
-  renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
-} from './data/serialization.js';
 
 import {
   t, tf, tPlural, champLabel, localeApp, nomJourCourt, labelNbEnquetes, LANGS,
@@ -1044,7 +1041,6 @@ Object.assign(window, {
   changerProvider, regionDominante, fondEffectif, rafraichirFond, buildBackupDetailHTML,
   apparieurAnciens, jourValide, valeurIncoherente, diffHistorique,
   recordEnErreur, raisonsErreur, _diffContacts, buildCompareHTML, fermerBackupDetail,
-  renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
   exporterBackup, majLastBackupInfo, majKebabBackupInfo, majComparaisonRestore, importerBackup,
   viderCacheCoords, listerNonGeocodees, renderNonGeo, allerAFiche, renderStatutsEditor,
   rafraichirStatutsVues, modifierStatut, ajouterStatut, supprimerStatut, appliquerPresetStatuts, deduirePresetStatuts, toggleKebab,
