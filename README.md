@@ -1,20 +1,32 @@
 # Statbel — Suite d'outils enquêtes
 
-Trois applications web **sans build ni dépendance externe** (tout est vendoré), pensées
+Quatre applications web **sans build ni dépendance externe** (tout est vendoré), pensées
 pour un usage **terrain, hors-ligne**, reliées entre elles (navigation croisée dans
 l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
 
 - **Convertisseur** et **Planner** restent **mono-fichier** (un seul `.html`) : ouvrables par simple double-clic (`file://`).
 - **Interviews** est découpé en **modules ES** (voir [Architecture](#architecture-modules-es-sans-build)) : il doit être **servi en http(s)** (PWA / Pages, ou un serveur statique local) — les modules ES ne se chargent pas en `file://`.
+- **PDF → GRP** utilise un fichier HTML et un module JavaScript local ; il fonctionne hors-ligne avec les bibliothèques PDF et Excel vendorées.
 
 | App | Fichier | Rôle |
 |---|---|---|
 | 📋 **Interviews** | `index.html` | Suivi des contacts à interviewer |
 | 🔄 **Convertisseur** | `statbel_converter.html` | Convertit les exports bruts STATBEL en CSV importables |
 | 🗓️ **Statbel Planner** | `statbel_planner.html` | Agenda des vagues d'enquête + candidature enquêteur |
+| 📄 **PDF → GRP** | `statbel_pdf2grp.html` | Extrait un listing GRP PDF vers XLSX / CSV |
 
-Le **numéro de version** de la PWA est affiché dans chaque app (aligné sur le cache du
-service worker `sw.js`).
+### Versions actuelles
+
+| Composant | Version |
+|---|---:|
+| Interviews | **3.49** |
+| Convertisseur | **220** |
+| Planner | **194** |
+| Cache PWA / service worker | **statbel-v317** |
+
+Le numéro de version est affiché dans Interviews, le Convertisseur et le Planner. Le
+cache versionné du service worker est incrémenté à chaque mise à jour livrée afin de
+forcer le rafraîchissement des fichiers hors-ligne.
 
 📘 **[Manuel d'utilisation illustré](docs/manuel.html)** (`docs/manuel.html`) — présentation de chaque
 module avec captures d'écran ; fichier HTML autonome, ouvrable hors-ligne par double-clic.
@@ -46,8 +58,9 @@ Suivi des contacts à interviewer dans le cadre des enquêtes Statbel.
 - **Aperçu d'import** : lignes lues / à importer / rejetées (motifs), colonnes reconnues/ignorées (dont la **méthode de collecte** et les **identifiants d'accès web**, conservés à l'export — round-trip).
 - **Contrôles de cohérence** (code pays, date de naissance, sexe, statut) ; valeurs incohérentes **barrées en rouge**.
 - **Correction automatique des codes pays** : ISO-2 → ISO-3 et alias fréquents.
-- **Comparaison avant écrasement** : ajouts / modifications / suppressions / inchangés, avec détail des changements d'historique.
-- **Préservation du suivi** à la réimportation ; option **« N'importer que les enregistrements corrects »**.
+- **Comparaison avant écrasement** : ajouts / modifications / suppressions / inchangés, y compris le nombre de cibles, la méthode de collecte, les identifiants CATI/CAWI et le détail des changements d'historique (date, heure, statut et RDV).
+- **Préservation du suivi** à la réimportation grâce à un appariement hiérarchique. Une concordance d'ordre et d'adresse n'est pas acceptée automatiquement si l'identité diffère ; le cas reste incertain afin d'éviter d'attribuer l'historique à la mauvaise personne.
+- Option **« N'importer que les enregistrements corrects »**.
 - Export **CSV** (séparateur configurable), **vCard** par contact, **sauvegarde/restauration JSON** complète.
 
 ### Données dérivées
@@ -60,14 +73,14 @@ Suivi des contacts à interviewer dans le cadre des enquêtes Statbel.
 ### Architecture (modules ES, sans build)
 
 `index.html` charge `js/app.js` comme **module ES** (`<script type="module">`), qui orchestre
-**16 modules**. Aucun bundler : les fichiers sont servis tels quels et pré-cachés par le
+**21 modules**. Aucun bundler : les fichiers sont servis tels quels et pré-cachés par le
 service worker.
 
 | Dossier | Modules |
 |---|---|
 | `js/core/` | **util** (helpers purs) · **i18n** (dictionnaire FR/NL/EN/DE + `t()`) |
-| `js/data/` | **idb** (persistance IndexedDB + localStorage) · **csv** (import/export CSV) · **canon** (canonicalisation pays / état civil / statuts + libellés) |
-| `js/features/` | **geocoding** (fournisseurs carte/géocodage régionaux) · **history** (historique des visites) · **import** (CSV/XLSX + appariement/comparaison) · **backup** (sauvegarde/restauration JSON) |
+| `js/data/` | **idb** (persistance IndexedDB + localStorage) · **csv** (import/export CSV) · **canon** (canonicalisation pays / état civil) · **collect-method** (classification CAPI/CATI/CAWI) · **statuses** (modèle et résolution des statuts) · **reimport** (appariement et différences) · **serialization** (conversion du modèle de sauvegarde) |
+| `js/features/` | **geocoding** (fournisseurs carte/géocodage régionaux) · **history** (historique des visites) · **import** (orchestration CSV/XLSX et aperçu) · **backup** (orchestration sauvegarde/restauration JSON) · **reminders** (messages de rappel CATI/CAWI) |
 | `js/ui/` | **pin** (verrouillage) · **stats** (graphes & journal) · **settings** (réglages + éditeur de statuts) · **map** (carte Leaflet) · **contacts** (liste & fiche) · **rdv** (vue Suivi) · **resume** (vue Résumé) |
 
 - **`js/app.js`** — orchestration : état, accesseurs, gestion des enquêtes, `setView`, thème/langue, cache géo, `init`.
@@ -79,14 +92,25 @@ dans `app.js`.
 
 ### Tests
 
-`tests/` — tests **headless** (`playwright-core`, servis via un petit serveur http local
-`tests/_serve.js`) : non-régression sur l'**intégrité des données**, la **robustesse** (CSV,
-dates, cache), le **confort**, la **sauvegarde**, la **CSP**, le **PIN**, la **vue contacts**
-et le **Planner** (consommation des plannings du Convertisseur, agrégation « Tout », libellés province).
+`tests/` — tests **headless** avec **Playwright** et Chromium, servis via un petit
+serveur HTTP local (`tests/_serve.js`). Ils couvrent notamment l'**intégrité des données**,
+la **robustesse** (CSV, dates, cache), le **réimport**, la **sérialisation**, les
+**statuts**, les **rappels**, la **sauvegarde**, la **CSP**, le **PIN**, la vue contacts
+et le **Planner**.
 
+```bash
+npm install
+npm test
 ```
-CHROMIUM_PATH=/chemin/vers/chrome node tests/data-integrity.test.js
+
+Pour exécuter une seule suite :
+
+```bash
+npm run test:one -- tests/data-integrity.test.js
 ```
+
+Le script `pretest` installe Chromium via Playwright. La variable `CHROMIUM_PATH`
+reste disponible comme solution de repli vers un binaire Chrome/Chromium existant.
 
 ---
 
@@ -132,6 +156,20 @@ XML tokenisé, ZIP + CRC32) :
 
 ---
 
+## 📄 PDF → GRP (`statbel_pdf2grp.html`)
+
+Extrait localement les personnes et ménages d'un listing GRP au format PDF, sans
+transmettre le document à un serveur.
+
+- Glisser-déposer ou sélection au clavier d'un fichier `GRP_2026…pdf`.
+- Export au format Statbel à **30 colonnes**, en **XLSX** ou **CSV**.
+- Aperçu des 25 premières lignes et compte des ménages/personnes extraits.
+- Signalement des nationalités ou états civils sans code de correspondance.
+- Les champs de date et de commune de naissance restent vides lorsqu'ils sont absents du PDF.
+- Traitement hors-ligne avec PDF.js et SheetJS vendorés.
+
+---
+
 ## Confidentialité (RGPD)
 
 - Toutes les données restent **dans le navigateur** (IndexedDB / localStorage) — **aucun serveur, aucune analytics**. Les seules sorties de données sont les deux actions ci-dessous, **déclenchées par vous**.
@@ -140,7 +178,7 @@ XML tokenisé, ZIP + CRC32) :
 - ⚠️ **Aucune donnée personnelle n'est versionnée** : `.gitignore` en **liste blanche stricte**
   (seuls le code des apps — HTML, `css/`, `js/`, `vendor/`, `tests/` —, les fichiers PWA,
   `README.md` et `.gitignore`). Les CSV / JSON / vCard / xlsx d'enquêtés sont exclus.
-- **CSP** (Content-Security-Policy) sur les trois pages : sources verrouillées sur l'origine,
+- **CSP** (Content-Security-Policy) sur les quatre pages : sources verrouillées sur l'origine,
   connexions réseau limitées aux seuls géocodeurs régionaux (aucun script/style externe — tout est vendoré).
 
 ## Déploiement
