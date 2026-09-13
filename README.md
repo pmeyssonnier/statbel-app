@@ -68,7 +68,8 @@ Suivi des contacts à interviewer dans le cadre des enquêtes Statbel.
 
 ### Interface
 - **Multilingue FR / NL / EN / DE** (pivot interne = anglais ; détection au 1er lancement).
-- **Apparence** : police, taille du texte, thème. **Verrouillage par code PIN** (optionnel).
+- **Apparence** : police, taille du texte, thème. **Verrouillage par code PIN** (optionnel), avec
+  **déverrouillage par empreinte / Face ID** en option (WebAuthn, hors-ligne ; le PIN reste le repli).
 
 ### Architecture (modules ES, sans build)
 
@@ -81,7 +82,7 @@ service worker.
 | `js/core/` | **util** (helpers purs) · **i18n** (dictionnaire FR/NL/EN/DE + `t()`) |
 | `js/data/` | **idb** (persistance IndexedDB + localStorage) · **csv** (import/export CSV) · **canon** (canonicalisation pays / état civil) · **collect-method** (classification CAPI/CATI/CAWI) · **statuses** (modèle et résolution des statuts) · **reimport** (appariement et différences) · **serialization** (conversion du modèle de sauvegarde) |
 | `js/features/` | **geocoding** (fournisseurs carte/géocodage régionaux) · **history** (historique des visites) · **import** (orchestration CSV/XLSX et aperçu) · **backup** (orchestration sauvegarde/restauration JSON) · **reminders** (messages de rappel CATI/CAWI) |
-| `js/ui/` | **pin** (verrouillage) · **stats** (graphes & journal) · **settings** (réglages + éditeur de statuts) · **map** (carte Leaflet) · **contacts** (liste & fiche) · **rdv** (vue Suivi) · **resume** (vue Résumé) |
+| `js/ui/` | **pin** (verrouillage) · **biometrie** (déverrouillage empreinte / Face ID, WebAuthn) · **stats** (graphes & journal) · **settings** (réglages + éditeur de statuts) · **map** (carte Leaflet) · **contacts** (liste & fiche) · **rdv** (vue Suivi) · **resume** (vue Résumé) |
 
 - **`js/app.js`** — orchestration : état, accesseurs, gestion des enquêtes, `setView`, thème/langue, cache géo, `init`.
 - **`css/`** — styles (`base`, `summary`, `modals`, `mobile`) · **`vendor/`** — Leaflet + SheetJS vendorés (aucun CDN).
