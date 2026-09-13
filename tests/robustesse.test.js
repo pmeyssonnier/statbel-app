@@ -55,6 +55,15 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     out.parse_returns_coords = Array.isArray(parsed2.coords) && parsed2.coords.length === 1;
     out.parse_no_cache = !coordsCache('Rue Y');
 
+    // #11bis — une valeur de cache corrompue (JSON invalide) ne fait pas planter
+    // coordsCache (chemin chaud : rendu + export) et la clé fautive est auto-purgée
+    const cleCorr = 'coords_' + adresseSansBoite('Rue Corrompue 1');
+    localStorage.setItem(cleCorr, '{ pas du json');
+    let threw = false, val;
+    try { val = coordsCache('Rue Corrompue 1'); } catch (e) { threw = true; }
+    out.corrupt_no_throw = !threw && val === null;
+    out.corrupt_selfheal = localStorage.getItem(cleCorr) === null;
+
     // #8 — indicateur de sauvegarde
     await sauver();
     await new Promise(res => setTimeout(res, 150));
@@ -76,6 +85,8 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['#10 formule neutralisée à l’export', r.excel_neutralized === true],
     ['#11 parse retourne les coords',    r.parse_returns_coords === true],
     ['#11 parse n’écrit pas le cache',   r.parse_no_cache === true],
+    ['#11 coordsCache résiste au JSON corrompu', r.corrupt_no_throw === true],
+    ['#11 clé corrompue auto-purgée',    r.corrupt_selfheal === true],
     ['#8  indicateur ✓ après sauvegarde', r.saveState === '✓'],
   ];
   let ok = true;
