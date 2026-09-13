@@ -13,9 +13,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Convertisseur — garde-fou : enquête mémorisée avec identifiants en notation scientifique**
+  (Convertisseur `221` → `222`, SW `statbel-v329` → `statbel-v330`) : le correctif `cellTexte`
+  (v216) ne répare les ID numériques longs qu'à l'**import**. Une enquête importée avant, restaurée
+  depuis IndexedDB au démarrage, garde ses identifiants cassés (`2.02612E+11`) → re-télécharger son
+  CSV ressort des logins CAWI inutilisables. `afficher()` détecte désormais ce cas et montre un
+  avertissement `role="alert"` invitant à **ré-importer le `.xlsx` d'origine** (glisser-déposer) pour
+  ré-analyser l'enquête avec le correctif. Clés i18n fr/nl/en/de. Test `tests/converter-sci-id-warn.test.js`.
 - **Convertisseur & Planner — bannière « Mise à jour disponible » (mono-fichiers)**
-  (Convertisseur `220` → `221`, Planner `195` → `196`, Interviews `3.59` → `3.60`, SW
-  `statbel-v328` → `statbel-v329`) : depuis le passage de la navigation en *cache-first*,
+  (Convertisseur `220` → `222`, Planner `195` → `196`, Interviews `3.59` → `3.60`, SW
+  `statbel-v328` → `statbel-v330`) : depuis le passage de la navigation en *cache-first*,
   une page mono-fichier restait figée sur l'ancienne version en cache tant que la mise à
   jour n'avait pas été « posée » **depuis Interviews** — la seule page dotée du popup. Les
   deux pages **réutilisent désormais `js/boot.js`** (l'amorçage PWA autonome d'Interviews) :

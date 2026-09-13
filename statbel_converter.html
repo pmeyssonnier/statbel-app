@@ -547,6 +547,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
     <!-- Alerte codes nationalité/pays manquants -->
     <div id="structureWarn" class="avertissement hidden" role="status" aria-live="polite"></div>
+    <!-- Alerte identifiants web cassés en notation scientifique (enquête mémorisée
+         importée avec une ancienne version, avant le correctif) -->
+    <div id="idScientifiqueWarn" class="avertissement hidden" role="alert" style="background:#fdecea;border-color:#f5c6cb;color:#b71c1c"></div>
     <div id="codesManquants" class="avertissement hidden" role="status" aria-live="polite"></div>
 
     <!-- Panneau Aperçu : cibles + accordéon ménage -->
@@ -925,6 +928,8 @@ const I18N = {
   hint_add_codes: { fr:"Ajoutez ces codes dans la table correspondante à la source (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR) pour les décoder.", nl:"Voeg deze codes toe aan de bijbehorende tabel in de broncode (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR) om ze te decoderen.", en:"Add these codes to the matching table in the source (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR) to decode them.", de:"Fügen Sie diese Codes der entsprechenden Tabelle im Quellcode hinzu (NLTY_ISO / NLTY_ALIAS, REFNIS_COMMUNE, MRTL_FR), um sie zu dekodieren." },
   warn_missing_cols_title: { fr:"⚠️ Certaines colonnes attendues sont absentes", nl:"⚠️ Sommige verwachte kolommen ontbreken", en:"⚠️ Some expected columns are missing", de:"⚠️ Einige erwartete Spalten fehlen" },
   warn_missing_cols_suffix: { fr:"— les données concernées seront vides :", nl:"— de betreffende gegevens blijven leeg:", en:"— related data will be empty:", de:"— betroffene Daten bleiben leer:" },
+  warn_sci_id_title: { fr:"⚠️ Identifiants web corrompus", nl:"⚠️ Beschadigde web-ID's", en:"⚠️ Corrupted web IDs", de:"⚠️ Beschädigte Web-Kennungen" },
+  warn_sci_id_body: { fr:"{n} identifiant(s) sont en notation scientifique (ex. « {ex} ») — précision perdue. Cette enquête a été importée avec une version antérieure au correctif : ré-importez le fichier .xlsx d'origine (glisser-déposer) pour la corriger.", nl:"{n} ID('s) staan in wetenschappelijke notatie (bv. « {ex} ») — precisie verloren. Deze enquête is geïmporteerd met een versie van vóór de correctie: herimporteer het originele .xlsx-bestand (slepen) om ze te herstellen.", en:"{n} ID(s) are in scientific notation (e.g. \"{ex}\") — precision lost. This survey was imported with a version predating the fix: re-import the original .xlsx file (drag & drop) to repair it.", de:"{n} Kennung(en) in wissenschaftlicher Notation (z. B. „{ex}“) — Genauigkeit verloren. Diese Erhebung wurde mit einer Version vor der Korrektur importiert: Importieren Sie die ursprüngliche .xlsx-Datei erneut (Drag & Drop), um sie zu reparieren." },
   plan_not_found: { fr:"introuvable dans les plannings chargés", nl:"niet gevonden in de geladen plannings", en:"not found in the loaded plannings", de:"in den geladenen Planungen nicht gefunden" },
 
   // ── Export ────────────────────────────────────────────────────────
@@ -5391,6 +5396,25 @@ function afficher(res) {
   } else {
     elSW.classList.add('hidden'); elSW.innerHTML = '';
   }
+  // Garde-fou : une enquête MÉMORISÉE (restaurée depuis IndexedDB) analysée par une
+  // version antérieure au correctif « cellTexte » (< v216) garde ses identifiants web
+  // longs cassés en notation scientifique (« 2.02612E+11 ») — le correctif ne s'applique
+  // qu'à l'import, pas aux résultats déjà stockés. On le signale ici (à l'affichage) pour
+  // inviter à un vrai ré-import du .xlsx, plutôt que de re-télécharger un CSV avec des
+  // logins CAWI inutilisables.
+  const elSci = document.getElementById('idScientifiqueWarn');
+  const RE_SCI_ID = /^[+-]?\d+(?:\.\d+)?[eE][+-]?\d+$/;
+  const champSci = r => RE_SCI_ID.test((r.web_user_id || '').trim()) ? r.web_user_id
+                      : RE_SCI_ID.test((r.web_user_pwd || '').trim()) ? r.web_user_pwd : '';
+  let nSci = 0, exSci = '';
+  (outCibles || []).forEach(r => { const v = champSci(r); if (v) { nSci++; if (!exSci) exSci = v.trim(); } });
+  if (nSci) {
+    elSci.innerHTML = `<strong>${escHtml(t('warn_sci_id_title'))}</strong> `
+      + escHtml(tf('warn_sci_id_body', { n: nSci, ex: exSci }));
+    elSci.classList.remove('hidden');
+  } else {
+    elSci.classList.add('hidden'); elSci.innerHTML = '';
+  }
   document.getElementById('locInput').value = res.localisation || '';
 
 
@@ -7009,7 +7033,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '221';
+const APP_VERSION = '222';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
