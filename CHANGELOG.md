@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Interviews — fermeture des modales par tap sur le fond (backdrop)**
+  (Interviews `3.61` → `3.62`, SW `statbel-v331` → `statbel-v332`) : un clic/tap sur le fond (hors de la
+  carte) ferme la modale du dessus. Indispensable sur mobile, **sans touche Échap** : sans cette issue,
+  une modale dont les boutons ne répondraient pas (ex. `index.html` neuf servi avec un `js/app.js` encore
+  en cache pendant une mise à jour → `data-act` sans routeur enregistré) piégeait l'utilisateur (cas
+  « impossible de sortir du popup PIN »). Le clic n'agit que sur l'overlay lui-même, jamais sur son
+  contenu ; l'import (`modalNom`) passe par sa fermeture propre. L'**écran de verrouillage PIN**
+  (`#lockScreen`, hors `.modal-overlay`) reste volontairement **non-fermable par le fond**. Complète la
+  fermeture par Échap existante. Test `tests/modal-backdrop.test.js`.
+
 ### Documentation
 - **Manuel & README — déverrouillage par empreinte** (`docs/manuel.html`, `README.md`) : le manuel
   (carte « Langue & apparence », légende de l'écran Paramètres, section Confidentialité RGPD) et le
