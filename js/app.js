@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.61';
+const APP_VERSION = '3.62';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -369,15 +369,28 @@ function setupA11y() {
     else if (!e.shiftKey && (actif === dernier || !m.contains(actif))) { e.preventDefault(); premier.focus(); }
   });
 
+  // Ferme la modale `m` proprement (cas particulier de l'import) ou génériquement.
+  const fermerModale = m => {
+    if (m.id === 'modalNom' && typeof fermerModal === 'function') fermerModal();
+    else m.classList.remove('open');
+  };
+
   // Fermeture par Échap (comportement historique conservé).
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     const ouverts = modalesOuvertes();
     if (!ouverts.length) return;
-    const top = ouverts[ouverts.length - 1];
-    // Fermeture propre de l'import (réinitialise csvEnAttente) sinon générique.
-    if (top.id === 'modalNom' && typeof fermerModal === 'function') fermerModal();
-    else top.classList.remove('open');
+    fermerModale(ouverts[ouverts.length - 1]);
+  });
+
+  // Fermeture par clic/tap sur le FOND (hors de la carte modale). Indispensable
+  // sur mobile, où il n'y a pas de touche Échap : sans ça, une modale dont les
+  // boutons ne répondraient pas (ex. HTML/JS désynchronisés pendant une mise à
+  // jour) piégerait l'utilisateur. Ne se déclenche que sur l'overlay lui-même,
+  // jamais sur son contenu. (L'écran de verrouillage PIN n'est PAS un .modal-overlay
+  // et reste donc volontairement non-fermable par le fond.)
+  overlays.forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) fermerModale(m); });
   });
 }
 
