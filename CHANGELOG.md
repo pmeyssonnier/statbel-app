@@ -13,6 +13,15 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Modifié
+- **Interviews — R7 : sérialisation backup dans un module pur** (Interviews 3.47 → 3.48,
+  SW `statbel-v315` → `statbel-v316`) : la conversion modèle interne (FR) ↔ pivot anglais
+  (`renommerCles`, `contactVersEN`, `contactVersInterne`, `enquetesVersEN`, `enquetesVersInterne`,
+  + les tables `KEYMAP_OUT`/`KEYMAP_IN`) quitte `js/features/backup.js` pour un module **pur**
+  `js/data/serialization.js` — renommage de clés uniquement, aucune lecture d'état applicatif, ni
+  DOM, ni stockage, ni i18n → testable sans navigateur. `backup.js` conserve l'orchestration
+  (fichier, bannière, comparaison, restauration) et importe la sérialisation. Nouveau test **pur**
+  `tests/serialization.test.js` (renommage, historique, clés non mappées conservées, round-trip
+  interne→EN→interne sans perte). Refactor sans changement de comportement visible.
 - **Interviews — R4 : moteur de réimport pur** (Interviews 3.46 → 3.47, SW `statbel-v314` →
   `statbel-v315`) : le cœur métier de l'appariement/diff du réimport quitte `js/features/import.js`
   pour un module **pur** `js/data/reimport.js` — `apparieurAnciens` (appariement hiérarchique qui

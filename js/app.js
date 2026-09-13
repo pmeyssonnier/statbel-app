@@ -45,9 +45,11 @@ import {
 } from './ui/resume.js';
 import {
   majBackupBanner, fermerBackupBanner, buildBackupDetailHTML, fermerBackupDetail,
-  renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
   exporterBackup, majLastBackupInfo, majKebabBackupInfo, majComparaisonRestore, importerBackup,
 } from './features/backup.js';
+import {
+  renommerCles, contactVersEN, contactVersInterne, enquetesVersEN, enquetesVersInterne,
+} from './data/serialization.js';
 
 import {
   t, tf, tPlural, champLabel, localeApp, nomJourCourt, labelNbEnquetes, LANGS,
@@ -93,7 +95,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.47';
+const APP_VERSION = '3.48';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)

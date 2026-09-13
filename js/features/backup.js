@@ -2,16 +2,19 @@
  * js/features/backup.js — Sauvegarde & restauration JSON : bandeau de rappel,
  * export complet (enquêtes en clés EN + réglages + cache de coordonnées),
  * import avec comparaison avant/après (réutilise l'appariement/le diff de
- * features/import), et sérialisation EN↔interne (KEYMAP). Extrait de app.js.
+ * data/reimport). La sérialisation EN↔interne vit dans data/serialization.js.
+ * Extrait de app.js.
  *
  * Imports : buildCompareHTML (import) ; apparieurAnciens (data/reimport) ;
- * normaliserPays (canon) ; esc (util) ; t, tf, localeApp (i18n) ; GEO_PROVIDERS (geocoding).
+ * enquetesVersEN/enquetesVersInterne (data/serialization) ; normaliserPays (canon) ;
+ * esc (util) ; t, tf, localeApp (i18n) ; GEO_PROVIDERS (geocoding).
  * L'orchestration (enquetes, settings, validerSettings, migrerVersAnglais,
  * sauver, refreshSelect, rendu, majSettingsUI, appliquerTheme, afficherToast,
  * GEO, rafraichirFond, leafletMap) est globale (pont).
  */
 import { buildCompareHTML } from './import.js';
 import { apparieurAnciens } from '../data/reimport.js';
+import { enquetesVersEN, enquetesVersInterne } from '../data/serialization.js';
 import { normaliserPays } from '../data/canon.js';
 import { esc } from '../core/util.js';
 import { t, tf, localeApp } from '../core/i18n.js';
@@ -115,22 +118,8 @@ export function fermerBackupDetail() {
   document.getElementById('modalBackupDetail').classList.remove('open');
 }
 
-// Clés de champs : modèle interne (FR) ↔ pivot anglais (export/backup/CSV).
-const KEYMAP_OUT = { prenom:'first_name', nom:'last_name', adresse:'address', ordre:'order', sexe:'sex', statut:'status', historique:'history', taille_menage:'household_size', gsm:'mobile_number', rdv:'appointment' };
-const KEYMAP_IN  = { first_name:'prenom', last_name:'nom', address:'adresse', order:'ordre', sex:'sexe', status:'statut', history:'historique', household_size:'taille_menage', mobile_number:'gsm', appointment:'rdv' };
-export function renommerCles(c, map) { const o = {}; for (const k in c) o[map[k] || k] = c[k]; return o; }
-export function contactVersEN(c) {
-  const o = renommerCles(c, KEYMAP_OUT);
-  if (Array.isArray(o.history)) o.history = o.history.map(h => renommerCles(h, { statut:'status' }));
-  return o;
-}
-export function contactVersInterne(c) {
-  const o = renommerCles(c, KEYMAP_IN);
-  if (Array.isArray(o.historique)) o.historique = o.historique.map(h => renommerCles(h, { status:'statut' }));
-  return o;
-}
-export function enquetesVersEN(enq) { const r = {}; Object.entries(enq).forEach(([n, arr]) => r[n] = arr.map(contactVersEN)); return r; }
-export function enquetesVersInterne(enq) { const r = {}; Object.entries(enq).forEach(([n, arr]) => r[n] = arr.map(contactVersInterne)); return r; }
+// La sérialisation interne (FR) ↔ pivot EN vit dans le module pur
+// data/serialization.js (importé en tête). Ici : uniquement l'orchestration backup.
 
 export function exporterBackup() {
   const date   = new Date();
