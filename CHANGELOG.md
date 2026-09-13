@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Interviews — temporisation anti-essais du code PIN** (Interviews 3.50 → 3.51,
+  SW `statbel-v318` → `statbel-v319`) : après **3 échecs consécutifs**, la saisie du PIN est
+  **gelée** un court instant, croissant à chaque nouvel échec (30 s → 1 min → 2 min → 5 min).
+  Pendant le gel, le pavé est désactivé et un compte à rebours s'affiche. Le compteur d'échecs et
+  l'échéance sont persistés (`settings`) → un simple rechargement ne remet pas les compteurs à zéro ;
+  un code correct les réinitialise. Ce n'est pas une protection cryptographique (les données restent
+  locales et en clair au repos), mais un frein contre l'essai systématique par un tiers ayant
+  l'appareil en main. Helper **pur** `_pinDelaiTempo(fails)` + nouveaux tests
+  `tests/pin-tempo.test.js` (paliers) et scénario de gel dans `tests/pin.test.js`.
+
 ### Corrigé
 - **Interviews — robustesse `coordsCache` + nettoyage code mort** (Interviews 3.49 → 3.50,
   SW `statbel-v317` → `statbel-v318`) : `coordsCache()` (`js/data/idb.js`) protège désormais son

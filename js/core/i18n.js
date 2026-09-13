@@ -208,6 +208,7 @@ export const I18N = {
   "toast_pin_off": { fr:"🔓 Verrouillage désactivé", nl:"🔓 Vergrendeling uitgeschakeld", en:"🔓 Lock disabled", de:"🔓 Sperre deaktiviert" },
   "pin_mismatch": { fr:"Les codes ne correspondent pas — recommencez", nl:"De codes komen niet overeen — probeer opnieuw", en:"Codes do not match — try again", de:"Codes stimmen nicht überein — bitte wiederholen" },
   "pin_wrong": { fr:"Code incorrect", nl:"Onjuiste code", en:"Wrong code", de:"Falscher Code" },
+  "pin_locked_out": { fr:"Trop d'essais — réessayez dans {t}", nl:"Te veel pogingen — probeer opnieuw over {t}", en:"Too many attempts — try again in {t}", de:"Zu viele Versuche — erneut in {t}" },
   "empty_state": { fr:"Aucun contact.<br>Importez un fichier CSV ou Excel pour commencer.", nl:"Geen contacten.<br>Importeer een CSV- of Excel-bestand om te beginnen.", en:"No contacts.<br>Import a CSV or Excel file to get started.", de:"Kein Kontakt.<br>Importieren Sie eine CSV- oder Excel-Datei, um zu beginnen." },
   "ip_lines_read": { fr:"lignes lues", nl:"gelezen regels", en:"lines read", de:"Zeilen gelesen" },
   "ip_to_import": { fr:"à importer", nl:"te importeren", en:"to import", de:"zu importieren" },

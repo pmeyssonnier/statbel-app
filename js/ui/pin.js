@@ -7,7 +7,7 @@
  * Dépendances : t() (i18n). settings et les actions UI (saveSettings,
  * afficherToast, fermerSettings) sont des globaux (pont de compatibilité).
  */
-import { t } from '../core/i18n.js';
+import { t, tf } from '../core/i18n.js';
 
 // ══════════════════════════════════════════════════════════════════════
 //  VERROUILLAGE PAR CODE PIN
@@ -22,14 +22,70 @@ export function _pinHash(code) {
   return h.toString(36);
 }
 
+// Temporisation anti-essais : après PIN_SEUIL_TEMPO échecs consécutifs, la
+// saisie est gelée un court instant, croissant à chaque nouvel échec. Ce n'est
+// PAS une protection cryptographique (les données sont locales, en clair au
+// repos) mais un frein contre l'essai systématique par un tiers qui a l'appareil
+// en main. Le compteur et l'échéance sont persistés (settings) → un rechargement
+// ne remet pas les compteurs à zéro.
+const PIN_SEUIL_TEMPO = 3;
+const PIN_PALIERS_S = [30, 60, 120, 300]; // 3e→30 s, 4e→1 min, 5e→2 min, 6e+→5 min
+
+// PURE : délai de gel (ms) pour `fails` échecs consécutifs (0 sous le seuil).
+export function _pinDelaiTempo(fails) {
+  if (fails < PIN_SEUIL_TEMPO) return 0;
+  return PIN_PALIERS_S[Math.min(fails - PIN_SEUIL_TEMPO, PIN_PALIERS_S.length - 1)] * 1000;
+}
+
 let _pinSaisie = '';
 let _pinLongueurCible = 4;
 let _pinModeSetup = false;     // true pendant la définition d'un nouveau code
 let _pinSetupEtape1 = '';      // 1er code saisi en mode setup (confirmation)
 let _pinDernierActivite = Date.now();
 let _pinVerrouille = false;
+let _pinTempoTimer = null;     // intervalle du compte à rebours de temporisation
 
 export function pinEstActif() { return !!(settings.pinCode && settings.pinCode.length); }
+
+// Millisecondes restantes de gel de la saisie (0 = libre).
+function pinTempoRestante() { return Math.max(0, (settings.pinLockUntil || 0) - Date.now()); }
+
+// Format « m:ss » pour le compte à rebours affiché.
+function _fmtMMSS(ms) {
+  const s = Math.ceil(ms / 1000);
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+// Met à jour l'affichage du gel (message + pavé désactivé). Renvoie true si un
+// gel est en cours.
+function pinMajTempoUI() {
+  const reste = pinTempoRestante();
+  const keypad = document.getElementById('lockKeypad');
+  if (reste > 0) {
+    const err = document.getElementById('lockErrorMsg');
+    if (err) err.textContent = tf('pin_locked_out', { t: _fmtMMSS(reste) });
+    if (keypad) keypad.classList.add('disabled');
+    return true;
+  }
+  if (keypad) keypad.classList.remove('disabled');
+  return false;
+}
+
+// Démarre le compte à rebours : tick chaque 0,5 s jusqu'à expiration, puis
+// réactive la saisie et efface le message.
+function pinDemarrerTempo() {
+  if (_pinTempoTimer) clearInterval(_pinTempoTimer);
+  pinMajTempoUI();
+  _pinTempoTimer = setInterval(() => {
+    if (!pinMajTempoUI()) {
+      clearInterval(_pinTempoTimer);
+      _pinTempoTimer = null;
+      const err = document.getElementById('lockErrorMsg');
+      if (err) err.textContent = ' ';
+      renderLockDots();
+    }
+  }, 500);
+}
 
 export function renderLockDots() {
   const wrap = document.getElementById('lockDots');
@@ -64,6 +120,7 @@ export function renderLockKeypad() {
 }
 
 export function pinToucheAppuyee(t) {
+  if (pinTempoRestante() > 0) return; // temporisation en cours : saisie gelée
   if (t === '⌫') {
     _pinSaisie = _pinSaisie.slice(0, -1);
     renderLockDots();
@@ -125,11 +182,19 @@ export function pinValiderSaisie() {
     _pinSaisie = '';
     _pinVerrouille = false;
     _pinDernierActivite = Date.now();
+    settings.pinFails = 0;
+    settings.pinLockUntil = 0;
+    saveSettings();
     fermerLockScreen();
   } else {
-    pinAfficherErreur(t('pin_wrong'));
     _pinSaisie = '';
+    settings.pinFails = (settings.pinFails || 0) + 1;
+    const delai = _pinDelaiTempo(settings.pinFails);
+    if (delai) settings.pinLockUntil = Date.now() + delai;
+    saveSettings();
+    pinAfficherErreur(t('pin_wrong'));
     setTimeout(renderLockDots, 200);
+    if (delai) pinDemarrerTempo(); // remplace le message par le compte à rebours
   }
 }
 
@@ -145,9 +210,13 @@ export function ouvrirLockScreen(modeSetup) {
   renderLockKeypad();
   renderLockDots();
   document.getElementById('lockScreen').classList.add('open');
+  // Reprise du gel si une temporisation est encore en cours (ex. rechargement
+  // pendant le délai) — hors mode définition de code.
+  if (!modeSetup && pinTempoRestante() > 0) pinDemarrerTempo();
 }
 
 export function fermerLockScreen() {
+  if (_pinTempoTimer) { clearInterval(_pinTempoTimer); _pinTempoTimer = null; }
   document.getElementById('lockScreen').classList.remove('open');
 }
 

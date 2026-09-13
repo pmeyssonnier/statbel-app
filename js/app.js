@@ -92,7 +92,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.50';
+const APP_VERSION = '3.51';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -105,6 +105,8 @@ const SETTINGS_DEFAULTS = {
   statutsScopeV: 0,       // garde de migration du cloisonnement par enquête (0 = pas encore semé)
   pinCode:    '',         // code PIN de verrouillage de l'app ('' = désactivé)
   pinTimeout: 5,          // minutes d'inactivité avant re-verrouillage (0 = jamais auto)
+  pinFails:   0,          // échecs PIN consécutifs (temporisation anti-essais)
+  pinLockUntil: 0,        // horodatage jusqu'auquel la saisie PIN est gelée (0 = libre)
   fontFamily: 'system',   // 'system' (défaut) | 'arial' | 'georgia' | 'verdana' | 'monospace'
   fontSize:   'normal',   // 'small' | 'normal' (défaut/système) | 'large' | 'xlarge'
   csvSep:     'auto',     // séparateur d'export CSV : 'auto' (régional) | ',' | ';'
