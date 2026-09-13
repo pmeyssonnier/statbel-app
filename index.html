@@ -297,7 +297,7 @@
       <div style="margin-top:8px;">
         <div class="set-row">
           <label data-i18n="lbl_lang">🌐 Langue</label>
-          <select id="setLang" onchange="changerLangue(this.value)" data-i18n-aria="lbl_lang" aria-label="Langue">
+          <select id="setLang" data-act="changerLangue" data-i18n-aria="lbl_lang" aria-label="Langue">
             <option value="fr">🇫🇷 Français</option>
             <option value="nl">🇳🇱 Nederlands</option>
             <option value="en">🇬🇧 English</option>
@@ -306,7 +306,7 @@
         </div>
         <div class="set-row">
           <label data-i18n="lbl_theme">🎨 Thème</label>
-          <select id="setTheme" onchange="settings.theme=this.value;saveSettings();appliquerTheme()" data-i18n-aria="lbl_theme" aria-label="Thème">
+          <select id="setTheme" data-act="setTheme" data-i18n-aria="lbl_theme" aria-label="Thème">
             <option value="light" data-i18n="opt_theme_light">Clair</option>
             <option value="dark" data-i18n="opt_theme_dark">Sombre</option>
             <option value="auto" data-i18n="opt_theme_auto">Automatique (système)</option>
@@ -314,7 +314,7 @@
         </div>
         <div class="set-row">
           <label data-i18n="lbl_font">🔤 Police de caractères</label>
-          <select id="setFontFamily" onchange="settings.fontFamily=this.value;saveSettings();appliquerPolice()" data-i18n-aria="lbl_font" aria-label="Police de caractères">
+          <select id="setFontFamily" data-act="setFontFamily" data-i18n-aria="lbl_font" aria-label="Police de caractères">
             <option value="system" data-i18n="opt_font_system">Police système (par défaut)</option>
             <option value="arial">Arial</option>
             <option value="georgia">Georgia</option>
@@ -324,7 +324,7 @@
         </div>
         <div class="set-row">
           <label data-i18n="lbl_size">🔍 Taille du texte</label>
-          <select id="setFontSize" onchange="settings.fontSize=this.value;saveSettings();appliquerPolice()" data-i18n-aria="lbl_size" aria-label="Taille du texte">
+          <select id="setFontSize" data-act="setFontSize" data-i18n-aria="lbl_size" aria-label="Taille du texte">
             <option value="small" data-i18n="opt_size_small">Petite</option>
             <option value="normal" data-i18n="opt_size_normal">Normale (par défaut)</option>
             <option value="large" data-i18n="opt_size_large">Grande</option>
@@ -339,7 +339,7 @@
       <div style="margin-top:8px;">
         <div class="set-row">
           <label data-i18n="lbl_provider">🌍 Région / fournisseur géo</label>
-          <select id="setProvider" onchange="changerProvider(this.value)" data-i18n-aria="lbl_provider" aria-label="Région / fournisseur géo">
+          <select id="setProvider" data-act="changerProvider" data-i18n-aria="lbl_provider" aria-label="Région / fournisseur géo">
             <option value="auto" data-i18n="opt_prov_auto">🇧🇪 Automatique (selon le code postal) — recommandé</option>
             <option value="bruxelles" data-i18n="opt_prov_bxl">Bruxelles (UrbIS — CIRB)</option>
             <option value="wallonie" data-i18n="opt_prov_wal">Wallonie (SPW + IGN)</option>
@@ -351,14 +351,14 @@
         </div>
         <div class="set-row" id="setStyleRow">
           <label data-i18n="lbl_basemap">🗺️ Fond de carte</label>
-          <select id="setMapStyle" onchange="settings.mapStyle=this.value;saveSettings();rafraichirFond()" data-i18n-aria="lbl_basemap" aria-label="Fond de carte">
+          <select id="setMapStyle" data-act="setMapStyle" data-i18n-aria="lbl_basemap" aria-label="Fond de carte">
             <option value="gray" data-i18n="opt_map_gray">Sobre (niveaux de gris)</option>
             <option value="color" data-i18n="opt_map_color">Couleur</option>
           </select>
         </div>
         <div class="set-row">
           <label data-i18n="lbl_nav">🧭 Liens de navigation</label>
-          <select id="setNav" onchange="settings.navMode=this.value;saveSettings();rendu()" data-i18n-aria="lbl_nav" aria-label="Liens de navigation">
+          <select id="setNav" data-act="setNav" data-i18n-aria="lbl_nav" aria-label="Liens de navigation">
             <option value="coords" data-i18n="opt_nav_coords">Coordonnées GPS (respect vie privée)</option>
             <option value="adresse" data-i18n="opt_nav_addr">Adresse postale complète</option>
           </select>
@@ -372,11 +372,11 @@
       <div class="set-row" style="margin-top:8px;">
         <small class="hint" data-i18n="statuts_scope_hint" style="font-weight:600;color:var(--accent,#1a73e8)">Les statuts sont propres à l'enquête active (CAPI, CATI/CAWI…).</small>
         <div id="statutsEditor"></div>
-        <button class="btn-secondary" style="align-self:flex-start" data-i18n="btn_addstatus" onclick="ajouterStatut()">＋ Ajouter un statut</button>
+        <button class="btn-secondary" style="align-self:flex-start" data-i18n="btn_addstatus" data-act="ajouterStatut">＋ Ajouter un statut</button>
         <small data-i18n="statut_hint">« ✓ » horodate la date de l'action (entretien, refus…). « 📅 » active la date/heure et la vue agenda.</small>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;margin-top:2px">
-          <button class="btn-secondary" data-i18n="preset_capi_btn" onclick="appliquerPresetStatuts('capi')">🚪 Préréglage « CAPI (face-à-face) »</button>
-          <button class="btn-secondary" data-i18n="preset_cati_btn" onclick="appliquerPresetStatuts('cati')">📋 Préréglage « Feuille de contact CATI »</button>
+          <button class="btn-secondary" data-i18n="preset_capi_btn" data-act="appliquerPresetStatuts" data-preset="capi">🚪 Préréglage « CAPI (face-à-face) »</button>
+          <button class="btn-secondary" data-i18n="preset_cati_btn" data-act="appliquerPresetStatuts" data-preset="cati">📋 Préréglage « Feuille de contact CATI »</button>
         </div>
       </div>
     </details>
@@ -386,17 +386,17 @@
       <div class="set-row" style="margin-top:8px;">
         <small id="lastBackupInfo" style="margin-bottom:4px;"></small>
         <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          <button class="btn-secondary" data-i18n="btn_backup" onclick="exporterBackup()">⬇️ Sauvegarder tout (JSON)</button>
-          <button class="btn-secondary" data-i18n="btn_restore" onclick="document.getElementById('restoreFile').click()">⬆️ Restaurer</button>
+          <button class="btn-secondary" data-i18n="btn_backup" data-act="exporterBackup">⬇️ Sauvegarder tout (JSON)</button>
+          <button class="btn-secondary" data-i18n="btn_restore" data-act="declencherRestore">⬆️ Restaurer</button>
           <span style="display:inline-flex;gap:4px;align-items:center;">
             <select id="viderCacheScope" data-i18n-aria="aria_cache_scope" aria-label="Portée du cache de coordonnées à vider" style="max-width:220px;"></select>
-            <button class="btn-secondary" data-i18n="btn_clearcache" onclick="viderCacheCoords()">🗑️ Vider le cache des coordonnées</button>
+            <button class="btn-secondary" data-i18n="btn_clearcache" data-act="viderCacheCoords">🗑️ Vider le cache des coordonnées</button>
           </span>
-          <button class="btn-secondary" data-i18n="btn_nongeo" onclick="listerNonGeocodees()">🔍 Adresses non géocodées</button>
+          <button class="btn-secondary" data-i18n="btn_nongeo" data-act="listerNonGeocodees">🔍 Adresses non géocodées</button>
         </div>
         <div class="set-row" style="margin-top:10px;">
           <label data-i18n="lbl_csvsep">↔️ Séparateur d'export CSV</label>
-          <select id="setCsvSep" onchange="settings.csvSep=this.value;saveSettings()" data-i18n-aria="lbl_csvsep" aria-label="Séparateur d'export CSV">
+          <select id="setCsvSep" data-act="setCsvSep" data-i18n-aria="lbl_csvsep" aria-label="Séparateur d'export CSV">
             <option value="auto" data-i18n="opt_csvsep_auto">Auto (réglages régionaux)</option>
             <option value="," data-i18n="opt_csvsep_comma">Virgule ( , )</option>
             <option value=";" data-i18n="opt_csvsep_semi">Point-virgule ( ; ) — Excel FR/NL</option>
@@ -405,17 +405,17 @@
         <div class="set-row" style="margin-top:10px;">
           <label data-i18n="lbl_cawi_url">🔗 Lien enquête web (CAWI)</label>
           <input type="url" id="setCawiUrl" inputmode="url" placeholder="https://…" data-i18n-aria="lbl_cawi_url" aria-label="Lien enquête web (CAWI)" style="width:100%;max-width:360px"
-                 oninput="settings.cawiUrl=this.value.trim();saveSettings()">
+                 data-act="setCawiUrl">
         </div>
         <div class="set-row" style="margin-top:10px;">
           <label data-i18n="lbl_pay_household">💶 Indemnité par ménage réalisé (€)</label>
           <input type="number" id="setPayHousehold" min="0" step="0.01" inputmode="decimal" data-i18n-aria="lbl_pay_household" aria-label="Indemnité par ménage réalisé (€)" style="width:110px"
-                 onchange="settings.paieMenage=Math.max(0,parseFloat(this.value)||0);saveSettings()">
+                 data-act="setPayHousehold">
         </div>
         <div class="set-row">
           <label data-i18n="lbl_pay_person">💶 Indemnité par personne ≥15 interrogée (€)</label>
           <input type="number" id="setPayPerson" min="0" step="0.01" inputmode="decimal" data-i18n-aria="lbl_pay_person" aria-label="Indemnité par personne ≥15 interrogée (€)" style="width:110px"
-                 onchange="settings.paiePersonne=Math.max(0,parseFloat(this.value)||0);saveSettings()">
+                 data-act="setPayPerson">
         </div>
         <small id="dataStats"></small>
         <div id="i18nMissing"></div>
@@ -427,8 +427,8 @@
       <summary data-i18n="sec_security">🔒 Sécurité — code PIN</summary>
       <div class="set-row" style="margin-top:8px;">
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-          <button class="btn-secondary" id="btnPinToggle" onclick="ouvrirGestionPin()">Définir un code PIN</button>
-          <select id="setPinTimeout" onchange="settings.pinTimeout=parseInt(this.value);saveSettings()" data-i18n-aria="aria_pin_timeout" aria-label="Délai de re-verrouillage" style="max-width:200px;">
+          <button class="btn-secondary" id="btnPinToggle" data-act="ouvrirGestionPin">Définir un code PIN</button>
+          <select id="setPinTimeout" data-act="setPinTimeout" data-i18n-aria="aria_pin_timeout" aria-label="Délai de re-verrouillage" style="max-width:200px;">
             <option value="0" data-i18n="opt_pin_never">Re-verrouiller : jamais (sauf fermeture)</option>
             <option value="1" data-i18n="opt_pin_1">Re-verrouiller après 1 min</option>
             <option value="5" data-i18n="opt_pin_5">Re-verrouiller après 5 min</option>
@@ -444,13 +444,13 @@
     <p class="aide-copyright" style="margin-top:10px;">Version <span class="app-version">…</span> · © Consultora sprl 2026</p>
 
     <div class="modal-btns">
-      <button class="btn-primary" data-i18n="btn_close" onclick="fermerSettings()">Fermer</button>
+      <button class="btn-primary" data-i18n="btn_close" data-act="fermerSettings">Fermer</button>
     </div>
   </div>
 </div>
 <input type="file" id="restoreFile" accept=".json" data-i18n-aria="btn_restore" aria-label="Restaurer une sauvegarde"
   style="opacity:0;position:absolute;width:1px;height:1px;overflow:hidden"
-  onchange="importerBackup(event)">
+  data-act="importerBackup">
 <!-- Sélecteur de date partagé pour le calendrier de l'historique -->
 <input type="date" id="histDatePicker" data-i18n-aria="aria_hist_date" aria-label="Date de l'entrée d'historique"
   style="position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0;">

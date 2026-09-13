@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Modifié
+- **Interviews — délégation d'événements de l'écran Réglages (lot 1 du chantier `onclick`)**
+  (Interviews 3.52 → 3.53, SW `statbel-v320` → `statbel-v321`) : les **29 handlers inline** de la
+  modale Réglages (`index.html`) et de l'éditeur de statuts (`js/ui/settings.js`) — `onchange` des
+  `<select>` (langue, thème, police, taille, fournisseur géo, fond de carte, navigation, séparateur
+  CSV, délai PIN, indemnités), `oninput` du lien CAWI, `onclick` des boutons (statuts, sauvegarde,
+  cache, PIN, fermeture) et `onchange`/`onclick` des lignes de l'éditeur de statuts — passent de
+  `on*=` inline à `data-act` routé par le module de délégation (`js/core/actions.js`). Les actions
+  sont enregistrées dans `js/app.js` (orchestrateur). Aucun changement de comportement visible. Le
+  pont `window` est inchangé à ce stade (allègement prévu au dernier lot, avec le durcissement CSP).
+  Nouveau test navigateur `tests/settings-delegation.test.js` (change/input/click via le routeur +
+  0 handler inline restant dans la modale).
+
 ### Ajouté
 - **Interviews — routeur de délégation d'événements (lot 0 du chantier `onclick`)** (Interviews
   3.51 → 3.52, SW `statbel-v319` → `statbel-v320`) : nouveau module **`js/core/actions.js`**
