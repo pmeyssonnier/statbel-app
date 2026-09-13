@@ -58,11 +58,15 @@ export function apparieurAnciens(oldArr) {
         // concorde (nom, prénom, naissance ou adresse). Si l'ordre concorde mais que tout
         // le reste diffère (n° peut-être réutilisé pour une autre personne), on N'apparie
         // PAS -> pas de transfert de suivi ; on signale pour validation humaine.
-        const signaux = [sig(o.nom, neu.nom), sig(o.prenom, neu.prenom),
-                         sig(o.birth_date, neu.birth_date), sig(o.adresse, neu.adresse, normAdr)];
-        const positifs = signaux.filter(s => s > 0).length;
-        const conflits = signaux.filter(s => s < 0).length;
-        if (positifs >= 1 || conflits === 0) return take(o);
+        const identite = [sig(o.nom, neu.nom), sig(o.prenom, neu.prenom),
+                          sig(o.birth_date, neu.birth_date)];
+        const adresse = sig(o.adresse, neu.adresse, normAdr);
+        const identitePositive = identite.some(s => s > 0);
+        const identiteEnConflit = identite.some(s => s < 0);
+        // Une adresse concordante ne doit jamais, à elle seule, neutraliser une
+        // identité entièrement divergente : plusieurs ménages/personnes peuvent
+        // partager ou conserver la même adresse entre deux imports.
+        if (identitePositive || (!identiteEnConflit && adresse >= 0)) return take(o);
         incertains.push({ neu, old: o });
       }
     }
@@ -88,7 +92,7 @@ export function apparieurAnciens(oldArr) {
 const _CHAMPS_COMPARES = [
   'prenom','nom','adresse','statut','date','gsm','email','notes',
   'sexe','birth_date','age','birth_country','nationality','marital_status',
-  'taille_menage','rdv'
+  'taille_menage','nb_cibles','collect_method','web_user_id','web_user_pwd','rdv'
 ];
 
 // Détail des changements d'historique : appariement par statut (ordre des dates),
@@ -128,7 +132,7 @@ export function _diffContacts(a, b) {
     if (va !== vb) diffs.push({ champ, avant: va, apres: vb });
   });
   // Historique : signaler tout changement (perte/modification d'entrées)
-  const sig = h => (Array.isArray(h) ? h : []).map(e => `${e.statut}@${e.date}${e.rdv ? '/' + e.rdv : ''}`).join('|');
+  const sig = h => (Array.isArray(h) ? h : []).map(e => `${e.statut}@${e.date}@${e.heure || ''}@${e.rdv || ''}`).join('|');
   const sa = sig(a.historique), sb = sig(b.historique);
   if (sa !== sb) diffs.push({
     champ: 'historique',
