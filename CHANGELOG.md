@@ -13,6 +13,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Interviews — prototype de modèles personnalisables pour les rappels**
+  (Interviews `3.62` → `3.63`, SW `statbel-v332` → `statbel-v333`) :
+  les Paramètres permettent de charger, modifier, prévisualiser et réinitialiser
+  cinq modèles (objet e-mail, e-mails CATI/CAWI et SMS CATI/CAWI). Les variables
+  `{{prenom}}`, `{{enquete}}`, `{{rendez_vous}}`, `{{lien}}`,
+  `{{identifiant}}`, `{{mot_de_passe}}`, `{{signature}}` et
+  `{{signature_courte}}` sont remplacées à l'ouverture de l'application
+  mail/SMS. Les personnalisations restent locales, sont validées lors d'une
+  restauration JSON, et les messages i18n historiques restent le repli lorsque
+  les champs sont vides. Nouveau test `tests/reminder-templates.test.js`.
+
+
+### Ajouté
 - **Interviews — fermeture des modales par tap sur le fond (backdrop)**
   (Interviews `3.61` → `3.62`, SW `statbel-v331` → `statbel-v332`) : un clic/tap sur le fond (hors de la
   carte) ferme la modale du dessus. Indispensable sur mobile, **sans touche Échap** : sans cette issue,
