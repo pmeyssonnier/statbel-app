@@ -36,7 +36,7 @@ import {
   fermerSuggestions, emailKeydown, allerAFiche, toggleKebab,
   envoyerRappel,
 } from './ui/contacts.js';
-import { construireRappel } from './features/reminders.js';
+import { construireRappel, RAPPEL_TEMPLATES_FR } from './features/reminders.js';
 import {
   filtrerActiviteJour, ouvrirFicheEvtIdx, rdvTitreStatut,
   renderRdvFilters, filtrerRdv, renduRdv,
@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.62';
+const APP_VERSION = '3.63';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -119,6 +119,9 @@ const SETTINGS_DEFAULTS = {
   paieMenage:   0,        // indemnité (€) par ménage réalisé (0 = masquée)
   paiePersonne: 0,        // indemnité (€) par personne ≥15 interrogée
   cawiUrl: 'https://blaise.economie.fgov.be/lfspanel2026/',  // portail d'auto-complétion web (CAWI) inclus dans les rappels ; modifiable
+  reminderSignature: '',
+  reminderSignatureShort: '',
+  reminderTemplates: {},   // surcharges mail/SMS ; vide = messages i18n historiques
   // Langue : détectée depuis le navigateur au 1er lancement (fr/nl/en), défaut fr
   lang: (() => { const l = (navigator.language || 'fr').slice(0,2).toLowerCase(); return ['fr','nl','en','de'].includes(l) ? l : 'fr'; })(),
 };
@@ -134,6 +137,9 @@ function chargerSettings() {
     const raw = JSON.parse(localStorage.getItem('statbel_settings') || '{}');
     settings = Object.assign({}, SETTINGS_DEFAULTS, raw);
   } catch(e) { settings = Object.assign({}, SETTINGS_DEFAULTS); }
+  settings.reminderTemplates = validerReminderTemplates(settings.reminderTemplates);
+  settings.reminderSignature = texteBorne(settings.reminderSignature, 200);
+  settings.reminderSignatureShort = texteBorne(settings.reminderSignatureShort, 80);
   if (!Array.isArray(settings.statuts) || !settings.statuts.length) settings.statuts = cloneStatuts();
   // Migration v2 : horodater aussi les refus
   if (!settings.statutsV) {
@@ -179,6 +185,17 @@ function chargerSettings() {
 }
 function saveSettings() { localStorage.setItem('statbel_settings', JSON.stringify(settings)); }
 
+function texteBorne(v, max) { return typeof v === 'string' ? v.slice(0, max) : ''; }
+function validerReminderTemplates(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  const limites = { mailSubject:300, mailCati:4000, mailCawi:4000, smsCati:1000, smsCawi:1000 };
+  for (const [key, max] of Object.entries(limites)) {
+    if (typeof raw[key] === 'string') out[key] = raw[key].slice(0, max);
+  }
+  return out;
+}
+
 // Valide/assainit un objet « settings » d'origine externe (fichier de
 // sauvegarde importé) : ne conserve QUE les clés connues, chaque valeur
 // contrainte à son domaine (enum / type / borne), repli sur le défaut sinon.
@@ -205,6 +222,9 @@ function validerSettings(raw) {
   if (typeof raw.paieMenage === 'number' && raw.paieMenage >= 0 && isFinite(raw.paieMenage)) out.paieMenage = raw.paieMenage;
   if (typeof raw.paiePersonne === 'number' && raw.paiePersonne >= 0 && isFinite(raw.paiePersonne)) out.paiePersonne = raw.paiePersonne;
   if (typeof raw.cawiUrl === 'string') out.cawiUrl = raw.cawiUrl.trim().slice(0, 300);
+  out.reminderSignature = texteBorne(raw.reminderSignature, 200);
+  out.reminderSignatureShort = texteBorne(raw.reminderSignatureShort, 80);
+  out.reminderTemplates = validerReminderTemplates(raw.reminderTemplates);
   const st = validerStatuts(raw.statuts);
   if (st) out.statuts = st;
   // Vocabulaire par enquête : chaque entrée assainie via validerStatuts (itération
@@ -981,6 +1001,59 @@ function migrerVersAnglais() {
 // ici car l'orchestrateur importe déjà tous les symboles concernés (évite un
 // import circulaire depuis settings.js). `el` est l'élément portant data-act ;
 // pour les <select>/<input>, la valeur est lue sur `el` (value/checked).
+function majChampsModelesRappel() {
+  const rt = settings.reminderTemplates || {};
+  document.querySelectorAll('[data-reminder-field]').forEach(el => {
+    el.value = rt[el.dataset.reminderField] || '';
+  });
+  const sig = document.getElementById('setReminderSignature');
+  const sigShort = document.getElementById('setReminderSignatureShort');
+  if (sig) sig.value = settings.reminderSignature || '';
+  if (sigShort) sigShort.value = settings.reminderSignatureShort || '';
+}
+
+function chargerModelesRappel() {
+  settings.reminderTemplates = { ...RAPPEL_TEMPLATES_FR };
+  if (!settings.reminderSignature) settings.reminderSignature = 'Pierre Meyssonnier – Enquêteur Statbel';
+  if (!settings.reminderSignatureShort) settings.reminderSignatureShort = 'Pierre – Statbel';
+  saveSettings();
+  majChampsModelesRappel();
+  apercuModelesRappel();
+}
+
+function resetModelesRappel() {
+  settings.reminderTemplates = {};
+  saveSettings();
+  majChampsModelesRappel();
+  const pre = document.getElementById('reminderTemplatePreview');
+  if (pre) { pre.textContent = ''; pre.classList.add('hidden'); }
+}
+
+function apercuModelesRappel() {
+  const commun = {
+    cawiUrl: settings.cawiUrl,
+    surveyName: enqueteActive || 'EFT 2026',
+    templates: settings.reminderTemplates,
+    signature: settings.reminderSignature,
+    shortSignature: settings.reminderSignatureShort,
+  };
+  const cati = { prenom:'Alice', collect_method:'CATI', rdv:'18/09/2026 à 14:30', email:'alice@example.be', gsm:'0470123456' };
+  const cawi = { prenom:'Bob', collect_method:'CAWI', web_user_id:'202612345678', web_user_pwd:'Exemple9', email:'bob@example.be', gsm:'0470123456' };
+  const blocs = [
+    ['E-MAIL CATI', construireRappel({ ...commun, contact:cati, canal:'mail' })],
+    ['E-MAIL CAWI', construireRappel({ ...commun, contact:cawi, canal:'mail' })],
+    ['SMS CATI', construireRappel({ ...commun, contact:cati, canal:'sms' })],
+    ['SMS CAWI', construireRappel({ ...commun, contact:cawi, canal:'sms' })],
+  ];
+  const pre = document.getElementById('reminderTemplatePreview');
+  if (pre) {
+    pre.textContent = blocs.map(([titre, r]) =>
+      titre + (titre.startsWith('E-MAIL') ? '\nObjet : ' + r.subject : '') + '\n' + r.body
+    ).join('\n\n──────────\n\n');
+    pre.classList.remove('hidden');
+  }
+}
+
 function enregistrerActionsReglages() {
   registerActions('change', {
     changerLangue:   el => changerLangue(el.value),
@@ -999,7 +1072,20 @@ function enregistrerActionsReglages() {
     toggleBioUnlock: el => toggleBioUnlock(el),
   });
   registerActions('input', {
-    setCawiUrl:      el => { settings.cawiUrl = el.value.trim(); saveSettings(); },
+    setCawiUrl: el => { settings.cawiUrl = el.value.trim(); saveSettings(); },
+    setReminderIdentity: el => {
+      const key = el.dataset.field;
+      if (key === 'reminderSignature') settings[key] = texteBorne(el.value, 200);
+      if (key === 'reminderSignatureShort') settings[key] = texteBorne(el.value, 80);
+      saveSettings();
+    },
+    setReminderTemplate: el => {
+      settings.reminderTemplates = settings.reminderTemplates || {};
+      const key = el.dataset.reminderField;
+      const max = key && key.startsWith('sms') ? 1000 : (key === 'mailSubject' ? 300 : 4000);
+      if (key) settings.reminderTemplates[key] = texteBorne(el.value, max);
+      saveSettings();
+    },
   });
   registerActions('click', {
     ouvrirGestionPin:       () => ouvrirGestionPin(),
@@ -1012,6 +1098,9 @@ function enregistrerActionsReglages() {
     declencherRestore:      () => document.getElementById('restoreFile').click(),
     viderCacheCoords:       () => viderCacheCoords(),
     listerNonGeocodees:     () => listerNonGeocodees(),
+    loadReminderTemplates:    () => chargerModelesRappel(),
+    previewReminderTemplates: () => apercuModelesRappel(),
+    resetReminderTemplates:   () => resetModelesRappel(),
   });
 }
 
