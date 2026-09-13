@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Planner — lien « Ouvrir » après génération de la candidature `.docx`**
+  (Planner `194` → `195`, SW `statbel-v327` → `statbel-v328`) : à la fin de
+  `genererCandidature()`, le fichier est toujours téléchargé, mais un toast d'action
+  remplace le simple message de confirmation : il propose un bouton **« Ouvrir »**
+  qui ré-adresse l'URL blob du `.docx` (`target="_blank"`), pour éviter d'aller
+  chercher le fichier dans le dossier Téléchargements — surtout utile sur mobile, où
+  le lien déclenche « Ouvrir avec… ». Rappel : une page web ne peut pas lancer Word
+  elle-même ; l'ouverture effective reste décidée par la plateforme. Le nouveau helper
+  `afficherToastFichier()` maintient l'URL blob vivante jusqu'à la fermeture du toast
+  (bouton ✕ ou expiration ~9 s), puis la révoque. Toast = région live accessible
+  (`role="status"`), lien étiqueté du nom de fichier. Couvert par `tests/planner.test.js`.
+
 ### Sécurité
 - **Interviews — CSP durcie : `script-src 'self'` sans `'unsafe-inline'` (lot 6 du chantier `onclick`)**
   (Interviews 3.58 → 3.59, SW `statbel-v326` → `statbel-v327`) : aboutissement du chantier de

@@ -308,6 +308,35 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(docx.paOk, 'candidature .docx : choix « pas » coche « pas intéressé(e) »');
     A(docx.plOk, 'candidature .docx : choix « plus » coche « n\'est plus intéressé(e) »');
 
+    // Toast « Ouvrir » après génération : lien qui ré-adresse l'URL blob du .docx
+    // (évite d'aller fouiller les Téléchargements). On teste le helper directement
+    // avec une URL blob factice — indépendant du remplissage complet du formulaire.
+    const toast = await p.evaluate(() => {
+      const url = URL.createObjectURL(new Blob(['x'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
+      afficherToastFichier('📝 Candidature générée', url, 'Candidature_EFT_TestU.docx');
+      const t = document.getElementById('lfs-toast-file');
+      const a = t && t.querySelector('a');
+      return {
+        present: !!t,
+        role: !!(t && t.getAttribute('role') === 'status' && t.getAttribute('aria-live') === 'polite'),
+        blobHref: !!(a && a.getAttribute('href') === url && /^blob:/.test(url)),
+        blank: !!(a && a.getAttribute('target') === '_blank' && /noopener/.test(a.getAttribute('rel') || '')),
+        ariaFichier: !!(a && /Candidature_EFT_TestU\.docx/.test(a.getAttribute('aria-label') || '')),
+        hasClose: !!(t && t.querySelector('button')),
+      };
+    });
+    A(toast.present, 'candidature : toast « fichier » affiché après génération');
+    A(toast.role, 'candidature : toast = région live (role="status" aria-live="polite")');
+    A(toast.blobHref, 'candidature : lien « Ouvrir » pointe vers l\'URL blob du .docx');
+    A(toast.blank, 'candidature : lien ouvre dans un nouvel onglet (target=_blank rel=noopener)');
+    A(toast.ariaFichier, 'candidature : lien porte le nom du fichier en aria-label');
+    A(toast.hasClose, 'candidature : toast dispose d\'un bouton de fermeture');
+    // Fermeture (✕) → retrait du toast (fondu 220 ms).
+    await p.evaluate(() => document.querySelector('#lfs-toast-file button').click());
+    await p.waitForTimeout(300);
+    const closed = await p.evaluate(() => !document.getElementById('lfs-toast-file'));
+    A(closed, 'candidature : le bouton ✕ retire le toast');
+
     // Thème sombre (prefers-color-scheme:dark) : fond de page + cartes foncés,
     // texte clair, bandeau (chrome) qui reste foncé.
     await p.emulateMedia({ colorScheme: 'dark' });
