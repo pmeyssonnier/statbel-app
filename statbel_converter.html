@@ -46,6 +46,7 @@
     --violet: #6a1b9a;   /* bouton export « enquête » */
     --warn-bg:#fff3e0; --warn-border:#ffb74d; --warn-text:#e65100;  /* encadrés d'alerte */
     --err-bg:#ffebee; --err-border:#ef9a9a; --err-text:#b71c1c;     /* encadrés d'erreur */
+    --code-bg:#ffe0b2;   /* puces de code dans les avertissements */
   }
   /* ── Thème sombre (gris-bleu ardoise, pas noir) ── */
   body.theme-dark {
@@ -66,6 +67,7 @@
     --violet: #b39ddb;
     --warn-bg:#3a2f1a; --warn-border:#8c6d3f; --warn-text:#ffcc80;
     --err-bg:#3a2326; --err-border:#8c4a4a; --err-text:#ffb4ad;
+    --code-bg:#4a3a24;
   }
   body.theme-dark input, body.theme-dark select, body.theme-dark textarea {
     background: var(--blanc); color: var(--text); border-color: var(--border);
@@ -104,6 +106,13 @@
     padding: 0; position: relative;
   }
   .btn-view.actif { background: #fff; color: var(--bleu); font-weight: bold; }
+  /* Libellé texte des onglets de vue : masqué sur mobile étroit, visible dès 480px
+     (le survol n'existe pas au tactile/clavier) */
+  .btn-view .btn-lbl { display: none; }
+  @media (min-width: 480px) {
+    .view-toggle .btn-view { width: auto; min-width: 40px; padding: 0 12px; gap: 6px; }
+    .btn-view .btn-lbl { display: inline; font-size: 13px; }
+  }
   .btn-ico:hover, .btn-view:not(.actif):hover { background: rgba(255,255,255,0.25); }
 
   /* Tooltip des boutons d'en-tête (icône seule, libellé au survol) */
@@ -158,6 +167,8 @@
   /* Encadrés d'avertissement (structure/codes manquants) — thème-aware via tokens */
   .avertissement { background: var(--warn-bg); border: 1px solid var(--warn-border);
     border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; font-size: 12px; color: var(--warn-text); }
+  /* Variante « erreur » (ID scientifique corrompu) — tokens err, thème-aware */
+  .avertissement.av-err { background: var(--err-bg); border-color: var(--err-border); color: var(--err-text); }
   /* Réservé aux lecteurs d'écran (titres de repérage, libellés) */
   .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
@@ -189,6 +200,10 @@
     transition: opacity .15s ease, transform .15s ease; z-index: 400; }
   #chartRead.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .dz-local { color: var(--text2); font-size: 12px; margin-top: 8px; }
+  .dz-help { text-align: center; font-size: 12.5px; color: var(--text2); margin: 12px 0 0; }
+  .dz-help a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .dz-help a:hover { text-decoration: underline; }
+  .dz-help a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 
   /* ── Compteurs (tuiles KPI — style repris du Résumé d'Interviews :
         carte blanche, ombre légère, bordure haute colorée, gros chiffre) ── */
@@ -495,11 +510,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </div>
     <div class="header-col3">
       <div class="view-toggle" id="hdrTabs">
-        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" data-i18n-tip="tip_overview" data-i18n-aria="tip_overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span></button>
-        <button class="btn-view" id="ong-stats" data-tip="Statistics" data-i18n-tip="tip_stats" data-i18n-aria="tip_stats" onclick="basculerTab('stats')">📊</button>
+        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" data-i18n-tip="tip_overview" data-i18n-aria="tip_overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span><span class="btn-lbl" data-i18n="tip_overview">Overview</span></button>
+        <button class="btn-view" id="ong-stats" data-tip="Statistics" data-i18n-tip="tip_stats" data-i18n-aria="tip_stats" onclick="basculerTab('stats')">📊<span class="btn-lbl" data-i18n="tip_stats">Statistics</span></button>
       </div>
       <div class="menu-wrap">
-        <button class="btn-ico" title="Settings" data-i18n-title="title_settings" data-i18n-aria="title_settings" onclick="toggleMenu()">⚙️</button>
+        <button class="btn-ico" id="menuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu" title="Settings" data-i18n-title="title_settings" data-i18n-aria="title_settings" onclick="toggleMenu()">⚙️</button>
         <div class="menu" id="menu">
         <button class="menu-item" data-i18n="menu_import" onclick="document.getElementById('fileInput').click();toggleMenu()">📁 Import a source file</button>
         <button class="menu-item" data-i18n="menu_export" onclick="ouvrirExport();toggleMenu()">⬇️ Export converted data</button>
@@ -527,10 +542,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="icon" aria-hidden="true">📂</div>
     <div class="titre" data-i18n="dz_title">Drag the GRP file here</div>
     <div class="sous" data-i18n="dz_sub">or click to select</div>
-    <div class="note">CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx</div>
+    <div class="note" data-i18n="dz_formats">CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx</div>
     <div class="dz-local" data-i18n="local_note">🔒 Traitement 100 % local — aucune donnée n'est envoyée.</div>
     <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls,.pdf" tabindex="-1" data-i18n-aria="dz_aria" aria-label="Import a GRP file">
   </div>
+  <p class="dz-help"><span data-i18n="dz_no_file">Pas de fichier GRP ?</span> <a href="statbel_pdf2grp.html" data-i18n="dz_extract">Extraire un GRP depuis le PDF officiel →</a></p>
 
   <!-- Chargement -->
   <div id="loading" class="loading hidden" role="status" aria-live="polite">
@@ -564,7 +580,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div id="structureWarn" class="avertissement hidden" role="status" aria-live="polite"></div>
     <!-- Alerte identifiants web cassés en notation scientifique (enquête mémorisée
          importée avec une ancienne version, avant le correctif) -->
-    <div id="idScientifiqueWarn" class="avertissement hidden" role="alert" style="background:#fdecea;border-color:#f5c6cb;color:#b71c1c"></div>
+    <div id="idScientifiqueWarn" class="avertissement av-err hidden" role="alert"></div>
     <div id="codesManquants" class="avertissement hidden" role="status" aria-live="polite"></div>
 
     <!-- Panneau Aperçu : cibles + accordéon ménage -->
@@ -901,6 +917,9 @@ const I18N = {
   aria_sankey_hh: { fr:"Diagramme de flux taille du ménage → à interroger → âge ; touchez un nœud pour son effectif", nl:"Stroomdiagram huishoudgrootte → te bevragen → leeftijd; tik op een knoop voor het aantal", en:"Flow diagram household size → to survey → age; tap a node for its count", de:"Flussdiagramm Haushaltsgröße → zu befragen → Alter; tippen Sie einen Knoten für die Anzahl an" },
   dz_sub:   { fr:"ou cliquez pour sélectionner", nl:"of klik om te selecteren", en:"or click to select", de:"oder klicken zum Auswählen" },
   local_note: { fr:"🔒 Traitement 100 % local — aucune donnée n'est envoyée.", nl:"🔒 100 % lokale verwerking — er worden geen gegevens verzonden.", en:"🔒 100% local processing — no data is sent.", de:"🔒 100 % lokale Verarbeitung — es werden keine Daten gesendet." },
+  dz_formats: { fr:"CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx", nl:"CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx", en:"CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx", de:"CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx" },
+  dz_no_file: { fr:"Pas de fichier GRP ?", nl:"Geen GRP-bestand?", en:"No GRP file?", de:"Keine GRP-Datei?" },
+  dz_extract: { fr:"Extraire un GRP depuis le PDF officiel →", nl:"Haal een GRP uit de officiële PDF →", en:"Extract a GRP from the official PDF →", de:"Ein GRP aus dem offiziellen PDF extrahieren →" },
   dz_aria:  { fr:"Importer un fichier GRP", nl:"Een GRP-bestand importeren", en:"Import a GRP file", de:"Eine GRP-Datei importieren" },
   app_h1:   { fr:"Convertisseur GRP Statbel", nl:"Statbel GRP-omzetter", en:"Statbel GRP Converter", de:"Statbel GRP-Konverter" },
   brand_conv: { fr:"Convertisseur", nl:"Omzetter", en:"Converter", de:"Konverter" },
@@ -5395,15 +5414,15 @@ function afficher(res) {
       const gens = (x.gens || [])
         .map(g => `<span style="white-space:nowrap">N° ${escHtml(g.ordre)} — ${escHtml(g.nom)}</span>`)
         .join(', ');
-      const detail = gens ? `<div style="margin:2px 0 4px 14px;color:#bf360c">${gens}</div>` : '';
-      return `<div style="margin-top:4px"><code style="background:#ffe0b2;padding:1px 5px;border-radius:4px">${escHtml(x.code)}</code> ×${x.count}${detail}</div>`;
+      const detail = gens ? `<div style="margin:2px 0 4px 14px;color:var(--warn-text)">${gens}</div>` : '';
+      return `<div style="margin-top:4px"><code style="background:var(--code-bg);padding:1px 5px;border-radius:4px">${escHtml(x.code)}</code> ×${x.count}${detail}</div>`;
     }).join('');
     let html = `⚠️ <strong>${escHtml(t('warn_unknown_codes_title').replace(/^⚠️\s*/, ''))}</strong> ${escHtml(t('warn_unknown_codes_suffix'))}`;
     if (cm.nlty    && cm.nlty.length)    html += `<div style="margin-top:6px"><u>${escHtml(t('field_nationality_code'))}</u> ${escHtml(t('txt_not_in'))} NLTY_ISO:${fmtList(cm.nlty)}</div>`;
     if (cm.bth     && cm.bth.length)     html += `<div style="margin-top:6px"><u>${escHtml(t('field_birthcountry_code'))}</u> ${escHtml(t('txt_not_in'))} NLTY_ISO:${fmtList(cm.bth)}</div>`;
     if (cm.commune && cm.commune.length) html += `<div style="margin-top:6px"><u>${escHtml(t('field_municipality_code'))}</u> ${escHtml(t('txt_not_in'))} REFNIS_COMMUNE:${fmtList(cm.commune)}</div>`;
     if (cm.mrtl    && cm.mrtl.length)    html += `<div style="margin-top:6px"><u>${escHtml(t('field_marital_code'))}</u> ${escHtml(t('txt_not_in'))} MRTL_FR:${fmtList(cm.mrtl)}</div>`;
-    html += `<div style="margin-top:8px;color:#bf360c;font-size:11px">${escHtml(t('hint_add_codes'))}</div>`;
+    html += `<div style="margin-top:8px;color:var(--warn-text);font-size:11px">${escHtml(t('hint_add_codes'))}</div>`;
     elCM.innerHTML = html;
     elCM.classList.remove('hidden');
   } else {
@@ -5415,7 +5434,7 @@ function afficher(res) {
   const sw = res.structureWarn || [];
   if (sw.length) {
     elSW.innerHTML = `⚠️ <strong>${escHtml(t('warn_missing_cols_title').replace(/^⚠️\s*/, ''))}</strong> ${escHtml(t('warn_missing_cols_suffix'))} `
-      + sw.map(c => `<code style="background:#ffe0b2;padding:1px 5px;border-radius:4px">${escHtml(c)}</code>`).join(' ');
+      + sw.map(c => `<code style="background:var(--code-bg);padding:1px 5px;border-radius:4px">${escHtml(c)}</code>`).join(' ');
     elSW.classList.remove('hidden');
   } else {
     elSW.classList.add('hidden'); elSW.innerHTML = '';
@@ -7059,6 +7078,21 @@ document.getElementById('btnRapport').addEventListener('click', () => {
     clearTimeout(chartRead._t); chartRead._t = setTimeout(()=>chartRead.classList.remove('show'), 3500);
   });
 
+  // 1c) État des bascules et du menu annoncé au lecteur d'écran. Les segments
+  //     portent `class="actif"` en visuel seulement : on reflète l'état dans
+  //     aria-pressed (bascules) et aria-expanded (menu ⚙️).
+  const TG = '.view-toggle button, .scope-toggle button, .perso-tabs button, .lk-tabs button';
+  function syncToggles(){ document.querySelectorAll(TG).forEach(b => b.setAttribute('aria-pressed', b.classList.contains('actif') ? 'true' : 'false')); }
+  const menuEl = document.getElementById('menu'), menuBtn = document.getElementById('menuBtn');
+  function syncMenu(){ if(menuBtn && menuEl) menuBtn.setAttribute('aria-expanded', menuEl.classList.contains('open') ? 'true' : 'false'); }
+  syncToggles(); syncMenu();
+  new MutationObserver(ms=>{
+    for(const m of ms){
+      if(m.target === menuEl){ syncMenu(); continue; }
+      if(m.target.matches && m.target.matches(TG)){ syncToggles(); }
+    }
+  }).observe(document.body, { attributes:true, attributeFilter:['class'], subtree:true });
+
   // 2) Modales : Échap ferme, Tab piégé dans la boîte, focus restitué au retour.
   const overlays = () => [...document.querySelectorAll('.modal-overlay')];
   const focusables = m => [...m.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);
@@ -7084,7 +7118,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '224';
+const APP_VERSION = '225';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

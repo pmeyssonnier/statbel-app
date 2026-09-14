@@ -12,6 +12,21 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — passe design 2 (vérification Impeccable, couche a11y + onboarding)
+(Convertisseur `224` → `225`, SW `statbel-v359` → `statbel-v360`)
+- **État ARIA des contrôles (harden)** : les bascules (onglets de vue, périmètre Enquête/
+  Population, thème/taille, onglets Personnaliser/Lookup) reflètent leur état via `aria-pressed` ;
+  le menu ⚙️ porte `aria-haspopup`/`aria-controls` et un `aria-expanded` synchronisé. L'état actif
+  était jusqu'ici visuel seulement (inaudible au lecteur d'écran).
+- **Encadrés d'alerte thème-aware (colorize)** : l'alerte « ID scientifique » et les
+  avertissements de codes/structure passent des littéraux hex en dur (`#fdecea`, `#bf360c`,
+  `#ffe0b2`…) à des tokens (`--err-*`, `--warn-text`, nouveau `--code-bg`) → contraste correct
+  en thème sombre.
+- **Onboarding de l'état vide (clarify)** : lien « Extraire un GRP depuis le PDF officiel → »
+  vers PDF→GRP sous la zone de dépôt, et l'indice de format devient traduisible (`data-i18n`).
+- **Onglets de vue (adapt)** : libellé texte visible dès 480px (Aperçu/Statistiques) en plus
+  de l'icône — le survol n'existe pas au tactile/clavier.
+
 ### Convertisseur — passe design (critique Impeccable, score 33/40)
 (Convertisseur `223` → `224`, SW `statbel-v358` → `statbel-v359`)
 - **A11y (harden)** : les en-têtes de tri (`th.sortable`/`th.ref-sort`) deviennent focusables
