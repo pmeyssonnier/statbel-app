@@ -45,13 +45,16 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     const out = {};
     out.hasLockBar = !!document.querySelector('#liste .statut-bar-lock');
     out.hasLockIcon = !!document.querySelector('#liste .statut-lock');
-    // Clic sur le statut « Done » de la CARTE (verrouillée)
-    const doneIdx = settings.statuts.findIndex(s => s.label === 'Done');
-    const cardDone = document.querySelectorAll('#liste .statut-bar-lock .s-btn')[doneIdx];
-    cardDone.click();
+    // Fiche compacte : SEUL le statut courant est affiché (une puce), pas toute la barre.
+    const cardChips = document.querySelectorAll('#liste .statut-bar-lock .s-btn');
+    out.chipCount = cardChips.length;
+    out.chipLabel = cardChips[0] && cardChips[0].dataset.label;
+    // Clic sur la puce du statut courant (verrouillée) → ouvre l'édition, ne change rien.
+    cardChips[0].click();
     await new Promise(res => setTimeout(res, 80));
     out.statutAfterCardClick = enquetes.G1[0].statut;
     out.editOpened = !!(document.getElementById('edit-0') && document.getElementById('edit-0').classList.contains('open'));
+    const doneIdx = settings.statuts.findIndex(s => s.label === 'Done');
     // En mode édition : clic « Done » dans le formulaire
     const editDone = document.querySelectorAll('#edit-0 .statut-bar .s-btn')[doneIdx];
     editDone.click();
@@ -61,6 +64,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   });
 
   A(r.hasLockBar && r.hasLockIcon, 'carte : barre de statut verrouillée + cadenas 🔒');
+  A(r.chipCount === 1 && r.chipLabel === 'To do', `carte compacte : seul le statut courant affiché (${r.chipCount} puce, "${r.chipLabel}")`);
   A(r.statutAfterCardClick === 'To do', `clic sur la CARTE ne change PAS le statut (reste "${r.statutAfterCardClick}")`);
   A(r.editOpened, 'clic sur le statut de la carte ouvre le formulaire d\'édition');
   A(r.statutAfterEditClick === 'Done', `clic en MODE ÉDITION change bien le statut → "${r.statutAfterEditClick}"`);

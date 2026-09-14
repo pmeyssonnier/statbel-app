@@ -255,6 +255,14 @@ export function statutBarHTML(i, statut, editable) {
   }).join('');
 }
 
+// Puce du statut COURANT seul (fiche compacte, gain de place mobile) : verrouillée,
+// un clic ouvre le formulaire d'édition (comme le cadenas). Le choix parmi tous les
+// statuts se fait dans le formulaire (barre éditable) — cf. statutBarHTML.
+export function statutChipHTML(i, statut) {
+  const def = statutDef(statut);
+  return `<button class="s-btn actif s-btn-lock" style="color:${def.color};border-color:${def.color};background:${def.color}22;" title="${esc(t('lock_status_edit'))}" data-act="statutBtn" data-i="${i}" data-editable="0" data-label="${esc(statut)}"><span aria-hidden="true">${esc(def.icon)}</span> ${esc(statutLabel(statut))}</button>`;
+}
+
 // Génère le contenu du formulaire d'édition d'une fiche (à la demande)
 export function buildEditForm(i) {
   const c      = contacts()[i];
@@ -415,7 +423,7 @@ export function rendu() {
       </div>
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
       <div class="card-statut">
-        <div class="statut-bar statut-bar-lock">${statutBarHTML(i, statut, false)}</div>
+        <div class="statut-bar statut-bar-lock">${statutChipHTML(i, statut)}</div>
         <span class="statut-lock" title="${esc(t('lock_status_edit'))}" data-act="ouvrirEdit" data-i="${i}">🔒</span>
         ${dateStatut ? `<span class="card-statut-date">${esc(dateStatut)}</span>` : ''}
       </div>
@@ -494,7 +502,9 @@ export function majCarteStatut(i) {
   // Barres de statut (carte + formulaire) : reflète le statut courant. La barre du
   // formulaire (dans .edit-area) est éditable ; celle de la carte est verrouillée.
   card.querySelectorAll('.statut-bar').forEach(bar => {
-    bar.innerHTML = statutBarHTML(i, c.statut, !!bar.closest('.edit-area'));
+    const inEdit = !!bar.closest('.edit-area');
+    // Formulaire : barre complète éditable ; carte compacte : puce du statut courant.
+    bar.innerHTML = inEdit ? statutBarHTML(i, c.statut, true) : statutChipHTML(i, c.statut);
   });
 }
 
