@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Corrigé
+- **Interviews — statuts du préréglage CATI/CAWI non traduits (nl/en/de)**
+  (Interviews `3.69` → `3.70`, SW `statbel-v347` → `statbel-v348`) : les six statuts de la
+  feuille de contact CATI (« Pas encore de contact entrepris », « Rdv fixé »,
+  « Tentatives de contacts sans résultat », « Négatif », « Interview réalisée »,
+  « Inconnu ») restaient en français dans la légende de carte, l'éditeur et les filtres,
+  quelle que soit la langue. Ils sont désormais dans `STATUT_I18N` (fr/nl/en/de) — ex.
+  « Nog geen contact opgenomen » (NL), « Noch kein Kontakt aufgenommen » (DE), « No
+  contact yet » (EN). **Affichage seul** : la valeur stockée sur les fiches ne change pas
+  (pas de migration). Test `tests/statut-preset.test.js` étendu.
+
 ### Modifié
 - **Planner — candidature .docx : sigle d'enquête localisé + formulation NL/EN**
   (Planner `203` → `204`, SW `statbel-v346` → `statbel-v347`) : le **sigle** de l'enquête
