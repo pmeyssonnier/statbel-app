@@ -13,6 +13,12 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Corrigé
+- **Planner — candidature : génération bloquée si 0 groupe souhaité**
+  (Planner `204` → `205`, SW `statbel-v348` → `statbel-v349`) : lorsque l'option
+  « Nombre de groupes souhaités » est choisie mais qu'aucun groupe n'est sélectionné,
+  la génération du .docx est refusée avec un message explicite (au lieu de produire un
+  formulaire vide). Les options « Pas intéressé » / « Plus intéressé » restent
+  générables sans groupe. Test `tests/planner.test.js` étendu.
 - **Interviews — statuts du préréglage CATI/CAWI non traduits (nl/en/de)**
   (Interviews `3.69` → `3.70`, SW `statbel-v347` → `statbel-v348`) : les six statuts de la
   feuille de contact CATI (« Pas encore de contact entrepris », « Rdv fixé »,

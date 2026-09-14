@@ -936,6 +936,7 @@ const I18N = {
   js_field_required: { fr:"Veuillez renseigner : {field}.", nl:"Gelieve in te vullen: {field}.", en:"Please fill in: {field}.", de:"Bitte ausfüllen: {field}." },
   js_sig_required: { fr:"La signature est obligatoire : dessinez-la avant de générer le document.", nl:"De handtekening is verplicht: teken ze voordat u het document genereert.", en:"The signature is required: draw it before generating the document.", de:"Die Unterschrift ist erforderlich: zeichnen Sie sie, bevor Sie das Dokument erzeugen." },
   js_fix_fields: { fr:"Veuillez corriger les champs indiqués avant de générer la candidature.", nl:"Corrigeer de aangeduide velden voordat u de kandidatuur genereert.", en:"Please correct the indicated fields before generating the application.", de:"Bitte korrigieren Sie die angegebenen Felder, bevor Sie die Bewerbung erzeugen." },
+  js_cand_no_group: { fr:"Aucun groupe sélectionné : choisissez au moins un groupe (onglet Agenda) ou cochez « Pas / Plus intéressé » avant de générer la candidature.", nl:"Geen groep geselecteerd: kies minstens één groep (tabblad Agenda) of vink « Niet / Niet langer geïnteresseerd » aan voordat u de kandidatuur genereert.", en:"No group selected: choose at least one group (Calendar tab) or tick « Not / No longer interested » before generating the application.", de:"Keine Gruppe ausgewählt: Wählen Sie mindestens eine Gruppe (Reiter Kalender) oder kreuzen Sie « Nicht / Nicht mehr interessiert » an, bevor Sie die Bewerbung erzeugen." },
   cand_sig_filled: { fr:"Signature saisie", nl:"Handtekening ingevoerd", en:"Signature captured", de:"Unterschrift erfasst" },
   js_selected_suffix: { fr:" · ✓ {n} sélectionné(s)", nl:" · ✓ {n} geselecteerd", en:" · ✓ {n} selected", de:" · ✓ {n} ausgewählt" },
   js_approx_full: { fr:"⚠️ approximatif (hors commune ?)", nl:"⚠️ benaderend (buiten de gemeente?)", en:"⚠️ approximate (outside municipality?)", de:"⚠️ ungefähr (außerhalb der Gemeinde?)" },
@@ -3411,6 +3412,13 @@ async function genererCandidature(){
   // Case à cocher retenue (une seule) → transmise au .docx comme les autres champs.
   const choixEl=document.querySelector('input[name="candChoix"]:checked');
   data.choix=choixEl?choixEl.value:'groupes';
+  // « Nombre de groupes souhaités » sans aucun groupe → génération bloquée.
+  // (Les options « Pas / Plus intéressé » ne nécessitent pas de groupe.)
+  if(data.choix==='groupes' && data.groupes.length===0){
+    candErrGlobale(t('js_cand_no_group'));
+    setTab('candidature');
+    return;
+  }
   // Une seule variable "EFT 2026-Q4" : le 1er mot = sigle, le reste = période.
   // Le sigle est développé (dictionnaire) pour le TITRE ; il est conservé tel
   // quel dans l'intro, l'en-tête du tableau et la case à cocher.
@@ -3536,7 +3544,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '204';
+const APP_VERSION = '205';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();

@@ -377,6 +377,33 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(gen.withoutShare.downloaded, 'candidature : repli téléchargement si le partage n\'est pas supporté');
     A(!gen.withoutShare.shared, 'candidature : pas de partage quand non supporté');
 
+    // Garde « 0 groupe » : choix « nombre de groupes souhaités » sans groupe → bloqué ;
+    // les choix « pas / plus intéressé » restent générables sans groupe.
+    const guard = await p.evaluate(async () => {
+      const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+      setTab('candidature');
+      candEl('Nom').value = 'T'; candEl('Prenom').value = 'U'; candEl('Adresse').value = 'X'; candSigData = PNG;
+      selected = new Set(); updateCandidaturePreview();   // aucun groupe
+      const origClick = HTMLAnchorElement.prototype.click;
+      let downloaded = false;
+      HTMLAnchorElement.prototype.click = function(){ if (this.download) downloaded = true; };
+      Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => false });
+      Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+      try {
+        document.querySelector('input[name="candChoix"][value="groupes"]').checked = true;
+        await genererCandidature();
+        const errEl = document.getElementById('candErr');
+        const blocked = { downloaded, errShown: !!(errEl && !errEl.hidden && errEl.textContent), err: errEl ? errEl.textContent : '' };
+        downloaded = false;
+        document.querySelector('input[name="candChoix"][value="pas"]').checked = true;
+        await genererCandidature();
+        return { blocked, pasDownloaded: downloaded };
+      } finally { HTMLAnchorElement.prototype.click = origClick; }
+    });
+    A(!guard.blocked.downloaded, 'candidature : « nombre de groupes » + 0 groupe → génération bloquée');
+    A(guard.blocked.errShown && /groupe/i.test(guard.blocked.err), 'candidature : message d\'erreur « aucun groupe » affiché');
+    A(guard.pasDownloaded, 'candidature : « pas intéressé » générable même sans groupe');
+
     // Thème sombre (prefers-color-scheme:dark) : fond de page + cartes foncés,
     // texte clair, bandeau (chrome) qui reste foncé.
     await p.emulateMedia({ colorScheme: 'dark' });
