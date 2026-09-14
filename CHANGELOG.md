@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Interviews — modèles de rappel : garde-fous et confidentialité**
+  (Interviews `3.74` → `3.75`, SW `statbel-v353` → `statbel-v354`) : quatre améliorations
+  des modèles de rappel personnalisables. (1) Les variables `{{…}}` inconnues d'un modèle
+  sont désormais **signalées** dans l'aperçu (⚠️) au lieu d'être silencieusement remplacées
+  par du vide. (2) L'aperçu affiche la **longueur estimée** de chaque SMS (caractères +
+  nombre de segments, GSM-7 vs UCS-2). (3) Nouvelle option **« Inclure le mot de passe CAWI
+  dans les rappels »** (activée par défaut) pour l'omettre des messages. (4) Un rappel CAWI
+  dont le modèle référence `{{identifiant}}` ou `{{mot_de_passe}}` **demande confirmation**
+  si la fiche ne contient pas cette donnée. Test `tests/reminder-templates.test.js` étendu.
+
 ### Sécurité / confidentialité
 - **Interviews — données de sécurité locales exclues des sauvegardes**
   (Interviews `3.73` → `3.74`, SW `statbel-v352` → `statbel-v353`) : l'export JSON
