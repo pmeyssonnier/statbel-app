@@ -12,6 +12,15 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Documentation
+- **`docs/eft-2026-organisation.md`** : connaissance métier de l'organisation EFT 2026
+  (vue d'ensemble + vague 1 CAPI) et de la feuille de contact **R35** — panel/vagues,
+  numérotation groupe/ménage, rythme des groupes, tentatives de contact, motifs
+  d'« interview impossible », recrutement TIC, structure des paiements. Reformulé depuis
+  la formation Statbel : **processus uniquement, aucune donnée de ménage**, et **sans
+  coordonnées personnelles** (noms/téléphones des superviseurs, boîtes internes) ni
+  montants — conforme à la liste blanche `.gitignore`. Complète `docs/eft-cati-cawi.md`.
+
 ### Modifié
 - **Planner — candidature : priorité par commune + quartier (au lieu de commune seule)**
   (Planner `200` → `201`, SW `statbel-v343` → `statbel-v344`) : les groupes retenus ne
