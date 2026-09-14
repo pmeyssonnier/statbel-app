@@ -69,6 +69,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     p.on('dialog', d => d.accept());
     await p.addInitScript(data => {
       localStorage.setItem('plannings', JSON.stringify(data));
+      // Le Planner est désormais multilingue (défaut = langue du navigateur) ;
+      // on fige le français pour des assertions déterministes.
+      try { localStorage.setItem('statbel_settings', JSON.stringify({ lang: 'fr' })); } catch (e) {}
     }, PLANNINGS);
     await p.goto(srv.url + '/statbel_planner.html', { waitUntil: 'load' });
     await p.waitForTimeout(400);

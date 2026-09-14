@@ -295,7 +295,7 @@ export function buildEditForm(i) {
           <label>${t('ed_rdv')}</label>
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="text" inputmode="numeric" id="edit-rdv-date-${i}" value="${dateISOToFr((c.rdv||'').split(' ')[0]||'')}"
-              placeholder="jj/mm/aaaa" maxlength="10" data-act="editRdvDate" data-i="${i}"
+              placeholder="${esc(t('ph_date'))}" maxlength="10" data-act="editRdvDate" data-i="${i}"
               style="flex:1;">
             <button type="button" class="historique-cal" title="${esc(t('hist_open_cal'))}" aria-label="${esc(t('hist_open_cal'))}" data-act="ouvrirCalendrierRdv" data-i="${i}" style="font-size:16px;">📅</button>
             <input type="text" inputmode="numeric" id="edit-rdv-heure-${i}" value="${(c.rdv||'').split(' ')[1]||''}"
@@ -457,7 +457,7 @@ export function buildHistoriqueHTML(c, i) {
     if (def.rdv) {
       const p = (h.rdv ? h.rdv + ' ' : ' ').split(' ');
       const rdvFr = h.rdv ? (dateISOToFr(p[0]) + (p[1] ? ' ' + p[1].trim() : '')) : '';
-      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" data-act="histRdv" data-i="${i}" data-idx="${idx}" title="Date/heure du RDV"><button class="historique-cal" title="Calendrier RDV" aria-label="Calendrier du rendez-vous" data-act="ouvrirCalendrierRdvHist" data-i="${i}" data-idx="${idx}" data-rdv="${esc(h.rdv || '')}">📅</button>`;
+      rdvField = `<input type="text" class="hist-rdv" value="${esc(rdvFr)}" placeholder="${t('hist_rdv_ph')}" data-act="histRdv" data-i="${i}" data-idx="${idx}" title="${esc(t('hist_rdv_tip'))}"><button class="historique-cal" title="${esc(t('hist_open_cal'))}" aria-label="${esc(t('hist_open_cal'))}" data-act="ouvrirCalendrierRdvHist" data-i="${i}" data-idx="${idx}" data-rdv="${esc(h.rdv || '')}">📅</button>`;
     }
     return `<div class="historique-ligne">
       <div class="historique-dot" style="background:${def.color}"></div>

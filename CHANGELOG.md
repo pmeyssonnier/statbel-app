@@ -12,7 +12,38 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Planner — traduction complète en 4 langues (fr/nl/en/de)**
+  (Planner `196` → `197`, SW `statbel-v339` → `statbel-v340`) : le module Planner,
+  jusque-là uniquement en français, est désormais entièrement traduit — les trois
+  onglets **Planning / Agenda / Candidature**, le menu ⋮, la modale de mapping des
+  colonnes et les contenus générés en JS (agenda liste/semaine/mois/année, tableau
+  de planning, statuts de géocodage, aperçu et validation de la candidature). Ajout
+  d'une couche i18n `t()`/`tf()` + `data-i18n` (même mécanisme que le Convertisseur)
+  et d'un **sélecteur 🌐 propre au Planner** dans le menu ⋮ ; la langue est partagée
+  avec Interviews/Convertisseur via `localStorage['statbel_settings'].lang` et
+  fonctionne aussi hors-ligne (`file://`). Les jours/mois de l'agenda suivent la
+  langue active. Les contenus des fichiers exportés (ICS, formulaire .docx officiel)
+  restent inchangés. Nouveau test `tests/planner-i18n.test.js`.
+
 ### Corrigé
+- **Interviews — autres fuites FR au changement de langue (audit complet)**
+  (Interviews `3.68` → `3.69`, SW `statbel-v338` → `statbel-v339`) : correction des
+  contenus rendus en JS qui restaient en français quelle que soit la langue —
+  panneau « Adresses non géocodées » (message « tout géocodé », option « Toutes les
+  enquêtes », en-tête, replis « adresse vide »/« vide », libellé « envoyé »), aperçu
+  des modèles de rappel (« Objet : »), infobulles RDV de l'historique et placeholder
+  de date (`jj/mm/aaaa`), indicateur d'état de sauvegarde (infobulles ⏳/✓/⚠️), et
+  détail de sauvegarde (« contact(s) », « Aucun contact »). `changerLangue()` rappelle
+  désormais aussi la légende de carte, l'info de sauvegarde du menu ⋮, l'indicateur
+  d'état et le panneau non-géocodées pour les retraduire à chaud. Nouvelles clés i18n
+  fr/nl/en/de. Test `tests/settings-delegation.test.js` étendu.
+- **Interviews — sélecteur d'enquête : « — Aucune enquête — » figé en français**
+  (Interviews `3.67` → `3.68`, SW `statbel-v337` → `statbel-v338`) : sans enquête
+  chargée, l'option du sélecteur d'enquête (en-tête) restait en français dans toutes
+  les langues. Le libellé passe désormais par la clé i18n `opt_no_survey` (fr/nl/en/de)
+  et `changerLangue()` rappelle `refreshSelect()` pour le retraduire à chaud. Couvert
+  par `tests/settings-delegation.test.js`.
 - **Interviews — Paramètres : contenus dynamiques non retraduits au changement de langue**
   (Interviews `3.66` → `3.67`, SW `statbel-v336` → `statbel-v337`) : dans la section
   **Données & sauvegarde**, l'option « Toutes les enquêtes » du sélecteur de purge et

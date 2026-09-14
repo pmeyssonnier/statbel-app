@@ -52,12 +52,25 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     lang.value = 'nl'; fire(lang, 'change');
     out.allScope   = document.querySelector('#viderCacheScope option[value="__all__"]').textContent;
     out.backupInfo = document.getElementById('lastBackupInfo').textContent;
+    // Sélecteur d'enquête (en-tête, hors modale) : sans enquête chargée, l'option
+    // « — Aucune enquête — » doit aussi suivre la langue à chaud.
+    out.surveyOpt  = document.querySelector('#surveySelect option').textContent;
     lang.value = 'fr'; fire(lang, 'change');           // rétablir pour la suite
 
     // click sur bouton : fermerSettings ferme la modale
     document.getElementById('modalSettings').classList.add('open');
     document.querySelector('[data-act="fermerSettings"]').click();
     out.modalClosed = !document.getElementById('modalSettings').classList.contains('open');
+
+    // Panneau « Adresses non géocodées » (rendu en JS) : retraduit à chaud quand
+    // il est peuplé et la modale ouverte. Régression sur les littéraux FR figés.
+    enquetes['Test'] = [{ ordre:'1', prenom:'A', nom:'B', adresse:'Rue Inconnue 1' }];
+    enqueteActive = 'Test';
+    document.getElementById('modalSettings').classList.add('open');
+    document.querySelector('[data-act="listerNonGeocodees"]').click();
+    lang.value = 'nl'; fire(lang, 'change');
+    out.nongeoHead = document.querySelector('.nongeo-head')?.textContent || '';
+    lang.value = 'fr'; fire(lang, 'change');
 
     // aucun handler inline ne doit subsister dans la modale Réglages
     out.inlineRestant = document.querySelectorAll(
@@ -75,6 +88,8 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['input champ URL → settings.cawiUrl (trim)', r.cawi === 'https://enquete.be'],
     ['option « Toutes les enquêtes » traduite à chaud (NL)', /Alle onderzoeken/.test(r.allScope)],
     ['statut de sauvegarde traduit à chaud (NL)', /Nog geen back-up/.test(r.backupInfo)],
+    ['option « Aucune enquête » traduite à chaud (NL)', /Geen onderzoek/.test(r.surveyOpt)],
+    ['panneau non-géocodées traduit à chaud (NL)', /niet-gegeocodeerd/.test(r.nongeoHead)],
     ['click bouton → fermerSettings',     r.modalClosed === true],
     ['0 handler inline restant (Réglages)', r.inlineRestant === 0],
   ];

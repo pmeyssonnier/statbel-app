@@ -28,7 +28,7 @@ statique (GitHub Pages) ; Convertisseur et Planner ouvrables en double-clic
 - **`.gitignore` en liste blanche stricte** (aucune donnée perso versionnée) : un
   nouveau `.html` à la racine doit être whitelisté explicitement (`!fichier.html`).
 - **i18n** : Convertisseur & Interviews en 4 langues (fr/nl/en/de) via `t('key')` +
-  `data-i18n` (Planner : FR) ; `esc()` sur toute donnée injectée dans le DOM.
+  `data-i18n` (Planner aussi : fr/nl/en/de, sélecteur 🌐 propre) ; `esc()` sur toute donnée injectée dans le DOM.
 
 ## Skills (le détail vit là, pas ici)
 
