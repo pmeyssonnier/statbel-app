@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.71';
+const APP_VERSION = '3.72';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1219,7 +1219,6 @@ function enregistrerActionsResume() {
 function enregistrerActionsContacts() {
   registerActions('click', {
     statutBtn:  el => el.dataset.editable === '1' ? changerStatut(+el.dataset.i, el.dataset.label) : ouvrirEdit(+el.dataset.i),
-    ouvrirEdit: el => ouvrirEdit(+el.dataset.i),
     toggleEdit: el => toggleEdit(+el.dataset.i),
     sauverEdit: el => sauverEdit(+el.dataset.i),
     exporterVCard: el => exporterVCard(+el.dataset.i),

@@ -14,13 +14,13 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ### Modifié
 - **Interviews — vue Liste : fiche compacte n'affichant que le statut courant**
-  (Interviews `3.70` → `3.71`, SW `statbel-v349` → `statbel-v350`) : sur mobile, chaque
+  (Interviews `3.70` → `3.72`, SW `statbel-v349` → `statbel-v351`) : sur mobile, chaque
   fiche de la liste montrait la barre complète des statuts (tous les boutons), très
-  encombrante. Elle affiche désormais **uniquement le statut courant** (une puce, comme
-  le popup de la carte), en gardant le crayon 🖊️ et le cadenas 🔒. Un clic sur la puce
-  (ou le cadenas, ou le crayon) ouvre le formulaire d'édition — **l'édition et le choix
-  du statut restent identiques** (barre complète dans le formulaire). Nouveau
-  `statutChipHTML()`. Test `tests/statut-lock.test.js` adapté.
+  encombrante. Elle affiche désormais **uniquement le statut courant** sous forme d'une
+  puce (comme le popup de la carte). Un clic sur la puce **ou** sur le crayon 🖊️ ouvre le
+  formulaire d'édition — **l'édition et le choix du statut restent identiques** (barre
+  complète dans le formulaire). Le cadenas 🔒 séparé a été **retiré** (la puce + le crayon
+  suffisent). Nouveau `statutChipHTML()`. Test `tests/statut-lock.test.js` adapté.
 
 ### Corrigé
 - **Planner — candidature : génération bloquée si 0 groupe souhaité**

@@ -424,7 +424,6 @@ export function rendu() {
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
       <div class="card-statut">
         <div class="statut-bar statut-bar-lock">${statutChipHTML(i, statut)}</div>
-        <span class="statut-lock" title="${esc(t('lock_status_edit'))}" data-act="ouvrirEdit" data-i="${i}">🔒</span>
         ${dateStatut ? `<span class="card-statut-date">${esc(dateStatut)}</span>` : ''}
       </div>
       ${!coordsCache(c.adresse) ? `<div class="no-coords">${t('no_coords')}</div>` : ''}

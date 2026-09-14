@@ -44,7 +44,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     await new Promise(res => setTimeout(res, 100));
     const out = {};
     out.hasLockBar = !!document.querySelector('#liste .statut-bar-lock');
-    out.hasLockIcon = !!document.querySelector('#liste .statut-lock');
+    // Le cadenas séparé a été retiré : la puce du statut + le crayon suffisent.
+    out.noLockIcon = !document.querySelector('#liste .statut-lock');
     // Fiche compacte : SEUL le statut courant est affiché (une puce), pas toute la barre.
     const cardChips = document.querySelectorAll('#liste .statut-bar-lock .s-btn');
     out.chipCount = cardChips.length;
@@ -63,7 +64,8 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     return out;
   });
 
-  A(r.hasLockBar && r.hasLockIcon, 'carte : barre de statut verrouillée + cadenas 🔒');
+  A(r.hasLockBar, 'carte : barre de statut verrouillée (puce du statut courant)');
+  A(r.noLockIcon, 'carte : plus de cadenas 🔒 séparé (puce + crayon suffisent)');
   A(r.chipCount === 1 && r.chipLabel === 'To do', `carte compacte : seul le statut courant affiché (${r.chipCount} puce, "${r.chipLabel}")`);
   A(r.statutAfterCardClick === 'To do', `clic sur la CARTE ne change PAS le statut (reste "${r.statutAfterCardClick}")`);
   A(r.editOpened, 'clic sur le statut de la carte ouvre le formulaire d\'édition');
