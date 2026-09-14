@@ -3160,7 +3160,8 @@ function candLocaliserLabels(doc) {
 function candGenerateDocxBytes(data) {
   const rowTpl = candBytesToStr(candB64ToBytes(CAND_DOCX.rowtpl));
   const rowsXml = (data.groupes || []).map(g =>
-    rowTpl.replace('@@GRP@@', candXmlEsc(g.numero)).replace('@@COM@@', candXmlEsc(communeLabel(g.commune)))
+    rowTpl.replace('@@GRP@@', candXmlEsc(g.numero))
+          .replace('@@COM@@', candXmlEsc(communeLabel(g.commune) + (g.quartier ? ' - ' + g.quartier : '')))
   ).join('');
 
   let doc = candBytesToStr(candB64ToBytes(CAND_DOCX.parts['word/document.xml']));
@@ -3381,7 +3382,7 @@ function updateCandidaturePreview(){
         +'<button type="button" class="cand-mv" title="'+candEscHtml(t('js_move_down'))+'" onclick="candMoveCommune('+i+',1)"'+(i===last?' disabled':'')+'>▼</button>'
       +'</span>'
       +'<span class="cand-comm">'+candEscHtml(communeLabel(c.commune))
-        +(c.quartier?'<span class="cand-q">'+candEscHtml(c.quartier)+'</span>':'')
+        +'<span class="cand-q">'+candEscHtml(c.groups.join(', ')+(c.quartier?(' - '+c.quartier):''))+'</span>'
       +'</span>'
       +'<span class="cand-cnt">'+c.count+' '+candEscHtml(t('cand_groupes_word'))+'</span>'
       +'<button type="button" class="cand-del" title="'+candEscHtml(t('js_remove_commune'))+'" aria-label="'+candEscHtml(tf('js_remove_commune_aria',{c:communeLabel(c.commune)+(c.quartier?(' — '+c.quartier):'')}))+'" onclick="candRemoveCommune('+i+')">✕</button>'
@@ -3551,7 +3552,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '201';
+const APP_VERSION = '202';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();
