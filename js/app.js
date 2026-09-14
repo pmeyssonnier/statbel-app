@@ -97,11 +97,11 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.76';
+const APP_VERSION = '3.77';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
-  provider: 'auto',  // 'auto' | 'bruxelles' | 'wallonie' | 'flandre' | 'osm'
+  provider: 'auto',  // 'auto' | 'bruxelles' | 'wallonie' | 'flandre'
   mapStyle: 'gray',       // 'gray' | 'color'  (Bruxelles uniquement)
   navMode:  'coords',     // 'coords' (point GPS, vie privée) | 'adresse'
   statuts:  cloneStatuts(),  // modèle par défaut + repli de lecture (voir statutsParEnquete)
@@ -321,6 +321,15 @@ function setupA11y() {
   overlays.forEach(m => {
     m.setAttribute('role', 'dialog');
     m.setAttribute('aria-modal', 'true');
+    // Nom accessible : associer le titre de la modale (1er h1/h2/h3) via aria-labelledby,
+    // sinon un lecteur d'écran annonce « dialog » sans intitulé. Respecte un nom déjà posé.
+    if (!m.hasAttribute('aria-labelledby') && !m.hasAttribute('aria-label')) {
+      const titre = m.querySelector('h1, h2, h3');
+      if (titre) {
+        if (!titre.id) titre.id = (m.id || 'modal') + '-title';
+        m.setAttribute('aria-labelledby', titre.id);
+      }
+    }
   });
 
   // Éléments de premier niveau formant l'arrière-plan (tout sauf les modales) :

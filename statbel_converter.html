@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!-- CSP pragmatique (voir index.html) : connexions réseau limitées aux
      géocodeurs régionaux ; 'unsafe-inline' conservé pour script/style. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.irisnet.be https://*.wallonie.be https://*.vlaanderen.be https://*.ngi.be https://*.openstreetmap.org">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statbel — Convertisseur d'enquête</title>
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -999,6 +999,8 @@ const I18N = {
   ph_search_country: { fr:"Rechercher par NIS, ISO ou nom…", nl:"Zoeken op NIS, ISO of naam…", en:"Search NIS, ISO or name…", de:"Suche nach NIS, ISO oder Name…" },
   ph_search_commune: { fr:"Rechercher par REFNIS ou nom…", nl:"Zoeken op REFNIS of naam…", en:"Search REFNIS or name…", de:"Suche nach REFNIS oder Name…" },
   btn_clear: { fr:"Effacer", nl:"Wissen", en:"Clear", de:"Löschen" },
+  pl_move_up: { fr:"Monter", nl:"Omhoog", en:"Move up", de:"Nach oben" },
+  pl_move_down: { fr:"Descendre", nl:"Omlaag", en:"Move down", de:"Nach unten" },
   skip_link: { fr:"Aller au contenu", nl:"Naar de inhoud", en:"Skip to content", de:"Zum Inhalt springen" },
 
   // ── Statistics ────────────────────────────────────────────────────
@@ -5764,7 +5766,7 @@ function natTreemapInto(tmId, titre, sub, opts) {
   const natTxt = escHtml(t(opts.hh ? 'txt_by_nationality_hh' : 'txt_by_nationality'));
   el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:2px 0 4px">
       <b style="color:var(--text)">${escHtml(titre)}</b> — ${sub.length}${unit}${natTxt}
-      <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" onclick="document.getElementById('${tmId}').innerHTML=''">✕</button>
+      <button class="btn-reset" style="margin:0 0 0 auto;padding:1px 7px" aria-label="${escHtml(t('btn_clear'))}" title="${escHtml(t('btn_clear'))}" onclick="document.getElementById('${tmId}').innerHTML=''">✕</button>
     </div><div id="${tmId}-tm"></div>`;
   renderTreemapNlty(tmId + '-tm', items);
 }
@@ -6211,8 +6213,8 @@ function renderPersoList() {
       return `<li class="${x.on ? '' : 'off'}">`
         + `<input type="checkbox" ${x.on ? 'checked' : ''} onchange="persoToggle('${kind}',${i})" aria-label="${lb}">`
         + `<span class="pl-lb">${lb}</span>`
-        + `<span class="pl-mv"><button onclick="persoMove('${kind}',${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>`
-        + `<button onclick="persoMove('${kind}',${i},1)" ${i === cfg.length - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button></span></li>`;
+        + `<span class="pl-mv"><button onclick="persoMove('${kind}',${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="${escHtml(t('pl_move_up'))}">↑</button>`
+        + `<button onclick="persoMove('${kind}',${i},1)" ${i === cfg.length - 1 ? 'disabled' : ''} aria-label="${escHtml(t('pl_move_down'))}">↓</button></span></li>`;
     }).join('');
     return (grouped && P.sub ? `<li class="perso-sub">${escHtml(t(P.sub))}</li>` : '') + rows;
   }).join('');
@@ -7033,7 +7035,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '222';
+const APP_VERSION = '223';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

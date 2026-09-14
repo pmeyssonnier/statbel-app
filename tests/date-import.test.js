@@ -83,6 +83,16 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.us3 = us[2].birth_date;   // attendu 1968-01-31
     out.us_all_coherent = us.every(c => !valeurIncoherente('birth_date', c.birth_date));
 
+    // — parseInt garde un 0 légitime (ménage sans cible ≥15) au lieu de le perdre → null.
+    const csvZero =
+      'order,first_name,last_name,address,household_size,nb_cibles\n' +
+      '1,Zoe,Nul,"Rue Z, 1000 Bruxelles",0,0\n' +
+      '2,Ida,Vide,"Rue V, 1000 Bruxelles",,\n';
+    const z = parseCSV(csvZero).rows;
+    out.zeroTaille = z[0].taille_menage;   // attendu 0 (pas null)
+    out.zeroCibles = z[0].nb_cibles;       // attendu 0 (pas null)
+    out.videTaille = z[1].taille_menage;   // vide → null (inchangé)
+
     return out;
   });
 
@@ -102,6 +112,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.us2 === '1983-07-25', `colonne US « 7/25/83 » → ISO « ${r.us2} »`);
   A(r.us3 === '1968-01-31', `colonne US « 1/31/68 » → ISO « ${r.us3} »`);
   A(r.us_all_coherent, 'toutes les dates US normalisées passent le contrôle');
+  A(r.zeroTaille === 0, `import : taille_ménage « 0 » conservée (got ${JSON.stringify(r.zeroTaille)})`);
+  A(r.zeroCibles === 0, `import : nb_cibles « 0 » conservé (got ${JSON.stringify(r.zeroCibles)})`);
+  A(r.videTaille === null, `import : taille_ménage vide → null (got ${JSON.stringify(r.videTaille)})`);
   A(perr.length === 0, 'aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
 
   await b.close();

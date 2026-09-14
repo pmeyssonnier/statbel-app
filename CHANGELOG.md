@@ -12,6 +12,24 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Correctifs mineurs (audit — lot LOW)
+(Interviews `3.76` → `3.77`, Convertisseur `222` → `223`, Planner `206` → `207`,
+SW `statbel-v355` → `statbel-v356`)
+- **CSP resserrées** : Convertisseur `connect-src 'self'` (l'app ne fait aucun appel réseau ;
+  5 domaines externes retirés) ; Planner : `*.ngi.be` retiré (jamais contacté).
+- **Import CSV** : la taille de ménage / le nombre de cibles `0` (valeur légitime) n'est plus
+  transformé en « inconnu » (`null`) ; nouveau helper `intOuNull`. Test étendu.
+- **Planner — `parseDate`** : branche « format US » morte (regex dupliquée) corrigée → plus de
+  débordement silencieux d'une date type `05/13/2026` ; le format US n'est pris que si `jj/mm`
+  est impossible.
+- **`saveCoords`** protégé contre un `QuotaExceededError` (cache de coordonnées plein ne casse
+  plus la chaîne de géocodage).
+- **Accessibilité** : les modales de contenu (Interviews) reçoivent un nom accessible
+  (`aria-labelledby` → titre) ; boutons ✕ nommés (Planner vérif. adresse, Convertisseur) ;
+  boutons monter/descendre du Convertisseur traduits (`pl_move_up`/`pl_move_down`, 4 langues).
+- **Nettoyage** : entrée `.gitignore` périmée (`aqua-conseil.html`) retirée ; commentaire
+  provider `osm` obsolète retiré ; table des versions du README réalignée.
+
 ### Sécurité / correctifs (audit)
 - **Planner — XSS via le n° de groupe importé corrigée**
   (Planner `205` → `206`, SW `statbel-v354` → `statbel-v355`) : le n° de groupe issu d'un
