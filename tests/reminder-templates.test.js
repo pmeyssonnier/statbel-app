@@ -66,10 +66,16 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
       signature:settings.reminderSignature, shortSignature:settings.reminderSignatureShort,
     }).body;
 
+    // Les libellés de la section suivent aussi la langue active.
+    appliquerLangue();
+    const nlSection = document.querySelector('[data-i18n="reminder_section"]').textContent;
+    const nlLoadBtn = document.querySelector('[data-act="loadReminderTemplates"]').textContent;
+    const nlSubjectPh = document.getElementById('setReminderMailSubject').placeholder;
+
     return {
       loaded, preview, body:built.body, href:built.href,
       storedSms:stored.reminderTemplates && stored.reminderTemplates.smsCati,
-      reset, fallback, nlSubject, nlSig, nlRdv,
+      reset, fallback, nlSubject, nlSig, nlRdv, nlSection, nlLoadBtn, nlSubjectPh,
       inline:document.querySelectorAll('#modalSettings [onclick],[oninput],[onchange]').length,
     };
   });
@@ -89,6 +95,9 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['modèles proposés en NL', /Herinnering/.test(r.nlSubject)],
     ['signature par défaut NL', /Statbel-enquêteur/.test(r.nlSig)],
     ['rendez-vous localisé NL', /Geplande afspraak/.test(r.nlRdv)],
+    ['libellé de section traduit NL', /Herinneringssjablonen/.test(r.nlSection)],
+    ['bouton « charger » traduit NL', /Voorgestelde sjablonen laden/.test(r.nlLoadBtn)],
+    ['placeholder objet traduit NL', /Herinnering/.test(r.nlSubjectPh)],
     ['aucun handler inline', r.inline === 0],
     ['aucune erreur de page', perr.length === 0],
   ];

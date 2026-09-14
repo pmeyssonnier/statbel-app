@@ -300,55 +300,55 @@
                  data-act="setCawiUrl">
         </div>
         <details class="set-accordion" style="margin-top:12px;">
-          <summary>✉️ Modèles de rappel — prototype</summary>
+          <summary data-i18n="reminder_section">✉️ Modèles de rappel — prototype</summary>
           <div style="margin-top:10px;">
-            <p class="hint">Les champs vides conservent le message automatique traduit actuel. Variables disponibles :
+            <p class="hint"><span data-i18n="reminder_hint">Les champs vides conservent le message automatique traduit actuel. Variables disponibles :</span>
               <code>{{prenom}}</code>, <code>{{enquete}}</code>, <code>{{rendez_vous}}</code>,
               <code>{{lien}}</code>, <code>{{identifiant}}</code>, <code>{{mot_de_passe}}</code>,
-              <code>{{signature}}</code> et <code>{{signature_courte}}</code>.
+              <code>{{signature}}</code>, <code>{{signature_courte}}</code>.
             </p>
             <div class="set-row">
-              <label for="setReminderSignature">Signature e-mail</label>
+              <label for="setReminderSignature" data-i18n="reminder_sig_mail">Signature e-mail</label>
               <input type="text" id="setReminderSignature" maxlength="200"
-                     placeholder="Pierre Meyssonnier – Enquêteur Statbel"
+                     placeholder="Pierre Meyssonnier – Enquêteur Statbel" data-i18n-ph="reminder_sig_mail_ph"
                      data-act="setReminderIdentity" data-field="reminderSignature">
             </div>
             <div class="set-row">
-              <label for="setReminderSignatureShort">Signature SMS</label>
+              <label for="setReminderSignatureShort" data-i18n="reminder_sig_sms">Signature SMS</label>
               <input type="text" id="setReminderSignatureShort" maxlength="80"
                      placeholder="Pierre – Statbel"
                      data-act="setReminderIdentity" data-field="reminderSignatureShort">
             </div>
             <div class="set-row">
-              <label for="setReminderMailSubject">Objet de l’e-mail</label>
+              <label for="setReminderMailSubject" data-i18n="reminder_mail_subject">Objet de l’e-mail</label>
               <input type="text" id="setReminderMailSubject" maxlength="300"
                      data-reminder-field="mailSubject" data-act="setReminderTemplate"
-                     placeholder="Rappel – Enquête {{enquete}} de Statbel">
+                     placeholder="Rappel – Enquête {{enquete}} de Statbel" data-i18n-ph="reminder_mail_subject_ph">
             </div>
             <div class="set-row">
-              <label for="setReminderMailCati">E-mail CATI</label>
+              <label for="setReminderMailCati" data-i18n="reminder_mail_cati">E-mail CATI</label>
               <textarea id="setReminderMailCati" rows="7" maxlength="4000"
                         data-reminder-field="mailCati" data-act="setReminderTemplate"></textarea>
             </div>
             <div class="set-row">
-              <label for="setReminderMailCawi">E-mail CAWI</label>
+              <label for="setReminderMailCawi" data-i18n="reminder_mail_cawi">E-mail CAWI</label>
               <textarea id="setReminderMailCawi" rows="8" maxlength="4000"
                         data-reminder-field="mailCawi" data-act="setReminderTemplate"></textarea>
             </div>
             <div class="set-row">
-              <label for="setReminderSmsCati">SMS CATI</label>
+              <label for="setReminderSmsCati" data-i18n="reminder_sms_cati">SMS CATI</label>
               <textarea id="setReminderSmsCati" rows="3" maxlength="1000"
                         data-reminder-field="smsCati" data-act="setReminderTemplate"></textarea>
             </div>
             <div class="set-row">
-              <label for="setReminderSmsCawi">SMS CAWI</label>
+              <label for="setReminderSmsCawi" data-i18n="reminder_sms_cawi">SMS CAWI</label>
               <textarea id="setReminderSmsCawi" rows="3" maxlength="1000"
                         data-reminder-field="smsCawi" data-act="setReminderTemplate"></textarea>
             </div>
             <div class="modal-btns" style="justify-content:flex-start;">
-              <button class="btn-secondary" type="button" data-act="loadReminderTemplates">Charger les modèles proposés</button>
-              <button class="btn-secondary" type="button" data-act="previewReminderTemplates">Aperçu</button>
-              <button class="btn-secondary" type="button" data-act="resetReminderTemplates">Réinitialiser</button>
+              <button class="btn-secondary" type="button" data-act="loadReminderTemplates" data-i18n="reminder_btn_load">Charger les modèles proposés</button>
+              <button class="btn-secondary" type="button" data-act="previewReminderTemplates" data-i18n="reminder_btn_preview">Aperçu</button>
+              <button class="btn-secondary" type="button" data-act="resetReminderTemplates" data-i18n="reminder_btn_reset">Réinitialiser</button>
             </div>
             <pre id="reminderTemplatePreview" class="hidden" aria-live="polite"
                  style="white-space:pre-wrap;max-height:280px;overflow:auto;padding:10px;border:1px solid var(--border);border-radius:8px;"></pre>

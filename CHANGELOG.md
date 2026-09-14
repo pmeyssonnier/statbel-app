@@ -13,6 +13,12 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Ajouté
+- **Interviews — section « Modèles de rappel » traduite en 4 langues**
+  (Interviews `3.65` → `3.66`, SW `statbel-v335` → `statbel-v336`) : les libellés,
+  l'aide, les exemples (placeholders) et les boutons de la section
+  **✉️ Modèles de rappel — prototype** (modale Paramètres) suivent désormais la
+  langue active (fr/nl/en/de) via `data-i18n`/`data-i18n-ph` ; ils étaient jusque-là
+  figés en français. Test `tests/reminder-templates.test.js` étendu aux libellés NL.
 - **Interviews — modèles de rappel proposés en 4 langues**
   (Interviews `3.64` → `3.65`, SW `statbel-v334` → `statbel-v335`) :
   « Charger les modèles proposés » remplit désormais les cinq modèles (objet
