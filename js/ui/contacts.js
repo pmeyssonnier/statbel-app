@@ -237,30 +237,30 @@ export function ouvrirEdit(i) {
   return el;
 }
 
-// Barre de statut d'une fiche. En mode « verrouillé » (fiche fermée), les boutons
-// N'APPLIQUENT PAS le statut : ils ouvrent le formulaire d'édition. Le statut ne se
-// change qu'en mode édition → évite les changements accidentels au toucher.
-export function statutBarHTML(i, statut, editable) {
-  return statutDefs().map((s) => {
-    const on = s.label === statut;
-    const style = `color:${s.color};${on ? `border-color:${s.color};background:${s.color}22;` : ''}`;
-    const cls = `s-btn${on ? ' actif' : ''}${editable ? '' : ' s-btn-lock'}`;
-    const ttl = editable ? '' : ` title="${esc(t('lock_status_edit'))}"`;
-    // a11y : l'emoji est décoratif (le libellé texte porte le sens) ; l'état actif
-    // d'un bouton éditable est exposé via aria-pressed.
-    const press = editable ? ` aria-pressed="${on}"` : '';
-    // Délégation : éditable → changerStatut(i,label) ; verrouillé → ouvrirEdit(i).
-    // La carte n'ayant pas de handler de clic propre, aucun stopPropagation requis.
-    return `<button class="${cls}" style="${style}"${ttl}${press} data-act="statutBtn" data-i="${i}" data-editable="${editable ? 1 : 0}" data-label="${esc(s.label)}"><span aria-hidden="true">${esc(s.icon)}</span> ${esc(statutLabel(s.label))}</button>`;
-  }).join('');
+// Un bouton de statut (source unique de la puce et de la barre). `s` = définition
+// {label,color,icon} ; `on` = statut courant (mis en avant). En mode éditable, le
+// clic applique le statut (aria-pressed exposé) ; en mode verrouillé (data-editable
+// « 0 » + s-btn-lock), il ouvre le formulaire d'édition — évite un changement au
+// toucher accidentel. Délégation via data-act="statutBtn" (cf. js/app.js).
+function statutBtnHTML(i, s, on, editable) {
+  const style = `color:${s.color};${on ? `border-color:${s.color};background:${s.color}22;` : ''}`;
+  const cls = `s-btn${on ? ' actif' : ''}${editable ? '' : ' s-btn-lock'}`;
+  const ttl = editable ? '' : ` title="${esc(t('lock_status_edit'))}"`;
+  const press = editable ? ` aria-pressed="${on}"` : '';   // l'emoji reste décoratif (aria-hidden)
+  return `<button class="${cls}" style="${style}"${ttl}${press} data-act="statutBtn" data-i="${i}" data-editable="${editable ? 1 : 0}" data-label="${esc(s.label)}"><span aria-hidden="true">${esc(s.icon)}</span> ${esc(statutLabel(s.label))}</button>`;
+}
+
+// Barre éditable de tous les statuts (formulaire) : un clic applique le statut.
+export function statutBarHTML(i, statut) {
+  return statutDefs().map(s => statutBtnHTML(i, s, s.label === statut, true)).join('');
 }
 
 // Puce du statut COURANT seul (fiche compacte, gain de place mobile) : verrouillée,
-// un clic ouvre le formulaire d'édition (comme le cadenas). Le choix parmi tous les
-// statuts se fait dans le formulaire (barre éditable) — cf. statutBarHTML.
-export function statutChipHTML(i, statut) {
-  const def = statutDef(statut);
-  return `<button class="s-btn actif s-btn-lock" style="color:${def.color};border-color:${def.color};background:${def.color}22;" title="${esc(t('lock_status_edit'))}" data-act="statutBtn" data-i="${i}" data-editable="0" data-label="${esc(statut)}"><span aria-hidden="true">${esc(def.icon)}</span> ${esc(statutLabel(statut))}</button>`;
+// un clic ouvre le formulaire d'édition. Le choix parmi tous les statuts se fait
+// dans le formulaire (barre éditable). `def` peut être passé pour éviter un
+// second statutDef() quand l'appelant l'a déjà calculé.
+export function statutChipHTML(i, statut, def = statutDef(statut)) {
+  return statutBtnHTML(i, def, true, false);
 }
 
 // Génère le contenu du formulaire d'édition d'une fiche (à la demande)
@@ -275,7 +275,7 @@ export function buildEditForm(i) {
         ${buildHistoriqueHTML(c, i)}
         <div class="edit-row">
           <label>${t('ed_status')}</label>
-          <div class="statut-bar">${statutBarHTML(i, statut, true)}</div>
+          <div class="statut-bar">${statutBarHTML(i, statut)}</div>
         </div>
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:0.45">
@@ -423,7 +423,7 @@ export function rendu() {
       </div>
       ${badges.length ? '<div class="card-badges">'+badges.join('')+'</div>' : ''}
       <div class="card-statut">
-        <div class="statut-bar statut-bar-lock">${statutChipHTML(i, statut)}</div>
+        <div class="statut-bar statut-bar-lock">${statutChipHTML(i, statut, def)}</div>
         ${dateStatut ? `<span class="card-statut-date">${esc(dateStatut)}</span>` : ''}
       </div>
       ${!coordsCache(c.adresse) ? `<div class="no-coords">${t('no_coords')}</div>` : ''}
@@ -503,7 +503,7 @@ export function majCarteStatut(i) {
   card.querySelectorAll('.statut-bar').forEach(bar => {
     const inEdit = !!bar.closest('.edit-area');
     // Formulaire : barre complète éditable ; carte compacte : puce du statut courant.
-    bar.innerHTML = inEdit ? statutBarHTML(i, c.statut, true) : statutChipHTML(i, c.statut);
+    bar.innerHTML = inEdit ? statutBarHTML(i, c.statut) : statutChipHTML(i, c.statut, def);
   });
 }
 
