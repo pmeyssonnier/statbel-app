@@ -12,6 +12,15 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Modifié
+- **Planner — candidature : priorité par commune + quartier (au lieu de commune seule)**
+  (Planner `200` → `201`, SW `statbel-v343` → `statbel-v344`) : les groupes retenus ne
+  sont plus regroupés en un seul bloc par commune. Chaque **quartier** d'une commune est
+  une entrée ordonnable **séparément** (ex. « Schaerbeek — Gd. Rue au Bois » peut passer
+  avant « Schaerbeek — Helmet »). Le tri par défaut est commune puis quartier, les
+  flèches ▲/▼ déplacent chaque entrée indépendamment, et l'ordre du formulaire .docx suit
+  cet ordre puis le n° de groupe. Nouveau test `tests/candidature-order.test.js`.
+
 ### Corrigé
 - **Planner — dernières fuites FR de la candidature (.docx)**
   (Planner `199` → `200`, SW `statbel-v342` → `statbel-v343`) : le nom d'enquête
