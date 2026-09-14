@@ -99,8 +99,11 @@ export function nowHHMM() {
 /** Convertit DD/MM/YYYY en YYYY-MM-DD pour comparaison de tri */
 export function dateFrToISO(d) {
   if (!d) return '';
-  const p = d.split('/');
-  return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : '';
+  const m = String(d).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return '';
+  const day = +m[1], mo = +m[2], y = +m[3];
+  if (!jourValide(y, mo, day)) return '';               // rejette 31/02, 31/04, 29/02 non bissextile…
+  return `${y}-${String(mo).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 /** Convertit YYYY-MM-DD (input date) en DD/MM/YYYY */
@@ -128,7 +131,7 @@ export function toISODate(v, moisDabord) {
   const d  = moisDabord ? b : a;                                     // jour
   const mo = moisDabord ? a : b;                                     // mois
   if (y < 100) { y = 2000 + y; if (y > new Date().getFullYear()) y -= 100; } // pivot de siècle
-  if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+  if (!jourValide(y, mo, d)) return '';                              // rejette 31/02, 31/04, 29/02 non bissextile…
   return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
@@ -175,9 +178,16 @@ export function toISODateTime(v) {
   if (!s) return '';
   const mt = s.match(/^(.*?)[\sT]+(\d{1,2}[:h]\d{2})\s*$/);          // partie heure finale ?
   const datePart = mt ? mt[1].trim() : s;
-  const timePart = mt ? mt[2].replace('h', ':') : '';
   const iso = toISODate(datePart);
   if (!iso) return '';                                              // date non reconnue → pas de rdv
+  // Heure : normalisée (0-padding) puis validée 24 h. Une heure invalide (25:99…)
+  // est écartée — on garde le rendez-vous à sa date plutôt que de le perdre.
+  let timePart = mt ? mt[2].replace('h', ':') : '';
+  if (timePart) {
+    const hm = timePart.match(/^(\d{1,2}):(\d{2})$/);
+    timePart = hm ? `${hm[1].padStart(2, '0')}:${hm[2]}` : '';
+    if (timePart && !/^([01]\d|2[0-3]):[0-5]\d$/.test(timePart)) timePart = '';
+  }
   return timePart ? `${iso} ${timePart}` : iso;
 }
 

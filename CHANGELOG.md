@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Correctifs (audit — suite)
+- **Interviews — validité calendaire des dates de rendez-vous** (Interviews `3.77` → `3.78`,
+  SW `statbel-v356` → `statbel-v357`) : la normalisation corrigeait le format mais pas la
+  validité. `toISODate` et `dateFrToISO` rejettent désormais les dates impossibles
+  (`31/02`, `31/04`, `29/02` hors année bissextile) via le helper `jourValide` — au lieu du
+  simple contrôle jour ≤ 31 / mois ≤ 12 ; `dateFrToISO` renvoie de l'ISO **0-paddé**.
+  `toISODateTime` valide et normalise l'heure (`^([01]\d|2[0-3]):[0-5]\d$`) : une heure
+  invalide (`25:99`, `24:60`) est écartée, la date du rendez-vous étant conservée. Même
+  contrôle appliqué à l'import CSV **et** à la saisie manuelle (`lireRdvFields` →
+  `dateFrToISO`). `tests/date-import.test.js` étendu (31/02, 29/02 bissextile ou non, 24:60).
+
 ### Correctifs mineurs (audit — lot LOW)
 (Interviews `3.76` → `3.77`, Convertisseur `222` → `223`, Planner `206` → `207`,
 SW `statbel-v355` → `statbel-v356`)
