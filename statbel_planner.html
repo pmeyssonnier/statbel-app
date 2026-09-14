@@ -3138,14 +3138,23 @@ const CAND_DOCX_I18N = {
   'Date:': { nl:'Datum:', en:'Date:', de:'Datum:' },
   'Signature': { nl:'Handtekening', en:'Signature', de:'Unterschrift' },
 };
+// Normalisation pour l'appariement : le gabarit officiel emploie la typographie FR
+// (espace insécable U+00A0 / fine U+202F avant « : », apostrophe courbe U+2019).
+// On compare des formes normalisées pour rester robuste à ces variantes.
+function candNorm(s) { return String(s).replace(/[  ]/g, ' ').replace(/’/g, "'"); }
 function candLocaliserLabels(doc) {
   if (uiLang === 'fr') return doc;
+  const idx = {};
   for (const fr in CAND_DOCX_I18N) {
     const tr = CAND_DOCX_I18N[fr][uiLang];
-    if (!tr) continue;
-    doc = doc.split('>' + fr + '</w:t>').join('>' + candXmlEsc(tr) + '</w:t>');
+    if (tr != null) idx[candNorm(fr)] = tr;
   }
-  return doc;
+  // Remplace le texte de chaque nœud <w:t> dont la forme normalisée est un libellé
+  // connu (appariement exact sur le nœud entier → pas de collision de sous-chaînes).
+  return doc.replace(/(<w:t[^>]*>)([^<]*)(<\/w:t>)/g, (m, open, text, close) => {
+    const tr = idx[candNorm(text)];
+    return tr != null ? open + candXmlEsc(tr) + close : m;
+  });
 }
 
 function candGenerateDocxBytes(data) {
@@ -3222,10 +3231,11 @@ const CAND_LS_KEY = 'lfs_candidature_infos';
 // sélectionnés / date du jour) → ni mémorisés ni restaurés.
 const CAND_FIELDS = ['Survey','Nom','Prenom','Adresse','Cp','Commune','TelPrive','HeuresPrive',
   'TelPort','HeuresPort','TelBur','HeuresBur','EmailPrive','EmailBur'];
-// Sigle d'enquête -> nom complet (pour développer le titre du document).
-// Le sigle inconnu est utilisé tel quel comme nom. Ajouter les enquêtes ici.
+// Sigle d'enquête -> nom complet en 4 langues (pour développer le titre du
+// document). Le sigle inconnu est utilisé tel quel comme nom. Ajouter les
+// enquêtes ici. Le nom affiché suit la langue active (repli FR).
 const CAND_SURVEYS = {
-  'EFT': 'Enquête sur les Forces de Travail',
+  'EFT': { fr:'Enquête sur les Forces de Travail', nl:'Enquête naar de Arbeidskrachten', en:'Labour Force Survey', de:'Arbeitskräfteerhebung' },
 };
 
 function candEl(f){ return document.getElementById('cand'+f); }
@@ -3285,43 +3295,51 @@ function candSaveInfos(){
   try{ localStorage.setItem(CAND_LS_KEY,JSON.stringify(o)); }catch(e){}
 }
 
-// Ordre de priorité des communes choisies (persistant tant que la sélection existe).
+// Ordre de priorité des entrées choisies (persistant tant que la sélection existe).
+// Une entrée = commune + quartier : chaque quartier d'une commune est ordonnable
+// SÉPARÉMENT (ex. « Schaerbeek — Gd. Rue au Bois » avant « Schaerbeek — Helmet »),
+// au lieu de regrouper tous les groupes d'une commune en un seul bloc.
 let candCommuneOrder = [];
+const CAND_SEP = String.fromCharCode(1);   // separateur de cle commune|quartier (absent des donnees)
 
-// Regroupe les groupes sélectionnés PAR COMMUNE, dans l'ordre de priorité choisi.
-// Met à jour candCommuneOrder : élague les communes disparues, ajoute les nouvelles
-// (par ordre alphabétique) à la fin. Retourne [{commune, communeFR, count, groups[], quartiers[]}].
+// Regroupe les groupes sélectionnés PAR COMMUNE + QUARTIER, dans l'ordre de priorité
+// choisi. Met à jour candCommuneOrder : élague les entrées disparues, ajoute les
+// nouvelles (tri commune puis quartier) à la fin.
+// Retourne [{key, commune, communeFR, quartier, count, groups[]}].
 function candCommunes(){
   const map=new Map();
   selectedRows().forEach(r=>{
-    const key=(r.commune||'').trim() || '—';
+    const commune=(r.commune||'').trim() || '—';
+    const quartier=(r.quartier||'').trim();
+    const key=commune+CAND_SEP+quartier;
     let e=map.get(key);
-    if(!e){ e={commune:key, communeFR:key.split('/')[0].trim()||key, groups:[], quartiers:new Set()}; map.set(key,e); }
+    if(!e){ e={key, commune, communeFR:commune.split('/')[0].trim()||commune, quartier, groups:[]}; map.set(key,e); }
     e.groups.push(r.numero);
-    if(r.quartier) e.quartiers.add(r.quartier);
   });
   const ordered=candCommuneOrder.filter(k=>map.has(k));
   [...map.keys()].filter(k=>!ordered.includes(k))
-    .sort((a,b)=>a.localeCompare(b,'fr',{sensitivity:'base'}))
+    .sort((a,b)=>{ const ea=map.get(a), eb=map.get(b);
+      return ea.communeFR.localeCompare(eb.communeFR,'fr',{sensitivity:'base'})
+          || ea.quartier.localeCompare(eb.quartier,'fr',{sensitivity:'base'}); })
     .forEach(k=>ordered.push(k));
   candCommuneOrder=ordered;
   return ordered.map(k=>{ const e=map.get(k);
     const grps=e.groups.slice().sort((a,b)=>{ const na=parseInt(a,10),nb=parseInt(b,10);
       return (!isNaN(na)&&!isNaN(nb)&&na!==nb)?na-nb:String(a).localeCompare(String(b)); });
-    return { commune:k, communeFR:e.communeFR, count:grps.length, groups:grps, quartiers:[...e.quartiers].sort() };
+    return { key:k, commune:e.commune, communeFR:e.communeFR, quartier:e.quartier, count:grps.length, groups:grps };
   });
 }
 
-// Groupes transmis au .docx : dans l'ordre de priorité des communes, puis par n°.
+// Groupes transmis au .docx : dans l'ordre de priorité (commune + quartier), puis par n°.
 function candSelectedGroups(){
   const out=[];
-  candCommunes().forEach(c=> c.groups.forEach(n=> out.push({ numero:n, commune:c.communeFR })));
+  candCommunes().forEach(c=> c.groups.forEach(n=> out.push({ numero:n, commune:c.communeFR, quartier:c.quartier })));
   return out;
 }
 
-// Monte/descend une commune dans l'ordre de priorité (i = rang affiché).
+// Monte/descend une entrée (commune + quartier) dans l'ordre de priorité (i = rang affiché).
 function candMoveCommune(i, dir){
-  const keys=candCommunes().map(c=>c.commune);
+  const keys=candCommunes().map(c=>c.key);
   const j=i+dir;
   if(j<0||j>=keys.length) return;
   [keys[i],keys[j]]=[keys[j],keys[i]];
@@ -3329,12 +3347,12 @@ function candMoveCommune(i, dir){
   updateCandidaturePreview();
 }
 
-// Retire une commune : désélectionne ses groupes et recalcule tout (nb de groupes inclus).
+// Retire une entrée (commune + quartier) : désélectionne ses groupes et recalcule tout.
 function candRemoveCommune(i){
   const c=candCommunes()[i];
   if(!c) return;
   c.groups.forEach(n=>selected.delete(n));
-  candCommuneOrder=candCommuneOrder.filter(k=>k!==c.commune);
+  candCommuneOrder=candCommuneOrder.filter(k=>k!==c.key);
   renderGroupsList();
   updateAgenda();               // → met à jour l'agenda + updateCandidaturePreview
 }
@@ -3362,11 +3380,11 @@ function updateCandidaturePreview(){
         +'<button type="button" class="cand-mv" title="'+candEscHtml(t('js_move_up'))+'" onclick="candMoveCommune('+i+',-1)"'+(i===0?' disabled':'')+'>▲</button>'
         +'<button type="button" class="cand-mv" title="'+candEscHtml(t('js_move_down'))+'" onclick="candMoveCommune('+i+',1)"'+(i===last?' disabled':'')+'>▼</button>'
       +'</span>'
-      +'<span class="cand-comm">'+candEscHtml(c.communeFR)
-        +(c.quartiers.length?'<span class="cand-q">'+candEscHtml(c.quartiers.slice(0,5).join(' · '))+(c.quartiers.length>5?' …':'')+'</span>':'')
+      +'<span class="cand-comm">'+candEscHtml(communeLabel(c.commune))
+        +(c.quartier?'<span class="cand-q">'+candEscHtml(c.quartier)+'</span>':'')
       +'</span>'
       +'<span class="cand-cnt">'+c.count+' '+candEscHtml(t('cand_groupes_word'))+'</span>'
-      +'<button type="button" class="cand-del" title="'+candEscHtml(t('js_remove_commune'))+'" aria-label="'+candEscHtml(tf('js_remove_commune_aria',{c:c.communeFR}))+'" onclick="candRemoveCommune('+i+')">✕</button>'
+      +'<button type="button" class="cand-del" title="'+candEscHtml(t('js_remove_commune'))+'" aria-label="'+candEscHtml(tf('js_remove_commune_aria',{c:communeLabel(c.commune)+(c.quartier?(' — '+c.quartier):'')}))+'" onclick="candRemoveCommune('+i+')">✕</button>'
       +'</div>'
     ).join('');
   }
@@ -3422,7 +3440,8 @@ function genererCandidature(){
   const survey=(g('Survey').value||'').trim();
   const abbr=survey.split(/\s+/)[0]||'';
   const period=survey.slice(abbr.length).trim();
-  const full=CAND_SURVEYS[abbr.toUpperCase()]||abbr;
+  const se=CAND_SURVEYS[abbr.toUpperCase()];
+  const full=se ? (se[uiLang]||se.fr) : abbr;
   data.abbrev=abbr;
   data.period=period;
   data.title=(full+' '+period).trim();
@@ -3532,7 +3551,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '199';
+const APP_VERSION = '201';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();

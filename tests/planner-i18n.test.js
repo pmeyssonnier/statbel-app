@@ -67,8 +67,14 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     out.docx_nl_tokens   = dNl.includes('@@ABBR@@') && dNl.includes('@@NBGROUPES@@');
     out.docx_fr_nom      = docxDoc('fr', 'groupes').includes('>Nom:</w:t>');
 
-    // Export .ics : libellés de description + nom de calendrier traduits.
+    // Nom d'enquête développé (titre .docx) traduit + ligne « Nombre de groupes »
+    // du gabarit (espace insécable FR avant « : » → appariement normalisé).
+    out.survey_nl = (CAND_SURVEYS['EFT'] && CAND_SURVEYS['EFT'].nl) || '';
     changerLangue('nl');
+    let dDoc = candLocaliserLabels(candBytesToStr(candB64ToBytes(CAND_DOCX.parts['word/document.xml'])));
+    out.docx_nl_nombre = dDoc.includes('Gewenst aantal groepen') && !dDoc.includes('Nombre de groupes souhait');
+
+    // Export .ics : libellés de description + nom de calendrier traduits.
     out.ics_desc_nl = [t('ics_lbl_group'), t('f_commune'), communeLabel('Bruxelles/Brussel'), t('ics_lbl_wave')].join('|');
     out.ics_cal_nl  = t('ics_calname');
     changerLangue('fr');
@@ -104,6 +110,8 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['.docx NL : case à cocher posée (ordre)', r.docx_nl_checked],
     ['.docx NL : jetons @@…@@ conservés', r.docx_nl_tokens],
     ['.docx FR : libellé « Nom: » conservé', r.docx_fr_nom],
+    ['.docx NL : nom d’enquête EFT traduit', /Arbeidskrachten/.test(r.survey_nl)],
+    ['.docx NL : ligne « Nombre de groupes » traduite (NBSP)', r.docx_nl_nombre],
     ['.ics NL : description traduite + commune NL', r.ics_desc_nl === 'Groep|Gemeente|Brussel|Golf'],
     ['.ics NL : nom de calendrier traduit', r.ics_cal_nl === 'LFS / EFT — Enquêteplanning'],
     ['aucune erreur de page', perr.length === 0],
