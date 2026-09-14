@@ -153,6 +153,7 @@ export const I18N = {
   "res_survey": { fr:"enquête", nl:"onderzoek", en:"survey", de:"Umfrage" },
   "res_surveys": { fr:"enquêtes", nl:"onderzoeken", en:"surveys", de:"Umfragen" },
   "res_allsurveys": { fr:"Toutes les enquêtes", nl:"Alle onderzoeken", en:"All surveys", de:"Alle Umfragen" },
+  "opt_no_survey": { fr:"— Aucune enquête —", nl:"— Geen onderzoek —", en:"— No survey —", de:"— Keine Umfrage —" },
   "res_updated": { fr:"Dernière mise à jour :", nl:"Bijgewerkt:", en:"Updated:", de:"Aktualisiert:" },
   "res_total_contacts": { fr:"Nombre total de contacts", nl:"Totaal contacten", en:"Total contacts", de:"Kontakte gesamt" },
   "res_kpi": { fr:"Indicateurs clés", nl:"Kernindicatoren", en:"Key indicators", de:"Schlüsselindikatoren" },

@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.67';
+const APP_VERSION = '3.68';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -439,7 +439,7 @@ function refreshSelect() {
   const sel  = document.getElementById('surveySelect');
   const noms = Object.keys(enquetes);
   sel.innerHTML = noms.length === 0
-    ? '<option value="">— Aucune enquête —</option>'
+    ? `<option value="">${esc(t('opt_no_survey'))}</option>`
     : noms.map(n => `<option value="${esc(n)}"${n===enqueteActive?' selected':''}>${esc(n)}</option>`).join('');
 }
 
@@ -744,6 +744,7 @@ function changerLangue(v) {
   majPinUI();
   if (typeof renderFilters === 'function') renderFilters();
   if (typeof renderStatutsEditor === 'function') renderStatutsEditor();
+  refreshSelect();   // option « — Aucune enquête — » rendue en JS (hors data-i18n)
   // Contenus des Paramètres rendus dynamiquement en JS (donc hors data-i18n) :
   // option « Toutes les enquêtes » du sélecteur de purge et statut de sauvegarde.
   // Sans ce rafraîchissement, ils gardaient la langue précédente jusqu'à la

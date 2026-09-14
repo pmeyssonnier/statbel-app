@@ -13,6 +13,12 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Corrigé
+- **Interviews — sélecteur d'enquête : « — Aucune enquête — » figé en français**
+  (Interviews `3.67` → `3.68`, SW `statbel-v337` → `statbel-v338`) : sans enquête
+  chargée, l'option du sélecteur d'enquête (en-tête) restait en français dans toutes
+  les langues. Le libellé passe désormais par la clé i18n `opt_no_survey` (fr/nl/en/de)
+  et `changerLangue()` rappelle `refreshSelect()` pour le retraduire à chaud. Couvert
+  par `tests/settings-delegation.test.js`.
 - **Interviews — Paramètres : contenus dynamiques non retraduits au changement de langue**
   (Interviews `3.66` → `3.67`, SW `statbel-v336` → `statbel-v337`) : dans la section
   **Données & sauvegarde**, l'option « Toutes les enquêtes » du sélecteur de purge et
