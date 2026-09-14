@@ -398,7 +398,7 @@ select[multiple]{height:120px}
 </style>
 </head>
 <body>
-<a class="skip-link" href="#contenu">Aller au contenu</a>
+<a class="skip-link" href="#contenu" data-i18n="skip_link">Aller au contenu</a>
 
 <header>
   <div class="header-row">
@@ -407,29 +407,39 @@ select[multiple]{height:120px}
       <h1>Statbel Planner</h1>
     </div>
     <div class="header-mid">
-      <select id="selPlanning" onchange="onChangePlanning()" title="Trimestre / planning" style="display:none"></select>
+      <select id="selPlanning" onchange="onChangePlanning()" title="Trimestre / planning" data-i18n-tip="plan_sel_title" data-i18n-aria="plan_sel_title" aria-label="Trimestre / planning" style="display:none"></select>
     </div>
     <div class="header-col3">
       <div class="view-toggle" id="hdrTabs" role="tablist" aria-label="Sections du planner">
-        <button class="btn-ico active" id="tab-planning"    role="tab" aria-selected="true"  aria-controls="pane-planning"    data-tip="Planning"    aria-label="Planning"    onclick="setTab('planning')">🗺️<span class="tab-lbl">Planning</span></button>
-        <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      aria-label="Agenda"      onclick="setTab('agenda')">📅<span class="tab-lbl">Agenda</span><span class="tab-count" id="agendaCount" hidden></span></button>
-        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" aria-label="Candidature" onclick="setTab('candidature')">📝<span class="tab-lbl">Candidature</span><span class="tab-count" id="candCount" hidden></span></button>
+        <button class="btn-ico active" id="tab-planning"    role="tab" aria-selected="true"  aria-controls="pane-planning"    data-tip="Planning"    data-i18n-tip="tab_planning"    aria-label="Planning"    data-i18n-aria="tab_planning"    onclick="setTab('planning')">🗺️<span class="tab-lbl" data-i18n="tab_planning">Planning</span></button>
+        <button class="btn-ico"        id="tab-agenda"      role="tab" aria-selected="false" aria-controls="pane-agenda"      data-tip="Agenda"      data-i18n-tip="tab_agenda"      aria-label="Agenda"      data-i18n-aria="tab_agenda"      onclick="setTab('agenda')">📅<span class="tab-lbl" data-i18n="tab_agenda">Agenda</span><span class="tab-count" id="agendaCount" hidden></span></button>
+        <button class="btn-ico"        id="tab-candidature" role="tab" aria-selected="false" aria-controls="pane-candidature" data-tip="Candidature" data-i18n-tip="tab_candidature" aria-label="Candidature" data-i18n-aria="tab_candidature" onclick="setTab('candidature')">📝<span class="tab-lbl" data-i18n="tab_candidature">Candidature</span><span class="tab-count" id="candCount" hidden></span></button>
       </div>
       <div class="kebab-wrap">
-        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" aria-label="Plus d'options">⋮</button>
+        <button class="btn-ico" onclick="toggleKebab()" title="Plus d'options" data-i18n-tip="more_options" aria-label="Plus d'options" data-i18n-aria="more_options">⋮</button>
         <div class="kebab-menu" id="kebabMenu">
-          <button class="kebab-item" onclick="document.getElementById('planFileInput').click();toggleKebab()">📥 Importer un planning</button>
-          <button class="kebab-item" id="planRenBtn" style="display:none" onclick="renommerPlanningImporte();toggleKebab()">✏️ Renommer le planning</button>
-          <button class="kebab-item" id="planDelBtn" style="display:none" onclick="supprimerPlanningImporte();toggleKebab()">🗑️ Supprimer le planning</button>
+          <button class="kebab-item" onclick="document.getElementById('planFileInput').click();toggleKebab()" data-i18n="kb_import">📥 Importer un planning</button>
+          <button class="kebab-item" id="planRenBtn" style="display:none" onclick="renommerPlanningImporte();toggleKebab()" data-i18n="kb_rename">✏️ Renommer le planning</button>
+          <button class="kebab-item" id="planDelBtn" style="display:none" onclick="supprimerPlanningImporte();toggleKebab()" data-i18n="kb_delete">🗑️ Supprimer le planning</button>
           <hr class="kebab-sep">
-          <button class="kebab-item" onclick="openCandidature();toggleKebab()">📝 Candidature enquêteur</button>
+          <button class="kebab-item" onclick="openCandidature();toggleKebab()" data-i18n="kb_candidature">📝 Candidature enquêteur</button>
           <hr class="kebab-sep">
-          <button class="kebab-item" onclick="sauvegarder();toggleKebab()">💾 Sauvegarder</button>
-          <button class="kebab-item" onclick="restaurer();toggleKebab()">↩ Restaurer la sélection</button>
-          <button class="kebab-item" onclick="effacerSauvegarde();toggleKebab()">🗑️ Effacer la sauvegarde</button>
+          <button class="kebab-item" onclick="sauvegarder();toggleKebab()" data-i18n="kb_save">💾 Sauvegarder</button>
+          <button class="kebab-item" onclick="restaurer();toggleKebab()" data-i18n="kb_restore">↩ Restaurer la sélection</button>
+          <button class="kebab-item" onclick="effacerSauvegarde();toggleKebab()" data-i18n="kb_clear_save">🗑️ Effacer la sauvegarde</button>
           <hr class="kebab-sep">
-          <button class="kebab-item" onclick="location.href='index.html'">📋 Interviews</button>
-          <button class="kebab-item" onclick="location.href='statbel_converter.html'">🔄 Convertisseur</button>
+          <button class="kebab-item" onclick="location.href='index.html'" data-i18n="kb_interviews">📋 Interviews</button>
+          <button class="kebab-item" onclick="location.href='statbel_converter.html'" data-i18n="kb_converter">🔄 Convertisseur</button>
+          <hr class="kebab-sep">
+          <div class="kebab-item" style="cursor:default;gap:6px" onclick="event.stopPropagation()">
+            <span data-i18n="lbl_language">🌐 Langue</span>
+            <select id="setLangPlanner" onchange="changerLangue(this.value)" aria-label="Langue" data-i18n-aria="lbl_language" style="margin-left:auto;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--card);color:var(--ink)">
+              <option value="fr">Français</option>
+              <option value="nl">Nederlands</option>
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </div>
           <hr class="kebab-sep">
           <div class="kebab-item" id="appVer" style="opacity:.55;cursor:default;pointer-events:none;justify-content:center"></div>
         </div>
@@ -450,10 +460,10 @@ select[multiple]{height:120px}
        de groupes est déplacé dans l'en-tête « Sélectionner des groupes ». -->
   <div class="card" id="planCard" style="display:none">
     <div id="planEmpty" style="font-size:13px;color:var(--ink3);line-height:1.6">
-      Aucun planning chargé. Importez ici votre fichier trimestriel LFS
-      (<code>LFS_IESS_GRP_APPEL_Y2026Qx_FR.xlsx</code>) — il apparaîtra ensuite dans l'agenda.
+      <span data-i18n="plan_empty_pre">Aucun planning chargé. Importez ici votre fichier trimestriel LFS</span>
+      (<code>LFS_IESS_GRP_APPEL_Y2026Qx_FR.xlsx</code>) <span data-i18n="plan_empty_post">— il apparaîtra ensuite dans l'agenda.</span>
       <div style="margin-top:10px">
-        <button class="btn-reset" onclick="document.getElementById('planFileInput').click()">📥 Importer un planning</button>
+        <button class="btn-reset" onclick="document.getElementById('planFileInput').click()" data-i18n="kb_import">📥 Importer un planning</button>
       </div>
     </div>
   </div>
@@ -462,13 +472,13 @@ select[multiple]{height:120px}
        référence + carte + vérificateur d'adresse. Le lien GRP↔LFS est conservé via
        localStorage['plannings'] (index « grp » lu par le Convertisseur). -->
   <div class="card" id="planMgmtCard" style="display:none">
-    <div class="card-titre">📅 Planning enquêtes terrain</div>
-    <p style="font-size:11px;color:var(--text2);margin:0 0 8px">
+    <div class="card-titre" data-i18n="plan_mgmt_title">📅 Planning enquêtes terrain</div>
+    <p style="font-size:11px;color:var(--text2);margin:0 0 8px" data-i18n="plan_mgmt_desc">
       Importe un fichier de planning LFS (Excel/CSV) puis associe ses colonnes. Sélectionne une
       province/commune pour voir les missions et localiser les quartiers/adresses sur la carte.
     </p>
     <p style="font-size:11px;color:var(--text2);margin:0 0 8px">
-      Import, renommage et suppression du planning : menu <strong>⋮</strong> (en haut à droite).
+      <span data-i18n="plan_mgmt_menu_pre">Import, renommage et suppression du planning : menu</span> <strong>⋮</strong> <span data-i18n="plan_mgmt_menu_post">(en haut à droite).</span>
     </p>
     <input type="file" id="planFileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display:none" onchange="importerPlanningFichier(this)">
     <div id="planFiltres" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px;align-items:center">
@@ -476,20 +486,20 @@ select[multiple]{height:120px}
       <select id="planCommune" onchange="majQuartiersPlan();filtrerPlanning()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
       <select id="planQuartier" onchange="filtrerPlanning()" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select>
       <label style="font-size:12px;display:flex;align-items:center;gap:4px">
-        <input type="checkbox" id="planAVenir" checked onchange="filtrerPlanning()"> <span>À venir uniquement</span>
+        <input type="checkbox" id="planAVenir" checked onchange="filtrerPlanning()"> <span data-i18n="plan_upcoming_only">À venir uniquement</span>
       </label>
       <span style="position:relative;flex:1;min-width:140px;display:flex">
-        <input id="planSearch" type="text" placeholder="Rechercher groupe / quartier…" oninput="filtrerPlanning()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
-        <button id="planSearchClear" onclick="effacerRecherchePlan()" title="Effacer" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
+        <input id="planSearch" type="text" placeholder="Rechercher groupe / quartier…" data-i18n-ph="plan_search_ph" oninput="filtrerPlanning()" style="flex:1;padding:5px 26px 5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%">
+        <button id="planSearchClear" onclick="effacerRecherchePlan()" title="Effacer" data-i18n-tip="clear" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 3px">✕</button>
       </span>
       <span id="planCount" aria-live="polite" style="align-self:center;font-size:11px;color:var(--text2)"></span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
-      <label style="font-size:12px;color:var(--text2);font-weight:bold">📍 Vérifier une adresse :</label>
-      <input id="planAdrCheck" type="text" placeholder="ex. Grande Rue au Bois 12, Schaerbeek" onkeydown="if(event.key==='Enter')verifierAdresse()" style="flex:1;min-width:220px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px">
-      <button class="btn-reset" onclick="verifierAdresse()">Localiser</button>
+      <label style="font-size:12px;color:var(--text2);font-weight:bold" data-i18n="plan_check_addr">📍 Vérifier une adresse :</label>
+      <input id="planAdrCheck" type="text" placeholder="ex. Grande Rue au Bois 12, Schaerbeek" data-i18n-ph="plan_addr_ph" onkeydown="if(event.key==='Enter')verifierAdresse()" style="flex:1;min-width:220px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+      <button class="btn-reset" onclick="verifierAdresse()" data-i18n="locate">Localiser</button>
       <button class="btn-reset" onclick="effacerAdresseCheck()">✕</button>
-      <button class="btn-reset" title="Vider le cache et recalculer la position des quartiers affichés" onclick="rafraichirGeocodage()">🔄 Recalculer</button>
+      <button class="btn-reset" title="Vider le cache et recalculer la position des quartiers affichés" data-i18n-tip="plan_recalc_tip" onclick="rafraichirGeocodage()" data-i18n="plan_recalc">🔄 Recalculer</button>
       <span id="planAdrStatus" aria-live="polite" style="align-self:center;font-size:11px;color:var(--text2)"></span>
     </div>
     <div id="planMap" style="height:340px;border-radius:8px;margin:0 0 10px;background:var(--card2);position:relative;z-index:0"></div>
@@ -504,83 +514,82 @@ select[multiple]{height:120px}
 
   <!-- Invite affichée quand aucun planning n'est encore chargé. -->
   <div class="tab-empty" id="agendaEmpty" style="display:none">
-    Aucun planning chargé. Importez d'abord un planning dans l'onglet <strong>🗺️ Planning</strong>,
-    puis revenez ici pour sélectionner des groupes et bâtir votre agenda.
+    <span data-i18n="agenda_empty_pre">Aucun planning chargé. Importez d'abord un planning dans l'onglet</span> <strong data-i18n="tab_planning_full">🗺️ Planning</strong><span data-i18n="agenda_empty_post">, puis revenez ici pour sélectionner des groupes et bâtir votre agenda.</span>
   </div>
 
   <!-- 2. Filtres & sélection — le badge « N groupe(s) » est en haut à droite du titre. -->
   <div class="card" id="filterCard" style="display:none">
     <div class="card-title" style="flex-wrap:wrap">
-      <span>🔍</span> Sélectionner des groupes
+      <span>🔍</span> <span data-i18n="sel_groups_title">Sélectionner des groupes</span>
       <div class="file-chips" id="planInfo" style="margin:0 0 0 auto"></div>
     </div>
     <div class="filters-grid">
       <div class="filter-group">
-        <label>Province</label>
+        <label data-i18n="f_province">Province</label>
         <!-- Sélection unique (une ligne), défaut Bruxelles ; commune/quartier restent multiples. -->
         <select id="selProvince" onchange="onChangeProvince()"></select>
       </div>
       <div class="filter-group">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-          <label style="margin:0">Commune</label>
+          <label style="margin:0" data-i18n="f_commune">Commune</label>
           <span class="sort-btns">
-            <button class="sort-btn" onclick="sortSelect('selCommune','asc')" title="A→Z">▲</button>
-            <button class="sort-btn" onclick="sortSelect('selCommune','desc')" title="Z→A">▼</button>
+            <button class="sort-btn" onclick="sortSelect('selCommune','asc')" title="A→Z" data-i18n-tip="sort_az">▲</button>
+            <button class="sort-btn" onclick="sortSelect('selCommune','desc')" title="Z→A" data-i18n-tip="sort_za">▼</button>
           </span>
         </div>
         <select id="selCommune" multiple onchange="onChangeCommune()"></select>
       </div>
       <div class="filter-group">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-          <label style="margin:0">Quartier / Lettre</label>
+          <label style="margin:0" data-i18n="f_quartier_letter">Quartier / Lettre</label>
           <span class="sort-btns">
-            <button class="sort-btn" onclick="sortSelect('selQuartier','asc')" title="A→Z">▲</button>
-            <button class="sort-btn" onclick="sortSelect('selQuartier','desc')" title="Z→A">▼</button>
+            <button class="sort-btn" onclick="sortSelect('selQuartier','asc')" title="A→Z" data-i18n-tip="sort_az">▲</button>
+            <button class="sort-btn" onclick="sortSelect('selQuartier','desc')" title="Z→A" data-i18n-tip="sort_za">▼</button>
           </span>
         </div>
         <select id="selQuartier" multiple onchange="onChangeQuartier()"></select>
       </div>
     </div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="selectAll()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--accent);background:var(--v1l);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">✅ Tout sélectionner</button>
-      <button onclick="clearAll()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer">✕ Effacer</button>
-      <input type="text" id="searchGrp" placeholder="🔎 Rechercher groupe / quartier…" style="flex:1;min-width:180px" oninput="applyFilters()">
+      <button onclick="selectAll()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--accent);background:var(--v1l);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer" data-i18n="select_all">✅ Tout sélectionner</button>
+      <button onclick="clearAll()" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer" data-i18n="sel_clear">✕ Effacer</button>
+      <input type="text" id="searchGrp" placeholder="🔎 Rechercher groupe / quartier…" data-i18n-ph="grp_search_ph" style="flex:1;min-width:180px" oninput="applyFilters()">
     </div>
     <div class="groups-selected" id="groupsSelected">
-      <div style="font-size:12px;color:var(--ink3);padding:6px 0">Aucun groupe sélectionné</div>
+      <div style="font-size:12px;color:var(--ink3);padding:6px 0" data-i18n="no_group_selected">Aucun groupe sélectionné</div>
     </div>
   </div>
 
   <!-- 3. Agenda -->
   <div class="card" id="agendaCard" style="display:none">
-    <div class="card-title" style="margin-bottom:0"><span>📅</span> Agenda</div>
+    <div class="card-title" style="margin-bottom:0"><span>📅</span> <span data-i18n="tab_agenda">Agenda</span></div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:12px 0">
       <div class="view-controls">
-        <button class="btn-view active" onclick="setView('liste')" id="vListe">☰ Liste</button>
-        <button class="btn-view" onclick="setView('semaine')" id="vSemaine">Semaine</button>
-        <button class="btn-view" onclick="setView('mois')" id="vMois">Mois</button>
-        <button class="btn-view" onclick="setView('annee')" id="vAnnee">Année</button>
+        <button class="btn-view active" onclick="setView('liste')" id="vListe" data-i18n="v_list">☰ Liste</button>
+        <button class="btn-view" onclick="setView('semaine')" id="vSemaine" data-i18n="v_week">Semaine</button>
+        <button class="btn-view" onclick="setView('mois')" id="vMois" data-i18n="v_month">Mois</button>
+        <button class="btn-view" onclick="setView('annee')" id="vAnnee" data-i18n="v_year">Année</button>
       </div>
       <div class="view-controls" id="navControls" style="display:none">
         <button class="nav-btn" onclick="navPrev()">◀</button>
         <span id="navLabel">—</span>
         <button class="nav-btn" onclick="navNext()">▶</button>
-        <button class="nav-btn" onclick="navToday()" style="font-weight:700;border-color:var(--accent);color:var(--accent)">Aujourd'hui</button>
+        <button class="nav-btn" onclick="navToday()" style="font-weight:700;border-color:var(--accent);color:var(--accent)" data-i18n="today">Aujourd'hui</button>
       </div>
       <div class="view-controls" style="margin-left:auto">
-        <button class="nav-btn" onclick="exportXls()" title="Exporter la liste en Excel" style="border-color:#0e7c4a;color:#0e7c4a;font-weight:600">⬇️ Excel</button>
-        <button class="nav-btn" onclick="exportCsvApp()" title="Export CSV pour enquetes_statbel.html" style="border-color:#1a237e;color:#1a237e;font-weight:600">⬇️ CSV App</button>
-        <button class="nav-btn" onclick="exportIcs()" title="Exporter vers Google Agenda / iCal" style="border-color:var(--cand);color:var(--cand);font-weight:600">📅 iCal</button>
-        <button class="nav-btn" onclick="exportChevauchements()" title="Exporter les chevauchements" style="border-color:#f57f17;color:#f57f17;font-weight:600">⚠️ Chevauch.</button>
+        <button class="nav-btn" onclick="exportXls()" title="Exporter la liste en Excel" data-i18n-tip="exp_excel_tip" style="border-color:#0e7c4a;color:#0e7c4a;font-weight:600" data-i18n="exp_excel">⬇️ Excel</button>
+        <button class="nav-btn" onclick="exportCsvApp()" title="Export CSV pour enquetes_statbel.html" data-i18n-tip="exp_csv_tip" style="border-color:#1a237e;color:#1a237e;font-weight:600" data-i18n="exp_csv">⬇️ CSV App</button>
+        <button class="nav-btn" onclick="exportIcs()" title="Exporter vers Google Agenda / iCal" data-i18n-tip="exp_ical_tip" style="border-color:var(--cand);color:var(--cand);font-weight:600" data-i18n="exp_ical">📅 iCal</button>
+        <button class="nav-btn" onclick="exportChevauchements()" title="Exporter les chevauchements" data-i18n-tip="exp_overlap_tip" style="border-color:#f57f17;color:#f57f17;font-weight:600" data-i18n="exp_overlap">⚠️ Chevauch.</button>
       </div>
     </div>
 
     <div class="legend" style="margin-bottom:14px">
-      <div class="leg-item"><div class="leg-dot" style="background:var(--v1)"></div>Vague 1</div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--v2)"></div>Vague 2</div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--v3)"></div>Vague 3</div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--v4)"></div>Vague 4</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--v1)"></div><span data-i18n="leg_v1">Vague 1</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--v2)"></div><span data-i18n="leg_v2">Vague 2</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--v3)"></div><span data-i18n="leg_v3">Vague 3</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--v4)"></div><span data-i18n="leg_v4">Vague 4</span></div>
     </div>
 
     <div id="agendaContent"></div>
@@ -593,33 +602,33 @@ select[multiple]{height:120px}
   <!-- Modale : mapping des colonnes d'un planning importé (formats non-LFS) -->
   <div class="modal-overlay" id="modalPlanMap" onclick="if(event.target===this)fermerMappingPlanning()">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ttl-planmap" style="max-width:560px">
-      <h2 id="ttl-planmap">📥 Importer un planning</h2>
+      <h2 id="ttl-planmap" data-i18n="kb_import">📥 Importer un planning</h2>
       <p style="font-size:12px;color:var(--text2);margin-bottom:10px">
-        Fichier : <strong id="mapFichier"></strong> — <span id="mapNbLignes"></span> ligne(s).
-        Associe chaque information à une colonne du fichier (1 ligne = 1 mission/interrogation).
+        <span data-i18n="map_file_label">Fichier :</span> <strong id="mapFichier"></strong> — <span id="mapNbLignes"></span> <span data-i18n="map_lines">ligne(s).</span>
+        <span data-i18n="map_assoc">Associe chaque information à une colonne du fichier (1 ligne = 1 mission/interrogation).</span>
       </p>
       <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;font-size:13px">
-        <label for="mapNom">Nom du planning</label>
-        <input id="mapNom" type="text" placeholder="ex. EU-SILC 2026 vague 1" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-        <label for="mapType">Type d'enquête</label>
+        <label for="mapNom" data-i18n="map_name">Nom du planning</label>
+        <input id="mapNom" type="text" placeholder="ex. EU-SILC 2026 vague 1" data-i18n-ph="map_name_ph" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+        <label for="mapType" data-i18n="map_type">Type d'enquête</label>
         <select id="mapType" style="padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px">
           <option>EFT / LFS</option><option>EU-SILC</option><option>HBS</option>
-          <option>TIC</option><option>Voyages &amp; Vacances</option><option>Santé</option>
-          <option>Recensement / spéciale</option><option>Autre</option>
+          <option>TIC</option><option data-i18n="map_type_travel">Voyages &amp; Vacances</option><option data-i18n="map_type_health">Santé</option>
+          <option data-i18n="map_type_census">Recensement / spéciale</option><option data-i18n="map_type_other">Autre</option>
         </select>
-        <label for="mapCommune"><span>Commune</span> <span style="color:var(--danger)">*</span></label> <select id="mapCommune"  class="map-col"></select>
-        <label for="mapQuartier">Quartier / adresse</label>                   <select id="mapQuartier" class="map-col"></select>
-        <label for="mapProvince">Province</label>                             <select id="mapProvince" class="map-col"></select>
-        <label for="mapGroup">Groupe / code</label>                          <select id="mapGroup"    class="map-col"></select>
-        <label for="mapWave">Vague</label>                                    <select id="mapWave"     class="map-col"></select>
-        <label for="mapWeek">Semaine de réf.</label>                          <select id="mapWeek"     class="map-col"></select>
-        <label for="mapStart">Date début</label>                              <select id="mapStart"    class="map-col"></select>
-        <label for="mapStop">Date fin</label>                                 <select id="mapStop"     class="map-col"></select>
+        <label for="mapCommune"><span data-i18n="f_commune">Commune</span> <span style="color:var(--danger)">*</span></label> <select id="mapCommune"  class="map-col"></select>
+        <label for="mapQuartier" data-i18n="map_quartier_addr">Quartier / adresse</label>                   <select id="mapQuartier" class="map-col"></select>
+        <label for="mapProvince" data-i18n="f_province">Province</label>                             <select id="mapProvince" class="map-col"></select>
+        <label for="mapGroup" data-i18n="map_group_code">Groupe / code</label>                          <select id="mapGroup"    class="map-col"></select>
+        <label for="mapWave" data-i18n="map_wave">Vague</label>                                    <select id="mapWave"     class="map-col"></select>
+        <label for="mapWeek" data-i18n="map_week_ref">Semaine de réf.</label>                          <select id="mapWeek"     class="map-col"></select>
+        <label for="mapStart" data-i18n="map_date_start">Date début</label>                              <select id="mapStart"    class="map-col"></select>
+        <label for="mapStop" data-i18n="map_date_stop">Date fin</label>                                 <select id="mapStop"     class="map-col"></select>
       </div>
       <p id="mapErreur" style="color:var(--danger);font-size:12px;margin:10px 0 0;display:none"></p>
       <div style="text-align:right;margin-top:16px">
-        <button class="btn-reset" style="margin:0 6px 0 0" onclick="fermerMappingPlanning()">Annuler</button>
-        <button class="btn-reset" style="margin:0" onclick="confirmerMappingPlanning()">✅ Importer</button>
+        <button class="btn-reset" style="margin:0 6px 0 0" onclick="fermerMappingPlanning()" data-i18n="cancel">Annuler</button>
+        <button class="btn-reset" style="margin:0" onclick="confirmerMappingPlanning()" data-i18n="map_import_confirm">✅ Importer</button>
       </div>
     </div>
   </div>
@@ -627,78 +636,77 @@ select[multiple]{height:120px}
   <!-- ════ Onglet CANDIDATURE : génération du formulaire enquêteur (.docx) ════ -->
   <section class="tabpane" id="pane-candidature" role="tabpanel" aria-labelledby="tab-candidature" hidden>
    <div class="card">
-    <div class="card-title" style="margin:0 0 6px"><span>📝</span> Candidature enquêteur</div>
+    <div class="card-title" style="margin:0 0 6px"><span>📝</span> <span data-i18n="kb_candidature">Candidature enquêteur</span></div>
     <p style="font-size:12px;color:var(--ink3);margin:0 0 14px">
-      Remplit le formulaire de candidature avec vos coordonnées et les groupes sélectionnés
-      dans l'onglet <strong>📅 Agenda</strong>. Vos informations personnelles sont mémorisées sur cet appareil.
+      <span data-i18n="cand_desc_pre">Remplit le formulaire de candidature avec vos coordonnées et les groupes sélectionnés dans l'onglet</span> <strong data-i18n="tab_agenda_full">📅 Agenda</strong><span data-i18n="cand_desc_post">. Vos informations personnelles sont mémorisées sur cet appareil.</span>
     </p>
 
     <div class="cand-grid">
-      <div class="cand-field cand-wide"><label for="candSurvey">Enquête — sigle + période (ex. EFT 2026-T3)</label>
+      <div class="cand-field cand-wide"><label for="candSurvey" data-i18n="cand_survey">Enquête — sigle + période (ex. EFT 2026-T3)</label>
         <input type="text" id="candSurvey" placeholder="EFT 2026-Q4" value="EFT 2026-T3"
           style="font-size:16px;font-weight:700;padding:12px 14px;letter-spacing:.3px"></div>
-      <div class="cand-field"><label for="candNom">Nom</label><input type="text" id="candNom" autocomplete="family-name"><span class="err-msg" id="err-candNom"></span></div>
-      <div class="cand-field"><label for="candPrenom">Prénom</label><input type="text" id="candPrenom" autocomplete="given-name"><span class="err-msg" id="err-candPrenom"></span></div>
-      <div class="cand-field cand-wide"><label for="candAdresse">Adresse</label><input type="text" id="candAdresse" autocomplete="street-address"><span class="err-msg" id="err-candAdresse"></span></div>
-      <div class="cand-field"><label for="candCp">Code postal</label><input type="text" id="candCp" inputmode="numeric" autocomplete="postal-code"></div>
-      <div class="cand-field"><label for="candCommune">Commune</label><input type="text" id="candCommune" autocomplete="address-level2"></div>
+      <div class="cand-field"><label for="candNom" data-i18n="cand_nom">Nom</label><input type="text" id="candNom" autocomplete="family-name"><span class="err-msg" id="err-candNom"></span></div>
+      <div class="cand-field"><label for="candPrenom" data-i18n="cand_prenom">Prénom</label><input type="text" id="candPrenom" autocomplete="given-name"><span class="err-msg" id="err-candPrenom"></span></div>
+      <div class="cand-field cand-wide"><label for="candAdresse" data-i18n="cand_adresse">Adresse</label><input type="text" id="candAdresse" autocomplete="street-address"><span class="err-msg" id="err-candAdresse"></span></div>
+      <div class="cand-field"><label for="candCp" data-i18n="cand_cp">Code postal</label><input type="text" id="candCp" inputmode="numeric" autocomplete="postal-code"></div>
+      <div class="cand-field"><label for="candCommune" data-i18n="f_commune">Commune</label><input type="text" id="candCommune" autocomplete="address-level2"></div>
     </div>
 
     <fieldset class="cand-fs">
-      <legend>Téléphones &amp; e-mails</legend>
+      <legend data-i18n="cand_phones_emails">Téléphones &amp; e-mails</legend>
       <div class="cand-grid">
-        <div class="cand-field"><label for="candTelPrive">Tél. privé</label><input type="tel" inputmode="tel" id="candTelPrive"></div>
-        <div class="cand-field"><label for="candHeuresPrive">Heures limites d'appel (privé)</label><input type="text" id="candHeuresPrive" placeholder="ex. 18h–20h"></div>
-        <div class="cand-field"><label for="candTelPort">Tél. portable</label><input type="tel" inputmode="tel" id="candTelPort"></div>
-        <div class="cand-field"><label for="candHeuresPort">Heures limites d'appel (portable)</label><input type="text" id="candHeuresPort"></div>
-        <div class="cand-field"><label for="candTelBur">Tél. bureau</label><input type="tel" inputmode="tel" id="candTelBur"></div>
-        <div class="cand-field"><label for="candHeuresBur">Heures limites d'appel (bureau)</label><input type="text" id="candHeuresBur"></div>
-        <div class="cand-field"><label for="candEmailPrive">E-mail privé</label><input type="email" id="candEmailPrive" autocomplete="email"></div>
-        <div class="cand-field"><label for="candEmailBur">E-mail bureau</label><input type="email" id="candEmailBur"></div>
+        <div class="cand-field"><label for="candTelPrive" data-i18n="cand_tel_prive">Tél. privé</label><input type="tel" inputmode="tel" id="candTelPrive"></div>
+        <div class="cand-field"><label for="candHeuresPrive" data-i18n="cand_hours_prive">Heures limites d'appel (privé)</label><input type="text" id="candHeuresPrive" placeholder="ex. 18h–20h" data-i18n-ph="cand_hours_ph"></div>
+        <div class="cand-field"><label for="candTelPort" data-i18n="cand_tel_port">Tél. portable</label><input type="tel" inputmode="tel" id="candTelPort"></div>
+        <div class="cand-field"><label for="candHeuresPort" data-i18n="cand_hours_port">Heures limites d'appel (portable)</label><input type="text" id="candHeuresPort"></div>
+        <div class="cand-field"><label for="candTelBur" data-i18n="cand_tel_bur">Tél. bureau</label><input type="tel" inputmode="tel" id="candTelBur"></div>
+        <div class="cand-field"><label for="candHeuresBur" data-i18n="cand_hours_bur">Heures limites d'appel (bureau)</label><input type="text" id="candHeuresBur"></div>
+        <div class="cand-field"><label for="candEmailPrive" data-i18n="cand_email_prive">E-mail privé</label><input type="email" id="candEmailPrive" autocomplete="email"></div>
+        <div class="cand-field"><label for="candEmailBur" data-i18n="cand_email_bur">E-mail bureau</label><input type="email" id="candEmailBur"></div>
       </div>
     </fieldset>
 
     <div class="cand-grid">
-      <div class="cand-field"><label for="candNbGroupes">Nombre de groupes souhaités <span class="cand-auto">auto</span></label>
-        <input type="text" id="candNbGroupes" readonly title="Automatique — égal au nombre de groupes sélectionnés"></div>
-      <div class="cand-field"><label for="candDate">Date <span class="cand-auto">auto</span></label>
-        <input type="text" id="candDate" readonly title="Automatique — date du jour"></div>
+      <div class="cand-field"><label for="candNbGroupes"><span data-i18n="cand_nb_groupes">Nombre de groupes souhaités</span> <span class="cand-auto" data-i18n="cand_auto">auto</span></label>
+        <input type="text" id="candNbGroupes" readonly title="Automatique — égal au nombre de groupes sélectionnés" data-i18n-tip="cand_nb_tip"></div>
+      <div class="cand-field"><label for="candDate"><span data-i18n="cand_date">Date</span> <span class="cand-auto" data-i18n="cand_auto">auto</span></label>
+        <input type="text" id="candDate" readonly title="Automatique — date du jour" data-i18n-tip="cand_date_tip"></div>
     </div>
 
     <div style="margin-top:10px">
       <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:var(--ink2)">Communes choisies — <span id="candGrpCount">0</span> groupe(s)</span>
-        <span style="font-size:11px;color:var(--ink3)">▲▼ pour l'ordre de priorité · ✕ pour retirer une commune (le nombre de groupes se recalcule)</span>
+        <span style="font-size:12px;font-weight:700;color:var(--ink2)"><span data-i18n="cand_communes">Communes choisies —</span> <span id="candGrpCount">0</span> <span data-i18n="cand_groupes_word">groupe(s)</span></span>
+        <span style="font-size:11px;color:var(--ink3)" data-i18n="cand_reorder_hint">▲▼ pour l'ordre de priorité · ✕ pour retirer une commune (le nombre de groupes se recalcule)</span>
       </div>
       <div id="candGrpPreview" class="cand-preview">
-        <div style="color:var(--ink3);font-size:12px">Aucun groupe sélectionné — choisissez des groupes dans l'onglet Agenda.</div>
+        <div style="color:var(--ink3);font-size:12px" data-i18n="cand_no_group">Aucun groupe sélectionné — choisissez des groupes dans l'onglet Agenda.</div>
       </div>
     </div>
 
     <fieldset class="cand-fs" style="margin-top:10px">
-      <legend>Case à cocher du formulaire</legend>
+      <legend data-i18n="cand_checkbox_legend">Case à cocher du formulaire</legend>
       <div style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink2)">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="groupes" checked> Nombre de groupes souhaités</label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="pas"> Pas intéressé(e) pour effectuer les enquêtes de cette vague</label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="plus"> N'est plus intéressé(e) pour effectuer des enquêtes</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="groupes" checked> <span data-i18n="cand_radio_groupes">Nombre de groupes souhaités</span></label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="pas"> <span data-i18n="cand_radio_pas">Pas intéressé(e) pour effectuer les enquêtes de cette vague</span></label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="candChoix" value="plus"> <span data-i18n="cand_radio_plus">N'est plus intéressé(e) pour effectuer des enquêtes</span></label>
       </div>
     </fieldset>
 
     <div style="margin-top:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px" id="candSigLbl">Signature</div>
+      <div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:6px" id="candSigLbl" data-i18n="cand_signature">Signature</div>
       <canvas id="candSigCanvas" width="480" height="100" role="img" aria-labelledby="candSigLbl"
-        aria-label="Zone de signature — dessinez votre signature à la souris ou au doigt"
+        aria-label="Zone de signature — dessinez votre signature à la souris ou au doigt" data-i18n-aria="cand_sig_aria"
         style="border:1px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:480px;height:100px;cursor:crosshair;display:block"></canvas>
-      <span id="candSigStatus" class="sr-only" aria-live="polite">Signature vide</span>
+      <span id="candSigStatus" class="sr-only" aria-live="polite" data-i18n="cand_sig_empty">Signature vide</span>
       <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button type="button" onclick="candSigClear()" style="padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer">✕ Effacer la signature</button>
-        <span style="font-size:11px;color:var(--ink3)">Signez à la souris ou au doigt — la signature est intégrée au .docx.</span>
+        <button type="button" onclick="candSigClear()" style="padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer" data-i18n="cand_sig_clear">✕ Effacer la signature</button>
+        <span style="font-size:11px;color:var(--ink3)" data-i18n="cand_sig_hint">Signez à la souris ou au doigt — la signature est intégrée au .docx.</span>
       </div>
     </div>
 
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button onclick="genererCandidature()" style="padding:9px 18px;border-radius:8px;border:1px solid var(--cand);background:var(--cand);color:#fff;font-size:13px;font-weight:700;cursor:pointer">⬇️ Générer la candidature (.docx)</button>
-      <span style="font-size:11px;color:var(--ink3)">Formulaire de candidature rempli — s'ouvre dans Word / LibreOffice</span>
+      <button onclick="genererCandidature()" style="padding:9px 18px;border-radius:8px;border:1px solid var(--cand);background:var(--cand);color:#fff;font-size:13px;font-weight:700;cursor:pointer" data-i18n="cand_generate">⬇️ Générer la candidature (.docx)</button>
+      <span style="font-size:11px;color:var(--ink3)" data-i18n="cand_generate_hint">Formulaire de candidature rempli — s'ouvre dans Word / LibreOffice</span>
     </div>
     <div id="candErr" class="cand-err" role="alert" hidden></div>
    </div>
@@ -722,7 +730,7 @@ select[multiple]{height:120px}
 //   6. EXPORTS                    Excel, iCal, chevauchements, CSV app         → « EXPORT … » / « CHEVAUCHEMENTS »
 //   7. CANDIDATURE ENQUÊTEUR      coordonnées, groupes, signature, .docx/ZIP   → « RÉGION — CANDIDATURE ENQUÊTEUR »
 //   8. PERSISTANCE                sauvegarde / restauration localStorage       → « SAUVEGARDE LOCALE »
-//   9. I18N / APPARENCE           s.o. — Planner en FR, thème hérité du système (pas de section dédiée)
+//   9. I18N / APPARENCE           4 langues (fr/nl/en/de) via t()/tf() + data-i18n → « RÉGION — I18N »
 //  10. INITIALISATION             démarrage + numéro de version                → « RÉGION — INITIALISATION »
 //
 //  Helpers transverses : « UTILITAIRES » (esc, dates, semaine ISO) et « LECTURE DES DATES ».
@@ -741,6 +749,258 @@ let navDate    = new Date();
 
 const VAGUE_COLORS = ['v1','v2','v3','v4'];
 
+// ══════════════════════════════════════════════════════════════════════
+//  RÉGION — I18N · 4 langues (fr/nl/en/de), même mécanisme que le Convertisseur.
+//  Langue partagée avec Interviews/Convertisseur via localStorage['statbel_settings'].lang ;
+//  sélecteur 🌐 propre au Planner (autonome, fonctionne aussi en file://).
+// ══════════════════════════════════════════════════════════════════════
+const LANGS = ['fr', 'nl', 'en', 'de'];
+const I18N = {
+  // — En-tête / menu ⋮ —
+  skip_link: { fr:"Aller au contenu", nl:"Naar de inhoud", en:"Skip to content", de:"Zum Inhalt springen" },
+  plan_sel_title: { fr:"Trimestre / planning", nl:"Kwartaal / planning", en:"Quarter / schedule", de:"Quartal / Planung" },
+  tab_planning: { fr:"Planning", nl:"Planning", en:"Schedule", de:"Planung" },
+  tab_agenda: { fr:"Agenda", nl:"Agenda", en:"Calendar", de:"Kalender" },
+  tab_candidature: { fr:"Candidature", nl:"Kandidatuur", en:"Application", de:"Bewerbung" },
+  more_options: { fr:"Plus d'options", nl:"Meer opties", en:"More options", de:"Weitere Optionen" },
+  kb_import: { fr:"📥 Importer un planning", nl:"📥 Een planning importeren", en:"📥 Import a schedule", de:"📥 Planung importieren" },
+  kb_rename: { fr:"✏️ Renommer le planning", nl:"✏️ Planning hernoemen", en:"✏️ Rename the schedule", de:"✏️ Planung umbenennen" },
+  kb_delete: { fr:"🗑️ Supprimer le planning", nl:"🗑️ Planning verwijderen", en:"🗑️ Delete the schedule", de:"🗑️ Planung löschen" },
+  kb_candidature: { fr:"📝 Candidature enquêteur", nl:"📝 Kandidatuur enquêteur", en:"📝 Interviewer application", de:"📝 Bewerbung als Befrager" },
+  kb_save: { fr:"💾 Sauvegarder", nl:"💾 Opslaan", en:"💾 Save", de:"💾 Speichern" },
+  kb_restore: { fr:"↩ Restaurer la sélection", nl:"↩ Selectie herstellen", en:"↩ Restore selection", de:"↩ Auswahl wiederherstellen" },
+  kb_clear_save: { fr:"🗑️ Effacer la sauvegarde", nl:"🗑️ Back-up wissen", en:"🗑️ Clear the backup", de:"🗑️ Sicherung löschen" },
+  kb_interviews: { fr:"📋 Interviews", nl:"📋 Interviews", en:"📋 Interviews", de:"📋 Interviews" },
+  kb_converter: { fr:"🔄 Convertisseur", nl:"🔄 Omzetter", en:"🔄 Converter", de:"🔄 Konverter" },
+  lbl_language: { fr:"🌐 Langue", nl:"🌐 Taal", en:"🌐 Language", de:"🌐 Sprache" },
+  // — Onglet Planning —
+  plan_empty_pre: { fr:"Aucun planning chargé. Importez ici votre fichier trimestriel LFS", nl:"Geen planning geladen. Importeer hier uw LFS-kwartaalbestand", en:"No schedule loaded. Import your quarterly LFS file here", de:"Keine Planung geladen. Importieren Sie hier Ihre LFS-Quartalsdatei" },
+  plan_empty_post: { fr:"— il apparaîtra ensuite dans l'agenda.", nl:"— het verschijnt daarna in de agenda.", en:"— it will then appear in the calendar.", de:"— sie erscheint danach im Kalender." },
+  plan_mgmt_title: { fr:"📅 Planning enquêtes terrain", nl:"📅 Planning veldenquêtes", en:"📅 Field survey schedule", de:"📅 Feldbefragungs-Planung" },
+  plan_mgmt_desc: { fr:"Importe un fichier de planning LFS (Excel/CSV) puis associe ses colonnes. Sélectionne une province/commune pour voir les missions et localiser les quartiers/adresses sur la carte.", nl:"Importeer een LFS-planningbestand (Excel/CSV) en koppel de kolommen. Selecteer een provincie/gemeente om de opdrachten te zien en de wijken/adressen op de kaart te lokaliseren.", en:"Import an LFS schedule file (Excel/CSV) then map its columns. Select a province/municipality to see the assignments and locate the neighbourhoods/addresses on the map.", de:"Importieren Sie eine LFS-Planungsdatei (Excel/CSV) und ordnen Sie die Spalten zu. Wählen Sie eine Provinz/Gemeinde, um die Einsätze zu sehen und die Viertel/Adressen auf der Karte zu lokalisieren." },
+  plan_mgmt_menu_pre: { fr:"Import, renommage et suppression du planning : menu", nl:"Importeren, hernoemen en verwijderen van de planning: menu", en:"Import, rename and delete the schedule: menu", de:"Import, Umbenennen und Löschen der Planung: Menü" },
+  plan_mgmt_menu_post: { fr:"(en haut à droite).", nl:"(rechtsboven).", en:"(top right).", de:"(oben rechts)." },
+  plan_upcoming_only: { fr:"À venir uniquement", nl:"Alleen toekomstige", en:"Upcoming only", de:"Nur bevorstehende" },
+  plan_search_ph: { fr:"Rechercher groupe / quartier…", nl:"Zoek groep / wijk…", en:"Search group / neighbourhood…", de:"Gruppe / Viertel suchen…" },
+  clear: { fr:"Effacer", nl:"Wissen", en:"Clear", de:"Löschen" },
+  plan_check_addr: { fr:"📍 Vérifier une adresse :", nl:"📍 Een adres controleren:", en:"📍 Check an address:", de:"📍 Adresse prüfen:" },
+  plan_addr_ph: { fr:"ex. Grande Rue au Bois 12, Schaerbeek", nl:"bv. Grande Rue au Bois 12, Schaarbeek", en:"e.g. Grande Rue au Bois 12, Schaerbeek", de:"z. B. Grande Rue au Bois 12, Schaerbeek" },
+  locate: { fr:"Localiser", nl:"Lokaliseren", en:"Locate", de:"Lokalisieren" },
+  plan_recalc_tip: { fr:"Vider le cache et recalculer la position des quartiers affichés", nl:"Cache wissen en de positie van de getoonde wijken herberekenen", en:"Clear the cache and recompute the position of the displayed neighbourhoods", de:"Cache leeren und die Position der angezeigten Viertel neu berechnen" },
+  plan_recalc: { fr:"🔄 Recalculer", nl:"🔄 Herberekenen", en:"🔄 Recompute", de:"🔄 Neu berechnen" },
+  // — Onglet Agenda —
+  agenda_empty_pre: { fr:"Aucun planning chargé. Importez d'abord un planning dans l'onglet", nl:"Geen planning geladen. Importeer eerst een planning in het tabblad", en:"No schedule loaded. First import a schedule in the tab", de:"Keine Planung geladen. Importieren Sie zuerst eine Planung im Reiter" },
+  agenda_empty_post: { fr:", puis revenez ici pour sélectionner des groupes et bâtir votre agenda.", nl:", en kom dan hier terug om groepen te selecteren en uw agenda op te bouwen.", en:", then come back here to select groups and build your calendar.", de:", und kehren Sie dann hierher zurück, um Gruppen auszuwählen und Ihren Kalender aufzubauen." },
+  tab_planning_full: { fr:"🗺️ Planning", nl:"🗺️ Planning", en:"🗺️ Schedule", de:"🗺️ Planung" },
+  sel_groups_title: { fr:"Sélectionner des groupes", nl:"Groepen selecteren", en:"Select groups", de:"Gruppen auswählen" },
+  f_province: { fr:"Province", nl:"Provincie", en:"Province", de:"Provinz" },
+  f_commune: { fr:"Commune", nl:"Gemeente", en:"Municipality", de:"Gemeinde" },
+  f_quartier_letter: { fr:"Quartier / Lettre", nl:"Wijk / Letter", en:"Neighbourhood / Letter", de:"Viertel / Buchstabe" },
+  sort_az: { fr:"A→Z", nl:"A→Z", en:"A→Z", de:"A→Z" },
+  sort_za: { fr:"Z→A", nl:"Z→A", en:"Z→A", de:"Z→A" },
+  select_all: { fr:"✅ Tout sélectionner", nl:"✅ Alles selecteren", en:"✅ Select all", de:"✅ Alle auswählen" },
+  sel_clear: { fr:"✕ Effacer", nl:"✕ Wissen", en:"✕ Clear", de:"✕ Löschen" },
+  grp_search_ph: { fr:"🔎 Rechercher groupe / quartier…", nl:"🔎 Zoek groep / wijk…", en:"🔎 Search group / neighbourhood…", de:"🔎 Gruppe / Viertel suchen…" },
+  no_group_selected: { fr:"Aucun groupe sélectionné", nl:"Geen groep geselecteerd", en:"No group selected", de:"Keine Gruppe ausgewählt" },
+  tab_agenda_full: { fr:"📅 Agenda", nl:"📅 Agenda", en:"📅 Calendar", de:"📅 Kalender" },
+  v_list: { fr:"☰ Liste", nl:"☰ Lijst", en:"☰ List", de:"☰ Liste" },
+  v_week: { fr:"Semaine", nl:"Week", en:"Week", de:"Woche" },
+  v_month: { fr:"Mois", nl:"Maand", en:"Month", de:"Monat" },
+  v_year: { fr:"Année", nl:"Jaar", en:"Year", de:"Jahr" },
+  today: { fr:"Aujourd'hui", nl:"Vandaag", en:"Today", de:"Heute" },
+  exp_excel: { fr:"⬇️ Excel", nl:"⬇️ Excel", en:"⬇️ Excel", de:"⬇️ Excel" },
+  exp_excel_tip: { fr:"Exporter la liste en Excel", nl:"De lijst naar Excel exporteren", en:"Export the list to Excel", de:"Die Liste nach Excel exportieren" },
+  exp_csv: { fr:"⬇️ CSV App", nl:"⬇️ CSV-app", en:"⬇️ CSV App", de:"⬇️ CSV-App" },
+  exp_csv_tip: { fr:"Export CSV pour l'application Interviews", nl:"CSV-export voor de Interviews-app", en:"CSV export for the Interviews app", de:"CSV-Export für die Interviews-App" },
+  exp_ical: { fr:"📅 iCal", nl:"📅 iCal", en:"📅 iCal", de:"📅 iCal" },
+  exp_ical_tip: { fr:"Exporter vers Google Agenda / iCal", nl:"Exporteren naar Google Agenda / iCal", en:"Export to Google Calendar / iCal", de:"Nach Google Kalender / iCal exportieren" },
+  exp_overlap: { fr:"⚠️ Chevauch.", nl:"⚠️ Overlap", en:"⚠️ Overlaps", de:"⚠️ Überschn." },
+  exp_overlap_tip: { fr:"Exporter les chevauchements", nl:"De overlappingen exporteren", en:"Export the overlaps", de:"Die Überschneidungen exportieren" },
+  leg_v1: { fr:"Vague 1", nl:"Golf 1", en:"Wave 1", de:"Welle 1" },
+  leg_v2: { fr:"Vague 2", nl:"Golf 2", en:"Wave 2", de:"Welle 2" },
+  leg_v3: { fr:"Vague 3", nl:"Golf 3", en:"Wave 3", de:"Welle 3" },
+  leg_v4: { fr:"Vague 4", nl:"Golf 4", en:"Wave 4", de:"Welle 4" },
+  // — Modale mapping colonnes —
+  map_file_label: { fr:"Fichier :", nl:"Bestand:", en:"File:", de:"Datei:" },
+  map_lines: { fr:"ligne(s).", nl:"regel(s).", en:"line(s).", de:"Zeile(n)." },
+  map_assoc: { fr:"Associe chaque information à une colonne du fichier (1 ligne = 1 mission/interrogation).", nl:"Koppel elke gegeven aan een kolom van het bestand (1 regel = 1 opdracht/bevraging).", en:"Map each piece of information to a column of the file (1 line = 1 assignment/interview).", de:"Ordnen Sie jede Information einer Spalte der Datei zu (1 Zeile = 1 Einsatz/Befragung)." },
+  map_name: { fr:"Nom du planning", nl:"Naam van de planning", en:"Schedule name", de:"Name der Planung" },
+  map_name_ph: { fr:"ex. EU-SILC 2026 vague 1", nl:"bv. EU-SILC 2026 golf 1", en:"e.g. EU-SILC 2026 wave 1", de:"z. B. EU-SILC 2026 Welle 1" },
+  map_type: { fr:"Type d'enquête", nl:"Type enquête", en:"Survey type", de:"Erhebungstyp" },
+  map_type_travel: { fr:"Voyages & Vacances", nl:"Reizen & Vakanties", en:"Travel & Holidays", de:"Reisen & Urlaub" },
+  map_type_health: { fr:"Santé", nl:"Gezondheid", en:"Health", de:"Gesundheit" },
+  map_type_census: { fr:"Recensement / spéciale", nl:"Telling / speciaal", en:"Census / special", de:"Zählung / Sonder" },
+  map_type_other: { fr:"Autre", nl:"Andere", en:"Other", de:"Andere" },
+  map_quartier_addr: { fr:"Quartier / adresse", nl:"Wijk / adres", en:"Neighbourhood / address", de:"Viertel / Adresse" },
+  map_group_code: { fr:"Groupe / code", nl:"Groep / code", en:"Group / code", de:"Gruppe / Code" },
+  map_wave: { fr:"Vague", nl:"Golf", en:"Wave", de:"Welle" },
+  map_week_ref: { fr:"Semaine de réf.", nl:"Ref.-week", en:"Ref. week", de:"Ref.-Woche" },
+  map_date_start: { fr:"Date début", nl:"Startdatum", en:"Start date", de:"Startdatum" },
+  map_date_stop: { fr:"Date fin", nl:"Einddatum", en:"End date", de:"Enddatum" },
+  cancel: { fr:"Annuler", nl:"Annuleren", en:"Cancel", de:"Abbrechen" },
+  map_import_confirm: { fr:"✅ Importer", nl:"✅ Importeren", en:"✅ Import", de:"✅ Importieren" },
+  // — Onglet Candidature —
+  cand_desc_pre: { fr:"Remplit le formulaire de candidature avec vos coordonnées et les groupes sélectionnés dans l'onglet", nl:"Vult het kandidatuurformulier in met uw gegevens en de groepen die u in het tabblad", en:"Fills the application form with your details and the groups selected in the tab", de:"Füllt das Bewerbungsformular mit Ihren Angaben und den im Reiter" },
+  cand_desc_post: { fr:". Vos informations personnelles sont mémorisées sur cet appareil.", nl:"hebt geselecteerd. Uw persoonlijke gegevens worden op dit toestel bewaard.", en:". Your personal information is stored on this device.", de:"ausgewählten Gruppen. Ihre persönlichen Daten werden auf diesem Gerät gespeichert." },
+  cand_survey: { fr:"Enquête — sigle + période (ex. EFT 2026-T3)", nl:"Enquête — code + periode (bv. EAK 2026-K3)", en:"Survey — code + period (e.g. LFS 2026-Q3)", de:"Erhebung — Kürzel + Zeitraum (z. B. AKE 2026-Q3)" },
+  cand_nom: { fr:"Nom", nl:"Naam", en:"Last name", de:"Name" },
+  cand_prenom: { fr:"Prénom", nl:"Voornaam", en:"First name", de:"Vorname" },
+  cand_adresse: { fr:"Adresse", nl:"Adres", en:"Address", de:"Adresse" },
+  cand_cp: { fr:"Code postal", nl:"Postcode", en:"Postal code", de:"Postleitzahl" },
+  cand_phones_emails: { fr:"Téléphones & e-mails", nl:"Telefoons & e-mails", en:"Phones & emails", de:"Telefone & E-Mails" },
+  cand_tel_prive: { fr:"Tél. privé", nl:"Tel. privé", en:"Home phone", de:"Tel. privat" },
+  cand_hours_prive: { fr:"Heures limites d'appel (privé)", nl:"Beluren (privé)", en:"Call hours (home)", de:"Anrufzeiten (privat)" },
+  cand_hours_ph: { fr:"ex. 18h–20h", nl:"bv. 18u–20u", en:"e.g. 6pm–8pm", de:"z. B. 18–20 Uhr" },
+  cand_tel_port: { fr:"Tél. portable", nl:"Gsm", en:"Mobile phone", de:"Mobiltelefon" },
+  cand_hours_port: { fr:"Heures limites d'appel (portable)", nl:"Beluren (gsm)", en:"Call hours (mobile)", de:"Anrufzeiten (mobil)" },
+  cand_tel_bur: { fr:"Tél. bureau", nl:"Tel. kantoor", en:"Office phone", de:"Tel. Büro" },
+  cand_hours_bur: { fr:"Heures limites d'appel (bureau)", nl:"Beluren (kantoor)", en:"Call hours (office)", de:"Anrufzeiten (Büro)" },
+  cand_email_prive: { fr:"E-mail privé", nl:"E-mail privé", en:"Home email", de:"E-Mail privat" },
+  cand_email_bur: { fr:"E-mail bureau", nl:"E-mail kantoor", en:"Office email", de:"E-Mail Büro" },
+  cand_nb_groupes: { fr:"Nombre de groupes souhaités", nl:"Aantal gewenste groepen", en:"Number of groups wanted", de:"Anzahl gewünschter Gruppen" },
+  cand_auto: { fr:"auto", nl:"auto", en:"auto", de:"auto" },
+  cand_nb_tip: { fr:"Automatique — égal au nombre de groupes sélectionnés", nl:"Automatisch — gelijk aan het aantal geselecteerde groepen", en:"Automatic — equal to the number of selected groups", de:"Automatisch — entspricht der Anzahl ausgewählter Gruppen" },
+  cand_date: { fr:"Date", nl:"Datum", en:"Date", de:"Datum" },
+  cand_date_tip: { fr:"Automatique — date du jour", nl:"Automatisch — datum van vandaag", en:"Automatic — today's date", de:"Automatisch — heutiges Datum" },
+  cand_communes: { fr:"Communes choisies —", nl:"Gekozen gemeenten —", en:"Chosen municipalities —", de:"Gewählte Gemeinden —" },
+  cand_groupes_word: { fr:"groupe(s)", nl:"groep(en)", en:"group(s)", de:"Gruppe(n)" },
+  cand_reorder_hint: { fr:"▲▼ pour l'ordre de priorité · ✕ pour retirer une commune (le nombre de groupes se recalcule)", nl:"▲▼ voor de prioriteitsvolgorde · ✕ om een gemeente te verwijderen (het aantal groepen wordt herberekend)", en:"▲▼ for priority order · ✕ to remove a municipality (the group count is recomputed)", de:"▲▼ für die Prioritätsreihenfolge · ✕ um eine Gemeinde zu entfernen (die Gruppenanzahl wird neu berechnet)" },
+  cand_no_group: { fr:"Aucun groupe sélectionné — choisissez des groupes dans l'onglet Agenda.", nl:"Geen groep geselecteerd — kies groepen in het tabblad Agenda.", en:"No group selected — choose groups in the Calendar tab.", de:"Keine Gruppe ausgewählt — wählen Sie Gruppen im Reiter Kalender." },
+  cand_checkbox_legend: { fr:"Case à cocher du formulaire", nl:"Aankruisvak van het formulier", en:"Form checkbox", de:"Ankreuzfeld des Formulars" },
+  cand_radio_groupes: { fr:"Nombre de groupes souhaités", nl:"Aantal gewenste groepen", en:"Number of groups wanted", de:"Anzahl gewünschter Gruppen" },
+  cand_radio_pas: { fr:"Pas intéressé(e) pour effectuer les enquêtes de cette vague", nl:"Niet geïnteresseerd om de enquêtes van deze golf uit te voeren", en:"Not interested in carrying out this wave's surveys", de:"Nicht interessiert, die Erhebungen dieser Welle durchzuführen" },
+  cand_radio_plus: { fr:"N'est plus intéressé(e) pour effectuer des enquêtes", nl:"Niet langer geïnteresseerd om enquêtes uit te voeren", en:"No longer interested in carrying out surveys", de:"Nicht mehr interessiert, Erhebungen durchzuführen" },
+  cand_signature: { fr:"Signature", nl:"Handtekening", en:"Signature", de:"Unterschrift" },
+  cand_sig_aria: { fr:"Zone de signature — dessinez votre signature à la souris ou au doigt", nl:"Handtekeningzone — teken uw handtekening met de muis of vinger", en:"Signature area — draw your signature with the mouse or finger", de:"Unterschriftsfeld — zeichnen Sie Ihre Unterschrift mit Maus oder Finger" },
+  cand_sig_empty: { fr:"Signature vide", nl:"Lege handtekening", en:"Empty signature", de:"Leere Unterschrift" },
+  cand_sig_clear: { fr:"✕ Effacer la signature", nl:"✕ Handtekening wissen", en:"✕ Clear signature", de:"✕ Unterschrift löschen" },
+  cand_sig_hint: { fr:"Signez à la souris ou au doigt — la signature est intégrée au .docx.", nl:"Onderteken met de muis of vinger — de handtekening wordt in de .docx opgenomen.", en:"Sign with the mouse or finger — the signature is embedded in the .docx.", de:"Unterschreiben Sie mit Maus oder Finger — die Unterschrift wird in die .docx eingebettet." },
+  cand_generate: { fr:"⬇️ Générer la candidature (.docx)", nl:"⬇️ Kandidatuur genereren (.docx)", en:"⬇️ Generate the application (.docx)", de:"⬇️ Bewerbung erzeugen (.docx)" },
+  cand_generate_hint: { fr:"Formulaire de candidature rempli — s'ouvre dans Word / LibreOffice", nl:"Ingevuld kandidatuurformulier — opent in Word / LibreOffice", en:"Filled application form — opens in Word / LibreOffice", de:"Ausgefülltes Bewerbungsformular — öffnet in Word / LibreOffice" },
+  // — Chaînes générées en JS (alertes, statuts, tableaux, agenda) —
+  js_no_group_alert: { fr:"Aucun groupe sélectionné.", nl:"Geen groep geselecteerd.", en:"No group selected.", de:"Keine Gruppe ausgewählt." },
+  js_no_group_match: { fr:"Aucun groupe correspond aux filtres", nl:"Geen groep komt overeen met de filters", en:"No group matches the filters", de:"Keine Gruppe entspricht den Filtern" },
+  js_ics_downloaded: { fr:"Fichier .ics téléchargé.\n\nPour importer dans Google Agenda :\n1. Ouvrir Google Agenda\n2. ⚙️ Paramètres → Importer et exporter\n3. Importer → sélectionner le fichier .ics", nl:".ics-bestand gedownload.\n\nIn Google Agenda importeren:\n1. Google Agenda openen\n2. ⚙️ Instellingen → Importeren en exporteren\n3. Importeren → het .ics-bestand selecteren", en:".ics file downloaded.\n\nTo import into Google Calendar:\n1. Open Google Calendar\n2. ⚙️ Settings → Import & export\n3. Import → select the .ics file", de:".ics-Datei heruntergeladen.\n\nIn Google Kalender importieren:\n1. Google Kalender öffnen\n2. ⚙️ Einstellungen → Import & Export\n3. Importieren → die .ics-Datei auswählen" },
+  js_error: { fr:"Erreur : {msg}", nl:"Fout: {msg}", en:"Error: {msg}", de:"Fehler: {msg}" },
+  js_no_backup: { fr:"Aucune sauvegarde.", nl:"Geen back-up.", en:"No backup.", de:"Keine Sicherung." },
+  js_confirm_clear_save: { fr:"Effacer la sauvegarde locale ?", nl:"Lokale back-up wissen?", en:"Clear the local backup?", de:"Lokale Sicherung löschen?" },
+  js_open: { fr:"Ouvrir", nl:"Openen", en:"Open", de:"Öffnen" },
+  js_open_file_aria: { fr:"Ouvrir le fichier {f}", nl:"Bestand {f} openen", en:"Open the file {f}", de:"Datei {f} öffnen" },
+  close: { fr:"Fermer", nl:"Sluiten", en:"Close", de:"Schließen" },
+  js_confirm_del_plan: { fr:"Supprimer le planning « {nom} » ?", nl:"Planning « {nom} » verwijderen?", en:"Delete the schedule “{nom}”?", de:"Planung „{nom}“ löschen?" },
+  js_map_not_ready: { fr:"Carte non prête.", nl:"Kaart niet gereed.", en:"Map not ready.", de:"Karte nicht bereit." },
+  js_searching: { fr:"Recherche…", nl:"Zoeken…", en:"Searching…", de:"Suche…" },
+  js_file_empty: { fr:"Fichier vide ou sans données.", nl:"Leeg bestand of zonder gegevens.", en:"Empty file or no data.", de:"Leere Datei oder ohne Daten." },
+  js_no_readable_lfs: { fr:"Aucun groupe lisible dans ce fichier LFS.", nl:"Geen leesbare groep in dit LFS-bestand.", en:"No readable group in this LFS file.", de:"Keine lesbare Gruppe in dieser LFS-Datei." },
+  js_col_commune_required: { fr:"La colonne « Commune » est obligatoire.", nl:"De kolom « Gemeente » is verplicht.", en:"The “Municipality” column is required.", de:"Die Spalte „Gemeinde“ ist erforderlich." },
+  js_no_line_commune: { fr:"Aucune ligne avec une commune.", nl:"Geen regel met een gemeente.", en:"No line with a municipality.", de:"Keine Zeile mit einer Gemeinde." },
+  js_plan_count: { fr:"{g} groupe(s) · {i} interro.", nl:"{g} groep(en) · {i} bevr.", en:"{g} group(s) · {i} interv.", de:"{g} Gruppe(n) · {i} Bef." },
+  js_quartiers_located: { fr:"{n} quartier(s) localisé(s).", nl:"{n} wijk(en) gelokaliseerd.", en:"{n} neighbourhood(s) located.", de:"{n} Viertel lokalisiert." },
+  js_geocoding_progress: { fr:"Géocodage… {i}/{n}", nl:"Geocodering… {i}/{n}", en:"Geocoding… {i}/{n}", de:"Geokodierung… {i}/{n}" },
+  js_geocoding_done: { fr:"{n} quartier(s) — localisation terminée.", nl:"{n} wijk(en) — lokalisatie voltooid.", en:"{n} neighbourhood(s) — location complete.", de:"{n} Viertel — Lokalisierung abgeschlossen." },
+  js_agenda_count: { fr:"Agenda — {n} groupe(s)", nl:"Agenda — {n} groep(en)", en:"Calendar — {n} group(s)", de:"Kalender — {n} Gruppe(n)" },
+  js_cand_count: { fr:"Candidature — {n} groupe(s)", nl:"Kandidatuur — {n} groep(en)", en:"Application — {n} group(s)", de:"Bewerbung — {n} Gruppe(n)" },
+  th_group: { fr:"N° Groupe", nl:"Groepsnr.", en:"Group no.", de:"Gruppen-Nr." },
+  th_group_short: { fr:"Groupe", nl:"Groep", en:"Group", de:"Gruppe" },
+  th_quartier: { fr:"Quartier", nl:"Wijk", en:"Neighbourhood", de:"Viertel" },
+  th_wave: { fr:"Vague", nl:"Golf", en:"Wave", de:"Welle" },
+  th_week_ref: { fr:"Sem. réf.", nl:"Ref.-week", en:"Ref. week", de:"Ref.-Woche" },
+  th_start: { fr:"Début", nl:"Begin", en:"Start", de:"Beginn" },
+  th_end: { fr:"Fin", nl:"Einde", en:"End", de:"Ende" },
+  th_duration: { fr:"Durée", nl:"Duur", en:"Duration", de:"Dauer" },
+  unit_day: { fr:"j", nl:"d", en:"d", de:"T" },
+  js_week_range: { fr:"Sem. {w} — {d1} au {d2}", nl:"Week {w} — {d1} tot {d2}", en:"Week {w} — {d1} to {d2}", de:"KW {w} — {d1} bis {d2}" },
+  js_group_upper: { fr:"GROUPE", nl:"GROEP", en:"GROUP", de:"GRUPPE" },
+  js_waves_count: { fr:" — {n} vague(s) : ", nl:" — {n} golf/golven: ", en:" — {n} wave(s): ", de:" — {n} Welle(n): " },
+  js_no_wave: { fr:" — aucune vague", nl:" — geen golf", en:" — no wave", de:" — keine Welle" },
+  js_precision: { fr:"Précision", nl:"Precisie", en:"Precision", de:"Genauigkeit" },
+  js_next: { fr:"Prochaine", nl:"Volgende", en:"Next", de:"Nächste" },
+  js_prec_fail: { fr:"échec", nl:"mislukt", en:"failed", de:"fehlgeschlagen" },
+  js_prec_high: { fr:"élevée", nl:"hoog", en:"high", de:"hoch" },
+  js_prec_mid: { fr:"moyenne", nl:"gemiddeld", en:"medium", de:"mittel" },
+  js_prec_commune: { fr:"commune", nl:"gemeente", en:"municipality", de:"Gemeinde" },
+  js_src_centre: { fr:"centre commune", nl:"centrum gemeente", en:"municipality centre", de:"Gemeindezentrum" },
+  js_debug_geo_tip: { fr:"Clic = debug géocodage (essais + forme retenue)", nl:"Klik = geocodering debuggen (pogingen + gekozen vorm)", en:"Click = geocoding debug (attempts + chosen form)", de:"Klick = Geokodierung-Debug (Versuche + gewählte Form)" },
+  js_priority: { fr:"Priorité {n}", nl:"Prioriteit {n}", en:"Priority {n}", de:"Priorität {n}" },
+  js_move_up: { fr:"Monter", nl:"Omhoog", en:"Move up", de:"Nach oben" },
+  js_move_down: { fr:"Descendre", nl:"Omlaag", en:"Move down", de:"Nach unten" },
+  js_remove_commune: { fr:"Retirer cette commune", nl:"Deze gemeente verwijderen", en:"Remove this municipality", de:"Diese Gemeinde entfernen" },
+  js_remove_commune_aria: { fr:"Retirer {c}", nl:"{c} verwijderen", en:"Remove {c}", de:"{c} entfernen" },
+  js_field_required: { fr:"Veuillez renseigner : {field}.", nl:"Gelieve in te vullen: {field}.", en:"Please fill in: {field}.", de:"Bitte ausfüllen: {field}." },
+  js_sig_required: { fr:"La signature est obligatoire : dessinez-la avant de générer le document.", nl:"De handtekening is verplicht: teken ze voordat u het document genereert.", en:"The signature is required: draw it before generating the document.", de:"Die Unterschrift ist erforderlich: zeichnen Sie sie, bevor Sie das Dokument erzeugen." },
+  js_fix_fields: { fr:"Veuillez corriger les champs indiqués avant de générer la candidature.", nl:"Corrigeer de aangeduide velden voordat u de kandidatuur genereert.", en:"Please correct the indicated fields before generating the application.", de:"Bitte korrigieren Sie die angegebenen Felder, bevor Sie die Bewerbung erzeugen." },
+  cand_sig_filled: { fr:"Signature saisie", nl:"Handtekening ingevoerd", en:"Signature captured", de:"Unterschrift erfasst" },
+  js_selected_suffix: { fr:" · ✓ {n} sélectionné(s)", nl:" · ✓ {n} geselecteerd", en:" · ✓ {n} selected", de:" · ✓ {n} ausgewählt" },
+  js_approx_full: { fr:"⚠️ approximatif (hors commune ?)", nl:"⚠️ benaderend (buiten de gemeente?)", en:"⚠️ approximate (outside municipality?)", de:"⚠️ ungefähr (außerhalb der Gemeinde?)" },
+  js_approx_prefix: { fr:"⚠️ approx. ", nl:"⚠️ ong. ", en:"⚠️ approx. ", de:"⚠️ ungef. " },
+  js_plan_updated: { fr:"🔄 Planning existant mis à jour (données remplacées).", nl:"🔄 Bestaande planning bijgewerkt (gegevens vervangen).", en:"🔄 Existing schedule updated (data replaced).", de:"🔄 Bestehende Planung aktualisiert (Daten ersetzt)." },
+  js_gen_error: { fr:"Erreur lors de la génération : {msg}", nl:"Fout bij het genereren: {msg}", en:"Error while generating: {msg}", de:"Fehler beim Erzeugen: {msg}" },
+  js_no_overlap: { fr:"✅ Aucun chevauchement détecté !", nl:"✅ Geen overlap gevonden!", en:"✅ No overlap detected!", de:"✅ Keine Überschneidung gefunden!" },
+  js_overlaps_exported: { fr:"⚠️ {n} chevauchement(s) exporté(s)", nl:"⚠️ {n} overlap(pen) geëxporteerd", en:"⚠️ {n} overlap(s) exported", de:"⚠️ {n} Überschneidung(en) exportiert" },
+  js_saved: { fr:"💾 Sauvegardé !", nl:"💾 Opgeslagen!", en:"💾 Saved!", de:"💾 Gespeichert!" },
+  js_restored: { fr:"↩ Restauré !", nl:"↩ Hersteld!", en:"↩ Restored!", de:"↩ Wiederhergestellt!" },
+  js_save_cleared: { fr:"✕ Sauvegarde effacée", nl:"✕ Back-up gewist", en:"✕ Backup cleared", de:"✕ Sicherung gelöscht" },
+};
+
+function t(key) {
+  const e = I18N[key];
+  if (!e) return key;
+  return e[uiLang] || e.fr || key;
+}
+// Template avec variables : tf('key', {n:3}) remplace {n} dans la chaîne traduite
+function tf(key, vars) {
+  return t(key).replace(/\{(\w+)\}/g, (_, k) => (vars && vars[k] != null) ? vars[k] : '');
+}
+// Pluriel : la valeur du dico est [singulier, pluriel] par langue
+function tPlural(key, n) {
+  const e = I18N[key];
+  const arr = (e && (e[uiLang] || e.fr)) || [key, key];
+  return arr[n > 1 ? 1 : 0];
+}
+function detecterLangueNavigateur() {
+  const l = (navigator.language || 'fr').slice(0, 2).toLowerCase();
+  return LANGS.includes(l) ? l : 'fr';
+}
+// Lecture défensive de localStorage['statbel_settings'] — langue partagée avec Interviews/Convertisseur.
+function lireSettings() {
+  try { return JSON.parse(localStorage.getItem('statbel_settings') || '{}') || {}; } catch (e) { return {}; }
+}
+function chargerLangueInitiale() {
+  const raw = lireSettings();
+  if (LANGS.includes(raw.lang)) return raw.lang;
+  return detecterLangueNavigateur();
+}
+let uiLang = chargerLangueInitiale();
+
+// Applique la langue courante à tout le DOM balisé (data-i18n[-ph|-tip|-title|-aria]).
+function appliquerLangue() {
+  document.documentElement.lang = uiLang || 'fr';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('[data-i18n-tip]').forEach(el => { el.setAttribute('title', t(el.getAttribute('data-i18n-tip'))); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
+  const sel = document.getElementById('setLangPlanner'); if (sel) sel.value = uiLang;
+  rafraichirVuesLangue();
+}
+// Changement de langue : persiste dans localStorage['statbel_settings'] (fusion — partagé avec les autres apps).
+function changerLangue(v) {
+  uiLang = LANGS.includes(v) ? v : 'fr';
+  const raw = lireSettings();
+  raw.lang = uiLang;
+  try { localStorage.setItem('statbel_settings', JSON.stringify(raw)); } catch (e) {}
+  appliquerLangue();
+}
+// Ré-affiche le contenu généré en JS (non couvert par data-i18n) après un changement de langue.
+function rafraichirVuesLangue() {
+  try {
+    if (typeof renderGroupsList === 'function') renderGroupsList();
+    if (typeof renderView === 'function') renderView();
+    if (typeof updateCandidaturePreview === 'function') updateCandidaturePreview();
+    if (typeof filtrerPlanning === 'function' && typeof _planRows !== 'undefined' && _planRows && _planRows.length) filtrerPlanning();
+  } catch (e) { /* pas bloquant */ }
+}
+
 // Codes province (fichiers LFS Statbel) → libellés complets. Repli : code brut.
 // ══════════════════════════════════════════════════════════════════════
 //  RÉGION — DATA / RÉFÉRENCES · provinces, jours/mois, couleurs de vague
@@ -757,9 +1017,21 @@ function provLabel(code) {
   const c = String(code || '').trim().toUpperCase();
   return PROV_LABELS[c] || code || '';
 }
-const JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin',
-                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+// Jours (Lun→Dim) et mois localisés — suivent la langue de l'UI.
+const JOURS_I18N = {
+  fr: ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
+  nl: ['ma','di','wo','do','vr','za','zo'],
+  en: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+  de: ['Mo','Di','Mi','Do','Fr','Sa','So'],
+};
+const MOIS_I18N = {
+  fr: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+  nl: ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'],
+  en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+  de: ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
+};
+function joursNoms() { return JOURS_I18N[uiLang] || JOURS_I18N.fr; }
+function moisNoms() { return MOIS_I18N[uiLang] || MOIS_I18N.fr; }
 
 // ══════════════════════════════════════════════════════════════════════
 //  LECTURE DES DATES (chaînes jj/mm/aaaa ou ISO issues du Convertisseur)
@@ -897,8 +1169,8 @@ function majBadgeGroupes() {
   const info = document.getElementById('planInfo');
   if (!info) return;
   const tot = filtered.length, sel = selected.size;
-  info.innerHTML = `<div class="file-chip">📊 ${tot} groupe(s)`
-    + (sel ? ` · ✓ ${sel} sélectionné(s)` : '') + `</div>`;
+  info.innerHTML = `<div class="file-chip">📊 ${tot} ${esc(t('cand_groupes_word'))}`
+    + (sel ? tf('js_selected_suffix',{n:sel}) : '') + `</div>`;
 }
 
 // Menu ⋮ du bandeau (même comportement que Interviews / Convertisseur).
@@ -1006,7 +1278,7 @@ function applyFilters() {
 function renderGroupsList() {
   const el = document.getElementById('groupsSelected');
   if (!filtered.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--ink3);padding:6px 0">Aucun groupe correspond aux filtres</div>';
+    el.innerHTML = '<div style="font-size:12px;color:var(--ink3);padding:6px 0">'+esc(t('js_no_group_match'))+'</div>';
     return;
   }
   // Tri croissant par numéro de groupe
@@ -1061,7 +1333,7 @@ function updateAgenda() {
   const b = document.getElementById('agendaCount');
   if (b) { b.textContent = count; b.hidden = count === 0; }
   const tab = document.getElementById('tab-agenda');
-  if (tab) tab.setAttribute('data-tip', count ? 'Agenda — ' + count + ' groupe(s)' : 'Agenda');
+  if (tab) tab.setAttribute('data-tip', count ? tf('js_agenda_count',{n:count}) : t('tab_agenda'));
   majBadgeGroupes();                                   // le badge dépend de la sélection
   const card = document.getElementById('agendaCard');
   if (count === 0) {
@@ -1134,15 +1406,15 @@ function renderListe() {
   if (window.Charts) {
     const frd = s => s ? s.split('-').reverse().join('/') : '';
     const cols = [
-      { k: 'numero',   label: 'N° Groupe', render: x => `<strong>${esc(x)}</strong>` },
-      { k: 'province', label: 'Province' },
-      { k: 'commune',  label: 'Commune' },
-      { k: 'quartier', label: 'Quartier' },
-      { k: 'vague',    label: 'Vague', num: true, render: x => `<span class="v-badge ${VAGUE_COLORS[x - 1]}">V${x}</span>` },
-      { k: 'sem',      label: 'Sem. réf.', num: true, render: x => `S${esc(x)}` },
-      { k: 'debutIso', label: 'Début', render: frd },
-      { k: 'finIso',   label: 'Fin',   render: frd },
-      { k: 'duree',    label: 'Durée', num: true, render: x => `${x} j` },
+      { k: 'numero',   label: t('th_group'), render: x => `<strong>${esc(x)}</strong>` },
+      { k: 'province', label: t('f_province') },
+      { k: 'commune',  label: t('f_commune') },
+      { k: 'quartier', label: t('th_quartier') },
+      { k: 'vague',    label: t('th_wave'), num: true, render: x => `<span class="v-badge ${VAGUE_COLORS[x - 1]}">V${x}</span>` },
+      { k: 'sem',      label: t('th_week_ref'), num: true, render: x => `S${esc(x)}` },
+      { k: 'debutIso', label: t('th_start'), render: frd },
+      { k: 'finIso',   label: t('th_end'),   render: frd },
+      { k: 'duree',    label: t('th_duration'), num: true, render: x => `${x} ${t('unit_day')}` },
     ];
     Charts.table('agendaContent', cols, data, { key: 'debutIso', dir: 1 });
     return;
@@ -1153,8 +1425,8 @@ function renderListe() {
   const frd = s => s ? s.split('-').reverse().join('/') : '';
   document.getElementById('agendaContent').innerHTML =
     `<table class="list-table"><thead><tr>
-      <th>N° Groupe</th><th>Province</th><th>Commune</th><th>Quartier</th>
-      <th>Vague</th><th>Sem. réf.</th><th>Début</th><th>Fin</th><th>Durée</th>
+      <th>${esc(t('th_group'))}</th><th>${esc(t('f_province'))}</th><th>${esc(t('f_commune'))}</th><th>${esc(t('th_quartier'))}</th>
+      <th>${esc(t('th_wave'))}</th><th>${esc(t('th_week_ref'))}</th><th>${esc(t('th_start'))}</th><th>${esc(t('th_end'))}</th><th>${esc(t('th_duration'))}</th>
     </tr></thead><tbody>` +
     data.map(d => `<tr>
       <td><strong>${esc(d.numero)}</strong></td><td>${esc(d.province)}</td>
@@ -1162,7 +1434,7 @@ function renderListe() {
       <td><span class="v-badge ${VAGUE_COLORS[d.vague-1]}">V${d.vague}</span></td>
       <td style="text-align:center;font-weight:700">S${esc(d.sem)}</td>
       <td>${frd(d.debutIso)}</td><td>${frd(d.finIso)}</td>
-      <td style="text-align:center">${d.duree} j</td>
+      <td style="text-align:center">${d.duree} ${esc(t('unit_day'))}</td>
     </tr>`).join('') + '</tbody></table>';
 }
 
@@ -1171,18 +1443,18 @@ function renderSemaine() {
   document.getElementById('navControls').style.display = '';
   // Trouver le lundi de la semaine courante
   const mon = mondayOf(navDate);
-  document.getElementById('navLabel').textContent = `Sem. ${isoWeek(mon)} — ${fmtDate(mon)} au ${fmtDate(addDays(mon,6))}`;
+  document.getElementById('navLabel').textContent = tf('js_week_range',{w:isoWeek(mon),d1:fmtDate(mon),d2:fmtDate(addDays(mon,6))});
 
   const rows = selectedRows();
   const today = new Date(); today.setHours(0,0,0,0);
 
   let html = '<div class="week-grid">';
   // En-têtes
-  html += '<div class="week-grp-label" style="border:none;font-size:10px;color:var(--ink3);font-weight:700">GROUPE</div>';
+  html += '<div class="week-grp-label" style="border:none;font-size:10px;color:var(--ink3);font-weight:700">'+esc(t('js_group_upper'))+'</div>';
   for (let d = 0; d < 7; d++) {
     const day = addDays(mon, d);
     const isToday = day.toDateString() === today.toDateString();
-    html += `<div class="week-head" style="${isToday?'color:var(--accent);':''}">${JOURS[d]}<br><strong>${day.getDate()}</strong></div>`;
+    html += `<div class="week-head" style="${isToday?'color:var(--accent);':''}">${joursNoms()[d]}<br><strong>${day.getDate()}</strong></div>`;
   }
 
   rows.forEach(row => {
@@ -1209,7 +1481,7 @@ function renderSemaine() {
 function renderMois() {
   document.getElementById('navControls').style.display = '';
   const yr = navDate.getFullYear(), mo = navDate.getMonth();
-  document.getElementById('navLabel').textContent = `${MOIS_FR[mo]} ${yr}`;
+  document.getElementById('navLabel').textContent = `${moisNoms()[mo]} ${yr}`;
 
   const firstDay = new Date(yr, mo, 1);
   const lastDay  = new Date(yr, mo+1, 0);
@@ -1217,7 +1489,7 @@ function renderMois() {
   const rows     = selectedRows();
 
   let html = '<div class="month-grid">';
-  JOURS.forEach(j => html += `<div class="month-head">${j}</div>`);
+  joursNoms().forEach(j => html += `<div class="month-head">${j}</div>`);
 
   // Remplir les jours vides avant le 1er
   let dow = (firstDay.getDay() + 6) % 7; // 0=lun
@@ -1233,9 +1505,9 @@ function renderMois() {
       const v = vagueForDate(row, cur);
       return v ? [{ row, v }] : [];
     });
-    const lbl = `${d} ${MOIS_FR[mo]} ${yr}` + (events.length
-      ? ` — ${events.length} vague(s) : ` + events.map(e => `${e.row.numero} V${e.v.idx}`).join(', ')
-      : ' — aucune vague');
+    const lbl = `${d} ${moisNoms()[mo]} ${yr}` + (events.length
+      ? tf('js_waves_count',{n:events.length}) + events.map(e => `${e.row.numero} V${e.v.idx}`).join(', ')
+      : t('js_no_wave'));
     html += `<div class="month-day${isToday?' today':''}" tabindex="0" aria-label="${esc(lbl)}">
       <div class="day-num" aria-hidden="true">${d}</div>
       <div class="day-events" aria-hidden="true">
@@ -1272,11 +1544,11 @@ function renderAnnee() {
   });
   if (!rowsSorted.length) {
     document.getElementById('agendaContent').innerHTML =
-      '<div class="empty"><div class="em-icon">📅</div>Aucun groupe sélectionné</div>';
+      '<div class="empty"><div class="em-icon">📅</div>'+esc(t('no_group_selected'))+'</div>';
     return;
   }
   const today = new Date(); today.setHours(0,0,0,0);
-  const JOURS_COURT = ['L','M','M','J','V','S','D'];
+  const JOURS_COURT = joursNoms().map(j => j.charAt(0).toUpperCase());   // initiales localisées
   let html = '';
   rowsSorted.forEach(row => {
     html += `<div style="margin-bottom:20px">
@@ -1295,7 +1567,7 @@ function renderAnnee() {
 
       html += `<div>
         <div style="font-size:9px;font-weight:700;text-align:center;color:var(--accent);
-                    margin-bottom:4px;text-transform:uppercase">${MOIS_FR[mo].slice(0,3)}</div>
+                    margin-bottom:4px;text-transform:uppercase">${moisNoms()[mo].slice(0,3)}</div>
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px">`;
 
       // En-tête L M M J V S D
@@ -1328,7 +1600,7 @@ function renderAnnee() {
     html += '</div></div>';
   });
 
-  if (!html) html = '<div class="empty"><div class="em-icon">📅</div>Aucun groupe sélectionné</div>';
+  if (!html) html = '<div class="empty"><div class="em-icon">📅</div>'+esc(t('no_group_selected'))+'</div>';
   document.getElementById('agendaContent').innerHTML = html;
 }
 
@@ -1377,7 +1649,7 @@ function isoWeek(d) {
 // ══════════════════════════════════════════════════════════════════════
 function exportXls() {
   const rows = selectedRows();
-  if (!rows.length) { alert('Aucun groupe sélectionné.'); return; }
+  if (!rows.length) { alert(t('js_no_group_alert')); return; }
 
   const items = [];
   rows.forEach(r => r.vagues.forEach(v => {
@@ -1419,7 +1691,7 @@ function parseFrDate(s) {
 // ══════════════════════════════════════════════════════════════════════
 function exportIcs() {
   const rows = selectedRows();
-  if (!rows.length) { alert('Aucun groupe sélectionné.'); return; }
+  if (!rows.length) { alert(t('js_no_group_alert')); return; }
 
   const dtstamp = icsStamp(new Date());
   const lines = [
@@ -1468,7 +1740,7 @@ function exportIcs() {
   a.download = 'Planning_LFS_' + new Date().toISOString().slice(0,10) + '.ics';
   a.click();
   URL.revokeObjectURL(url);
-  setTimeout(() => alert('Fichier .ics téléchargé.\n\nPour importer dans Google Agenda :\n1. Ouvrir Google Agenda\n2. ⚙️ Paramètres → Importer et exporter\n3. Importer → sélectionner le fichier .ics'), 300);
+  setTimeout(() => alert(t('js_ics_downloaded')), 300);
 }
 
 function icsDate(d) {
@@ -1525,7 +1797,7 @@ function getChevauchements() {
 
 function exportChevauchements() {
   const uniq = getChevauchements();
-  if (!uniq.length) { afficherToast('✅ Aucun chevauchement détecté !'); return; }
+  if (!uniq.length) { afficherToast(t('js_no_overlap')); return; }
   const HDRS = ['Groupe A','Vague A','Groupe B','Vague B','Début chevauch.','Fin chevauch.','Durée (j)'];
   const rows = uniq.map(({a,b,overStart,overStop,days}) => ({
     'Groupe A': a.grp, 'Vague A': 'V'+a.v.idx,
@@ -1542,7 +1814,7 @@ function exportChevauchements() {
   const a = document.createElement('a');
   a.href=url; a.download='LFS_chevauchements_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
   URL.revokeObjectURL(url);
-  afficherToast(`⚠️ ${uniq.length} chevauchement${uniq.length>1?'s':''} exporté${uniq.length>1?'s':''}`);
+  afficherToast(tf('js_overlaps_exported',{n:uniq.length}));
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1550,7 +1822,7 @@ function exportChevauchements() {
 // ══════════════════════════════════════════════════════════════════════
 function exportCsvApp() {
   const rows = selectedRows();
-  if (!rows.length) { alert('Aucun groupe sélectionné.'); return; }
+  if (!rows.length) { alert(t('js_no_group_alert')); return; }
   const vagueChoice = prompt('Quelle vague exporter ?\n1 = Vague 1\n2 = Vague 2\n3 = Vague 3\n4 = Vague 4\nVide = toutes','');
   if (vagueChoice === null) return;
   const vagueIdx = vagueChoice.trim() ? parseInt(vagueChoice) : null;
@@ -1604,14 +1876,14 @@ function sauvegarder() {
       selected: Array.from(selected),
       view,
     }));
-    afficherToast('💾 Sauvegardé !');
-  } catch(e) { alert('Erreur : ' + e.message); }
+    afficherToast(t('js_saved'));
+  } catch(e) { alert(tf('js_error',{msg:e.message})); }
 }
 
 function restaurer() {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (!raw) { alert('Aucune sauvegarde.'); return; }
+    if (!raw) { alert(t('js_no_backup')); return; }
     const p = JSON.parse(raw);
     const sel = document.getElementById('selPlanning');
     if (sel && p.plan && [...sel.options].some(o => o.value === p.plan)) sel.value = p.plan;
@@ -1622,15 +1894,15 @@ function restaurer() {
     renderGroupsList();
     setView(view);
     updateAgenda();
-    afficherToast('↩ Restauré !');
-  } catch(e) { alert('Erreur : ' + e.message); }
+    afficherToast(t('js_restored'));
+  } catch(e) { alert(tf('js_error',{msg:e.message})); }
 }
 
 function effacerSauvegarde() {
-  if (!localStorage.getItem(LS_KEY)) { afficherToast('Aucune sauvegarde'); return; }
-  if (!confirm('Effacer la sauvegarde locale ?')) return;
+  if (!localStorage.getItem(LS_KEY)) { afficherToast(t('js_no_backup')); return; }
+  if (!confirm(t('js_confirm_clear_save'))) return;
   localStorage.removeItem(LS_KEY);
-  afficherToast('✕ Sauvegarde effacée');
+  afficherToast(t('js_save_cleared'));
 }
 
 function afficherToast(msg) {
@@ -1657,9 +1929,9 @@ function afficherToast(msg) {
 function afficherToastFichier(msg, url, nomFichier){
   const anc=document.getElementById('lfs-toast-file');
   if(anc){ clearTimeout(anc._timer); if(anc._url){ try{URL.revokeObjectURL(anc._url);}catch(_){} } anc.remove(); }
-  const t=document.createElement('div'); t.id='lfs-toast-file'; t._url=url;
-  t.setAttribute('role','status'); t.setAttribute('aria-live','polite');
-  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
+  const toast=document.createElement('div'); toast.id='lfs-toast-file'; toast._url=url;
+  toast.setAttribute('role','status'); toast.setAttribute('aria-live','polite');
+  toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
     'display:flex;align-items:center;gap:12px;max-width:92vw;'+
     'background:var(--ink);color:#fff;padding:9px 12px 9px 18px;border-radius:22px;'+
     'font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s;'+
@@ -1667,18 +1939,18 @@ function afficherToastFichier(msg, url, nomFichier){
   const span=document.createElement('span'); span.textContent=msg; span.style.whiteSpace='nowrap';
   const lien=document.createElement('a');
   lien.href=url; lien.target='_blank'; lien.rel='noopener';
-  lien.textContent='Ouvrir'; lien.setAttribute('aria-label','Ouvrir le fichier '+nomFichier);
+  lien.textContent=t('js_open'); lien.setAttribute('aria-label',tf('js_open_file_aria',{f:nomFichier}));
   lien.style.cssText='color:#fff;background:var(--cand);padding:5px 13px;border-radius:14px;'+
     'text-decoration:none;font-weight:700;white-space:nowrap';
   const fermer=document.createElement('button');
-  fermer.type='button'; fermer.textContent='✕'; fermer.setAttribute('aria-label','Fermer');
+  fermer.type='button'; fermer.textContent='✕'; fermer.setAttribute('aria-label',t('close'));
   fermer.style.cssText='background:none;border:none;color:#fff;font-size:15px;cursor:pointer;line-height:1;padding:0 2px';
-  const detruire=()=>{ clearTimeout(t._timer); if(t._url){ try{URL.revokeObjectURL(t._url);}catch(_){} t._url=null; } t.style.opacity='0'; setTimeout(()=>t.remove(),220); };
+  const detruire=()=>{ clearTimeout(toast._timer); if(toast._url){ try{URL.revokeObjectURL(toast._url);}catch(_){} toast._url=null; } toast.style.opacity='0'; setTimeout(()=>toast.remove(),220); };
   fermer.addEventListener('click', detruire);
-  t.append(span, lien, fermer);
-  document.body.appendChild(t);
-  requestAnimationFrame(()=>{ t.style.opacity='1'; });
-  t._timer=setTimeout(detruire, 9000);
+  toast.append(span, lien, fermer);
+  document.body.appendChild(toast);
+  requestAnimationFrame(()=>{ toast.style.opacity='1'; });
+  toast._timer=setTimeout(detruire, 9000);
 }
 
 // Démarrage : charger les plannings du Convertisseur. La sauvegarde/restauration
@@ -1698,7 +1970,7 @@ function afficherToastFichier(msg, url, nomFichier){
 //  ONGLET PLANNING LFS — déplacé du Convertisseur (import + gestion + carte +
 //  vérificateur d'adresse). Écrit localStorage['plannings'] avec l'index « grp »
 //  → le Convertisseur garde le lien GRP_2026xxxxx ↔ LFS_IESS_GRP_APPEL.
-//  Textes en dur (FR) : le Planner n'a pas de t()/tf().
+//  Textes traduits via t()/tf() (fr/nl/en/de) — voir « RÉGION — I18N ».
 // ══════════════════════════════════════════════════════════════════════
 
 const sansAccent = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -1807,7 +2079,7 @@ function renommerPlanningImporte() {
 function supprimerPlanningImporte() {
   const p = _plannings[_planActif];
   if (!p) return;
-  if (!confirm(`Supprimer le planning « ${p.nom} » ?`)) return;
+  if (!confirm(tf('js_confirm_del_plan',{nom:p.nom}))) return;
   delete _plannings[_planActif];
   sauverPlanningsImportes();
   _planActif = Object.keys(_plannings)[0] || '';
@@ -1858,8 +2130,8 @@ function verifierAdresse() {
   const adr = (document.getElementById('planAdrCheck').value || '').trim();
   const stat = document.getElementById('planAdrStatus');
   if (!adr) { stat.textContent = ''; return; }
-  if (!_planMap || !_planAdrLayer) { stat.textContent = 'Carte non prête.'; return; }
-  stat.textContent = 'Recherche…';
+  if (!_planMap || !_planAdrLayer) { stat.textContent = t('js_map_not_ready'); return; }
+  stat.textContent = t('js_searching');
   const { region, communeFR } = regionSelectionPlan();
   const ctx = (communeFR && !sansAccent(adr).includes(sansAccent(communeFR))) ? adr + ', ' + communeFR : adr;
   const toks = tokensSignificatifs(adr);
@@ -1889,9 +2161,9 @@ function verifierAdresse() {
     L.circleMarker([pt.lat, pt.lng], { radius: 9, color: '#c62828', weight: 3, fillColor: '#e53935', fillOpacity: 0.6 })
       .addTo(_planAdrLayer)
       .bindPopup(`📍 ${esc(adr)}${voie}${svcTxt}<br>${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}`
-        + (pt.approx ? `<br><span style="color:#c62828">${esc('⚠️ approximatif (hors commune ?)')}</span>` : (srcTxt ? `<br><span style="color:var(--text2)">●${srcTxt}</span>` : ''))).openPopup();
+        + (pt.approx ? `<br><span style="color:#c62828">${esc(t('js_approx_full'))}</span>` : (srcTxt ? `<br><span style="color:var(--text2)">●${srcTxt}</span>` : ''))).openPopup();
     _planMap.setView([pt.lat, pt.lng], 17);
-    stat.textContent = (pt.approx ? '⚠️ approx. ' : '✓ ') + (pt.label ? pt.label + ' · ' : '') + `${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}` + srcTxt;
+    stat.textContent = (pt.approx ? t('js_approx_prefix') : '✓ ') + (pt.label ? pt.label + ' · ' : '') + `${pt.lat.toFixed(5)}, ${pt.lng.toFixed(5)}` + srcTxt;
   });
 }
 
@@ -1909,7 +2181,7 @@ function importerPlanningFichier(input) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
       const rows = aoa.filter(r => r.some(c => c !== '' && c != null));
-      if (rows.length < 2) { alert('Fichier vide ou sans données.'); return; }
+      if (rows.length < 2) { alert(t('js_file_empty')); return; }
       _mapHeaders = rows[0].map(h => String(h).trim());
       _mapData = rows.slice(1);
       // Format officiel LFS GRP_APPEL (large, 4 interrogations) → parsing direct
@@ -1967,7 +2239,7 @@ function importerPlanningLFS(nomFichier) {
     }
     grp[code] = { p, c, q, i };
   });
-  if (!rows.length) { alert('Aucun groupe lisible dans ce fichier LFS.'); return; }
+  if (!rows.length) { alert(t('js_no_readable_lfs')); return; }
   const nomComplet = nomFichier.replace(/\.[^.]+$/, '') + ' — EFT / LFS';
   const id = idPourPlanning(nomComplet, rows);      // reconnu par contenu → pas de doublon
   const remplace = !!_plannings[id];
@@ -1977,7 +2249,7 @@ function importerPlanningLFS(nomFichier) {
   rafraichirAnnexesPlanning();                 // reconstruit header + agenda + carte
   const sel = document.getElementById('selPlanning');
   if (sel && [...sel.options].some(o => o.value === id)) { sel.value = id; onChangePlanning(); }  // focalise le planning importé
-  if (remplace && typeof afficherToast === 'function') afficherToast('🔄 Planning existant mis à jour (données remplacées).');
+  if (remplace && typeof afficherToast === 'function') afficherToast(t('js_plan_updated'));
 }
 
 // Après import/suppression : le Planner (et, via le stockage partagé, l'annexe
@@ -2030,7 +2302,7 @@ function fmtDateCell(v) {
 function confirmerMappingPlanning() {
   const err = document.getElementById('mapErreur');
   if (document.getElementById('mapCommune').value === '') {
-    err.textContent = 'La colonne « Commune » est obligatoire.'; err.style.display = 'block'; return;
+    err.textContent = t('js_col_commune_required'); err.style.display = 'block'; return;
   }
   const nom = (document.getElementById('mapNom').value || 'Planning').trim();
   const type = document.getElementById('mapType').value;
@@ -2048,7 +2320,7 @@ function confirmerMappingPlanning() {
       stop: fmtDateCell(valCol(r, 'mapStop')),
     };
   }).filter(Boolean);
-  if (!rows.length) { err.textContent = 'Aucune ligne avec une commune.'; err.style.display = 'block'; return; }
+  if (!rows.length) { err.textContent = t('js_no_line_commune'); err.style.display = 'block'; return; }
   const nomComplet = nom + ' — ' + type;
   const id = idPourPlanning(nomComplet, rows);      // reconnu par contenu → pas de doublon
   const remplace = !!_plannings[id];
@@ -2059,7 +2331,7 @@ function confirmerMappingPlanning() {
   rafraichirAnnexesPlanning();                 // reconstruit header + agenda + carte
   const selp = document.getElementById('selPlanning');
   if (selp && [...selp.options].some(o => o.value === id)) { selp.value = id; onChangePlanning(); }  // focalise le planning importé
-  if (remplace && typeof afficherToast === 'function') afficherToast('🔄 Planning existant mis à jour (données remplacées).');
+  if (remplace && typeof afficherToast === 'function') afficherToast(t('js_plan_updated'));
 }
 
 function majCommunesPlan() {
@@ -2111,7 +2383,7 @@ function planRowsFiltres() {
 function filtrerPlanning() {
   const rows = planRowsFiltres().sort((a, b) => (a.d && b.d) ? a.d - b.d : 0);
   const grp = new Set(rows.map(r => r.code));
-  document.getElementById('planCount').textContent = `${grp.size} groupe(s) · ${rows.length} interro.`;
+  document.getElementById('planCount').textContent = tf('js_plan_count',{g:grp.size,i:rows.length});
   renderPlanningTable(rows);
   majMarqueursPlan(rows);
 }
@@ -2142,16 +2414,16 @@ function triPlanning(col) {
 function precisionGroupe(g) {
   const c = _geoCache[(g.communeFR || '') + '|' + g.quartier];
   if (!c) return { sc: -1, txt: '…', col: 'var(--text2)' };          // pas encore géocodé
-  if (c.lat == null) return { sc: 0, txt: 'échec', col: '#c62828' };
+  if (c.lat == null) return { sc: 0, txt: t('js_prec_fail'), col: '#c62828' };
   const sc = c.score || 0;
   const ecart = (c.ecart != null) ? ' · Δ' + c.ecart + ' m' : '';
   const src = c.source ? ' · ' + SRC_LBL(c.source) : '';
-  const txt = (sc >= 80 ? 'élevée' : sc >= 60 ? 'moyenne' : 'commune') + ' (' + sc + ')' + src + ecart;
+  const txt = (sc >= 80 ? t('js_prec_high') : sc >= 60 ? t('js_prec_mid') : t('js_prec_commune')) + ' (' + sc + ')' + src + ecart;
   return { sc, txt, col: sc >= 80 ? '#2e7d32' : sc >= 60 ? '#f9a825' : '#c62828' };
 }
 // Libellé lisible de la source de géocodage
 function SRC_LBL(s) {
-  return { urbis: 'UrbIS', spw: 'SPW', geopunt: 'Geopunt', osm: 'OSM', centre: 'centre commune' }[s] || s;
+  return { urbis: 'UrbIS', spw: 'SPW', geopunt: 'Geopunt', osm: 'OSM', centre: t('js_src_centre') }[s] || s;
 }
 
 function rendrePlanGroupes() {
@@ -2167,8 +2439,8 @@ function rendrePlanGroupes() {
   });
   const ind = c => _planTri.col === c ? (_planTri.dir > 0 ? ' ▲' : ' ▼') : '';
   const th = (c, lbl) => `<th style="cursor:pointer" onclick="triPlanning('${c}')">${lbl}${ind(c)}</th>`;
-  let h = '<thead><tr><th style="width:22px"></th>' + th('group', 'Groupe') + th('commune', 'Commune')
-    + th('quartier', 'Quartier') + th('precision', 'Précision') + th('prochaine', 'Prochaine') + '</tr></thead><tbody>';
+  let h = '<thead><tr><th style="width:22px"></th>' + th('group', esc(t('th_group_short'))) + th('commune', esc(t('f_commune')))
+    + th('quartier', esc(t('th_quartier'))) + th('precision', esc(t('js_precision'))) + th('prochaine', esc(t('js_next'))) + '</tr></thead><tbody>';
   arr.forEach(g => {
     const id = 'pd-' + String(g.code).replace(/[^a-z0-9]/gi, '_');
     const prochaine = g.nx ? `I${g.nx.wave} · ${esc(g.nx.start)}` : '';
@@ -2177,7 +2449,7 @@ function rendrePlanGroupes() {
     h += `<tr class="plan-grp" style="cursor:pointer" onclick="togglePlanDetail('${id}',this);centrerSurGroupe('${codeJS}')">`
       + `<td class="plan-arrow">▸</td><td>${esc(g.code)}</td><td>${esc(g.commune)}</td>`
       + `<td>${esc(g.quartier)}</td>`
-      + `<td style="color:${p.col};white-space:nowrap;cursor:help" title="Clic = debug géocodage (essais + forme retenue)" onclick="event.stopPropagation();debugGroupe('${codeJS}')">● ${esc(p.txt)} 🐞</td>`
+      + `<td style="color:${p.col};white-space:nowrap;cursor:help" title="${esc(t('js_debug_geo_tip'))}" onclick="event.stopPropagation();debugGroupe('${codeJS}')">● ${esc(p.txt)} 🐞</td>`
       + `<td>${esc(prochaine)}</td></tr>`;
     const det = g.vagues.map(x => `<div style="padding:2px 0"><b>I${x.wave}</b> · wk ${esc(x.sem)} · ${esc(x.start)} → ${esc(x.stop)}</div>`).join('');
     h += `<tr id="${id}" style="display:none"><td></td><td colspan="5">${det}</td></tr>`;
@@ -2220,19 +2492,19 @@ function majMarqueursPlan(rows) {
   liste.forEach(g => { const c = _geoCache[cleGeo(g)]; if (c && c.lat) { ajoutMarqueur(g, c); bounds.push([c.lat, c.lng]); } });
   recadrer();
 
-  if (!aGeocoder.length) { stat.textContent = liste.length ? `${liste.length} quartier(s) localisé(s).` : ''; return; }
+  if (!aGeocoder.length) { stat.textContent = liste.length ? tf('js_quartiers_located',{n:liste.length}) : ''; return; }
   let i = 0;
-  stat.textContent = `Géocodage… 0/${aGeocoder.length}`;
+  stat.textContent = tf('js_geocoding_progress',{i:0,n:aGeocoder.length});
   (function suivant() {
     if (i >= aGeocoder.length) {
       try { localStorage.setItem('planGeoCacheV27', JSON.stringify(_geoCache)); } catch (e) {}
-      stat.textContent = `${liste.length} quartier(s) — localisation terminée.`;
+      stat.textContent = tf('js_geocoding_done',{n:liste.length});
       recadrer();
       rendrePlanGroupes();   // met à jour la colonne « Précision » une fois le géocodage fini
       return;
     }
     const g = aGeocoder[i];
-    stat.textContent = `Géocodage… ${i + 1}/${aGeocoder.length}`;
+    stat.textContent = tf('js_geocoding_progress',{i:i+1,n:aGeocoder.length});
     geocodeQuartier(g).then(pt => {
       _geoCache[cleGeo(g)] = pt || { lat: null };   // mémorise même l'échec (évite de re-tenter)
       if (pt) { ajoutMarqueur(g, pt); bounds.push([pt.lat, pt.lng]); }
@@ -2996,24 +3268,24 @@ function updateCandidaturePreview(){
   const cb=document.getElementById('candCount');
   if(cb){ cb.textContent=total; cb.hidden=total===0; }
   const ctab=document.getElementById('tab-candidature');
-  if(ctab) ctab.setAttribute('data-tip', total ? 'Candidature — ' + total + ' groupe(s)' : 'Candidature');
+  if(ctab) ctab.setAttribute('data-tip', total ? tf('js_cand_count',{n:total}) : t('tab_candidature'));
   const box=document.getElementById('candGrpPreview');
   if(!communes.length){
-    box.innerHTML='<div style="color:var(--ink3);font-size:12px">Aucun groupe sélectionné — choisissez des groupes dans l\'onglet Agenda.</div>';
+    box.innerHTML='<div style="color:var(--ink3);font-size:12px">'+candEscHtml(t('cand_no_group'))+'</div>';
   }else{
     const last=communes.length-1;
     box.innerHTML=communes.map((c,i)=>
       '<div class="cand-line">'
-      +'<span class="cand-rank" title="Priorité '+(i+1)+'">'+(i+1)+'</span>'
+      +'<span class="cand-rank" title="'+candEscHtml(tf('js_priority',{n:i+1}))+'">'+(i+1)+'</span>'
       +'<span class="cand-prio">'
-        +'<button type="button" class="cand-mv" title="Monter" onclick="candMoveCommune('+i+',-1)"'+(i===0?' disabled':'')+'>▲</button>'
-        +'<button type="button" class="cand-mv" title="Descendre" onclick="candMoveCommune('+i+',1)"'+(i===last?' disabled':'')+'>▼</button>'
+        +'<button type="button" class="cand-mv" title="'+candEscHtml(t('js_move_up'))+'" onclick="candMoveCommune('+i+',-1)"'+(i===0?' disabled':'')+'>▲</button>'
+        +'<button type="button" class="cand-mv" title="'+candEscHtml(t('js_move_down'))+'" onclick="candMoveCommune('+i+',1)"'+(i===last?' disabled':'')+'>▼</button>'
       +'</span>'
       +'<span class="cand-comm">'+candEscHtml(c.communeFR)
         +(c.quartiers.length?'<span class="cand-q">'+candEscHtml(c.quartiers.slice(0,5).join(' · '))+(c.quartiers.length>5?' …':'')+'</span>':'')
       +'</span>'
-      +'<span class="cand-cnt">'+c.count+' groupe(s)</span>'
-      +'<button type="button" class="cand-del" title="Retirer cette commune" aria-label="Retirer '+candEscHtml(c.communeFR)+'" onclick="candRemoveCommune('+i+')">✕</button>'
+      +'<span class="cand-cnt">'+c.count+' '+candEscHtml(t('cand_groupes_word'))+'</span>'
+      +'<button type="button" class="cand-del" title="'+candEscHtml(t('js_remove_commune'))+'" aria-label="'+candEscHtml(tf('js_remove_commune_aria',{c:c.communeFR}))+'" onclick="candRemoveCommune('+i+')">✕</button>'
       +'</div>'
     ).join('');
   }
@@ -3038,14 +3310,14 @@ function genererCandidature(){
   // Document officiel : bloquer la génération si des champs requis ou la signature manquent.
   candClearErreurs();
   let premierFautif=null;
-  [['Nom','le nom'],['Prenom','le prénom'],['Adresse','l’adresse']].forEach(([sfx,lib])=>{
+  [['Nom','cand_nom'],['Prenom','cand_prenom'],['Adresse','cand_adresse']].forEach(([sfx,key])=>{
     const el=g(sfx);
-    if(!el || !el.value.trim()){ candMarquerErreur(sfx,'Veuillez renseigner '+lib+'.'); if(!premierFautif) premierFautif=el; }
+    if(!el || !el.value.trim()){ candMarquerErreur(sfx,tf('js_field_required',{field:t(key)})); if(!premierFautif) premierFautif=el; }
   });
   let msgGlobal='';
-  if(!candSigData){ msgGlobal='La signature est obligatoire : dessinez-la avant de générer le document.'; if(!premierFautif) premierFautif=document.getElementById('candSigCanvas'); }
+  if(!candSigData){ msgGlobal=t('js_sig_required'); if(!premierFautif) premierFautif=document.getElementById('candSigCanvas'); }
   if(premierFautif || msgGlobal){
-    candErrGlobale(msgGlobal || 'Veuillez corriger les champs indiqués avant de générer la candidature.');
+    candErrGlobale(msgGlobal || t('js_fix_fields'));
     if(premierFautif){ try{ premierFautif.focus(); }catch(_){} }
     return;
   }
@@ -3088,7 +3360,7 @@ function genererCandidature(){
     // maintient l'URL blob vivante jusqu'à fermeture du toast) pour éviter d'aller
     // le rechercher à la main — surtout utile sur mobile.
     afficherToastFichier('📝 Candidature générée', url, nomFichier);
-  }catch(e){ candErrGlobale('Erreur lors de la génération : '+e.message); }
+  }catch(e){ candErrGlobale(tf('js_gen_error',{msg:e.message})); }
 }
 
 // La candidature est désormais un onglet plein (plus de modale) : on bascule dessus.
@@ -3135,7 +3407,7 @@ function candSigInit(){
   window.addEventListener('pointerup',end); c.addEventListener('pointerleave',end);
   candSigInited=true;
 }
-function candSigStatus(has){ const s=document.getElementById('candSigStatus'); if(s) s.textContent = has ? 'Signature saisie' : 'Signature vide'; }
+function candSigStatus(has){ const s=document.getElementById('candSigStatus'); if(s) s.textContent = has ? t('cand_sig_filled') : t('cand_sig_empty'); }
 function candSigClear(){
   const c=document.getElementById('candSigCanvas');
   if(c&&candSigCtx) candSigCtx.clearRect(0,0,c.width,c.height);
@@ -3179,8 +3451,10 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '196';
+const APP_VERSION = '197';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
+// Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
+appliquerLangue();
 
 </script>
 </body>

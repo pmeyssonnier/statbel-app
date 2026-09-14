@@ -46,6 +46,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   const perr = [];
   p.on('pageerror', e => perr.push(e.message));
   p.on('dialog', d => d.accept());
+  // Le Planner est désormais multilingue (défaut = langue du navigateur) ;
+  // on fige le français pour des assertions déterministes.
+  await p.addInitScript(() => { try { localStorage.setItem('statbel_settings', JSON.stringify({ lang: 'fr' })); } catch (e) {} });
 
   // ── 1-2. Planner : importer un planning LFS (sans dialogue fichier) ─────
   await p.goto(srv.url + '/statbel_planner.html', { waitUntil: 'load' });

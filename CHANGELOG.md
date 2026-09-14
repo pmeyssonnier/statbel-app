@@ -12,6 +12,20 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Ajouté
+- **Planner — traduction complète en 4 langues (fr/nl/en/de)**
+  (Planner `196` → `197`, SW `statbel-v339` → `statbel-v340`) : le module Planner,
+  jusque-là uniquement en français, est désormais entièrement traduit — les trois
+  onglets **Planning / Agenda / Candidature**, le menu ⋮, la modale de mapping des
+  colonnes et les contenus générés en JS (agenda liste/semaine/mois/année, tableau
+  de planning, statuts de géocodage, aperçu et validation de la candidature). Ajout
+  d'une couche i18n `t()`/`tf()` + `data-i18n` (même mécanisme que le Convertisseur)
+  et d'un **sélecteur 🌐 propre au Planner** dans le menu ⋮ ; la langue est partagée
+  avec Interviews/Convertisseur via `localStorage['statbel_settings'].lang` et
+  fonctionne aussi hors-ligne (`file://`). Les jours/mois de l'agenda suivent la
+  langue active. Les contenus des fichiers exportés (ICS, formulaire .docx officiel)
+  restent inchangés. Nouveau test `tests/planner-i18n.test.js`.
+
 ### Corrigé
 - **Interviews — autres fuites FR au changement de langue (audit complet)**
   (Interviews `3.68` → `3.69`, SW `statbel-v338` → `statbel-v339`) : correction des
