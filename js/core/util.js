@@ -167,6 +167,19 @@ export function toFrDateTime(v) {
   const fr = iso ? dateISOToFr(iso) : datePart;                     // non reconnu → tel quel
   return timePart ? `${fr} ${timePart}` : fr;
 }
+// Normalise une date-heure vers le format INTERNE des rendez-vous « YYYY-MM-DD HH:MM »
+// (ISO), utilisé pour le tri et l'affichage (cf. lireRdvFields). Accepte de l'ISO ou du
+// local (JJ/MM/AAAA), avec heure optionnelle ; date non reconnue → '' (pas de rdv).
+export function toISODateTime(v) {
+  const s = (v == null ? '' : v).toString().trim();
+  if (!s) return '';
+  const mt = s.match(/^(.*?)[\sT]+(\d{1,2}[:h]\d{2})\s*$/);          // partie heure finale ?
+  const datePart = mt ? mt[1].trim() : s;
+  const timePart = mt ? mt[2].replace('h', ':') : '';
+  const iso = toISODate(datePart);
+  if (!iso) return '';                                              // date non reconnue → pas de rdv
+  return timePart ? `${iso} ${timePart}` : iso;
+}
 
 export function formaterGsm(val) {
   let d = val.replace(/[^\d]/g, '');

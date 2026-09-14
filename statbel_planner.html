@@ -5,7 +5,7 @@
 <!-- CSP pragmatique (voir index.html). La section Planning (carte + vérificateur
      d'adresse) interroge les géocodeurs régionaux belges + OSM ; le reste reste
      hors-ligne (génération .docx côté client). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.irisnet.be https://*.wallonie.be https://*.vlaanderen.be https://*.ngi.be https://*.openstreetmap.org">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.irisnet.be https://*.wallonie.be https://*.vlaanderen.be https://*.openstreetmap.org">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statbel Planner — Agenda d'enquêtes</title>
 <meta name="theme-color" content="#1a1f2e">
@@ -498,7 +498,7 @@ select[multiple]{height:120px}
       <label style="font-size:12px;color:var(--text2);font-weight:bold" data-i18n="plan_check_addr">📍 Vérifier une adresse :</label>
       <input id="planAdrCheck" type="text" placeholder="ex. Grande Rue au Bois 12, Schaerbeek" data-i18n-ph="plan_addr_ph" onkeydown="if(event.key==='Enter')verifierAdresse()" style="flex:1;min-width:220px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px">
       <button class="btn-reset" onclick="verifierAdresse()" data-i18n="locate">Localiser</button>
-      <button class="btn-reset" onclick="effacerAdresseCheck()">✕</button>
+      <button class="btn-reset" onclick="effacerAdresseCheck()" title="Effacer" data-i18n-tip="clear" aria-label="Effacer" data-i18n-aria="clear">✕</button>
       <button class="btn-reset" title="Vider le cache et recalculer la position des quartiers affichés" data-i18n-tip="plan_recalc_tip" onclick="rafraichirGeocodage()" data-i18n="plan_recalc">🔄 Recalculer</button>
       <span id="planAdrStatus" aria-live="polite" style="align-self:center;font-size:11px;color:var(--text2)"></span>
     </div>
@@ -1098,12 +1098,12 @@ function parseDate(v) {
   // yyyy-mm-dd (ISO non ambigu)
   let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-  // dd/mm/yyyy (format belge/européen)
+  // jj/mm/aaaa (belge/européen) — priorité, à condition que le mois soit valide (≤ 12)
   m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
-  // mm/dd/yyyy uniquement si année > 31 (éviter ambiguïté)
-  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m && +m[1] > 12) return new Date(+m[3], +m[1]-1, +m[2]);
+  if (m && +m[2] <= 12) return new Date(+m[3], +m[2]-1, +m[1]);
+  // mm/jj/aaaa (US) : uniquement quand jj/mm est impossible (2e nombre > 12) mais que
+  // le 1er est un mois valide (≤ 12). Évite le débordement silencieux de « 05/13/2026 ».
+  if (m && +m[1] <= 12) return new Date(+m[3], +m[1]-1, +m[2]);
   return null;
 }
 
@@ -1325,14 +1325,17 @@ function renderGroupsList() {
   const sorted = [...filtered].sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
   el.innerHTML = sorted.map(r => {
     const on = selected.has(r.numero);
-    return `<div class="grp-tag" 
-      style="${on?'':'background:var(--bg);color:var(--ink2);border:1px solid var(--border);'}"
-      onclick="toggleGroup('${r.numero}')">
-      <span>${r.numero}</span>
+    // n° de groupe = donnée importée : jamais interpolée dans un onclick (→ data-num
+    // échappé + écouteur délégué) ni injectée sans esc() (protection XSS).
+    return `<div class="grp-tag" data-num="${esc(r.numero)}"
+      style="${on?'':'background:var(--bg);color:var(--ink2);border:1px solid var(--border);'}">
+      <span>${esc(r.numero)}</span>
       <span class="gt-qtier">${esc(r.quartier.split(' ').slice(0,3).join(' '))}</span>
       ${on?'<span style="color:#4caf50;font-weight:700">✓</span>':''}
     </div>`;
   }).join('');
+  // Écouteur délégué (réassigné à chaque rendu, donc pas de doublon).
+  el.onclick = e => { const tag = e.target.closest('.grp-tag'); if (tag) toggleGroup(tag.dataset.num); };
 }
 
 // Trier les options d'un select sans perdre les sélections
@@ -1499,8 +1502,8 @@ function renderSemaine() {
 
   rows.forEach(row => {
     html += `<div class="week-grp-label"><div>
-      <div style="font-size:11px;font-weight:700">${row.numero}</div>
-      <div style="font-size:9px;color:var(--ink3)">${row.quartier.split(' ')[0]}</div>
+      <div style="font-size:11px;font-weight:700">${esc(row.numero)}</div>
+      <div style="font-size:9px;color:var(--ink3)">${esc(row.quartier.split(' ')[0])}</div>
     </div></div>`;
     for (let d = 0; d < 7; d++) {
       const day = addDays(mon, d);
@@ -1552,8 +1555,8 @@ function renderMois() {
       <div class="day-num" aria-hidden="true">${d}</div>
       <div class="day-events" aria-hidden="true">
         ${events.slice(0,4).map(({row,v}) => `
-          <div class="day-ev ${VAGUE_COLORS[v.idx-1]}" title="${row.numero} — ${row.quartier}">
-            ${row.numero} V${v.idx}
+          <div class="day-ev ${VAGUE_COLORS[v.idx-1]}" title="${esc(row.numero + ' — ' + row.quartier)}">
+            ${esc(row.numero)} V${v.idx}
           </div>`).join('')}
         ${events.length > 4 ? `<div style="font-size:9px;color:var(--ink3)">+${events.length-4}…</div>` : ''}
       </div>
@@ -3544,7 +3547,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '205';
+const APP_VERSION = '207';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();

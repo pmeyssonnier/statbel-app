@@ -56,6 +56,11 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // Focus entré dans la modale
     out.focusDansModale = modal.contains(document.activeElement);
 
+    // Nom accessible : aria-labelledby pointe vers le titre (non vide) de la modale.
+    const lb = modal.getAttribute('aria-labelledby');
+    const titreEl = lb ? document.getElementById(lb) : null;
+    out.hasName = !!(lb && titreEl && modal.contains(titreEl) && titreEl.textContent.trim());
+
     // Piège de focus : depuis le dernier focusable, Tab → revient au premier
     const foc = [...modal.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
       .filter(el => el.offsetParent !== null || el.getClientRects().length);
@@ -82,6 +87,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.headerInert, 'ouverture : l\'arrière-plan (header) est neutralisé (inert)');
   A(r.modalNotInert, 'ouverture : la modale active n\'est PAS inerte');
   A(r.focusDansModale, 'ouverture : le focus entre dans la modale');
+  A(r.hasName, 'ouverture : la modale a un nom accessible (aria-labelledby → titre)');
   A(r.nbFocusables >= 2, `modale avec plusieurs focusables (${r.nbFocusables})`);
   A(r.tabWrapToFirst, 'piège de focus : Tab depuis le dernier revient au premier');
   A(r.shiftTabWrapToLast, 'piège de focus : Maj+Tab depuis le premier va au dernier');

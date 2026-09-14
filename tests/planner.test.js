@@ -61,6 +61,42 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     await p.close();
   }
 
+  // ── XSS : le n° de groupe vient d'un fichier importé → jamais interprété ──
+  // (data-num échappé + écouteur délégué au lieu d'un onclick construit par concat,
+  //  et esc() sur l'affichage). Un code piégé ne doit ni exécuter de script ni
+  //  créer d'élément vivant, tout en restant sélectionnable via data-num.
+  {
+    const EVIL = '<img src=x onerror="window.__xss=1">';
+    const p = await b.newPage();
+    const perr = [];
+    p.on('pageerror', e => perr.push(e.message));
+    p.on('dialog', d => d.accept());
+    await p.addInitScript(evil => {
+      window.__xss = 0;
+      localStorage.setItem('plannings', JSON.stringify([{ id: 'plan_x', nom: 'X', type: 'EFT / LFS', embedded: false, grp: {}, rows: [
+        { code: evil, prov: 'BRU', commune: 'Bruxelles / Brussel', communeFR: 'Bruxelles', quartier: 'NORD', wave: 1, sem: '10', start: '02/03/2026', stop: '22/03/2026' },
+      ] }]));
+      try { localStorage.setItem('statbel_settings', JSON.stringify({ lang: 'fr' })); } catch (e) {}
+    }, EVIL);
+    await p.goto(srv.url + '/statbel_planner.html', { waitUntil: 'load' });
+    await p.waitForTimeout(400);   // laisse le temps à un éventuel onerror de se déclencher
+    const r = await p.evaluate(evil => {
+      const el = document.getElementById('groupsSelected');
+      const tag = el.querySelector('.grp-tag');
+      const hasImg = !!el.querySelector('img');
+      const dataNum = tag ? tag.dataset.num : null;
+      if (tag) tag.click();                       // écouteur délégué → toggleGroup(data-num)
+      return { xss: window.__xss, hasImg, dataNum, selected: selected.has(evil), rendered: !!tag };
+    }, EVIL);
+    A(r.rendered, 'XSS : la liste rend la carte malgré un n° de groupe piégé');
+    A(r.xss === 0, 'XSS : le onerror injecté ne s\'exécute pas (window.__xss reste 0)');
+    A(!r.hasImg, 'XSS : le n° importé est inséré comme texte, pas comme <img> vivant');
+    A(r.dataNum === EVIL, 'XSS : data-num porte la valeur brute décodée pour le toggle');
+    A(r.selected, 'XSS : l\'écouteur délégué sélectionne le groupe via data-num');
+    A(perr.length === 0, 'XSS : aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
+    await p.close();
+  }
+
   // ── 2-5. Plannings présents (injectés avant chargement de la page) ────
   {
     const p = await b.newPage();

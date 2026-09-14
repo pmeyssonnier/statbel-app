@@ -160,5 +160,9 @@ export function coordsCache(adresse) {
   catch (e) { localStorage.removeItem(cle); return null; }
 }
 export function saveCoords(adresse, lat, lng) {
-  localStorage.setItem('coords_' + adresseSansBoite(adresse), JSON.stringify({ lat, lng }));
+  // Garde quota : un cache de coordonnées plein ne doit pas casser la chaîne de
+  // géocodage (map.js appelle saveCoords dans un .then). Échec silencieux → l'adresse
+  // sera simplement re-géocodée la prochaine fois.
+  try { localStorage.setItem('coords_' + adresseSansBoite(adresse), JSON.stringify({ lat, lng })); }
+  catch (_) {}
 }

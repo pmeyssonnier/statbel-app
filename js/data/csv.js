@@ -7,7 +7,7 @@
  * de canonicalisation (statutCanon, normaliserPays, maritalCanon) et
  * contacts()/statutDefaut() sont des globaux (pont de compatibilité).
  */
-import { csvGuard, csvDeguard, toISODate, toFrDateTime, colonneMoisDabord } from '../core/util.js';
+import { csvGuard, csvDeguard, toISODate, toFrDateTime, toISODateTime, colonneMoisDabord } from '../core/util.js';
 import { coordsCache } from './idb.js';
 import { statutCanon, normaliserPays, maritalCanon } from './canon.js';
 
@@ -97,6 +97,9 @@ export function parseCSV(text) {
     .map(x => x.h);
 
   const g = (cols, i) => i >= 0 ? csvDeguard((cols[i]||'').trim()) : '';
+  // Entier positif ou null : conserve 0 (valeur légitime — p. ex. ménage sans cible),
+  // que `parseInt(x)||null` écrasait à tort. Vide/NaN/négatif → null.
+  const intOuNull = v => { const n = parseInt(v, 10); return Number.isInteger(n) && n >= 0 ? n : null; };
   const bodyRows = nonEmpty.slice(1);
   // Ordre des dates de la colonne birth_date : Excel peut réécrire l'ISO en
   // format US mm/jj/aaaa (ex. « 4/14/05 »). On déduit l'ordre sur toute la
@@ -128,15 +131,15 @@ export function parseCSV(text) {
       const seg = p.split('@');
       const e = { statut: statutCanon((seg[0] || '').trim()), date: toFrDateTime((seg[1] || '').trim()) };
       const heure = (seg[2] || '').trim();
-      const rdv   = toFrDateTime((seg[3] || '').trim());
+      const rdv   = toISODateTime((seg[3] || '').trim());   // rdv = format interne ISO (pas FR)
       if (heure) e.heure = heure;
       if (rdv)   e.rdv = rdv;
       return e;
     });
     // Dates : re-normalisées à l'import. Un aller-retour par Excel réécrit
     // silencieusement l'ISO en format local (JJ/MM/AAAA) ; on ré-canonicalise
-    // birth_date en ISO (contrôle de cohérence + calcul d'âge) et date/rdv en
-    // « JJ/MM/AAAA[ HH:mm] » (format interne d'affichage).
+    // birth_date + rdv en ISO (rdv = format interne « YYYY-MM-DD HH:MM », cf.
+    // lireRdvFields) et date en « JJ/MM/AAAA » (format interne d'affichage).
     const bdRaw = g(cols, map.birth_date);
     const bdIso = toISODate(bdRaw, bdMoisDabord);
     rows.push({
@@ -145,15 +148,15 @@ export function parseCSV(text) {
       statut:         statutCanon(g(cols,map.statut)) || 'To do',
       date:           toFrDateTime(g(cols,map.date)),
       notes:          g(cols,map.notes),
-      rdv:            toFrDateTime(g(cols,map.rdv)),
+      rdv:            toISODateTime(g(cols,map.rdv)),   // format interne ISO « YYYY-MM-DD HH:MM »
       sexe:           g(cols,map.sexe)   || null,
       birth_date:     (bdIso || bdRaw) || null,
-      age:            map.age>=0 ? parseInt(cols[map.age])||null : null,
+      age:            map.age>=0 ? intOuNull(g(cols,map.age)) : null,
       birth_country:  normaliserPays(g(cols,map.birth_country)) || null,
       nationality:    normaliserPays(g(cols,map.nationality))  || null,
       marital_status: maritalCanon(g(cols,map.marital_status)) || null,
-      taille_menage:  map.taille_menage>=0 ? (parseInt(cols[map.taille_menage])||null) : null,
-      nb_cibles:      map.nb_cibles>=0 ? (parseInt(cols[map.nb_cibles])||null) : null,
+      taille_menage:  map.taille_menage>=0 ? intOuNull(g(cols,map.taille_menage)) : null,
+      nb_cibles:      map.nb_cibles>=0 ? intOuNull(g(cols,map.nb_cibles)) : null,
       collect_method: g(cols,map.collect_method) || null,   // CATI/CAWI (issu du Convertisseur, CD_WSH_CLCT_MTHD)
       web_user_id:    g(cols,map.web_user_id)  || null,      // accès web CAWI (TX_WEB_USER_ID) — donnée perso, reste sur l'appareil
       web_user_pwd:   g(cols,map.web_user_pwd) || null,      // accès web CAWI (TX_WEB_USER_PSWRD) — donnée perso, reste sur l'appareil
