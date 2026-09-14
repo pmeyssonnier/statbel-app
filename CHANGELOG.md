@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Corrigé
+- **Planner — filtres du tableau Planning non traduits (provinces / communes / quartiers)**
+  (Planner `197` → `198`, SW `statbel-v340` → `statbel-v341`) : les listes déroulantes de
+  l'onglet Planning restaient en français. Les défauts « Toutes les provinces / communes /
+  quartiers » passent par des clés i18n (fr/nl/en/de) ; les libellés de **provinces** suivent
+  la langue active (nouvelle table `PROV_I18N` 4 langues, `provLabel()` localisé) ; les
+  **communes** bilingues « FR/NL » (Bruxelles/facilités) affichent la forme correspondant à la
+  langue (NL → côté néerlandais ; fr/en/de → forme primaire, faute de noms officiels DE/EN).
+  Les filtres des deux zones (tableau Planning et « Sélectionner des groupes ») sont reconstruits
+  au changement de langue en préservant les sélections. Test `tests/planner-i18n.test.js` étendu.
+
 ### Ajouté
 - **Planner — traduction complète en 4 langues (fr/nl/en/de)**
   (Planner `196` → `197`, SW `statbel-v339` → `statbel-v340`) : le module Planner,
