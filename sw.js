@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v352';
+const CACHE = 'statbel-v353';
 
 // Ressources CRITIQUES : indispensables au fonctionnement hors-ligne. Si l'une
 // manque, l'installation doit ÉCHOUER (ne pas activer un cache incomplet qui
@@ -105,7 +105,7 @@ self.addEventListener('activate', e => {
 // Stratégie :
 //  - tuiles carte & géocodage (services géo) → réseau seul (jamais en cache,
 //    données dynamiques + on ne veut pas gonfler le cache)
-//  - navigation → réseau puis repli sur index.html en cache (hors-ligne)
+//  - navigation → cache d'abord (index.html même version que les scripts), repli réseau
 //  - reste → cache d'abord, sinon réseau (et on met en cache au passage)
 self.addEventListener('fetch', e => {
   const req = e.request;
