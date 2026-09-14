@@ -799,6 +799,12 @@ const I18N = {
   pl_all_provinces: { fr:"Toutes les provinces", nl:"Alle provincies", en:"All provinces", de:"Alle Provinzen" },
   pl_all_communes: { fr:"Toutes les communes", nl:"Alle gemeenten", en:"All municipalities", de:"Alle Gemeinden" },
   pl_all_quartiers: { fr:"Tous les quartiers", nl:"Alle wijken", en:"All neighbourhoods", de:"Alle Viertel" },
+  // Export .ics (nom du calendrier + libellés de la description d'événement)
+  ics_calname: { fr:"LFS / EFT — Planning enquêtes", nl:"LFS / EFT — Enquêteplanning", en:"LFS / EFT — Survey schedule", de:"LFS / EFT — Erhebungsplanung" },
+  ics_lbl_group: { fr:"Groupe", nl:"Groep", en:"Group", de:"Gruppe" },
+  ics_lbl_quartier: { fr:"Quartier", nl:"Wijk", en:"Neighbourhood", de:"Viertel" },
+  ics_lbl_wave: { fr:"Vague", nl:"Golf", en:"Wave", de:"Welle" },
+  ics_lbl_weekref: { fr:"Semaine réf.", nl:"Ref. week", en:"Ref. week", de:"Ref. Woche" },
   sort_az: { fr:"A→Z", nl:"A→Z", en:"A→Z", de:"A→Z" },
   sort_za: { fr:"Z→A", nl:"Z→A", en:"Z→A", de:"Z→A" },
   select_all: { fr:"✅ Tout sélectionner", nl:"✅ Alles selecteren", en:"✅ Select all", de:"✅ Alle auswählen" },
@@ -1735,7 +1741,7 @@ function exportIcs() {
     'PRODID:-//LFS Planner//FR',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:LFS / EFT — Planning enquêtes',
+    'X-WR-CALNAME:' + icsEsc(t('ics_calname')),
     'X-WR-TIMEZONE:Europe/Brussels',
   ];
 
@@ -1749,7 +1755,9 @@ function exportIcs() {
       // DTEND = lendemain du stop (convention iCal : exclusif)
       const dtend   = icsDate(new Date(v.stop.getFullYear(), v.stop.getMonth(), v.stop.getDate() + 1));
       const summary = icsEsc(`LFS ${row.numero} — V${v.idx} (S${v.sem}) ${row.quartier}`);
-      const desc    = icsEsc(`Groupe: ${row.numero}\nCommune: ${row.commune}\nQuartier: ${row.quartier}\nVague: ${v.idx}\nSemaine réf.: S${v.sem}`);
+      const desc    = icsEsc(
+        `${t('ics_lbl_group')}: ${row.numero}\n${t('f_commune')}: ${communeLabel(row.commune)}\n` +
+        `${t('ics_lbl_quartier')}: ${row.quartier}\n${t('ics_lbl_wave')}: ${v.idx}\n${t('ics_lbl_weekref')}: S${v.sem}`);
 
       lines.push(
         'BEGIN:VEVENT',
@@ -3101,10 +3109,49 @@ function candCocherCase(doc, ancre) {
   return doc.replace(re, '<w:sym w:font="Wingdings" w:char="F0FE"/>');
 }
 
+// Traductions des libellés FIXES du formulaire officiel .docx (gabarit de base en
+// français). Les jetons @@…@@ (données) sont conservés et remplis ensuite. À
+// appliquer APRÈS candCocherCase (qui s'ancre sur le texte français des options).
+// NB : traductions de convivialité — le formulaire officiel Statbel en langue
+// régionale peut différer ; à vérifier avant tout usage administratif.
+const CAND_DOCX_I18N = {
+  'CANDIDATURE ENQUETEUR ': { nl:'KANDIDATUUR ENQUÊTEUR ', en:'INTERVIEWER APPLICATION ', de:'BEWERBUNG ALS BEFRAGER ' },
+  'Nom:': { nl:'Naam:', en:'Last name:', de:'Name:' },
+  'Prénom:': { nl:'Voornaam:', en:'First name:', de:'Vorname:' },
+  'Adresse:': { nl:'Adres:', en:'Address:', de:'Adresse:' },
+  'Code postal:': { nl:'Postcode:', en:'Postal code:', de:'Postleitzahl:' },
+  'Commune:': { nl:'Gemeente:', en:'Municipality:', de:'Gemeinde:' },
+  'Téléphone': { nl:'Telefoon', en:'Phone', de:'Telefon' },
+  'Précisez ci-dessous les heures limites d’appel': { nl:'Geef hieronder de uiterste beluren op', en:'Specify the call time limits below', de:'Geben Sie unten die Anrufzeitfenster an' },
+  'privé:': { nl:'privé:', en:'private:', de:'privat:' },
+  'portable:': { nl:'gsm:', en:'mobile:', de:'Mobil:' },
+  'bureau:': { nl:'kantoor:', en:'office:', de:'Büro:' },
+  'Adresse E-mail  privé': { nl:'E-mailadres  privé', en:'E-mail address  private', de:'E-Mail-Adresse  privat' },
+  'bureau': { nl:'kantoor', en:'office', de:'Büro' },
+  'Communes choisies ': { nl:'Gekozen gemeenten ', en:'Chosen municipalities ', de:'Gewählte Gemeinden ' },
+  '(indiquez le numéro des groupes pour @@ABBR@@ ainsi que le nom des communes)': { nl:'(vermeld het groepsnummer voor @@ABBR@@ en de naam van de gemeenten)', en:'(indicate the group number for @@ABBR@@ and the name of the municipalities)', de:'(geben Sie die Gruppennummer für @@ABBR@@ sowie den Namen der Gemeinden an)' },
+  'Num Groupe @@ABBR@@': { nl:'Groepsnr. @@ABBR@@', en:'Group No. @@ABBR@@', de:'Gruppennr. @@ABBR@@' },
+  'Commune': { nl:'Gemeente', en:'Municipality', de:'Gemeinde' },
+  '   Nombre de groupes souhaités : @@NBGROUPES@@': { nl:'   Gewenst aantal groepen: @@NBGROUPES@@', en:'   Desired number of groups: @@NBGROUPES@@', de:'   Gewünschte Anzahl Gruppen: @@NBGROUPES@@' },
+  '   pas intéressé(e) pour effectuer des enquêtes @@ABBR@@ @@PERIOD@@': { nl:'   niet geïnteresseerd om @@ABBR@@ @@PERIOD@@-enquêtes uit te voeren', en:'   not interested in carrying out @@ABBR@@ @@PERIOD@@ surveys', de:'   nicht interessiert an @@ABBR@@ @@PERIOD@@-Erhebungen' },
+  '   n’est plus intéressé(e) pour effectuer des enquêtes ': { nl:'   niet langer geïnteresseerd om enquêtes uit te voeren ', en:'   no longer interested in carrying out surveys ', de:'   nicht mehr an Erhebungen interessiert ' },
+  'Date:': { nl:'Datum:', en:'Date:', de:'Datum:' },
+  'Signature': { nl:'Handtekening', en:'Signature', de:'Unterschrift' },
+};
+function candLocaliserLabels(doc) {
+  if (uiLang === 'fr') return doc;
+  for (const fr in CAND_DOCX_I18N) {
+    const tr = CAND_DOCX_I18N[fr][uiLang];
+    if (!tr) continue;
+    doc = doc.split('>' + fr + '</w:t>').join('>' + candXmlEsc(tr) + '</w:t>');
+  }
+  return doc;
+}
+
 function candGenerateDocxBytes(data) {
   const rowTpl = candBytesToStr(candB64ToBytes(CAND_DOCX.rowtpl));
   const rowsXml = (data.groupes || []).map(g =>
-    rowTpl.replace('@@GRP@@', candXmlEsc(g.numero)).replace('@@COM@@', candXmlEsc(g.commune))
+    rowTpl.replace('@@GRP@@', candXmlEsc(g.numero)).replace('@@COM@@', candXmlEsc(communeLabel(g.commune)))
   ).join('');
 
   let doc = candBytesToStr(candB64ToBytes(CAND_DOCX.parts['word/document.xml']));
@@ -3112,6 +3159,10 @@ function candGenerateDocxBytes(data) {
   // de <w:jc>, son alignement dépend donc du rendu du style (gauche chez certains
   // lecteurs, centré chez d'autres). On force le centrage, cohérent avec l'encadré.
   doc = doc.replace('<w:pStyle w:val="Title"/><w:rPr>', '<w:pStyle w:val="Title"/><w:jc w:val="center"/><w:rPr>');
+  // Case à cocher AVANT la traduction des libellés : candCocherCase s'ancre sur le
+  // texte français des options ; ensuite on traduit les libellés fixes du formulaire.
+  doc = candCocherCase(doc, CAND_CHOIX_ANCRE[data.choix] || CAND_CHOIX_ANCRE.groupes);
+  doc = candLocaliserLabels(doc);   // libellés fixes → langue active (jetons @@…@@ conservés)
   doc = doc.replace('@@ROWS@@', rowsXml);
   const map = {
     '@@NOM@@': data.nom, '@@PRENOM@@': data.prenom, '@@ADRESSE@@': data.adresse,
@@ -3131,9 +3182,6 @@ function candGenerateDocxBytes(data) {
   doc = doc.split('@@TITLE@@').join(candXmlEsc(String(data.title != null ? data.title : '')));
   doc = doc.split('@@ABBR@@').join(candXmlEsc(String(data.abbrev != null ? data.abbrev : '')));
   doc = doc.split('@@PERIOD@@').join(candXmlEsc(String(data.period != null ? data.period : '')));
-
-  // ── Case à cocher : une seule des trois options est cochée (data.choix) ──
-  doc = candCocherCase(doc, CAND_CHOIX_ANCRE[data.choix] || CAND_CHOIX_ANCRE.groupes);
 
   // ── Signature (image PNG optionnelle) ──
   const SIG_RUN = '<w:r><w:t>@@SIGNATURE@@</w:t></w:r>';
@@ -3484,7 +3532,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '198';
+const APP_VERSION = '199';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();

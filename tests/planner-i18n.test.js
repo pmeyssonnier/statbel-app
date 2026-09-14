@@ -51,6 +51,27 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     out.nl_quart_all = [...document.getElementById('planQuartier').options][0].text;
     changerLangue('de'); out.de_prov_all = provOpts()[0];
     changerLangue('fr'); out.fr_prov_all = provOpts()[0];
+
+    // Export .docx officiel : libellés fixes traduits, jetons @@…@@ conservés,
+    // case à cocher posée (ancrage sur le texte FR AVANT traduction).
+    const docxDoc = (lang, choix) => {
+      changerLangue(lang);
+      let d = candBytesToStr(candB64ToBytes(CAND_DOCX.parts['word/document.xml']));
+      d = candCocherCase(d, CAND_CHOIX_ANCRE[choix] || CAND_CHOIX_ANCRE.groupes);
+      return candLocaliserLabels(d);
+    };
+    const dNl = docxDoc('nl', 'pas');
+    out.docx_nl_naam     = dNl.includes('>Naam:</w:t>');
+    out.docx_nl_nom_gone = !dNl.includes('>Nom:</w:t>');
+    out.docx_nl_checked  = dNl.includes('F0FE');
+    out.docx_nl_tokens   = dNl.includes('@@ABBR@@') && dNl.includes('@@NBGROUPES@@');
+    out.docx_fr_nom      = docxDoc('fr', 'groupes').includes('>Nom:</w:t>');
+
+    // Export .ics : libellés de description + nom de calendrier traduits.
+    changerLangue('nl');
+    out.ics_desc_nl = [t('ics_lbl_group'), t('f_commune'), communeLabel('Bruxelles/Brussel'), t('ics_lbl_wave')].join('|');
+    out.ics_cal_nl  = t('ics_calname');
+    changerLangue('fr');
     return out;
   });
 
@@ -78,6 +99,13 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['Planning NL : « Alle wijken »', r.nl_quart_all === 'Alle wijken'],
     ['Planning DE : « Alle Provinzen »', r.de_prov_all === 'Alle Provinzen'],
     ['Planning FR : « Toutes les provinces »', r.fr_prov_all === 'Toutes les provinces'],
+    ['.docx NL : libellé « Naam: » traduit', r.docx_nl_naam],
+    ['.docx NL : « Nom: » remplacé', r.docx_nl_nom_gone],
+    ['.docx NL : case à cocher posée (ordre)', r.docx_nl_checked],
+    ['.docx NL : jetons @@…@@ conservés', r.docx_nl_tokens],
+    ['.docx FR : libellé « Nom: » conservé', r.docx_fr_nom],
+    ['.ics NL : description traduite + commune NL', r.ics_desc_nl === 'Groep|Gemeente|Brussel|Golf'],
+    ['.ics NL : nom de calendrier traduit', r.ics_cal_nl === 'LFS / EFT — Enquêteplanning'],
     ['aucune erreur de page', perr.length === 0],
   ];
   let ok = true;
