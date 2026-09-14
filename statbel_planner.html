@@ -877,8 +877,8 @@ const I18N = {
   cand_no_group: { fr:"Aucun groupe sélectionné — choisissez des groupes dans l'onglet Agenda.", nl:"Geen groep geselecteerd — kies groepen in het tabblad Agenda.", en:"No group selected — choose groups in the Calendar tab.", de:"Keine Gruppe ausgewählt — wählen Sie Gruppen im Reiter Kalender." },
   cand_checkbox_legend: { fr:"Case à cocher du formulaire", nl:"Aankruisvak van het formulier", en:"Form checkbox", de:"Ankreuzfeld des Formulars" },
   cand_radio_groupes: { fr:"Nombre de groupes souhaités", nl:"Aantal gewenste groepen", en:"Number of groups wanted", de:"Anzahl gewünschter Gruppen" },
-  cand_radio_pas: { fr:"Pas intéressé(e) pour effectuer les enquêtes de cette vague", nl:"Niet geïnteresseerd om de enquêtes van deze golf uit te voeren", en:"Not interested in carrying out this wave's surveys", de:"Nicht interessiert, die Erhebungen dieser Welle durchzuführen" },
-  cand_radio_plus: { fr:"N'est plus intéressé(e) pour effectuer des enquêtes", nl:"Niet langer geïnteresseerd om enquêtes uit te voeren", en:"No longer interested in carrying out surveys", de:"Nicht mehr interessiert, Erhebungen durchzuführen" },
+  cand_radio_pas: { fr:"Pas intéressé(e) pour effectuer les enquêtes de cette vague", nl:"Niet geïnteresseerd in het afnemen van enquêtes voor deze golf", en:"Not interested in conducting this wave's surveys", de:"Nicht interessiert an der Durchführung der Erhebungen dieser Welle" },
+  cand_radio_plus: { fr:"N'est plus intéressé(e) pour effectuer des enquêtes", nl:"Niet langer geïnteresseerd in het afnemen van enquêtes", en:"No longer interested in conducting surveys", de:"Nicht mehr an der Durchführung von Erhebungen interessiert" },
   cand_signature: { fr:"Signature", nl:"Handtekening", en:"Signature", de:"Unterschrift" },
   cand_sig_aria: { fr:"Zone de signature — dessinez votre signature à la souris ou au doigt", nl:"Handtekeningzone — teken uw handtekening met de muis of vinger", en:"Signature area — draw your signature with the mouse or finger", de:"Unterschriftsfeld — zeichnen Sie Ihre Unterschrift mit Maus oder Finger" },
   cand_sig_empty: { fr:"Signature vide", nl:"Lege handtekening", en:"Empty signature", de:"Leere Unterschrift" },
@@ -3104,8 +3104,8 @@ const CAND_DOCX_I18N = {
   'Num Groupe @@ABBR@@': { nl:'Groepsnr. @@ABBR@@', en:'Group No. @@ABBR@@', de:'Gruppennr. @@ABBR@@' },
   'Commune': { nl:'Gemeente', en:'Municipality', de:'Gemeinde' },
   '   Nombre de groupes souhaités : @@NBGROUPES@@': { nl:'   Gewenst aantal groepen: @@NBGROUPES@@', en:'   Desired number of groups: @@NBGROUPES@@', de:'   Gewünschte Anzahl Gruppen: @@NBGROUPES@@' },
-  '   pas intéressé(e) pour effectuer des enquêtes @@ABBR@@ @@PERIOD@@': { nl:'   niet geïnteresseerd om @@ABBR@@ @@PERIOD@@-enquêtes uit te voeren', en:'   not interested in carrying out @@ABBR@@ @@PERIOD@@ surveys', de:'   nicht interessiert an @@ABBR@@ @@PERIOD@@-Erhebungen' },
-  '   n’est plus intéressé(e) pour effectuer des enquêtes ': { nl:'   niet langer geïnteresseerd om enquêtes uit te voeren ', en:'   no longer interested in carrying out surveys ', de:'   nicht mehr an Erhebungen interessiert ' },
+  '   pas intéressé(e) pour effectuer des enquêtes @@ABBR@@ @@PERIOD@@': { nl:'   Niet geïnteresseerd in het afnemen van enquêtes voor @@ABBR@@ @@PERIOD@@', en:'   Not interested in conducting @@ABBR@@ @@PERIOD@@ surveys', de:'   Nicht interessiert an der Durchführung von @@ABBR@@ @@PERIOD@@-Erhebungen' },
+  '   n’est plus intéressé(e) pour effectuer des enquêtes ': { nl:'   Niet langer geïnteresseerd in het afnemen van enquêtes ', en:'   No longer interested in conducting surveys ', de:'   Nicht mehr an der Durchführung von Erhebungen interessiert ' },
   'Date:': { nl:'Datum:', en:'Date:', de:'Datum:' },
   'Signature': { nl:'Handtekening', en:'Signature', de:'Unterschrift' },
 };
@@ -3208,6 +3208,11 @@ const CAND_FIELDS = ['Survey','Nom','Prenom','Adresse','Cp','Commune','TelPrive'
 // enquêtes ici. Le nom affiché suit la langue active (repli FR).
 const CAND_SURVEYS = {
   'EFT': { fr:'Enquête sur les Forces de Travail', nl:'Enquête naar de Arbeidskrachten', en:'Labour Force Survey', de:'Arbeitskräfteerhebung' },
+};
+// Sigle localisé de l'enquête (affiché dans le .docx : intro, en-tête tableau, case
+// à cocher). EFT (FR) = EAK (NL) = LFS (EN) = AKE (DE).
+const CAND_ABBR_I18N = {
+  'EFT': { fr:'EFT', nl:'EAK', en:'LFS', de:'AKE' },
 };
 
 function candEl(f){ return document.getElementById('cand'+f); }
@@ -3412,9 +3417,11 @@ async function genererCandidature(){
   const survey=(g('Survey').value||'').trim();
   const abbr=survey.split(/\s+/)[0]||'';
   const period=survey.slice(abbr.length).trim();
-  const se=CAND_SURVEYS[abbr.toUpperCase()];
+  const abbrKey=abbr.toUpperCase();
+  const se=CAND_SURVEYS[abbrKey];
   const full=se ? (se[uiLang]||se.fr) : abbr;
-  data.abbrev=abbr;
+  const ai=CAND_ABBR_I18N[abbrKey];
+  data.abbrev=ai ? (ai[uiLang]||ai.fr||abbr) : abbr;   // sigle localisé (EFT/EAK/LFS/AKE)
   data.period=period;
   data.title=(full+' '+period).trim();
   try{
@@ -3529,7 +3536,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '203';
+const APP_VERSION = '204';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();

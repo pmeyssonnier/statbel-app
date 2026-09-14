@@ -12,6 +12,28 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Corrigé
+- **Interviews — statuts du préréglage CATI/CAWI non traduits (nl/en/de)**
+  (Interviews `3.69` → `3.70`, SW `statbel-v347` → `statbel-v348`) : les six statuts de la
+  feuille de contact CATI (« Pas encore de contact entrepris », « Rdv fixé »,
+  « Tentatives de contacts sans résultat », « Négatif », « Interview réalisée »,
+  « Inconnu ») restaient en français dans la légende de carte, l'éditeur et les filtres,
+  quelle que soit la langue. Ils sont désormais dans `STATUT_I18N` (fr/nl/en/de) — ex.
+  « Nog geen contact opgenomen » (NL), « Noch kein Kontakt aufgenommen » (DE), « No
+  contact yet » (EN). **Affichage seul** : la valeur stockée sur les fiches ne change pas
+  (pas de migration). Test `tests/statut-preset.test.js` étendu.
+
+### Modifié
+- **Planner — candidature .docx : sigle d'enquête localisé + formulation NL/EN**
+  (Planner `203` → `204`, SW `statbel-v346` → `statbel-v347`) : le **sigle** de l'enquête
+  suit désormais la langue dans le formulaire (EFT en FR, **EAK** en NL, **LFS** en EN,
+  **AKE** en DE) — intro, en-tête du tableau et cases à cocher. Les deux lignes
+  « pas / plus intéressé » sont reformulées en NL (« Niet geïnteresseerd in het afnemen
+  van enquêtes voor EAK 2026-T4 » / « Niet langer geïnteresseerd in het afnemen van
+  enquêtes ») et en EN (« Not interested in conducting LFS 2026-T4 surveys » / « No longer
+  interested in conducting surveys »), y compris les libellés des boutons radio. Test
+  `tests/planner.test.js` étendu.
+
 ### Documentation
 - **`docs/eft-2026-organisation.md`** : connaissance métier de l'organisation EFT 2026
   (vue d'ensemble + vague 1 CAPI) et de la feuille de contact **R35** — panel/vagues,

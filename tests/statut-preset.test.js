@@ -64,6 +64,16 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       c1:  g[0].statut, c1h: g[0].historique.map(h => h.statut),
       c2:  g[1].statut, c2h: g[1].historique.map(h => h.statut),
       c3:  g[2].statut,
+      // Traduction d'affichage des statuts CATI (valeur stockée inchangée).
+      i18n: (() => {
+        const tr = (lbl, lang) => { const prev = settings.lang; settings.lang = lang; const v = statutLabel(lbl); settings.lang = prev; return v; };
+        return {
+          nlNotYet: tr('Pas encore de contact entrepris', 'nl'),
+          deNotYet: tr('Pas encore de contact entrepris', 'de'),
+          enNeg: tr('Négatif', 'en'),
+          enInterview: tr('Interview réalisée', 'en'),
+        };
+      })(),
     };
   });
 
@@ -83,6 +93,10 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.c3 === 'Pas encore de contact entrepris', `contact « To do » re-mappé → Pas encore… (got ${r.c3})`);
   A(r.modeleIntact === 'To do,In progress,Done,Absent,Refusal',
     `le préréglage n'a PAS touché le modèle global (cloisonné par enquête) (got ${r.modeleIntact})`);
+  A(r.i18n.nlNotYet === 'Nog geen contact opgenomen', `statut CATI traduit NL (got ${r.i18n.nlNotYet})`);
+  A(r.i18n.deNotYet === 'Noch kein Kontakt aufgenommen', `statut CATI traduit DE (got ${r.i18n.deNotYet})`);
+  A(r.i18n.enNeg === 'Negative', `statut « Négatif » traduit EN (got ${r.i18n.enNeg})`);
+  A(r.i18n.enInterview === 'Interview completed', `statut « Interview réalisée » traduit EN (got ${r.i18n.enInterview})`);
   A(perr.length === 0, 'aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
 
   await b.close();

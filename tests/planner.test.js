@@ -311,6 +311,35 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(docx.paOk, 'candidature .docx : choix « pas » coche « pas intéressé(e) »');
     A(docx.plOk, 'candidature .docx : choix « plus » coche « n\'est plus intéressé(e) »');
 
+    // Sigle d'enquête localisé (EFT/EAK/LFS) + formulation NL/EN des lignes « pas / plus ».
+    const abbr = await p.evaluate(() => {
+      const dec = b => new TextDecoder('utf-8', { fatal: false }).decode(b);
+      const gen = (lang, choix) => {
+        changerLangue(lang);
+        const ai = CAND_ABBR_I18N.EFT;
+        return dec(candGenerateDocxBytes({ nom:'T', prenom:'U', adresse:'X', cp:'', commune:'',
+          telPrive:'', heuresPrive:'', telPort:'', heuresPort:'', telBur:'', heuresBur:'',
+          emailPrive:'', emailBur:'', nbGroupes:'1', date:'',
+          groupes:[{ numero:'14805', commune:'Schaerbeek', quartier:'HELMET' }],
+          title:'x', abbrev:(ai[lang]||ai.fr), period:'2026-T4', choix, signaturePng:null }));
+      };
+      const nl = gen('nl', 'pas'), en = gen('en', 'pas'), nlP = gen('nl', 'plus'), enP = gen('en', 'plus');
+      changerLangue('fr');
+      return {
+        nl1: nl.includes('Niet geïnteresseerd in het afnemen van enquêtes voor EAK 2026-T4'),
+        en1: en.includes('Not interested in conducting LFS 2026-T4 surveys'),
+        nl2: nlP.includes('Niet langer geïnteresseerd in het afnemen van enquêtes'),
+        en2: enP.includes('No longer interested in conducting surveys'),
+        eak: /EAK/.test(nl), lfs: /LFS/.test(en),
+      };
+    });
+    A(abbr.eak, 'candidature .docx : sigle localisé EAK (NL)');
+    A(abbr.lfs, 'candidature .docx : sigle localisé LFS (EN)');
+    A(abbr.nl1, 'candidature .docx NL : « Niet geïnteresseerd in het afnemen van enquêtes voor EAK 2026-T4 »');
+    A(abbr.en1, 'candidature .docx EN : « Not interested in conducting LFS 2026-T4 surveys »');
+    A(abbr.nl2, 'candidature .docx NL : « Niet langer geïnteresseerd in het afnemen van enquêtes »');
+    A(abbr.en2, 'candidature .docx EN : « No longer interested in conducting surveys »');
+
     // Génération : plus de pop-up applicative. Selon le support du navigateur :
     // partage natif du fichier (Web Share API) sinon téléchargement classique
     // — l'utilisateur ouvre/partage lui-même. On instrumente navigator + le clic

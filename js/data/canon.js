@@ -342,6 +342,16 @@ export const STATUT_I18N = {
   "Refusal":     { fr:"Refus",       nl:"Weigering", de:"Abgelehnt" },
   "Moved":       { fr:"A déménager", nl:"Verhuisd",  de:"Umgezogen" },
   "Impossible":  { fr:"Impossible",  nl:"Onmogelijk", de:"Unmöglich" },
+  // Statuts du préréglage CATI (feuille de contact téléphonique CATI/CAWI). La clé
+  // est le libellé canonique tel que STOCKÉ par le préréglage (français) ; on fournit
+  // aussi `en` (la clé n'étant pas anglaise ici). Traduction pour l'affichage seul —
+  // la valeur stockée sur les fiches ne change pas.
+  "Pas encore de contact entrepris":     { fr:"Pas encore de contact entrepris", nl:"Nog geen contact opgenomen", en:"No contact yet", de:"Noch kein Kontakt aufgenommen" },
+  "Rdv fixé":                            { fr:"Rdv fixé", nl:"Afspraak gemaakt", en:"Appointment set", de:"Termin vereinbart" },
+  "Tentatives de contacts sans résultat": { fr:"Tentatives de contacts sans résultat", nl:"Contactpogingen zonder resultaat", en:"Contact attempts without result", de:"Kontaktversuche ohne Ergebnis" },
+  "Négatif":                             { fr:"Négatif", nl:"Negatief", en:"Negative", de:"Negativ" },
+  "Interview réalisée":                  { fr:"Interview réalisée", nl:"Interview uitgevoerd", en:"Interview completed", de:"Befragung durchgeführt" },
+  "Inconnu":                             { fr:"Inconnu", nl:"Onbekend", en:"Unknown", de:"Unbekannt" },
 };
 // Migration / import : ancien libellé canonique FR → clé canonique EN
 export const STATUT_FR2EN = {};
