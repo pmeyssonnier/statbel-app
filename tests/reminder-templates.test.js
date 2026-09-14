@@ -72,10 +72,33 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     const nlLoadBtn = document.querySelector('[data-act="loadReminderTemplates"]').textContent;
     const nlSubjectPh = document.getElementById('setReminderMailSubject').placeholder;
 
+    // Amélioration 1 — variables inconnues détectées (et non silencieusement vidées).
+    const varsInc = variablesInconnues({ a:'Bonjour {{prenom}} {{inconnue}} {{autre_faux}} {{enquete}}' });
+
+    // Amélioration 2 — estimation de longueur SMS (GSM-7 vs UCS-2).
+    const smsAscii = smsInfo('a'.repeat(200));            // 2 segments GSM-7 (153)
+    const smsEmoji = smsInfo('’'.repeat(80));             // apostrophe courbe hors Latin-1 → UCS-2 : 2 segments (67)
+
+    // Amélioration 3 — option « ne pas inclure le mot de passe ».
+    const cawiC = { prenom:'Bob', collect_method:'CAWI', web_user_id:'ID42', web_user_pwd:'Secret9', gsm:'0470123456' };
+    const avecPwd = construireRappel({ contact:cawiC, canal:'sms', includePwd:true }).body;
+    const sansPwd = construireRappel({ contact:cawiC, canal:'sms', includePwd:false }).body;
+
+    // Amélioration 4 — données CAWI référencées mais absentes de la fiche.
+    const cawiVide = { prenom:'Bob', collect_method:'CAWI', gsm:'0470123456' };
+    const wMissing = construireRappel({ contact:cawiVide, canal:'sms' }).warnings;
+    const wComplet = construireRappel({ contact:cawiC, canal:'sms' }).warnings;
+    // Modèle CAWI personnalisé sans {{mot_de_passe}} : ne pas signaler le MDP manquant.
+    const wNoRefPwd = construireRappel({
+      contact:cawiVide, canal:'sms',
+      templates:{ smsCawi:'Bonjour {{prenom}}, ID : {{identifiant}}' },
+    }).warnings;
+
     return {
       loaded, preview, body:built.body, href:built.href,
       storedSms:stored.reminderTemplates && stored.reminderTemplates.smsCati,
       reset, fallback, nlSubject, nlSig, nlRdv, nlSection, nlLoadBtn, nlSubjectPh,
+      varsInc, smsAscii, smsEmoji, avecPwd, sansPwd, wMissing, wComplet, wNoRefPwd,
       inline:document.querySelectorAll('#modalSettings [onclick],[oninput],[onchange]').length,
     };
   });
@@ -98,6 +121,14 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['libellé de section traduit NL', /Herinneringssjablonen/.test(r.nlSection)],
     ['bouton « charger » traduit NL', /Voorgestelde sjablonen laden/.test(r.nlLoadBtn)],
     ['placeholder objet traduit NL', /Herinnering/.test(r.nlSubjectPh)],
+    ['variables inconnues détectées', JSON.stringify(r.varsInc) === JSON.stringify(['autre_faux','inconnue'])],
+    ['SMS ASCII : 200 car. → 2 segments', r.smsAscii.len === 200 && r.smsAscii.segments === 2 && r.smsAscii.unicode === false],
+    ['SMS UCS-2 : 80 car. → 2 segments', r.smsEmoji.len === 80 && r.smsEmoji.segments === 2 && r.smsEmoji.unicode === true],
+    ['mot de passe inclus par défaut', /Secret9/.test(r.avecPwd)],
+    ['mot de passe exclu sur option', !/Secret9/.test(r.sansPwd)],
+    ['données CAWI absentes signalées', JSON.stringify(r.wMissing.missingData) === JSON.stringify(['identifiant','mot_de_passe'])],
+    ['fiche CAWI complète : rien à signaler', r.wComplet.missingData.length === 0],
+    ['modèle sans {{mot_de_passe}} : seul l’ID est signalé', JSON.stringify(r.wNoRefPwd.missingData) === JSON.stringify(['identifiant'])],
     ['aucun handler inline', r.inline === 0],
     ['aucune erreur de page', perr.length === 0],
   ];

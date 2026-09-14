@@ -155,6 +155,12 @@ export function modelesRappelDefaut(lang) {
 
 const TEMPLATE_KEYS = Object.keys(RAPPEL_TEMPLATES_FR);
 
+// Variables {{…}} reconnues par le moteur de rappel (toute autre est inconnue).
+export const RAPPEL_VARIABLES = Object.freeze([
+  'prenom', 'enquete', 'rendez_vous', 'lien', 'identifiant', 'mot_de_passe',
+  'signature', 'signature_courte',
+]);
+
 // Remplace uniquement les variables connues. Une variable absente devient vide,
 // puis les espaces/lignes laissés par les valeurs optionnelles sont nettoyés.
 export function appliquerTemplate(template, variables = {}) {
@@ -167,6 +173,37 @@ export function appliquerTemplate(template, variables = {}) {
     .trim();
 }
 
+// Liste triée et dédupliquée des variables {{…}} INCONNUES trouvées dans un jeu de
+// modèles (ou une seule chaîne). Sert à avertir l'enquêteur au lieu de remplacer
+// silencieusement par du vide. Accepte un objet {clé:modèle} ou une chaîne.
+export function variablesInconnues(templates) {
+  const chaines = typeof templates === 'string'
+    ? [templates]
+    : Object.values(templates && typeof templates === 'object' ? templates : {});
+  const found = new Set();
+  for (const s of chaines) {
+    if (typeof s !== 'string') continue;
+    const re = /\{\{([a-z_]+)\}\}/gi;
+    let m;
+    while ((m = re.exec(s))) { if (!RAPPEL_VARIABLES.includes(m[1])) found.add(m[1]); }
+  }
+  return [...found].sort();
+}
+
+// Estimation indicative du découpage SMS : au-delà de Latin-1 (émojis, tirets longs,
+// apostrophes courbes…) l'opérateur bascule en UCS-2, dont les segments sont plus
+// courts (70 puis 67) qu'en GSM-7 (160 puis 153).
+export function smsInfo(text) {
+  const s = String(text || '');
+  const cps = [...s];
+  const len = cps.length;                    // points de code (les émojis comptent)
+  // Au-delà de Latin-1 (> U+00FF) l’opérateur bascule en UCS-2 (segments plus courts).
+  const unicode = cps.some(ch => ch.codePointAt(0) > 0xff);
+  const par = unicode ? (len <= 70 ? 70 : 67) : (len <= 160 ? 160 : 153);
+  const segments = len === 0 ? 0 : Math.ceil(len / par);
+  return { len, segments, unicode };
+}
+
 export function normaliserTemplates(raw) {
   const out = {};
   if (!raw || typeof raw !== 'object') return out;
@@ -177,7 +214,7 @@ export function normaliserTemplates(raw) {
 }
 
 export function construireRappel({
-  contact, canal, cawiUrl, surveyName, templates, signature, shortSignature,
+  contact, canal, cawiUrl, surveyName, templates, signature, shortSignature, includePwd = true,
 } = {}) {
   const c = contact || {};
   const m = classerMethode(c.collect_method);
@@ -192,13 +229,25 @@ export function construireRappel({
     rendez_vous: c.rdv ? tf('rappel_rdv', { rdv: c.rdv }) : '',
     lien: (cawiUrl || '').trim(),
     identifiant: c.web_user_id || '',
-    mot_de_passe: c.web_user_pwd || '',
+    // Option de confidentialité : ne pas inclure le mot de passe CAWI dans le message.
+    mot_de_passe: includePwd ? (c.web_user_pwd || '') : '',
     signature: signature || '',
     signature_courte: shortSignature || signature || '',
   };
 
+  const custom = perso[templateKey] && perso[templateKey].trim();
+  // Avertissements pour l'appelant (aperçu / envoi) : variables inconnues du modèle
+  // personnalisé utilisé, et données CAWI référencées mais absentes de la fiche.
+  const warnings = { unknownVars: custom ? variablesInconnues(perso[templateKey]) : [], missingData: [] };
+  if (m === 'cawi') {
+    const refId  = custom ? /\{\{identifiant\}\}/.test(perso[templateKey])  : true;
+    const refPwd = custom ? /\{\{mot_de_passe\}\}/.test(perso[templateKey]) : true;
+    if (refId  && !c.web_user_id)               warnings.missingData.push('identifiant');
+    if (refPwd && includePwd && !c.web_user_pwd) warnings.missingData.push('mot_de_passe');
+  }
+
   let body;
-  if (perso[templateKey] && perso[templateKey].trim()) {
+  if (custom) {
     body = appliquerTemplate(perso[templateKey], variables);
   } else {
     const lignes = [tf('rappel_hello', { name: c.prenom || '' })];
@@ -229,5 +278,5 @@ export function construireRappel({
     const num = tb ? tb.e164 : (c.gsm || '');
     href = 'sms:' + num + '?&body=' + encodeURIComponent(body);
   }
-  return { subject, body, href };
+  return { subject, body, href, warnings };
 }

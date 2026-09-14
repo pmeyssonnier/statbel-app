@@ -15,7 +15,7 @@
 import { esc, formaterGsm, telBE, calcAge, todayStr, nowHHMM,
          dateFrToISO, dateISOToFr, composeAdresse, parseAdresse,
          correspondRecherche } from '../core/util.js';
-import { t, tPlural, nomJourCourt } from '../core/i18n.js';
+import { t, tf, tPlural, nomJourCourt } from '../core/i18n.js';
 import { statutLabel, paysAffiche, etatCivilGenre, maritalCanon,
          MARITAL_I18N, PAYS_I18N } from '../data/canon.js';
 import { coordsCache } from '../data/idb.js';
@@ -200,7 +200,7 @@ export function methodeBadge(c) {
 export function envoyerRappel(i, canal) {
   const c = contacts()[i];
   if (!c) return;
-  const { href } = construireRappel({
+  const { href, warnings } = construireRappel({
     contact: c,
     canal,
     cawiUrl: settings.cawiUrl,
@@ -208,7 +208,15 @@ export function envoyerRappel(i, canal) {
     templates: settings.reminderTemplates,
     signature: settings.reminderSignature,
     shortSignature: settings.reminderSignatureShort,
+    includePwd: settings.reminderIncludePwd !== false,
   });
+  // Rappel CAWI référençant un identifiant/mot de passe absent de la fiche :
+  // demander confirmation avant d'envoyer un message incomplet.
+  if (warnings && warnings.missingData && warnings.missingData.length) {
+    const libelles = { identifiant: t('rappel_lbl_login'), mot_de_passe: t('rappel_lbl_pwd') };
+    const vars = warnings.missingData.map(k => libelles[k] || k).join(', ');
+    if (!confirm(tf('rappel_cf_missing', { vars }))) return;
+  }
   window.location.href = href;
   if (typeof afficherToast === 'function') afficherToast(t('toast_rappel'));
 }

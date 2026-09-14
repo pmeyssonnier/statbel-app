@@ -66,6 +66,7 @@ export function ouvrirSettings() {
   { const e = document.getElementById('setCawiUrl'); if (e) e.value = settings.cawiUrl || ''; }
   { const e = document.getElementById('setReminderSignature'); if (e) e.value = settings.reminderSignature || ''; }
   { const e = document.getElementById('setReminderSignatureShort'); if (e) e.value = settings.reminderSignatureShort || ''; }
+  { const e = document.getElementById('setReminderIncludePwd'); if (e) e.checked = settings.reminderIncludePwd !== false; }
   const rt = settings.reminderTemplates || {};
   document.querySelectorAll('[data-reminder-field]').forEach(e => {
     e.value = rt[e.dataset.reminderField] || '';

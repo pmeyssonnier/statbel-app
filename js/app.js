@@ -36,7 +36,7 @@ import {
   fermerSuggestions, emailKeydown, allerAFiche, toggleKebab,
   envoyerRappel,
 } from './ui/contacts.js';
-import { construireRappel, modelesRappelDefaut } from './features/reminders.js';
+import { construireRappel, modelesRappelDefaut, smsInfo, variablesInconnues } from './features/reminders.js';
 import {
   filtrerActiviteJour, ouvrirFicheEvtIdx, rdvTitreStatut,
   renderRdvFilters, filtrerRdv, renduRdv,
@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.74';
+const APP_VERSION = '3.75';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -122,6 +122,7 @@ const SETTINGS_DEFAULTS = {
   reminderSignature: '',
   reminderSignatureShort: '',
   reminderTemplates: {},   // surcharges mail/SMS ; vide = messages i18n historiques
+  reminderIncludePwd: true, // inclure le mot de passe CAWI dans les rappels (confidentialité)
   // Langue : détectée depuis le navigateur au 1er lancement (fr/nl/en), défaut fr
   lang: (() => { const l = (navigator.language || 'fr').slice(0,2).toLowerCase(); return ['fr','nl','en','de'].includes(l) ? l : 'fr'; })(),
 };
@@ -140,6 +141,7 @@ function chargerSettings() {
   settings.reminderTemplates = validerReminderTemplates(settings.reminderTemplates);
   settings.reminderSignature = texteBorne(settings.reminderSignature, 200);
   settings.reminderSignatureShort = texteBorne(settings.reminderSignatureShort, 80);
+  settings.reminderIncludePwd = settings.reminderIncludePwd !== false;   // défaut : inclus
   if (!Array.isArray(settings.statuts) || !settings.statuts.length) settings.statuts = cloneStatuts();
   // Migration v2 : horodater aussi les refus
   if (!settings.statutsV) {
@@ -224,6 +226,7 @@ function validerSettings(raw) {
   if (typeof raw.cawiUrl === 'string') out.cawiUrl = raw.cawiUrl.trim().slice(0, 300);
   out.reminderSignature = texteBorne(raw.reminderSignature, 200);
   out.reminderSignatureShort = texteBorne(raw.reminderSignatureShort, 80);
+  out.reminderIncludePwd = raw.reminderIncludePwd !== false;   // défaut : inclus
   out.reminderTemplates = validerReminderTemplates(raw.reminderTemplates);
   const st = validerStatuts(raw.statuts);
   if (st) out.statuts = st;
@@ -1059,6 +1062,7 @@ function apercuModelesRappel() {
     templates: settings.reminderTemplates,
     signature: settings.reminderSignature,
     shortSignature: settings.reminderSignatureShort,
+    includePwd: settings.reminderIncludePwd !== false,
   };
   const cati = { prenom:'Alice', collect_method:'CATI', rdv:'18/09/2026 à 14:30', email:'alice@example.be', gsm:'0470123456' };
   const cawi = { prenom:'Bob', collect_method:'CAWI', web_user_id:'202612345678', web_user_pwd:'Exemple9', email:'bob@example.be', gsm:'0470123456' };
@@ -1070,9 +1074,19 @@ function apercuModelesRappel() {
   ];
   const pre = document.getElementById('reminderTemplatePreview');
   if (pre) {
-    pre.textContent = blocs.map(([titre, r]) =>
-      titre + (titre.startsWith('E-MAIL') ? '\n' + t('lbl_subject') + ' ' + r.subject : '') + '\n' + r.body
-    ).join('\n\n──────────\n\n');
+    const parts = blocs.map(([titre, r]) => {
+      let bloc = titre + (titre.startsWith('E-MAIL') ? '\n' + t('lbl_subject') + ' ' + r.subject : '') + '\n' + r.body;
+      // Longueur estimée uniquement pour les SMS (segmentation opérateur).
+      if (titre.startsWith('SMS')) {
+        const s = smsInfo(r.body);
+        bloc += '\n' + tf('reminder_sms_len', { n: s.len, s: s.segments });
+      }
+      return bloc;
+    });
+    // Avertissement global : variables {{…}} inconnues dans les modèles personnalisés.
+    const inconnues = variablesInconnues(settings.reminderTemplates);
+    if (inconnues.length) parts.unshift(tf('reminder_unknown_vars', { vars: inconnues.join(', ') }));
+    pre.textContent = parts.join('\n\n──────────\n\n');
     pre.classList.remove('hidden');
   }
 }
@@ -1091,6 +1105,7 @@ function enregistrerActionsReglages() {
     setPayHousehold: el => { settings.paieMenage = Math.max(0, parseFloat(el.value) || 0);   saveSettings(); },
     setPayPerson:    el => { settings.paiePersonne = Math.max(0, parseFloat(el.value) || 0); saveSettings(); },
     modifierStatut:  el => modifierStatut(+el.dataset.idx, el.dataset.field, el.type === 'checkbox' ? el.checked : el.value),
+    setReminderIncludePwd: el => { settings.reminderIncludePwd = el.checked; saveSettings(); apercuModelesRappel(); },
     importerBackup:  (el, e) => importerBackup(e),
     toggleBioUnlock: el => toggleBioUnlock(el),
   });
@@ -1338,7 +1353,7 @@ Object.assign(window, {
   ouvrirModalImport, preparerImport, renderExclus, majComparaisonImport,
   renderImportApercu, confirmerImport, fermerModal, csvGuard, csvDeguard, csvCell,
   sepRegionalAuto, sepCSVexport, genererCSV, exporterCSV, exporterVCard, renderFilters,
-  construireRappel, envoyerRappel,
+  construireRappel, envoyerRappel, smsInfo, variablesInconnues,
   rendu, haversine, formatDist, distanceBadge, afficherToast, toggleMaPosition,
   demanderPosition, placerMarqueurMoi, recentrerCarte, changerStatutCarte,
   ouvrirFicheDepuisCarte, renderLegend, initCarte, redessinerCourbeApresLayout,

@@ -343,6 +343,12 @@
               <textarea id="setReminderSmsCawi" rows="3" maxlength="1000"
                         data-reminder-field="smsCawi" data-act="setReminderTemplate"></textarea>
             </div>
+            <div class="set-row">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="setReminderIncludePwd" data-act="setReminderIncludePwd" checked>
+                <span data-i18n="reminder_include_pwd">Inclure le mot de passe CAWI dans les rappels</span>
+              </label>
+            </div>
             <div class="modal-btns" style="justify-content:flex-start;">
               <button class="btn-secondary" type="button" data-act="loadReminderTemplates" data-i18n="reminder_btn_load">Charger les modèles proposés</button>
               <button class="btn-secondary" type="button" data-act="previewReminderTemplates" data-i18n="reminder_btn_preview">Aperçu</button>
