@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Corrigé
+- **Interviews — Paramètres : contenus dynamiques non retraduits au changement de langue**
+  (Interviews `3.66` → `3.67`, SW `statbel-v336` → `statbel-v337`) : dans la section
+  **Données & sauvegarde**, l'option « Toutes les enquêtes » du sélecteur de purge et
+  le statut de sauvegarde (« ⚠️ Aucune sauvegarde… ») restaient figés dans la langue
+  précédente jusqu'à la réouverture de la modale. Ces éléments sont rendus en JS (hors
+  `data-i18n`), or `changerLangue()` ne rafraîchissait que les contenus balisés et
+  l'éditeur de statuts. Ils sont désormais retraduits à chaud (`majSettingsUI()` +
+  `majLastBackupInfo()`) quand la modale est ouverte. Couvert par
+  `tests/settings-delegation.test.js`.
+
 ### Ajouté
 - **Interviews — section « Modèles de rappel » traduite en 4 langues**
   (Interviews `3.65` → `3.66`, SW `statbel-v335` → `statbel-v336`) : les libellés,
