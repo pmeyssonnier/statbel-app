@@ -12,6 +12,24 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — passe design (critique Impeccable, score 33/40)
+(Convertisseur `223` → `224`, SW `statbel-v358` → `statbel-v359`)
+- **A11y (harden)** : les en-têtes de tri (`th.sortable`/`th.ref-sort`) deviennent focusables
+  au clavier, activables Entrée/Espace, et annoncent l'état de tri au lecteur d'écran
+  (`aria-sort`, `scope="col"`, anneau `:focus-visible`).
+- **Mobile (adapt)** : chaque graphique SVG (anneau, treemap, Sankey) reçoit
+  `role="img"` + `aria-label` ; toucher une forme portant un `<title>` en lit la valeur dans
+  une zone live partagée (le survol n'existe pas au doigt) ; cibles tactiles agrandies
+  (boutons d'en-tête 36→40px, ✕ de bloc 22→28px).
+- **Confidentialité (onboard)** : ligne « 🔒 Traitement 100 % local — aucune donnée n'est
+  envoyée » ajoutée à la zone de dépôt et à la fenêtre d'export (i18n fr/nl/en/de).
+- **Couleur (quieter)** : les tuiles KPI passent d'un arc-en-ciel de 11 teintes à un accent
+  indigo unique ; la couleur n'est conservée que là où elle encode un sens (genre H/F).
+- **Identité (distill)** : wordmark « Statbel Convertisseur » visible dans le bandeau (i18n).
+- **Nettoyage (polish)** : police par défaut alignée sur la pile système documentée
+  (`_ui.font` `arial`→`system`, body idem) ; boîte `.erreur` et bordure `td` tokenisées
+  (`--err-*`, `--line`) au lieu de littéraux hex non theme-aware.
+
 ### Accessibilité
 - **PDF → GRP — accessibilité alignée sur les autres apps** (SW `statbel-v357` → `statbel-v358`) :
   `statbel_pdf2grp.html` recevait un traitement a11y minimal. Ajout d'un lien d'évitement
