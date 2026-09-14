@@ -45,6 +45,8 @@
     --bar-f:  #c2185b;   /* barres femmes */
     --violet: #6a1b9a;   /* bouton export « enquête » */
     --warn-bg:#fff3e0; --warn-border:#ffb74d; --warn-text:#e65100;  /* encadrés d'alerte */
+    --err-bg:#ffebee; --err-border:#ef9a9a; --err-text:#b71c1c;     /* encadrés d'erreur */
+    --code-bg:#ffe0b2;   /* puces de code dans les avertissements */
   }
   /* ── Thème sombre (gris-bleu ardoise, pas noir) ── */
   body.theme-dark {
@@ -64,13 +66,14 @@
     --bar-f:  #ef5e8c;
     --violet: #b39ddb;
     --warn-bg:#3a2f1a; --warn-border:#8c6d3f; --warn-text:#ffcc80;
+    --err-bg:#3a2326; --err-border:#8c4a4a; --err-text:#ffb4ad;
+    --code-bg:#4a3a24;
   }
   body.theme-dark input, body.theme-dark select, body.theme-dark textarea {
     background: var(--blanc); color: var(--text); border-color: var(--border);
   }
-  body.theme-dark .erreur { background: #3a2326; border-color: #8c4a4a; color: #ffb4ad; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; background: var(--gris); color: var(--text); min-height: 100vh; }
+  body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--gris); color: var(--text); min-height: 100vh; }
 
   /* ── Header (style identique à l'app enquête) ── */
   header {
@@ -87,18 +90,29 @@
   .header-col3 { display: flex; align-items: center; gap: 4px; }
   .header-mid  { display: flex; justify-content: flex-start; min-width: 0; }
   header .logo { font-size: 22px; line-height: 1; }
+  header .header-col1 { display: flex; align-items: center; gap: 8px; }
+  header .wordmark { color: #fff; font-size: 14px; font-weight: 600; white-space: nowrap; letter-spacing: .01em; }
+  header .wordmark b { font-weight: 800; }
+  @media (max-width: 480px) { header .wordmark { font-size: 12px; } }
 
   .view-toggle { display: flex; gap: 3px; }
   .btn-view, .btn-ico {
     background: rgba(255,255,255,0.15); color: white;
     border: 1px solid rgba(255,255,255,0.35);
-    width: 36px; height: 36px;
+    width: 40px; height: 40px;
     border-radius: 7px; font-size: 15px;
     cursor: pointer; white-space: nowrap; line-height: 1;
     display: inline-flex; align-items: center; justify-content: center;
     padding: 0; position: relative;
   }
   .btn-view.actif { background: #fff; color: var(--bleu); font-weight: bold; }
+  /* Libellé texte des onglets de vue : masqué sur mobile étroit, visible dès 480px
+     (le survol n'existe pas au tactile/clavier) */
+  .btn-view .btn-lbl { display: none; }
+  @media (min-width: 480px) {
+    .view-toggle .btn-view { width: auto; min-width: 40px; padding: 0 12px; gap: 6px; }
+    .btn-view .btn-lbl { display: inline; font-size: 13px; }
+  }
   .btn-ico:hover, .btn-view:not(.actif):hover { background: rgba(255,255,255,0.25); }
 
   /* Tooltip des boutons d'en-tête (icône seule, libellé au survol) */
@@ -147,12 +161,14 @@
   .loading .spin { font-size: 28px; display: block; margin-bottom: 8px; animation: spin 1.1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .erreur {
-    background: #ffebee; border: 1px solid #ef9a9a;
-    border-radius: 10px; padding: 14px 16px; color: #b71c1c; font-size: 14px;
+    background: var(--err-bg); border: 1px solid var(--err-border);
+    border-radius: 10px; padding: 14px 16px; color: var(--err-text); font-size: 14px;
   }
   /* Encadrés d'avertissement (structure/codes manquants) — thème-aware via tokens */
   .avertissement { background: var(--warn-bg); border: 1px solid var(--warn-border);
     border-radius: 8px; padding: 10px 14px; margin: 0 0 12px; font-size: 12px; color: var(--warn-text); }
+  /* Variante « erreur » (ID scientifique corrompu) — tokens err, thème-aware */
+  .avertissement.av-err { background: var(--err-bg); border-color: var(--err-border); color: var(--err-text); }
   /* Réservé aux lecteurs d'écran (titres de repérage, libellés) */
   .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
@@ -169,14 +185,25 @@
   #statsBlocks .card[data-block] { position: relative; }
   #statsBlocks .card-titre { padding-right: 22px; }
   .blk-x {
-    position: absolute; top: 8px; right: 8px;
-    width: 22px; height: 22px; padding: 0; line-height: 1;
+    position: absolute; top: 6px; right: 6px;
+    width: 28px; height: 28px; padding: 0; line-height: 1;
     display: flex; align-items: center; justify-content: center;
     background: none; border: none; border-radius: 6px;
     color: var(--text3); font-size: 13px; cursor: pointer;
   }
   .blk-x:hover { background: var(--card2); color: var(--bar-f); }
   .blk-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  /* Lecture tactile des valeurs de graphiques (pas de survol au doigt) */
+  #chartRead { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%) translateY(8px);
+    max-width: 90vw; background: var(--bleu); color: #fff; padding: 8px 14px; border-radius: 10px;
+    font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); opacity: 0; pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease; z-index: 400; }
+  #chartRead.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .dz-local { color: var(--text2); font-size: 12px; margin-top: 8px; }
+  .dz-help { text-align: center; font-size: 12.5px; color: var(--text2); margin: 12px 0 0; }
+  .dz-help a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .dz-help a:hover { text-decoration: underline; }
+  .dz-help a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 
   /* ── Compteurs (tuiles KPI — style repris du Résumé d'Interviews :
         carte blanche, ombre légère, bordure haute colorée, gros chiffre) ── */
@@ -281,7 +308,7 @@
   thead tr { background: var(--card2); }
   th { padding: 7px 8px; text-align: left; color: var(--accent);
        font-weight: bold; white-space: nowrap; }
-  td { padding: 5px 8px; border-bottom: 1px solid #f5f5f5; }
+  td { padding: 5px 8px; border-bottom: 1px solid var(--line); }
   tr:nth-child(even) td { background: var(--row-alt); }
   td.ordre { font-weight: bold; color: var(--accent); }
   td.vide  { color: var(--text3); font-style: italic; }
@@ -340,6 +367,7 @@
   }
   th.sortable.asc::after,  th.ref-sort.asc::after  { content: '↑'; opacity: 1; color: var(--accent); }
   th.sortable.desc::after, th.ref-sort.desc::after { content: '↓'; opacity: 1; color: var(--accent); }
+  th.sortable:focus-visible, th.ref-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
   /* ── Bascule de portée (Cibles / Ménage) ── */
   .scope-toggle { display: inline-flex; border: 1px solid var(--bleu); border-radius: 8px; overflow: hidden; }
@@ -475,17 +503,18 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div class="header-row">
     <div class="header-col1">
       <span class="logo">📋</span>
+      <span class="wordmark"><b>Statbel</b>&nbsp;<span data-i18n="brand_conv">Convertisseur</span></span>
     </div>
     <div class="header-mid">
       <select id="sourceSelect" style="display:none" onchange="changerSource(this.value)" title="Active source file" data-i18n-title="title_active_source"></select>
     </div>
     <div class="header-col3">
       <div class="view-toggle" id="hdrTabs">
-        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" data-i18n-tip="tip_overview" data-i18n-aria="tip_overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span></button>
-        <button class="btn-view" id="ong-stats" data-tip="Statistics" data-i18n-tip="tip_stats" data-i18n-aria="tip_stats" onclick="basculerTab('stats')">📊</button>
+        <button class="btn-view actif" id="ong-apercu" data-tip="Overview" data-i18n-tip="tip_overview" data-i18n-aria="tip_overview" onclick="basculerTab('apercu')">📋<span id="nbCibles"></span><span class="btn-lbl" data-i18n="tip_overview">Overview</span></button>
+        <button class="btn-view" id="ong-stats" data-tip="Statistics" data-i18n-tip="tip_stats" data-i18n-aria="tip_stats" onclick="basculerTab('stats')">📊<span class="btn-lbl" data-i18n="tip_stats">Statistics</span></button>
       </div>
       <div class="menu-wrap">
-        <button class="btn-ico" title="Settings" data-i18n-title="title_settings" data-i18n-aria="title_settings" onclick="toggleMenu()">⚙️</button>
+        <button class="btn-ico" id="menuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu" title="Settings" data-i18n-title="title_settings" data-i18n-aria="title_settings" onclick="toggleMenu()">⚙️</button>
         <div class="menu" id="menu">
         <button class="menu-item" data-i18n="menu_import" onclick="document.getElementById('fileInput').click();toggleMenu()">📁 Import a source file</button>
         <button class="menu-item" data-i18n="menu_export" onclick="ouvrirExport();toggleMenu()">⬇️ Export converted data</button>
@@ -513,9 +542,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="icon" aria-hidden="true">📂</div>
     <div class="titre" data-i18n="dz_title">Drag the GRP file here</div>
     <div class="sous" data-i18n="dz_sub">or click to select</div>
-    <div class="note">CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx</div>
+    <div class="note" data-i18n="dz_formats">CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx</div>
+    <div class="dz-local" data-i18n="local_note">🔒 Traitement 100 % local — aucune donnée n'est envoyée.</div>
     <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls,.pdf" tabindex="-1" data-i18n-aria="dz_aria" aria-label="Import a GRP file">
   </div>
+  <p class="dz-help"><span data-i18n="dz_no_file">Pas de fichier GRP ?</span> <a href="statbel_pdf2grp.html" data-i18n="dz_extract">Extraire un GRP depuis le PDF officiel →</a></p>
 
   <!-- Chargement -->
   <div id="loading" class="loading hidden" role="status" aria-live="polite">
@@ -549,7 +580,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div id="structureWarn" class="avertissement hidden" role="status" aria-live="polite"></div>
     <!-- Alerte identifiants web cassés en notation scientifique (enquête mémorisée
          importée avec une ancienne version, avant le correctif) -->
-    <div id="idScientifiqueWarn" class="avertissement hidden" role="alert" style="background:#fdecea;border-color:#f5c6cb;color:#b71c1c"></div>
+    <div id="idScientifiqueWarn" class="avertissement av-err hidden" role="alert"></div>
     <div id="codesManquants" class="avertissement hidden" role="status" aria-live="polite"></div>
 
     <!-- Panneau Aperçu : cibles + accordéon ménage -->
@@ -714,6 +745,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <div class="btn-sous" id="lblRapport"></div>
       </button>
     </div>
+    <p class="dz-local" style="margin-top:10px" data-i18n="local_note">🔒 Traitement 100 % local — aucune donnée n'est envoyée.</p>
     <div style="text-align:right;margin-top:16px">
       <button class="btn-reset" style="margin:0" data-i18n="btn_close" onclick="fermerExport()">Close</button>
     </div>
@@ -879,9 +911,18 @@ const I18N = {
 
   // ── Zone de dépôt / chargement ────────────────────────────────────
   dz_title: { fr:"Glissez le fichier GRP ici", nl:"Sleep het GRP-bestand hierheen", en:"Drag the GRP file here", de:"GRP-Datei hierher ziehen" },
+  aria_donut: { fr:"Graphique en anneau (total {n}) ; valeurs détaillées dans la légende ci-contre", nl:"Ringdiagram (totaal {n}); details in de legende hiernaast", en:"Donut chart (total {n}); detailed values in the legend beside it", de:"Ringdiagramm (Gesamt {n}); Detailwerte in der Legende daneben" },
+  aria_treemap: { fr:"Treemap : surface proportionnelle à l'effectif ; effectif affiché sur chaque tuile", nl:"Treemap: oppervlak evenredig met aantal; aantal op elke tegel", en:"Treemap: area proportional to count; count shown on each tile", de:"Treemap: Fläche proportional zur Anzahl; Anzahl auf jeder Kachel" },
+  aria_sankey_nat: { fr:"Diagramme de flux nationalité → sexe → âge ; touchez un nœud pour son effectif", nl:"Stroomdiagram nationaliteit → geslacht → leeftijd; tik op een knoop voor het aantal", en:"Flow diagram nationality → sex → age; tap a node for its count", de:"Flussdiagramm Staatsangehörigkeit → Geschlecht → Alter; tippen Sie einen Knoten für die Anzahl an" },
+  aria_sankey_hh: { fr:"Diagramme de flux taille du ménage → à interroger → âge ; touchez un nœud pour son effectif", nl:"Stroomdiagram huishoudgrootte → te bevragen → leeftijd; tik op een knoop voor het aantal", en:"Flow diagram household size → to survey → age; tap a node for its count", de:"Flussdiagramm Haushaltsgröße → zu befragen → Alter; tippen Sie einen Knoten für die Anzahl an" },
   dz_sub:   { fr:"ou cliquez pour sélectionner", nl:"of klik om te selecteren", en:"or click to select", de:"oder klicken zum Auswählen" },
+  local_note: { fr:"🔒 Traitement 100 % local — aucune donnée n'est envoyée.", nl:"🔒 100 % lokale verwerking — er worden geen gegevens verzonden.", en:"🔒 100% local processing — no data is sent.", de:"🔒 100 % lokale Verarbeitung — es werden keine Daten gesendet." },
+  dz_formats: { fr:"CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx", nl:"CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx", en:"CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx", de:"CSV / TSV / XLSX / XLS / PDF — GRP_2026xxxxx" },
+  dz_no_file: { fr:"Pas de fichier GRP ?", nl:"Geen GRP-bestand?", en:"No GRP file?", de:"Keine GRP-Datei?" },
+  dz_extract: { fr:"Extraire un GRP depuis le PDF officiel →", nl:"Haal een GRP uit de officiële PDF →", en:"Extract a GRP from the official PDF →", de:"Ein GRP aus dem offiziellen PDF extrahieren →" },
   dz_aria:  { fr:"Importer un fichier GRP", nl:"Een GRP-bestand importeren", en:"Import a GRP file", de:"Eine GRP-Datei importieren" },
   app_h1:   { fr:"Convertisseur GRP Statbel", nl:"Statbel GRP-omzetter", en:"Statbel GRP Converter", de:"Statbel GRP-Konverter" },
+  brand_conv: { fr:"Convertisseur", nl:"Omzetter", en:"Converter", de:"Konverter" },
   aria_location:         { fr:"Localisation", nl:"Locatie", en:"Location", de:"Standort" },
   aria_pyr_nlty:         { fr:"Filtrer la pyramide par nationalité", nl:"Piramide filteren op nationaliteit", en:"Filter pyramid by nationality", de:"Pyramide nach Nationalität filtern" },
   aria_filter_continent: { fr:"Filtrer par continent", nl:"Filteren op continent", en:"Filter by continent", de:"Nach Kontinent filtern" },
@@ -5259,7 +5300,7 @@ const FONTS = {
   times:   '"Times New Roman", Times, serif',
   mono:    '"Courier New", monospace',
 };
-let _ui = { theme: 'auto', font: 'arial', scale: 1, ageMinCible: 15 };
+let _ui = { theme: 'auto', font: 'system', scale: 1, ageMinCible: 15 };
 // Âge minimum des personnes « cibles » interrogées (LFS : 15 ans et +). Paramètre
 // persisté du module (statbel_conv_ui).
 function ageMinCible() { const n = parseInt(_ui.ageMinCible, 10); return isNaN(n) ? 15 : n; }
@@ -5287,7 +5328,7 @@ function appliquerApparence() {
   const sombre = _ui.theme === 'dark' || (_ui.theme === 'auto' && _mqDark && _mqDark.matches);
   document.body.classList.toggle('theme-dark', sombre);
   document.body.style.zoom = _ui.scale || 1;
-  document.body.style.fontFamily = FONTS[_ui.font] || FONTS.arial;
+  document.body.style.fontFamily = FONTS[_ui.font] || FONTS.system;
   // états actifs des contrôles (si la modale est rendue)
   document.querySelectorAll('#themeToggle button').forEach(b => b.classList.toggle('actif', b.dataset.theme === _ui.theme));
   document.querySelectorAll('#scaleToggle button').forEach(b => b.classList.toggle('actif', Number(b.dataset.scale) === Number(_ui.scale)));
@@ -5373,15 +5414,15 @@ function afficher(res) {
       const gens = (x.gens || [])
         .map(g => `<span style="white-space:nowrap">N° ${escHtml(g.ordre)} — ${escHtml(g.nom)}</span>`)
         .join(', ');
-      const detail = gens ? `<div style="margin:2px 0 4px 14px;color:#bf360c">${gens}</div>` : '';
-      return `<div style="margin-top:4px"><code style="background:#ffe0b2;padding:1px 5px;border-radius:4px">${escHtml(x.code)}</code> ×${x.count}${detail}</div>`;
+      const detail = gens ? `<div style="margin:2px 0 4px 14px;color:var(--warn-text)">${gens}</div>` : '';
+      return `<div style="margin-top:4px"><code style="background:var(--code-bg);padding:1px 5px;border-radius:4px">${escHtml(x.code)}</code> ×${x.count}${detail}</div>`;
     }).join('');
     let html = `⚠️ <strong>${escHtml(t('warn_unknown_codes_title').replace(/^⚠️\s*/, ''))}</strong> ${escHtml(t('warn_unknown_codes_suffix'))}`;
     if (cm.nlty    && cm.nlty.length)    html += `<div style="margin-top:6px"><u>${escHtml(t('field_nationality_code'))}</u> ${escHtml(t('txt_not_in'))} NLTY_ISO:${fmtList(cm.nlty)}</div>`;
     if (cm.bth     && cm.bth.length)     html += `<div style="margin-top:6px"><u>${escHtml(t('field_birthcountry_code'))}</u> ${escHtml(t('txt_not_in'))} NLTY_ISO:${fmtList(cm.bth)}</div>`;
     if (cm.commune && cm.commune.length) html += `<div style="margin-top:6px"><u>${escHtml(t('field_municipality_code'))}</u> ${escHtml(t('txt_not_in'))} REFNIS_COMMUNE:${fmtList(cm.commune)}</div>`;
     if (cm.mrtl    && cm.mrtl.length)    html += `<div style="margin-top:6px"><u>${escHtml(t('field_marital_code'))}</u> ${escHtml(t('txt_not_in'))} MRTL_FR:${fmtList(cm.mrtl)}</div>`;
-    html += `<div style="margin-top:8px;color:#bf360c;font-size:11px">${escHtml(t('hint_add_codes'))}</div>`;
+    html += `<div style="margin-top:8px;color:var(--warn-text);font-size:11px">${escHtml(t('hint_add_codes'))}</div>`;
     elCM.innerHTML = html;
     elCM.classList.remove('hidden');
   } else {
@@ -5393,7 +5434,7 @@ function afficher(res) {
   const sw = res.structureWarn || [];
   if (sw.length) {
     elSW.innerHTML = `⚠️ <strong>${escHtml(t('warn_missing_cols_title').replace(/^⚠️\s*/, ''))}</strong> ${escHtml(t('warn_missing_cols_suffix'))} `
-      + sw.map(c => `<code style="background:#ffe0b2;padding:1px 5px;border-radius:4px">${escHtml(c)}</code>`).join(' ');
+      + sw.map(c => `<code style="background:var(--code-bg);padding:1px 5px;border-radius:4px">${escHtml(c)}</code>`).join(' ');
     elSW.classList.remove('hidden');
   } else {
     elSW.classList.add('hidden'); elSW.innerHTML = '';
@@ -5474,7 +5515,7 @@ function rendreRef(elId) {
     return st.dir * String(va).localeCompare(String(vb), 'fr', { sensitivity: 'base' });
   });
   const thead = '<thead><tr>' + colonnes.map((c, i) =>
-    `<th class="ref-sort${st.col === i ? (st.dir === 1 ? ' asc' : ' desc') : ''}" data-el="${elId}" data-i="${i}"${c.w ? ` style="min-width:${c.w}px"` : ''}>${escHtml(c.label)}</th>`
+    `<th class="ref-sort${st.col === i ? (st.dir === 1 ? ' asc' : ' desc') : ''}" data-el="${elId}" data-i="${i}" scope="col" tabindex="0" aria-sort="${st.col === i ? (st.dir === 1 ? 'ascending' : 'descending') : 'none'}"${c.w ? ` style="min-width:${c.w}px"` : ''}>${escHtml(c.label)}</th>`
   ).join('') + '</tr></thead>';
   const tbody = '<tbody>' + tri.map(r =>
     '<tr>' + r.map((c, i) => `<td>${colonnes[i].render ? colonnes[i].render(c, r) : escHtml(c)}</td>`).join('') + '</tr>'
@@ -5932,22 +5973,25 @@ function eurFmt(n) {
 // Registre des indicateurs disponibles : libellé (i18n), couleur de bordure,
 // teinte éventuelle de la valeur, et fonction de calcul depuis le contexte.
 const KPI_DEFS = {
-  men:  { i18n: 'kpi_households',  color: 'var(--bleuC)', val: c => c.nbHH },
-  pop:  { i18n: 'kpi_pop_total',   color: '#00897b',      val: c => c.popN },
-  size: { i18n: 'kpi_avg_hh_size', color: 'var(--vert)',  val: c => c.nbHH ? (c.membres / c.nbHH).toFixed(1) : '—' },
-  age:  { i18n: 'kpi_avg_age',     color: 'var(--gold)',  val: c => c.ageMoy != null ? c.ageMoy + ' ' + t('age_years') : '—' },
+  // Accent unique (indigo de marque) pour toutes les tuiles : la couleur ne code
+  // un sens que là où elle porte de l'information — le genre (h/f). Toute autre
+  // teinte serait décorative (cf. DESIGN.md : le sémantique est réservé à un état).
+  men:  { i18n: 'kpi_households',  color: 'var(--bleu)', val: c => c.nbHH },
+  pop:  { i18n: 'kpi_pop_total',   color: 'var(--bleu)', val: c => c.popN },
+  size: { i18n: 'kpi_avg_hh_size', color: 'var(--bleu)', val: c => c.nbHH ? (c.membres / c.nbHH).toFixed(1) : '—' },
+  age:  { i18n: 'kpi_avg_age',     color: 'var(--bleu)', val: c => c.ageMoy != null ? c.ageMoy + ' ' + t('age_years') : '—' },
   h:    { i18n: 'kpi_pct_men',     color: 'var(--bar-h)', tint: 'var(--bar-h)', val: c => c.popN ? Math.round(c.kM / c.popN * 100) + ' %' : '—' },
   f:    { i18n: 'kpi_pct_women',   color: 'var(--bar-f)', tint: 'var(--bar-f)', val: c => c.popN ? Math.round(c.kF / c.popN * 100) + ' %' : '—' },
-  cib:  { i18n: 'kpi_targets_min', color: '#5e35b1',      val: c => c.nbCibles15, dyn: () => tf('kpi_targets_min', { n: ageMinCible() }) },
-  etr:  { i18n: 'kpi_pct_foreign', color: '#00838f',      val: c => c.popN ? Math.round(c.nEtr / c.popN * 100) + ' %' : '—' },
-  min:  { i18n: 'kpi_pct_minors',  color: '#8d6e63',      val: c => c.membres ? Math.round(c.nMin / c.membres * 100) + ' %' : '—', dyn: () => tf('kpi_pct_minors_dyn', { n: ageMinCible() }) },
-  med:  { i18n: 'kpi_age_median',  color: '#ef6c00',      val: c => c.ageMed != null ? c.ageMed + ' ' + t('age_years') : '—' },
+  cib:  { i18n: 'kpi_targets_min', color: 'var(--bleu)', val: c => c.nbCibles15, dyn: () => tf('kpi_targets_min', { n: ageMinCible() }) },
+  etr:  { i18n: 'kpi_pct_foreign', color: 'var(--bleu)', val: c => c.popN ? Math.round(c.nEtr / c.popN * 100) + ' %' : '—' },
+  min:  { i18n: 'kpi_pct_minors',  color: 'var(--bleu)', val: c => c.membres ? Math.round(c.nMin / c.membres * 100) + ' %' : '—', dyn: () => tf('kpi_pct_minors_dyn', { n: ageMinCible() }) },
+  med:  { i18n: 'kpi_age_median',  color: 'var(--bleu)', val: c => c.ageMed != null ? c.ageMed + ' ' + t('age_years') : '—' },
   // Indemnité POTENTIELLE : montant maximal payé par Statbel si toute l'enquête
   // est réalisée. Même règle que le Résumé d'Interviews (ménages × quota ménage
   // + cibles ≥ âge min × quota personne), mais sur la totalité du groupe (rien
   // n'est encore réalisé au stade Convertisseur). Quotas repris des paramètres
   // du module Interviews ; absents → « — » + titre explicatif.
-  paie: { i18n: 'kpi_pay_potential', color: '#1b5e20', tint: '#1b5e20',
+  paie: { i18n: 'kpi_pay_potential', color: 'var(--bleu)',
           val: c => { const { has, montant } = paieCalc(c); return has ? eurFmt(montant) : '—'; },
           tip: c => { const { has, q } = paieCalc(c); return has
             ? tf('kpi_pay_potential_tip', { hh: c.nbHH, qm: eurFmt(q.menage), cib: c.nbCibles15, qp: eurFmt(q.personne) })
@@ -6376,7 +6420,7 @@ function renderDonut(elId, items, clickFn) {
       + `${escHtml(it.label)} — <b>${it.value}</b> (${pct.toFixed(0)}%)</div>`;
   }).join('');
   el.innerHTML = `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">`
-    + `<svg viewBox="0 0 42 42" style="width:118px;height:118px;flex:none">${segs}`
+    + `<svg viewBox="0 0 42 42" style="width:118px;height:118px;flex:none" role="img" aria-label="${escHtml(tf('aria_donut',{n:total}))}">${segs}`
     + `<text x="21" y="20" text-anchor="middle" font-size="6" font-weight="bold" fill="var(--text)">${total}</text>`
     + `<text x="21" y="26" text-anchor="middle" font-size="2.6" fill="var(--text2)">total</text></svg>`
     + `<div>${leg}</div></div>`;
@@ -6464,7 +6508,7 @@ function renderTreemapNlty(elId, items) {
     }
     return `<g><rect x="${r.x.toFixed(2)}" y="${r.y.toFixed(2)}" width="${r.w.toFixed(2)}" height="${r.h.toFixed(2)}" fill="${col}" stroke="#fff" stroke-width="0.4"><title>${escHtml(name)} : ${r.d.value}</title></rect>${txt}</g>`;
   }).join('');
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" font-family="inherit">${svg}</svg>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" font-family="inherit" role="img" aria-label="${escHtml(t('aria_treemap'))}">${svg}</svg>`;
 }
 
 // Sankey Nationalité → Sexe → Âge (SVG). pop : enregistrements { nationality, sexe, age }
@@ -6539,7 +6583,7 @@ function renderSankeyNSA(elId, pop) {
   const nodesA = noeuds(ordreNat, pa, colX[0], 'start', (k, i) => PALETTE[i % PALETTE.length]);
   const nodesB = noeuds(ordreSex, pb, colX[1], 'middle', k => k === 'Femmes' ? 'var(--bar-f)' : 'var(--bar-h)');
   const nodesC = noeuds(ordreAge, pc, colX[2], 'end', () => '#90a4ae');
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" font-family="inherit">${flows}${nodesA}${nodesB}${nodesC}</svg>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" font-family="inherit" role="img" aria-label="${escHtml(t('aria_sankey_nat'))}">${flows}${nodesA}${nodesB}${nodesC}</svg>`;
 }
 
 // Sankey ménages : taille du ménage → nombre de personnes à interroger (≥ âge min)
@@ -6615,7 +6659,7 @@ function renderSankeyMenage(elId, res) {
   const nodesA = noeuds(ordreA, pa, colX[0], 'start', (k, i) => PALETTE[i % PALETTE.length]);
   const nodesB = noeuds(ordreB, pb, colX[1], 'middle', (k, i) => PALETTE[i % PALETTE.length]);
   const nodesC = noeuds(ordreC, pc, colX[2], 'end', () => '#90a4ae');
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" font-family="inherit">${flows}${nodesA}${nodesB}${nodesC}</svg>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" font-family="inherit" role="img" aria-label="${escHtml(t('aria_sankey_hh'))}">${flows}${nodesA}${nodesB}${nodesC}</svg>`;
 }
 
 // ── Drill-down commune de naissance (Belges) : Région → Province → Arr. → Commune ──
@@ -6705,7 +6749,7 @@ function renderCiblesHead() {
   const st = _sortState.cibles;
   if (st && st.col) {
     const t = tr.querySelector(`th.sortable[data-col="${st.col}"]`);
-    if (t) t.classList.add(st.dir === 1 ? 'asc' : 'desc');
+    if (t) { t.classList.add(st.dir === 1 ? 'asc' : 'desc'); t.setAttribute('aria-sort', st.dir === 1 ? 'ascending' : 'descending'); }
   }
 }
 // Re-rend le tableau de contacts avec le tri courant (après changement de colonnes).
@@ -6785,9 +6829,10 @@ document.addEventListener('click', e => {
 
   // Réinitialiser les classes
   th.closest('thead').querySelectorAll('th.sortable').forEach(t => {
-    t.classList.remove('asc','desc');
+    t.classList.remove('asc','desc'); t.setAttribute('aria-sort','none');
   });
   th.classList.add(state.dir === 1 ? 'asc' : 'desc');
+  th.setAttribute('aria-sort', state.dir === 1 ? 'ascending' : 'descending');
 
   // Trier et re-rendre les cibles (l'accordéon ménage se reconstruit)
   renderCibles(sortRows(_resultat.outCibles, col, state.dir));
@@ -7000,15 +7045,53 @@ document.getElementById('btnRapport').addEventListener('click', () => {
   //    role="button" seulement hors <tr> (préserve la sémantique de ligne).
   const CLIC = '.bar-row[onclick],.pyr-row[onclick],.bd-crumb[onclick],.cible-row[onclick]';
   const BTN  = '.bar-row[onclick],.pyr-row[onclick],.bd-crumb[onclick]';
+  // En-têtes de tri : focusables au clavier + sémantique aria-sort (annonce du tri
+  // au lecteur d'écran). Le tri lui-même passe par les handlers de clic existants.
+  const SORT = 'th.sortable,th.ref-sort';
   function enrichir1(x){ if(!x.hasAttribute('tabindex')) x.setAttribute('tabindex','0'); if(x.matches(BTN)) x.setAttribute('role','button'); }
-  function enrichir(el){ if(!el || el.nodeType!==1) return; if(el.matches && el.matches(CLIC)) enrichir1(el); el.querySelectorAll && el.querySelectorAll(CLIC).forEach(enrichir1); }
+  function enrichirSort(x){ if(!x.hasAttribute('tabindex')) x.setAttribute('tabindex','0'); if(!x.hasAttribute('scope')) x.setAttribute('scope','col'); if(!x.hasAttribute('aria-sort')) x.setAttribute('aria-sort','none'); }
+  function enrichir(el){ if(!el || el.nodeType!==1) return;
+    if(el.matches){ if(el.matches(CLIC)) enrichir1(el); if(el.matches(SORT)) enrichirSort(el); }
+    if(el.querySelectorAll){ el.querySelectorAll(CLIC).forEach(enrichir1); el.querySelectorAll(SORT).forEach(enrichirSort); }
+  }
   new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(enrichir))).observe(document.body,{childList:true,subtree:true});
   enrichir(document.body);
   document.addEventListener('keydown', e=>{
     if(e.key!=='Enter' && e.key!==' ' && e.key!=='Spacebar') return;
-    const el = e.target.closest && e.target.closest(CLIC);
+    const el = e.target.closest && (e.target.closest(CLIC) || e.target.closest(SORT));
     if(el){ e.preventDefault(); el.click(); }
   });
+
+  // 1b) Graphiques SVG : au tactile, le survol n'existe pas. Toucher une forme
+  //     portant un <title> (segment donut, tuile treemap, nœud Sankey) en lit la
+  //     valeur dans une zone live partagée.
+  const chartRead = document.createElement('div');
+  chartRead.id = 'chartRead'; chartRead.setAttribute('role','status'); chartRead.setAttribute('aria-live','polite');
+  document.body.appendChild(chartRead);
+  document.addEventListener('click', e=>{
+    const svg = e.target.closest && e.target.closest('svg'); if(!svg) return;
+    let node = e.target, titleEl = null;
+    while(node && node !== svg){ if(node.querySelector){ titleEl = node.querySelector(':scope > title'); if(titleEl) break; } node = node.parentNode; }
+    if(!titleEl || !titleEl.textContent.trim()) return;
+    chartRead.textContent = titleEl.textContent;
+    chartRead.classList.add('show');
+    clearTimeout(chartRead._t); chartRead._t = setTimeout(()=>chartRead.classList.remove('show'), 3500);
+  });
+
+  // 1c) État des bascules et du menu annoncé au lecteur d'écran. Les segments
+  //     portent `class="actif"` en visuel seulement : on reflète l'état dans
+  //     aria-pressed (bascules) et aria-expanded (menu ⚙️).
+  const TG = '.view-toggle button, .scope-toggle button, .perso-tabs button, .lk-tabs button';
+  function syncToggles(){ document.querySelectorAll(TG).forEach(b => b.setAttribute('aria-pressed', b.classList.contains('actif') ? 'true' : 'false')); }
+  const menuEl = document.getElementById('menu'), menuBtn = document.getElementById('menuBtn');
+  function syncMenu(){ if(menuBtn && menuEl) menuBtn.setAttribute('aria-expanded', menuEl.classList.contains('open') ? 'true' : 'false'); }
+  syncToggles(); syncMenu();
+  new MutationObserver(ms=>{
+    for(const m of ms){
+      if(m.target === menuEl){ syncMenu(); continue; }
+      if(m.target.matches && m.target.matches(TG)){ syncToggles(); }
+    }
+  }).observe(document.body, { attributes:true, attributeFilter:['class'], subtree:true });
 
   // 2) Modales : Échap ferme, Tab piégé dans la boîte, focus restitué au retour.
   const overlays = () => [...document.querySelectorAll('.modal-overlay')];
@@ -7035,7 +7118,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '223';
+const APP_VERSION = '225';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

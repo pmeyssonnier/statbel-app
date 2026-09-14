@@ -12,6 +12,48 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — passe design 2 (vérification Impeccable, couche a11y + onboarding)
+(Convertisseur `224` → `225`, SW `statbel-v359` → `statbel-v360`)
+- **État ARIA des contrôles (harden)** : les bascules (onglets de vue, périmètre Enquête/
+  Population, thème/taille, onglets Personnaliser/Lookup) reflètent leur état via `aria-pressed` ;
+  le menu ⚙️ porte `aria-haspopup`/`aria-controls` et un `aria-expanded` synchronisé. L'état actif
+  était jusqu'ici visuel seulement (inaudible au lecteur d'écran).
+- **Encadrés d'alerte thème-aware (colorize)** : l'alerte « ID scientifique » et les
+  avertissements de codes/structure passent des littéraux hex en dur (`#fdecea`, `#bf360c`,
+  `#ffe0b2`…) à des tokens (`--err-*`, `--warn-text`, nouveau `--code-bg`) → contraste correct
+  en thème sombre.
+- **Onboarding de l'état vide (clarify)** : lien « Extraire un GRP depuis le PDF officiel → »
+  vers PDF→GRP sous la zone de dépôt, et l'indice de format devient traduisible (`data-i18n`).
+- **Onglets de vue (adapt)** : libellé texte visible dès 480px (Aperçu/Statistiques) en plus
+  de l'icône — le survol n'existe pas au tactile/clavier.
+
+### Convertisseur — passe design (critique Impeccable, score 33/40)
+(Convertisseur `223` → `224`, SW `statbel-v358` → `statbel-v359`)
+- **A11y (harden)** : les en-têtes de tri (`th.sortable`/`th.ref-sort`) deviennent focusables
+  au clavier, activables Entrée/Espace, et annoncent l'état de tri au lecteur d'écran
+  (`aria-sort`, `scope="col"`, anneau `:focus-visible`).
+- **Mobile (adapt)** : chaque graphique SVG (anneau, treemap, Sankey) reçoit
+  `role="img"` + `aria-label` ; toucher une forme portant un `<title>` en lit la valeur dans
+  une zone live partagée (le survol n'existe pas au doigt) ; cibles tactiles agrandies
+  (boutons d'en-tête 36→40px, ✕ de bloc 22→28px).
+- **Confidentialité (onboard)** : ligne « 🔒 Traitement 100 % local — aucune donnée n'est
+  envoyée » ajoutée à la zone de dépôt et à la fenêtre d'export (i18n fr/nl/en/de).
+- **Couleur (quieter)** : les tuiles KPI passent d'un arc-en-ciel de 11 teintes à un accent
+  indigo unique ; la couleur n'est conservée que là où elle encode un sens (genre H/F).
+- **Identité (distill)** : wordmark « Statbel Convertisseur » visible dans le bandeau (i18n).
+- **Nettoyage (polish)** : police par défaut alignée sur la pile système documentée
+  (`_ui.font` `arial`→`system`, body idem) ; boîte `.erreur` et bordure `td` tokenisées
+  (`--err-*`, `--line`) au lieu de littéraux hex non theme-aware.
+
+### Accessibilité
+- **PDF → GRP — accessibilité alignée sur les autres apps** (SW `statbel-v357` → `statbel-v358`) :
+  `statbel_pdf2grp.html` recevait un traitement a11y minimal. Ajout d'un lien d'évitement
+  (« Aller au contenu »), d'un landmark `<main id="contenu">`, d'un `<nav>` nommé, d'une région
+  de résultat nommée (`aria-labelledby` → titre), de la zone d'aperçu défilable rendue
+  atteignable au clavier (`role="region"` + `tabindex` + libellé), de `scope="col"` sur les
+  en-têtes du tableau et d'une règle `prefers-reduced-motion`. Nouveau test
+  `tests/pdf2grp-a11y.test.js`. (Le module reste FR uniquement — pas de version applicative propre.)
+
 ### Correctifs (audit — suite)
 - **Interviews — validité calendaire des dates de rendez-vous** (Interviews `3.77` → `3.78`,
   SW `statbel-v356` → `statbel-v357`) : la normalisation corrigeait le format mais pas la
