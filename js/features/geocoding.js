@@ -114,22 +114,9 @@ export const GEO_PROVIDERS = {
     }
   },
 
-  // Reste de la Belgique / usage générique — OpenStreetMap + Nominatim.
-  // ⚠️ Moins conforme RGPD (tiers hors UE) : à n'utiliser que faute de mieux.
-  osm: {
-    label: 'Belgique générique (OpenStreetMap + Nominatim)',
-    tileAttribution: '© OpenStreetMap',
-    maxZoom: 19,
-    tileUrl: function() { return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; },
-    geocode: function(adresse) {
-      const { rue, cpville } = parseAdresse(adresse);
-      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='
-                + encodeURIComponent(rue + ', ' + cpville + ', Belgique');
-      return fetch(url).then(r => r.json()).then(d =>
-        (d && d[0]) ? { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) } : null
-      ).catch(() => null);
-    }
-  }
+  // OpenStreetMap/Nominatim RETIRÉ (RGPD : envoi d'adresses à un tiers hors UE, et
+  // géocodage en masse bloqué 403). Un ancien réglage `provider:'osm'` est ramené à
+  // 'bruxelles' au démarrage (app.js) et rejeté par validerSettings (clé absente ici).
 
 };
 

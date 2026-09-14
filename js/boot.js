@@ -38,13 +38,12 @@
         window.location.reload();
       });
       // Popup « Mise à jour disponible » AUTONOME (ne dépend PAS de js/app.js).
-      // Crucial : les sous-ressources JS/CSS sont servies « cache d'abord » par le
-      // service worker → un app.js/base.css périmé resterait en cache. Si le popup
-      // vivait dans app.js, un utilisateur bloqué sur une vieille version ne le
-      // verrait jamais (app.js en cache sans le code du popup) → il ne cliquerait
-      // jamais « Poser » → le SW ne s'activerait jamais → blocage. index.html est
-      // rechargé frais (navigation réseau) : en y logeant le popup + ses styles
-      // inline, il fonctionne quel que soit l'âge du cache.
+      // Le service worker sert la navigation « cache d'abord » → index.html ET ses
+      // sous-ressources JS/CSS proviennent du MÊME cache (même version). Le popup vit
+      // donc dans index.html, présent dans TOUTES les versions : même bloqué sur une
+      // vieille version en cache, l'utilisateur le voit et peut cliquer « Poser »
+      // (SKIP_WAITING → activate/claim → reload) pour basculer HTML + scripts d'un bloc.
+      // S'il vivait dans app.js, un app.js périmé en cache le masquerait → blocage.
       const MAJ_I18N = {
         fr:{d:'Mise à jour disponible',p:'OK',b:'…',l:'Plus tard'},
         nl:{d:'Update beschikbaar',p:'OK',b:'…',l:'Later'},

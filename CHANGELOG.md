@@ -12,6 +12,28 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Sécurité / confidentialité
+- **Interviews — données de sécurité locales exclues des sauvegardes**
+  (Interviews `3.73` → `3.74`, SW `statbel-v352` → `statbel-v353`) : l'export JSON
+  retirait seulement `pinCode`/`pinTimeout`. Il exclut désormais aussi `pinFails`,
+  `pinLockUntil` et `bioCredId` — propres à l'appareil, inutiles dans une sauvegarde
+  transférable (principe de minimisation). Test `tests/backup.test.js` étendu (côté export).
+- **Interviews — retrait complet du géocodage OSM/Nominatim** : le fournisseur `osm`
+  (envoi d'adresses à Nominatim, tiers hors UE) est **supprimé** de `GEO_PROVIDERS` ; il
+  n'est donc plus accepté par `validerSettings` (une vieille sauvegarde `provider:"osm"`
+  retombe sur un géocodeur belge) et `connect-src https://*.openstreetmap.org` est retiré
+  de la CSP d'`index.html`. Le **fond de carte** reste des tuiles OpenStreetMap (images
+  seules, sans donnée personnelle, via `img-src https:`). Test `tests/csp.test.js` adapté.
+
+### Documentation
+- **README réaligné** : versions actuelles (Interviews `3.74`, Convertisseur `222`,
+  Planner `205`, cache `statbel-v353`), **23 modules** avec `js/core/actions.js` (routeur
+  `data-act`) et `js/boot.js` ; suppression des mentions de gestionnaires `onclick=` inline
+  (l'UI est en `data-act` + délégation, cohérent avec `script-src 'self'`) ; note géocodage
+  mise à jour (OSM/Nominatim retiré).
+- **Commentaires techniques corrigés** : CSP d'`index.html` (`script-src 'self'`, plus de
+  `on*=`), `js/boot.js` et `sw.js` (navigation « cache d'abord », non plus « réseau »).
+
 ### Modifié
 - **Interviews — vue Liste : fiche compacte n'affichant que le statut courant**
   (Interviews `3.70` → `3.73`, SW `statbel-v349` → `statbel-v352`) : sur mobile, chaque

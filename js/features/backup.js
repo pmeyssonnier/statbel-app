@@ -130,9 +130,10 @@ export function exporterBackup() {
     if (!k.startsWith('coords_')) return;
     try { coords[k.slice(7)] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
   });
-  // Exclure le verrouillage PIN du backup : c'est un réglage propre à
-  // l'appareil (et son hash n'a pas à voyager dans un fichier exporté).
-  const { pinCode, pinTimeout, ...settingsExport } = settings;
+  // Données de sécurité PROPRES À L'APPAREIL : exclues de la sauvegarde transférable
+  // (minimisation). pinCode/pinTimeout (verrouillage), pinFails/pinLockUntil (anti-
+  // brute-force local), bioCredId (identifiant WebAuthn lié à cet appareil).
+  const { pinCode, pinTimeout, pinFails, pinLockUntil, bioCredId, ...settingsExport } = settings;
   const data   = JSON.stringify({ version: 2, date: isoNow, settings: settingsExport, surveys: enquetesVersEN(enquetes), coords }, null, 2);
   const blob   = new Blob([data], { type: 'application/json' });
   const url    = URL.createObjectURL(blob);

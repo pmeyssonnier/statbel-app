@@ -54,9 +54,10 @@ const PLAN_SEED = [{
     if (path === '/index.html') {
       await p.evaluate(async () => {
         try { setView('carte'); } catch (e) {}
-        // fetch vers un géocodeur régional autorisé : ne doit PAS violer connect-src
+        // fetch vers un géocodeur régional autorisé : ne doit PAS violer connect-src.
+        // (Interviews ne contacte plus Nominatim/OSM — provider retiré ; les tuiles OSM
+        // du fond de carte passent par img-src https:, pas connect-src.)
         try { await fetch('https://geoservices.wallonie.be/geocodeWS/ping'); } catch (e) {}
-        try { await fetch('https://nominatim.openstreetmap.org/search?q=x'); } catch (e) {}
       });
       await p.waitForTimeout(500);
     }

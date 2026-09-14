@@ -89,14 +89,8 @@ export function majSettingsUI() {
   // Le style gris/couleur ne concerne qu'UrbIS (mode Bruxelles explicite)
   document.getElementById('setStyleRow').style.display = settings.provider === 'bruxelles' ? '' : 'none';
   const hint = document.getElementById('setProviderHint');
-  if (settings.provider === 'osm') {
-    hint.textContent = t('hint_prov_osm');
-  } else if (settings.provider === 'auto') {
-    hint.textContent = t('hint_prov_auto');
-  } else {
-    hint.textContent = t('hint_prov_be');
-  }
-  hint.style.color = settings.provider === 'osm' ? '#e65100' : '#2e7d32';
+  hint.textContent = settings.provider === 'auto' ? t('hint_prov_auto') : t('hint_prov_be');
+  hint.style.color = '#2e7d32';
   // Stats données
   const nbEnq = Object.keys(enquetes).length;
   const nbCnt = Object.values(enquetes).reduce((s,a)=>s+a.length,0);

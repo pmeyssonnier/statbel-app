@@ -19,10 +19,10 @@ l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
 
 | Composant | Version |
 |---|---:|
-| Interviews | **3.64** |
+| Interviews | **3.74** |
 | Convertisseur | **222** |
-| Planner | **196** |
-| Cache PWA / service worker | **statbel-v334** |
+| Planner | **205** |
+| Cache PWA / service worker | **statbel-v353** |
 
 Le numéro de version est affiché dans Interviews, le Convertisseur et le Planner. Le
 cache versionné du service worker est incrémenté à chaque mise à jour livrée afin de
@@ -77,22 +77,25 @@ Suivi des contacts à interviewer dans le cadre des enquêtes Statbel.
 ### Architecture (modules ES, sans build)
 
 `index.html` charge `js/app.js` comme **module ES** (`<script type="module">`), qui orchestre
-**21 modules**. Aucun bundler : les fichiers sont servis tels quels et pré-cachés par le
-service worker.
+**23 modules** (+ `boot.js`, chargé à part). Aucun bundler : les fichiers sont servis tels
+quels et pré-cachés par le service worker.
 
 | Dossier | Modules |
 |---|---|
-| `js/core/` | **util** (helpers purs) · **i18n** (dictionnaire FR/NL/EN/DE + `t()`) |
+| `js/core/` | **util** (helpers purs) · **i18n** (dictionnaire FR/NL/EN/DE + `t()`) · **actions** (routeur d'événements `data-act` → handlers, en remplacement des `onclick=` inline) |
 | `js/data/` | **idb** (persistance IndexedDB + localStorage) · **csv** (import/export CSV) · **canon** (canonicalisation pays / état civil) · **collect-method** (classification CAPI/CATI/CAWI) · **statuses** (modèle et résolution des statuts) · **reimport** (appariement et différences) · **serialization** (conversion du modèle de sauvegarde) |
 | `js/features/` | **geocoding** (fournisseurs carte/géocodage régionaux) · **history** (historique des visites) · **import** (orchestration CSV/XLSX et aperçu) · **backup** (orchestration sauvegarde/restauration JSON) · **reminders** (messages de rappel CATI/CAWI) |
 | `js/ui/` | **pin** (verrouillage) · **biometrie** (déverrouillage empreinte / Face ID, WebAuthn) · **stats** (graphes & journal) · **settings** (réglages + éditeur de statuts) · **map** (carte Leaflet) · **contacts** (liste & fiche) · **rdv** (vue Suivi) · **resume** (vue Résumé) |
 
 - **`js/app.js`** — orchestration : état, accesseurs, gestion des enquêtes, `setView`, thème/langue, cache géo, `init`.
+- **`js/boot.js`** — amorçage autonome (enregistrement du service worker + popup « Mise à jour disponible »), indépendant de `app.js`.
 - **`css/`** — styles (`base`, `summary`, `modals`, `mobile`) · **`vendor/`** — Leaflet + SheetJS vendorés (aucun CDN).
 
-Les modules communiquent par `import`/`export` ; les fonctions attendues par les gestionnaires
-`onclick=` du HTML et par les tests sont réexposées au global par un **pont de compatibilité**
-dans `app.js`.
+Les modules communiquent par `import`/`export`. L'interface n'utilise **aucun gestionnaire
+`onclick=` inline** : les boutons portent un attribut `data-act` routé vers le bon handler par
+`js/core/actions.js` (délégation d'événements) — cohérent avec la CSP `script-src 'self'`. Les
+fonctions appelées par ce routeur et par les tests sont réexposées au global par un **pont de
+compatibilité** dans `app.js`.
 
 ### Tests
 
@@ -178,7 +181,7 @@ transmettre le document à un serveur.
 
 - Toutes les données restent **dans le navigateur** (IndexedDB / localStorage) — **aucun serveur, aucune analytics**. Les seules sorties de données sont les deux actions ci-dessous, **déclenchées par vous**.
 - **Rappels e-mail / SMS** : ouvrir un rappel ne fait que **pré-remplir** l'appli mail ou SMS *de votre appareil* — l'app n'envoie rien elle-même. Le message, et pour le **CAWI** l'**identifiant et le mot de passe** d'accès web du ménage, sont alors transmis à cette appli tierce puis au destinataire que vous choisissez. À n'utiliser que pour joindre la personne concernée.
-- **Géocodage** : lorsqu'une adresse est géocodée, **cette adresse** (donnée personnelle) est envoyée aux **services publics belges** (UrbIS/CIRB · Bruxelles, SPW · Wallonie, Geopunt · Flandre ; OSM/Nominatim en repli) — **pas de transfert hors UE**. Le mode de navigation par **point GPS** garde votre position sur l'appareil.
+- **Géocodage** : lorsqu'une adresse est géocodée, **cette adresse** (donnée personnelle) est envoyée **uniquement** aux **services publics belges** (UrbIS/CIRB · Bruxelles, SPW · Wallonie, Geopunt · Flandre) — **pas de transfert hors UE**. Le géocodage OSM/Nominatim a été **retiré** (tiers hors UE). Le **fond de carte** provient d'OpenStreetMap, mais ce sont des **tuiles-images sans donnée personnelle**. Le mode de navigation par **point GPS** garde votre position sur l'appareil.
 - ⚠️ **Aucune donnée personnelle n'est versionnée** : `.gitignore` en **liste blanche stricte**
   (seuls le code des apps — HTML, `css/`, `js/`, `vendor/`, `tests/` —, les fichiers PWA,
   `README.md` et `.gitignore`). Les CSV / JSON / vCard / xlsx d'enquêtés sont exclus.

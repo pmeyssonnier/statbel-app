@@ -73,6 +73,19 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     return out;
   });
 
+  // Export : les données de sécurité propres à l'appareil sont exclues du fichier
+  // (minimisation) — pinCode/pinTimeout/pinFails/pinLockUntil/bioCredId.
+  const exp = await p.evaluate(async () => {
+    settings.pinCode = 'hash'; settings.pinTimeout = 5; settings.pinFails = 3;
+    settings.pinLockUntil = Date.now(); settings.bioCredId = 'cred-xyz';
+    let captured = null; const orig = URL.createObjectURL;
+    URL.createObjectURL = blob => { captured = blob; return 'blob:test'; };
+    try { exporterBackup(); } finally { URL.createObjectURL = orig; }
+    const s = JSON.parse(captured ? await captured.text() : '{}').settings || {};
+    return { pinCode:'pinCode' in s, pinTimeout:'pinTimeout' in s, pinFails:'pinFails' in s,
+             pinLockUntil:'pinLockUntil' in s, bioCredId:'bioCredId' in s };
+  });
+
   await b.close();
   await srv.close();
 
@@ -91,6 +104,11 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['#7 booléens contraints',                 r.bool_coerced === true],
     ['#7 statuts non-tableau → défaut',        r.statuts_fallback === true],
     ['#7 entrée null → défauts complets',      r.null_defaults === true],
+    ['export : pinCode exclu du fichier',      exp.pinCode === false],
+    ['export : pinTimeout exclu du fichier',   exp.pinTimeout === false],
+    ['export : pinFails exclu du fichier',     exp.pinFails === false],
+    ['export : pinLockUntil exclu du fichier', exp.pinLockUntil === false],
+    ['export : bioCredId exclu du fichier',    exp.bioCredId === false],
   ];
   let ok = true;
   for (const [name, pass] of checks) { console.log((pass ? '✓ PASS ' : '✗ FAIL ') + name); if (!pass) ok = false; }
