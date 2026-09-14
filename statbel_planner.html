@@ -3138,14 +3138,23 @@ const CAND_DOCX_I18N = {
   'Date:': { nl:'Datum:', en:'Date:', de:'Datum:' },
   'Signature': { nl:'Handtekening', en:'Signature', de:'Unterschrift' },
 };
+// Normalisation pour l'appariement : le gabarit officiel emploie la typographie FR
+// (espace insécable U+00A0 / fine U+202F avant « : », apostrophe courbe U+2019).
+// On compare des formes normalisées pour rester robuste à ces variantes.
+function candNorm(s) { return String(s).replace(/[  ]/g, ' ').replace(/’/g, "'"); }
 function candLocaliserLabels(doc) {
   if (uiLang === 'fr') return doc;
+  const idx = {};
   for (const fr in CAND_DOCX_I18N) {
     const tr = CAND_DOCX_I18N[fr][uiLang];
-    if (!tr) continue;
-    doc = doc.split('>' + fr + '</w:t>').join('>' + candXmlEsc(tr) + '</w:t>');
+    if (tr != null) idx[candNorm(fr)] = tr;
   }
-  return doc;
+  // Remplace le texte de chaque nœud <w:t> dont la forme normalisée est un libellé
+  // connu (appariement exact sur le nœud entier → pas de collision de sous-chaînes).
+  return doc.replace(/(<w:t[^>]*>)([^<]*)(<\/w:t>)/g, (m, open, text, close) => {
+    const tr = idx[candNorm(text)];
+    return tr != null ? open + candXmlEsc(tr) + close : m;
+  });
 }
 
 function candGenerateDocxBytes(data) {
@@ -3222,10 +3231,11 @@ const CAND_LS_KEY = 'lfs_candidature_infos';
 // sélectionnés / date du jour) → ni mémorisés ni restaurés.
 const CAND_FIELDS = ['Survey','Nom','Prenom','Adresse','Cp','Commune','TelPrive','HeuresPrive',
   'TelPort','HeuresPort','TelBur','HeuresBur','EmailPrive','EmailBur'];
-// Sigle d'enquête -> nom complet (pour développer le titre du document).
-// Le sigle inconnu est utilisé tel quel comme nom. Ajouter les enquêtes ici.
+// Sigle d'enquête -> nom complet en 4 langues (pour développer le titre du
+// document). Le sigle inconnu est utilisé tel quel comme nom. Ajouter les
+// enquêtes ici. Le nom affiché suit la langue active (repli FR).
 const CAND_SURVEYS = {
-  'EFT': 'Enquête sur les Forces de Travail',
+  'EFT': { fr:'Enquête sur les Forces de Travail', nl:'Enquête naar de Arbeidskrachten', en:'Labour Force Survey', de:'Arbeitskräfteerhebung' },
 };
 
 function candEl(f){ return document.getElementById('cand'+f); }
@@ -3422,7 +3432,8 @@ function genererCandidature(){
   const survey=(g('Survey').value||'').trim();
   const abbr=survey.split(/\s+/)[0]||'';
   const period=survey.slice(abbr.length).trim();
-  const full=CAND_SURVEYS[abbr.toUpperCase()]||abbr;
+  const se=CAND_SURVEYS[abbr.toUpperCase()];
+  const full=se ? (se[uiLang]||se.fr) : abbr;
   data.abbrev=abbr;
   data.period=period;
   data.title=(full+' '+period).trim();
@@ -3532,7 +3543,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '199';
+const APP_VERSION = '200';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();
