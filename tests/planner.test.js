@@ -311,34 +311,42 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     A(docx.paOk, 'candidature .docx : choix « pas » coche « pas intéressé(e) »');
     A(docx.plOk, 'candidature .docx : choix « plus » coche « n\'est plus intéressé(e) »');
 
-    // Toast « Ouvrir » après génération : lien qui ré-adresse l'URL blob du .docx
-    // (évite d'aller fouiller les Téléchargements). On teste le helper directement
-    // avec une URL blob factice — indépendant du remplissage complet du formulaire.
-    const toast = await p.evaluate(() => {
-      const url = URL.createObjectURL(new Blob(['x'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
-      afficherToastFichier('📝 Candidature générée', url, 'Candidature_EFT_TestU.docx');
-      const t = document.getElementById('lfs-toast-file');
-      const a = t && t.querySelector('a');
-      return {
-        present: !!t,
-        role: !!(t && t.getAttribute('role') === 'status' && t.getAttribute('aria-live') === 'polite'),
-        blobHref: !!(a && a.getAttribute('href') === url && /^blob:/.test(url)),
-        blank: !!(a && a.getAttribute('target') === '_blank' && /noopener/.test(a.getAttribute('rel') || '')),
-        ariaFichier: !!(a && /Candidature_EFT_TestU\.docx/.test(a.getAttribute('aria-label') || '')),
-        hasClose: !!(t && t.querySelector('button')),
-      };
+    // Génération : plus de pop-up applicative. Selon le support du navigateur :
+    // partage natif du fichier (Web Share API) sinon téléchargement classique
+    // — l'utilisateur ouvre/partage lui-même. On instrumente navigator + le clic
+    // du lien pour observer le chemin choisi (formulaire minimal + signature).
+    const gen = await p.evaluate(async () => {
+      // 1x1 PNG valide pour la signature (candGenerateDocxBytes lit la taille).
+      const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+      document.getElementById('selPlanning').value = '__ALL__'; onChangePlanning(); selectAll(); setTab('candidature');
+      candEl('Nom').value = 'Test'; candEl('Prenom').value = 'U'; candEl('Adresse').value = 'Rue X 1';
+      candSigData = PNG;
+      const origShare = navigator.share, origCan = navigator.canShare, origClick = HTMLAnchorElement.prototype.click;
+      let shared = null, downloaded = false;
+      HTMLAnchorElement.prototype.click = function(){ if (this.download) downloaded = true; };
+      try {
+        // a) Partage de fichiers supporté → navigator.share appelé, pas de download.
+        Object.defineProperty(navigator, 'canShare', { configurable: true, value: o => !!(o && o.files && o.files.length) });
+        Object.defineProperty(navigator, 'share', { configurable: true, value: async o => { shared = o && o.files && o.files[0] && o.files[0].name; } });
+        await genererCandidature();
+        const withShare = { shared, downloaded, noPopup: !document.getElementById('lfs-toast-file') };
+        // b) Non supporté → repli téléchargement.
+        shared = null; downloaded = false;
+        Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => false });
+        Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+        await genererCandidature();
+        return { withShare, withoutShare: { shared, downloaded } };
+      } finally {
+        Object.defineProperty(navigator, 'share', { configurable: true, value: origShare });
+        Object.defineProperty(navigator, 'canShare', { configurable: true, value: origCan });
+        HTMLAnchorElement.prototype.click = origClick;
+      }
     });
-    A(toast.present, 'candidature : toast « fichier » affiché après génération');
-    A(toast.role, 'candidature : toast = région live (role="status" aria-live="polite")');
-    A(toast.blobHref, 'candidature : lien « Ouvrir » pointe vers l\'URL blob du .docx');
-    A(toast.blank, 'candidature : lien ouvre dans un nouvel onglet (target=_blank rel=noopener)');
-    A(toast.ariaFichier, 'candidature : lien porte le nom du fichier en aria-label');
-    A(toast.hasClose, 'candidature : toast dispose d\'un bouton de fermeture');
-    // Fermeture (✕) → retrait du toast (fondu 220 ms).
-    await p.evaluate(() => document.querySelector('#lfs-toast-file button').click());
-    await p.waitForTimeout(300);
-    const closed = await p.evaluate(() => !document.getElementById('lfs-toast-file'));
-    A(closed, 'candidature : le bouton ✕ retire le toast');
+    A(!!gen.withShare.shared && /\.docx$/.test(gen.withShare.shared), 'candidature : partage natif du .docx si supporté (navigator.share)');
+    A(!gen.withShare.downloaded, 'candidature : pas de téléchargement forcé quand le partage est utilisé');
+    A(gen.withShare.noPopup, 'candidature : plus de pop-up « Candidature générée »');
+    A(gen.withoutShare.downloaded, 'candidature : repli téléchargement si le partage n\'est pas supporté');
+    A(!gen.withoutShare.shared, 'candidature : pas de partage quand non supporté');
 
     // Thème sombre (prefers-color-scheme:dark) : fond de page + cartes foncés,
     // texte clair, bandeau (chrome) qui reste foncé.

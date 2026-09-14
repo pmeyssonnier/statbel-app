@@ -51,7 +51,21 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     // L'ordre transmis au .docx suit l'ordre des entrées (puis n° de groupe).
     const docxOrder = candSelectedGroups().map(g => g.numero);
 
-    return { entries, nbEntries, schaerbeekEntries, gdBeforeHelmetDefault, helmetNowBefore, docxOrder };
+    // Aperçu candidature : le n° de groupe + le quartier apparaissent (« 201 - GD. RUE AU BOIS »).
+    updateCandidaturePreview();
+    const previewHtml = document.getElementById('candGrpPreview').innerHTML;
+    const previewHasGroupQuartier = /201 - GD\. RUE AU BOIS/.test(previewHtml) && /101, 102 - HELMET/.test(previewHtml);
+
+    // .docx (ZIP STORE, non compressé) : la cellule commune contient « commune - quartier ».
+    const data = { groupes: candSelectedGroups(), nom:'', prenom:'', adresse:'', cp:'', commune:'',
+      telPrive:'', heuresPrive:'', telPort:'', heuresPort:'', telBur:'', heuresBur:'',
+      emailPrive:'', emailBur:'', nbGroupes:'2', date:'', title:'', abbrev:'EFT', period:'2026-T4',
+      choix:'groupes', signaturePng:null };
+    const docxStr = candBytesToStr(candGenerateDocxBytes(data));
+    const docxHasQuartier = docxStr.includes('Schaerbeek - HELMET') && docxStr.includes('Schaerbeek - GD. RUE AU BOIS');
+
+    return { entries, nbEntries, schaerbeekEntries, gdBeforeHelmetDefault, helmetNowBefore, docxOrder,
+      previewHasGroupQuartier, docxHasQuartier };
   });
 
   await b.close();
@@ -64,6 +78,8 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['déplacement indépendant : HELMET remonté', r.helmetNowBefore === true],
     ['ordre .docx suit les entrées : 301, puis HELMET (101,102), puis GD. RUE (201)',
       JSON.stringify(r.docxOrder) === JSON.stringify(['301', '101', '102', '201'])],
+    ['aperçu : n° de groupe + quartier affichés', r.previewHasGroupQuartier === true],
+    ['.docx : cellule commune = « commune - quartier »', r.docxHasQuartier === true],
     ['aucune erreur de page', perr.length === 0],
   ];
   let ok = true;

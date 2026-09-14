@@ -893,8 +893,6 @@ const I18N = {
   js_error: { fr:"Erreur : {msg}", nl:"Fout: {msg}", en:"Error: {msg}", de:"Fehler: {msg}" },
   js_no_backup: { fr:"Aucune sauvegarde.", nl:"Geen back-up.", en:"No backup.", de:"Keine Sicherung." },
   js_confirm_clear_save: { fr:"Effacer la sauvegarde locale ?", nl:"Lokale back-up wissen?", en:"Clear the local backup?", de:"Lokale Sicherung löschen?" },
-  js_open: { fr:"Ouvrir", nl:"Openen", en:"Open", de:"Öffnen" },
-  js_open_file_aria: { fr:"Ouvrir le fichier {f}", nl:"Bestand {f} openen", en:"Open the file {f}", de:"Datei {f} öffnen" },
   close: { fr:"Fermer", nl:"Sluiten", en:"Close", de:"Schließen" },
   js_confirm_del_plan: { fr:"Supprimer le planning « {nom} » ?", nl:"Planning « {nom} » verwijderen?", en:"Delete the schedule “{nom}”?", de:"Planung „{nom}“ löschen?" },
   js_map_not_ready: { fr:"Carte non prête.", nl:"Kaart niet gereed.", en:"Map not ready.", de:"Karte nicht bereit." },
@@ -1969,33 +1967,6 @@ function afficherToast(msg) {
 // Word elle-même ; ce lien ne fait que ré-adresser l'URL blob, la plateforme
 // décide de l'ouverture. L'URL blob est gardée vivante jusqu'à la fermeture du
 // toast (✕ ou expiration ~9 s), puis révoquée pour libérer la mémoire.
-function afficherToastFichier(msg, url, nomFichier){
-  const anc=document.getElementById('lfs-toast-file');
-  if(anc){ clearTimeout(anc._timer); if(anc._url){ try{URL.revokeObjectURL(anc._url);}catch(_){} } anc.remove(); }
-  const toast=document.createElement('div'); toast.id='lfs-toast-file'; toast._url=url;
-  toast.setAttribute('role','status'); toast.setAttribute('aria-live','polite');
-  toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
-    'display:flex;align-items:center;gap:12px;max-width:92vw;'+
-    'background:var(--ink);color:#fff;padding:9px 12px 9px 18px;border-radius:22px;'+
-    'font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s;'+
-    'box-shadow:0 4px 16px rgba(0,0,0,.28)';
-  const span=document.createElement('span'); span.textContent=msg; span.style.whiteSpace='nowrap';
-  const lien=document.createElement('a');
-  lien.href=url; lien.target='_blank'; lien.rel='noopener';
-  lien.textContent=t('js_open'); lien.setAttribute('aria-label',tf('js_open_file_aria',{f:nomFichier}));
-  lien.style.cssText='color:#fff;background:var(--cand);padding:5px 13px;border-radius:14px;'+
-    'text-decoration:none;font-weight:700;white-space:nowrap';
-  const fermer=document.createElement('button');
-  fermer.type='button'; fermer.textContent='✕'; fermer.setAttribute('aria-label',t('close'));
-  fermer.style.cssText='background:none;border:none;color:#fff;font-size:15px;cursor:pointer;line-height:1;padding:0 2px';
-  const detruire=()=>{ clearTimeout(toast._timer); if(toast._url){ try{URL.revokeObjectURL(toast._url);}catch(_){} toast._url=null; } toast.style.opacity='0'; setTimeout(()=>toast.remove(),220); };
-  fermer.addEventListener('click', detruire);
-  toast.append(span, lien, fermer);
-  document.body.appendChild(toast);
-  requestAnimationFrame(()=>{ toast.style.opacity='1'; });
-  toast._timer=setTimeout(detruire, 9000);
-}
-
 // Démarrage : charger les plannings du Convertisseur. La sauvegarde/restauration
 // se fait via le menu ⋮ (plus de bannière verte au démarrage).
 (function init() {
@@ -3160,7 +3131,8 @@ function candLocaliserLabels(doc) {
 function candGenerateDocxBytes(data) {
   const rowTpl = candBytesToStr(candB64ToBytes(CAND_DOCX.rowtpl));
   const rowsXml = (data.groupes || []).map(g =>
-    rowTpl.replace('@@GRP@@', candXmlEsc(g.numero)).replace('@@COM@@', candXmlEsc(communeLabel(g.commune)))
+    rowTpl.replace('@@GRP@@', candXmlEsc(g.numero))
+          .replace('@@COM@@', candXmlEsc(communeLabel(g.commune) + (g.quartier ? ' - ' + g.quartier : '')))
   ).join('');
 
   let doc = candBytesToStr(candB64ToBytes(CAND_DOCX.parts['word/document.xml']));
@@ -3381,7 +3353,7 @@ function updateCandidaturePreview(){
         +'<button type="button" class="cand-mv" title="'+candEscHtml(t('js_move_down'))+'" onclick="candMoveCommune('+i+',1)"'+(i===last?' disabled':'')+'>▼</button>'
       +'</span>'
       +'<span class="cand-comm">'+candEscHtml(communeLabel(c.commune))
-        +(c.quartier?'<span class="cand-q">'+candEscHtml(c.quartier)+'</span>':'')
+        +'<span class="cand-q">'+candEscHtml(c.groups.join(', ')+(c.quartier?(' - '+c.quartier):''))+'</span>'
       +'</span>'
       +'<span class="cand-cnt">'+c.count+' '+candEscHtml(t('cand_groupes_word'))+'</span>'
       +'<button type="button" class="cand-del" title="'+candEscHtml(t('js_remove_commune'))+'" aria-label="'+candEscHtml(tf('js_remove_commune_aria',{c:communeLabel(c.commune)+(c.quartier?(' — '+c.quartier):'')}))+'" onclick="candRemoveCommune('+i+')">✕</button>'
@@ -3404,7 +3376,7 @@ function candMarquerErreur(suffix,msg){
   const em=document.getElementById('err-cand'+suffix); if(em){ em.textContent=msg; em.classList.add('show'); }
 }
 function candErrGlobale(msg){ const ge=document.getElementById('candErr'); if(ge){ ge.textContent=msg; ge.hidden=false; } }
-function genererCandidature(){
+async function genererCandidature(){
   const g=candEl;
   // Document officiel : bloquer la génération si des champs requis ou la signature manquent.
   candClearErreurs();
@@ -3447,19 +3419,25 @@ function genererCandidature(){
   data.title=(full+' '+period).trim();
   try{
     const bytes=candGenerateDocxBytes(data);
-    const blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
-    const url=URL.createObjectURL(blob);
+    const TYPE='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     const who=(data.nom||data.prenom)?('_'+(data.nom+data.prenom).replace(/[^A-Za-z0-9]/g,'')):'';
     const slug=(survey||'EFT').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');
     const nomFichier='Candidature_'+slug+who+'.docx';
+    candSaveInfos();
+    // Pas de pop-up applicative. Sur mobile : partage natif (Gmail, WhatsApp,
+    // Word, Enregistrer dans Fichiers…) via l'API Web Share si elle accepte les
+    // fichiers. Sinon (bureau, navigateur non compatible) : téléchargement
+    // classique — l'utilisateur clique lui-même le lien du navigateur.
+    const file=new File([bytes], nomFichier, {type:TYPE});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:nomFichier}); return; }
+      catch(err){ if(err && err.name==='AbortError') return; /* sinon repli téléchargement */ }
+    }
+    const url=URL.createObjectURL(new Blob([bytes],{type:TYPE}));
     const a=document.createElement('a');
     a.href=url; a.download=nomFichier;
     document.body.appendChild(a); a.click(); a.remove();
-    candSaveInfos();
-    // Le .docx part dans les Téléchargements. On propose un lien « Ouvrir » (qui
-    // maintient l'URL blob vivante jusqu'à fermeture du toast) pour éviter d'aller
-    // le rechercher à la main — surtout utile sur mobile.
-    afficherToastFichier('📝 Candidature générée', url, nomFichier);
+    setTimeout(()=>{ try{URL.revokeObjectURL(url);}catch(_){} }, 60000);
   }catch(e){ candErrGlobale(tf('js_gen_error',{msg:e.message})); }
 }
 
@@ -3551,7 +3529,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '201';
+const APP_VERSION = '203';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();

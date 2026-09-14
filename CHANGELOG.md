@@ -22,6 +22,21 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
   montants — conforme à la liste blanche `.gitignore`. Complète `docs/eft-cati-cawi.md`.
 
 ### Modifié
+- **Planner — candidature : plus de pop-up, partage natif ou téléchargement**
+  (Planner `202` → `203`, SW `statbel-v345` → `statbel-v346`) : la génération du .docx
+  n'affiche plus la pop-up « Candidature générée ». Sur mobile, un **partage natif**
+  (API Web Share avec fichier) ouvre la feuille système — Gmail, WhatsApp, Word,
+  Enregistrer dans Fichiers… ; sur bureau / navigateur non compatible, **repli sur le
+  téléchargement** classique que l'utilisateur ouvre lui-même. Helper de toast fichier et
+  clés i18n associées retirés. Test `tests/planner.test.js` adapté (chemins partage /
+  téléchargement).
+- **Planner — candidature : n° de groupe dans l'aperçu et quartier dans le .docx**
+  (Planner `201` → `202`, SW `statbel-v344` → `statbel-v345`) : l'aperçu des groupes
+  retenus affiche désormais le **numéro de groupe** avec le quartier (ex. « Schaerbeek —
+  201 - GD. RUE AU BOIS »), et le formulaire .docx ajoute le **quartier derrière la
+  commune** dans la colonne « Commune » (ex. « 12605 · Schaerbeek - GD. RUE AU BOIS »),
+  pour une meilleure cohérence avec les groupes sélectionnés. Test
+  `tests/candidature-order.test.js` étendu.
 - **Planner — candidature : priorité par commune + quartier (au lieu de commune seule)**
   (Planner `200` → `201`, SW `statbel-v343` → `statbel-v344`) : les groupes retenus ne
   sont plus regroupés en un seul bloc par commune. Chaque **quartier** d'une commune est
