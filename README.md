@@ -19,10 +19,10 @@ l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
 
 | Composant | Version |
 |---|---:|
-| Interviews | **3.77** |
+| Interviews | **3.78** |
 | Convertisseur | **223** |
 | Planner | **207** |
-| Cache PWA / service worker | **statbel-v356** |
+| Cache PWA / service worker | **statbel-v357** |
 
 Le numéro de version est affiché dans Interviews, le Convertisseur et le Planner. Le
 cache versionné du service worker est incrémenté à chaque mise à jour livrée afin de

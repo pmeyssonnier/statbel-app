@@ -93,6 +93,27 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.zeroCibles = z[0].nb_cibles;       // attendu 0 (pas null)
     out.videTaille = z[1].taille_menage;   // vide → null (inchangé)
 
+    // — Validité calendaire (import rdv) : dates impossibles rejetées ; heure invalide écartée.
+    const rdvCsv =
+      'order,first_name,last_name,address,appointment\n' +
+      '1,Ka,Bad,"R, 1000 Bruxelles",31/02/2026 10:00\n' +   // 31 févr. → impossible
+      '2,Ki,NoLeap,"R, 1000 Bruxelles",29/02/2025 10:00\n' + // 2025 non bissextile
+      '3,Ko,Leap,"R, 1000 Bruxelles",29/02/2024 10:00\n' +   // 2024 bissextile → ok
+      '4,Ky,Time,"R, 1000 Bruxelles",10/06/2026 25:99\n' +   // date ok, heure invalide
+      '5,Ke,Time2,"R, 1000 Bruxelles",10/06/2026 24:60\n';   // date ok, heure invalide
+    const rr = parseCSV(rdvCsv).rows;
+    out.rdvBad31   = rr[0].rdv;   // '' (date impossible)
+    out.rdvNonLeap = rr[1].rdv;   // ''
+    out.rdvLeap    = rr[2].rdv;   // '2024-02-29 10:00'
+    out.rdvBadTime = rr[3].rdv;   // '2026-06-10' (heure écartée)
+    out.rdvBadTime2= rr[4].rdv;   // '2026-06-10'
+
+    // — Saisie manuelle (dateFrToISO) : validité calendaire + 0-padding.
+    out.frBad    = dateFrToISO('31/02/2026');   // ''
+    out.frLeapNo = dateFrToISO('29/02/2025');   // ''
+    out.frLeapOk = dateFrToISO('29/02/2024');   // '2024-02-29'
+    out.frPad    = dateFrToISO('5/3/2026');     // '2026-03-05'
+
     return out;
   });
 
@@ -115,6 +136,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.zeroTaille === 0, `import : taille_ménage « 0 » conservée (got ${JSON.stringify(r.zeroTaille)})`);
   A(r.zeroCibles === 0, `import : nb_cibles « 0 » conservé (got ${JSON.stringify(r.zeroCibles)})`);
   A(r.videTaille === null, `import : taille_ménage vide → null (got ${JSON.stringify(r.videTaille)})`);
+  A(r.rdvBad31 === '', `import rdv : 31/02 (impossible) rejeté → "${r.rdvBad31}"`);
+  A(r.rdvNonLeap === '', `import rdv : 29/02/2025 (non bissextile) rejeté → "${r.rdvNonLeap}"`);
+  A(r.rdvLeap === '2024-02-29 10:00', `import rdv : 29/02/2024 (bissextile) accepté → "${r.rdvLeap}"`);
+  A(r.rdvBadTime === '2026-06-10', `import rdv : heure 25:99 écartée, date conservée → "${r.rdvBadTime}"`);
+  A(r.rdvBadTime2 === '2026-06-10', `import rdv : heure 24:60 écartée, date conservée → "${r.rdvBadTime2}"`);
+  A(r.frBad === '', `saisie : 31/02 rejeté → "${r.frBad}"`);
+  A(r.frLeapNo === '', `saisie : 29/02/2025 rejeté → "${r.frLeapNo}"`);
+  A(r.frLeapOk === '2024-02-29', `saisie : 29/02/2024 accepté → "${r.frLeapOk}"`);
+  A(r.frPad === '2026-03-05', `saisie : 5/3/2026 → ISO 0-paddé "${r.frPad}"`);
   A(perr.length === 0, 'aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
 
   await b.close();
