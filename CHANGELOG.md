@@ -12,6 +12,15 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Accessibilité
+- **PDF → GRP — accessibilité alignée sur les autres apps** (SW `statbel-v357` → `statbel-v358`) :
+  `statbel_pdf2grp.html` recevait un traitement a11y minimal. Ajout d'un lien d'évitement
+  (« Aller au contenu »), d'un landmark `<main id="contenu">`, d'un `<nav>` nommé, d'une région
+  de résultat nommée (`aria-labelledby` → titre), de la zone d'aperçu défilable rendue
+  atteignable au clavier (`role="region"` + `tabindex` + libellé), de `scope="col"` sur les
+  en-têtes du tableau et d'une règle `prefers-reduced-motion`. Nouveau test
+  `tests/pdf2grp-a11y.test.js`. (Le module reste FR uniquement — pas de version applicative propre.)
+
 ### Correctifs (audit — suite)
 - **Interviews — validité calendaire des dates de rendez-vous** (Interviews `3.77` → `3.78`,
   SW `statbel-v356` → `statbel-v357`) : la normalisation corrigeait le format mais pas la
