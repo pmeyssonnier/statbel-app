@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.65';
+const APP_VERSION = '3.67';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -744,6 +744,14 @@ function changerLangue(v) {
   majPinUI();
   if (typeof renderFilters === 'function') renderFilters();
   if (typeof renderStatutsEditor === 'function') renderStatutsEditor();
+  // Contenus des Paramètres rendus dynamiquement en JS (donc hors data-i18n) :
+  // option « Toutes les enquêtes » du sélecteur de purge et statut de sauvegarde.
+  // Sans ce rafraîchissement, ils gardaient la langue précédente jusqu'à la
+  // réouverture de la modale.
+  if (document.getElementById('modalSettings')?.classList.contains('open')) {
+    if (typeof majSettingsUI === 'function') majSettingsUI();
+    if (typeof majLastBackupInfo === 'function') majLastBackupInfo();
+  }
   rendu();
   // Rafraîchir aussi la vue active (Suivi / Résumé / Carte)
   if (vueActive === 'rdv') renduRdv();

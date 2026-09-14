@@ -41,6 +41,19 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     url.value = '  https://enquete.be  '; fire(url, 'input');
     out.cawi = settings.cawiUrl;
 
+    // Changement de langue, modale OUVERTE : les contenus rendus en JS (hors
+    // data-i18n) doivent se traduire à chaud, sans réouverture. Régression :
+    // l'option « Toutes les enquêtes » et le statut de sauvegarde restaient
+    // figés dans la langue précédente jusqu'à la réouverture de la modale.
+    localStorage.removeItem('statbel_last_backup');   // → statut « aucune sauvegarde »
+    document.getElementById('modalSettings').classList.add('open');
+    majSettingsUI(); majLastBackupInfo();             // état initial (comme ouvrirSettings)
+    const lang = document.getElementById('setLang');
+    lang.value = 'nl'; fire(lang, 'change');
+    out.allScope   = document.querySelector('#viderCacheScope option[value="__all__"]').textContent;
+    out.backupInfo = document.getElementById('lastBackupInfo').textContent;
+    lang.value = 'fr'; fire(lang, 'change');           // rétablir pour la suite
+
     // click sur bouton : fermerSettings ferme la modale
     document.getElementById('modalSettings').classList.add('open');
     document.querySelector('[data-act="fermerSettings"]').click();
@@ -60,6 +73,8 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['change <select> → settings.theme',  r.theme === 'dark'],
     ['change <select> → settings.csvSep', r.csvSep === ';'],
     ['input champ URL → settings.cawiUrl (trim)', r.cawi === 'https://enquete.be'],
+    ['option « Toutes les enquêtes » traduite à chaud (NL)', /Alle onderzoeken/.test(r.allScope)],
+    ['statut de sauvegarde traduit à chaud (NL)', /Nog geen back-up/.test(r.backupInfo)],
     ['click bouton → fermerSettings',     r.modalClosed === true],
     ['0 handler inline restant (Réglages)', r.inlineRestant === 0],
   ];
