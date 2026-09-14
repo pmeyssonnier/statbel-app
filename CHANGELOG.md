@@ -13,6 +13,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 ## [Non publié]
 
 ### Corrigé
+- **Interviews — autres fuites FR au changement de langue (audit complet)**
+  (Interviews `3.68` → `3.69`, SW `statbel-v338` → `statbel-v339`) : correction des
+  contenus rendus en JS qui restaient en français quelle que soit la langue —
+  panneau « Adresses non géocodées » (message « tout géocodé », option « Toutes les
+  enquêtes », en-tête, replis « adresse vide »/« vide », libellé « envoyé »), aperçu
+  des modèles de rappel (« Objet : »), infobulles RDV de l'historique et placeholder
+  de date (`jj/mm/aaaa`), indicateur d'état de sauvegarde (infobulles ⏳/✓/⚠️), et
+  détail de sauvegarde (« contact(s) », « Aucun contact »). `changerLangue()` rappelle
+  désormais aussi la légende de carte, l'info de sauvegarde du menu ⋮, l'indicateur
+  d'état et le panneau non-géocodées pour les retraduire à chaud. Nouvelles clés i18n
+  fr/nl/en/de. Test `tests/settings-delegation.test.js` étendu.
 - **Interviews — sélecteur d'enquête : « — Aucune enquête — » figé en français**
   (Interviews `3.67` → `3.68`, SW `statbel-v337` → `statbel-v338`) : sans enquête
   chargée, l'option du sélecteur d'enquête (en-tête) restait en français dans toutes

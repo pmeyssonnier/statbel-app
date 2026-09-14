@@ -56,10 +56,12 @@ let _saveErrAlerted = false;
 export function majEtatSauvegarde(etat) {
   const el = document.getElementById('saveState');
   if (!el) return;
+  // t() est un global (pont de compat) : repli FR si absent ou clé non traduite.
+  const tr = (k, fr) => (typeof t === 'function' && t(k) !== k) ? t(k) : fr;
   const map = {
-    saving: { t: '⏳', c: '#888',    title: 'Enregistrement…' },
-    ok:     { t: '✓',  c: '#2e7d32', title: 'Modifications enregistrées' },
-    error:  { t: '⚠️', c: '#c62828', title: 'Erreur de stockage — faites une sauvegarde JSON' },
+    saving: { t: '⏳', c: '#888',    title: tr('save_saving', 'Enregistrement…') },
+    ok:     { t: '✓',  c: '#2e7d32', title: tr('save_ok', 'Modifications enregistrées') },
+    error:  { t: '⚠️', c: '#c62828', title: tr('save_error', 'Erreur de stockage — faites une sauvegarde JSON') },
   }[etat] || {};
   el.textContent = map.t || '';
   el.style.color = map.c || '';

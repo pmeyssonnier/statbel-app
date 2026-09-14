@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.68';
+const APP_VERSION = '3.69';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -752,12 +752,16 @@ function changerLangue(v) {
   if (document.getElementById('modalSettings')?.classList.contains('open')) {
     if (typeof majSettingsUI === 'function') majSettingsUI();
     if (typeof majLastBackupInfo === 'function') majLastBackupInfo();
+    // Panneau « Adresses non géocodées » : rendu en JS, retraduit s'il est peuplé.
+    if (_nonGeoAll && _nonGeoAll.length) renderNonGeo();
   }
+  if (typeof majKebabBackupInfo === 'function') majKebabBackupInfo();  // ligne « Dernière sauvegarde » du menu ⋮
+  { const ss = document.getElementById('saveState'); if (ss && ss.dataset.state) majEtatSauvegarde(ss.dataset.state); }  // tooltip d'état de sauvegarde
   rendu();
   // Rafraîchir aussi la vue active (Suivi / Résumé / Carte)
   if (vueActive === 'rdv') renduRdv();
   else if (vueActive === 'resume') renduResume();
-  else if (vueActive === 'carte' && markersLayer) afficherMarqueurs();
+  else if (vueActive === 'carte' && markersLayer) { renderLegend(); afficherMarqueurs(); }
 }
 
 
@@ -951,23 +955,23 @@ function listerNonGeocodees() {
 function renderNonGeo() {
   const box = document.getElementById('nonGeoList');
   if (!_nonGeoAll.length) {
-    box.innerHTML = '<div class="nongeo-ok">✅ Toutes les adresses sont géocodées.</div>';
+    box.innerHTML = `<div class="nongeo-ok">${esc(t('nongeo_all_ok'))}</div>`;
     return;
   }
   const enqs = [...new Set(_nonGeoAll.map(x => x.enq))];
   const cnt  = e => _nonGeoAll.filter(x => x.enq === e).length;
   const items = _nonGeoFiltre === 'Tous' ? _nonGeoAll : _nonGeoAll.filter(x => x.enq === _nonGeoFiltre);
-  const opts = `<option value="Tous"${_nonGeoFiltre === 'Tous' ? ' selected' : ''}>Toutes les enquêtes (${_nonGeoAll.length})</option>` +
+  const opts = `<option value="Tous"${_nonGeoFiltre === 'Tous' ? ' selected' : ''}>${esc(t('res_allsurveys'))} (${_nonGeoAll.length})</option>` +
     enqs.map(e => `<option value="${esc(e)}"${e === _nonGeoFiltre ? ' selected' : ''}>${esc(e)} (${cnt(e)})</option>`).join('');
   box.innerHTML =
     `<select class="nongeo-filtre" data-act="nonGeoFiltre">${opts}</select>
-     <div class="nongeo-head">${items.length} adresse(s) non géocodée(s) — cliquez pour ouvrir la fiche :</div>` +
+     <div class="nongeo-head">${esc(tf('nongeo_head', { n: items.length }))}</div>` +
     items.map(({enq, idx, c}) =>
       `<button class="nongeo-item" data-act="allerAFiche" data-enq="${esc(enq)}" data-idx="${idx}">
         <span class="nongeo-ref">${esc(enq)} › N°${esc(c.ordre)}</span>
         <span class="nongeo-name">${esc(c.prenom)} ${esc(c.nom)}</span>
-        <span class="nongeo-adr">📍 ${esc(c.adresse||'(adresse vide)')}</span>
-        <span class="nongeo-adr" style="color:#1a73e8">🔎 envoyé : ${esc(adresseSansBoite(c.adresse)||'(vide)')}</span>
+        <span class="nongeo-adr">📍 ${esc(c.adresse||t('nongeo_addr_empty'))}</span>
+        <span class="nongeo-adr" style="color:#1a73e8">🔎 ${esc(t('nongeo_sent'))} ${esc(adresseSansBoite(c.adresse)||t('nongeo_empty'))}</span>
       </button>`
     ).join('');
 }
@@ -1067,7 +1071,7 @@ function apercuModelesRappel() {
   const pre = document.getElementById('reminderTemplatePreview');
   if (pre) {
     pre.textContent = blocs.map(([titre, r]) =>
-      titre + (titre.startsWith('E-MAIL') ? '\nObjet : ' + r.subject : '') + '\n' + r.body
+      titre + (titre.startsWith('E-MAIL') ? '\n' + t('lbl_subject') + ' ' + r.subject : '') + '\n' + r.body
     ).join('\n\n──────────\n\n');
     pre.classList.remove('hidden');
   }

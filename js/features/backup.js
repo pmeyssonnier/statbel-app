@@ -17,7 +17,7 @@ import { apparieurAnciens } from '../data/reimport.js';
 import { enquetesVersEN, enquetesVersInterne } from '../data/serialization.js';
 import { normaliserPays } from '../data/canon.js';
 import { esc } from '../core/util.js';
-import { t, tf, localeApp } from '../core/i18n.js';
+import { t, tf, tPlural, localeApp } from '../core/i18n.js';
 import { GEO_PROVIDERS } from './geocoding.js';
 
 
@@ -99,9 +99,9 @@ export function buildBackupDetailHTML(src, meta) {
       <div class="backup-enq-block">
         <div class="backup-enq-header">
           <span title="${esc(nom)}">${esc(nom)}</span>
-          <span class="backup-enq-total">${tot} contact${tot > 1 ? 's' : ''}</span>
+          <span class="backup-enq-total">${tot} ${tPlural('bk_w_contact', tot)}</span>
         </div>
-        <div class="backup-statuts">${pillsHtml || '<span style="font-size:12px;color:var(--text3)">Aucun contact</span>'}</div>
+        <div class="backup-statuts">${pillsHtml || `<span style="font-size:12px;color:var(--text3)">${esc(t('bk_no_contact'))}</span>`}</div>
       </div>`;
   });
 
