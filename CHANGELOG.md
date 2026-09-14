@@ -12,6 +12,22 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Sécurité / correctifs (audit)
+- **Planner — XSS via le n° de groupe importé corrigée**
+  (Planner `205` → `206`, SW `statbel-v354` → `statbel-v355`) : le n° de groupe issu d'un
+  fichier planning était injecté brut dans un `onclick` et dans `innerHTML` (liste de
+  groupes, vues semaine/mois) → exécution de code possible depuis un fichier piégé. Il passe
+  désormais par un `data-num` échappé + écouteur délégué, et `esc()` sur tous les affichages.
+  Test `tests/planner.test.js` étendu (bloc XSS).
+- **Interviews — rendez-vous corrompus à l'import CSV corrigés**
+  (Interviews `3.75` → `3.76`) : `rdv` (et le `rdv` d'historique) étaient importés au format FR
+  alors que l'app les stocke en interne en ISO `YYYY-MM-DD HH:MM` (cf. `lireRdvFields`) → un
+  aller-retour Export CSV → Import CSV faisait disparaître les rendez-vous du Suivi et de
+  l'édition. Nouveau normaliseur `toISODateTime` ; `tests/date-import.test.js` étendu.
+- **Interviews — alerte « échec de sauvegarde » enfin traduite** : la clé i18n
+  `al_save_failed` (référencée par `idb.js`) n'existait pas → l'alerte bloquante restait
+  toujours française. Ajoutée en fr/nl/en/de.
+
 ### Ajouté
 - **Interviews — modèles de rappel : garde-fous et confidentialité**
   (Interviews `3.74` → `3.75`, SW `statbel-v353` → `statbel-v354`) : quatre améliorations

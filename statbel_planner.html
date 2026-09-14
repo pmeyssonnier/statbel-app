@@ -1325,14 +1325,17 @@ function renderGroupsList() {
   const sorted = [...filtered].sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
   el.innerHTML = sorted.map(r => {
     const on = selected.has(r.numero);
-    return `<div class="grp-tag" 
-      style="${on?'':'background:var(--bg);color:var(--ink2);border:1px solid var(--border);'}"
-      onclick="toggleGroup('${r.numero}')">
-      <span>${r.numero}</span>
+    // n° de groupe = donnée importée : jamais interpolée dans un onclick (→ data-num
+    // échappé + écouteur délégué) ni injectée sans esc() (protection XSS).
+    return `<div class="grp-tag" data-num="${esc(r.numero)}"
+      style="${on?'':'background:var(--bg);color:var(--ink2);border:1px solid var(--border);'}">
+      <span>${esc(r.numero)}</span>
       <span class="gt-qtier">${esc(r.quartier.split(' ').slice(0,3).join(' '))}</span>
       ${on?'<span style="color:#4caf50;font-weight:700">✓</span>':''}
     </div>`;
   }).join('');
+  // Écouteur délégué (réassigné à chaque rendu, donc pas de doublon).
+  el.onclick = e => { const tag = e.target.closest('.grp-tag'); if (tag) toggleGroup(tag.dataset.num); };
 }
 
 // Trier les options d'un select sans perdre les sélections
@@ -1499,8 +1502,8 @@ function renderSemaine() {
 
   rows.forEach(row => {
     html += `<div class="week-grp-label"><div>
-      <div style="font-size:11px;font-weight:700">${row.numero}</div>
-      <div style="font-size:9px;color:var(--ink3)">${row.quartier.split(' ')[0]}</div>
+      <div style="font-size:11px;font-weight:700">${esc(row.numero)}</div>
+      <div style="font-size:9px;color:var(--ink3)">${esc(row.quartier.split(' ')[0])}</div>
     </div></div>`;
     for (let d = 0; d < 7; d++) {
       const day = addDays(mon, d);
@@ -1552,8 +1555,8 @@ function renderMois() {
       <div class="day-num" aria-hidden="true">${d}</div>
       <div class="day-events" aria-hidden="true">
         ${events.slice(0,4).map(({row,v}) => `
-          <div class="day-ev ${VAGUE_COLORS[v.idx-1]}" title="${row.numero} — ${row.quartier}">
-            ${row.numero} V${v.idx}
+          <div class="day-ev ${VAGUE_COLORS[v.idx-1]}" title="${esc(row.numero + ' — ' + row.quartier)}">
+            ${esc(row.numero)} V${v.idx}
           </div>`).join('')}
         ${events.length > 4 ? `<div style="font-size:9px;color:var(--ink3)">+${events.length-4}…</div>` : ''}
       </div>
@@ -3544,7 +3547,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '205';
+const APP_VERSION = '206';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();
