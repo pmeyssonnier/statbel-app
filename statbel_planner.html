@@ -796,6 +796,15 @@ const I18N = {
   f_province: { fr:"Province", nl:"Provincie", en:"Province", de:"Provinz" },
   f_commune: { fr:"Commune", nl:"Gemeente", en:"Municipality", de:"Gemeinde" },
   f_quartier_letter: { fr:"Quartier / Lettre", nl:"Wijk / Letter", en:"Neighbourhood / Letter", de:"Viertel / Buchstabe" },
+  pl_all_provinces: { fr:"Toutes les provinces", nl:"Alle provincies", en:"All provinces", de:"Alle Provinzen" },
+  pl_all_communes: { fr:"Toutes les communes", nl:"Alle gemeenten", en:"All municipalities", de:"Alle Gemeinden" },
+  pl_all_quartiers: { fr:"Tous les quartiers", nl:"Alle wijken", en:"All neighbourhoods", de:"Alle Viertel" },
+  // Export .ics (nom du calendrier + libellés de la description d'événement)
+  ics_calname: { fr:"LFS / EFT — Planning enquêtes", nl:"LFS / EFT — Enquêteplanning", en:"LFS / EFT — Survey schedule", de:"LFS / EFT — Erhebungsplanung" },
+  ics_lbl_group: { fr:"Groupe", nl:"Groep", en:"Group", de:"Gruppe" },
+  ics_lbl_quartier: { fr:"Quartier", nl:"Wijk", en:"Neighbourhood", de:"Viertel" },
+  ics_lbl_wave: { fr:"Vague", nl:"Golf", en:"Wave", de:"Welle" },
+  ics_lbl_weekref: { fr:"Semaine réf.", nl:"Ref. week", en:"Ref. week", de:"Ref. Woche" },
   sort_az: { fr:"A→Z", nl:"A→Z", en:"A→Z", de:"A→Z" },
   sort_za: { fr:"Z→A", nl:"Z→A", en:"Z→A", de:"Z→A" },
   select_all: { fr:"✅ Tout sélectionner", nl:"✅ Alles selecteren", en:"✅ Select all", de:"✅ Alle auswählen" },
@@ -994,10 +1003,18 @@ function changerLangue(v) {
 // Ré-affiche le contenu généré en JS (non couvert par data-i18n) après un changement de langue.
 function rafraichirVuesLangue() {
   try {
+    // Filtres « Sélectionner des groupes » (selProvince/selCommune) : libellés de
+    // provinces/communes reconstruits, sélections préservées.
+    if (typeof allRows !== 'undefined' && allRows && allRows.length && typeof populateFilters === 'function') populateFilters();
     if (typeof renderGroupsList === 'function') renderGroupsList();
     if (typeof renderView === 'function') renderView();
     if (typeof updateCandidaturePreview === 'function') updateCandidaturePreview();
-    if (typeof filtrerPlanning === 'function' && typeof _planRows !== 'undefined' && _planRows && _planRows.length) filtrerPlanning();
+    // Filtres du tableau Planning (planProvince/Commune/Quartier) : « Toutes … » +
+    // libellés retraduits, sélections préservées.
+    if (typeof _planRows !== 'undefined' && _planRows && _planRows.length) {
+      if (typeof appliquerPlanningActif === 'function') appliquerPlanningActif();
+      if (typeof filtrerPlanning === 'function') filtrerPlanning();
+    }
   } catch (e) { /* pas bloquant */ }
 }
 
@@ -1005,17 +1022,40 @@ function rafraichirVuesLangue() {
 // ══════════════════════════════════════════════════════════════════════
 //  RÉGION — DATA / RÉFÉRENCES · provinces, jours/mois, couleurs de vague
 // ══════════════════════════════════════════════════════════════════════
-const PROV_LABELS = {
-  BRU:'Bruxelles', BWA:'Brabant wallon', HAI:'Hainaut', LIE:'Liège',
-  LUX:'Luxembourg', NAM:'Namur', ANV:'Anvers', BFL:'Brabant flamand',
-  FOC:'Flandre occidentale', FOR:'Flandre orientale', LIM:'Limbourg',
-  // variantes d'abréviation rencontrées selon les millésimes
-  VBR:'Brabant flamand', WVL:'Flandre occidentale', OVL:'Flandre orientale',
-  ANT:'Anvers', BXL:'Bruxelles',
+// Libellés de provinces en 4 langues (fr/nl/en/de). Les variantes d'abréviation
+// rencontrées selon les millésimes (ANV/ANT, BFL/VBR, FOC/WVL, FOR/OVL, BRU/BXL)
+// pointent vers la même province.
+const PROV_I18N = {
+  BRU: { fr:'Bruxelles',            nl:'Brussel',          en:'Brussels',        de:'Brüssel' },
+  BXL: { fr:'Bruxelles',            nl:'Brussel',          en:'Brussels',        de:'Brüssel' },
+  BWA: { fr:'Brabant wallon',       nl:'Waals-Brabant',    en:'Walloon Brabant', de:'Wallonisch-Brabant' },
+  HAI: { fr:'Hainaut',              nl:'Henegouwen',       en:'Hainaut',         de:'Hennegau' },
+  LIE: { fr:'Liège',                nl:'Luik',             en:'Liège',           de:'Lüttich' },
+  LUX: { fr:'Luxembourg',           nl:'Luxemburg',        en:'Luxembourg',      de:'Luxemburg' },
+  NAM: { fr:'Namur',                nl:'Namen',            en:'Namur',           de:'Namür' },
+  ANV: { fr:'Anvers',               nl:'Antwerpen',        en:'Antwerp',         de:'Antwerpen' },
+  ANT: { fr:'Anvers',               nl:'Antwerpen',        en:'Antwerp',         de:'Antwerpen' },
+  BFL: { fr:'Brabant flamand',      nl:'Vlaams-Brabant',   en:'Flemish Brabant', de:'Flämisch-Brabant' },
+  VBR: { fr:'Brabant flamand',      nl:'Vlaams-Brabant',   en:'Flemish Brabant', de:'Flämisch-Brabant' },
+  FOC: { fr:'Flandre occidentale',  nl:'West-Vlaanderen',  en:'West Flanders',   de:'Westflandern' },
+  WVL: { fr:'Flandre occidentale',  nl:'West-Vlaanderen',  en:'West Flanders',   de:'Westflandern' },
+  FOR: { fr:'Flandre orientale',    nl:'Oost-Vlaanderen',  en:'East Flanders',   de:'Ostflandern' },
+  OVL: { fr:'Flandre orientale',    nl:'Oost-Vlaanderen',  en:'East Flanders',   de:'Ostflandern' },
+  LIM: { fr:'Limbourg',             nl:'Limburg',          en:'Limburg',         de:'Limburg' },
 };
 function provLabel(code) {
   const c = String(code || '').trim().toUpperCase();
-  return PROV_LABELS[c] || code || '';
+  const e = PROV_I18N[c];
+  return e ? (e[uiLang] || e.fr) : (code || '');
+}
+// Libellé de commune selon la langue : les noms bilingues « FR/NL » (communes
+// bruxelloises et à facilités) affichent la forme correspondant à la langue ;
+// les communes à nom unique (flamandes/wallonnes) sont renvoyées telles quelles.
+// fr/en/de retombent sur la forme primaire (FR) faute de données officielles.
+function communeLabel(c) {
+  const parts = String(c || '').split('/').map(s => s.trim()).filter(Boolean);
+  if (parts.length < 2) return String(c || '');
+  return uiLang === 'nl' ? (parts[1] || parts[0]) : parts[0];
 }
 // Jours (Lun→Dim) et mois localisés — suivent la langue de l'UI.
 const JOURS_I18N = {
@@ -1231,7 +1271,7 @@ function cascadeCommune() {
   const comms = [...new Set(base.map(r => r.commune))].sort();
   // Conserver les sélections encore valides
   const prevComms = getSelValues('selCommune').filter(v => comms.includes(v));
-  fillSelect('selCommune', comms, prevComms);
+  fillSelect('selCommune', comms, prevComms, communeLabel);
   cascadeQuartier();
 }
 
@@ -1247,10 +1287,11 @@ function cascadeQuartier() {
   applyFilters();
 }
 
-function fillSelect(id, items, selected) {
+function fillSelect(id, items, selected, fmt) {
+  const label = typeof fmt === 'function' ? fmt : (v => v);
   const sel = document.getElementById(id);
   sel.innerHTML = items.map(v =>
-    `<option value="${esc(v)}"${selected && selected.includes(v) ? ' selected' : ''}>${esc(v)}</option>`
+    `<option value="${esc(v)}"${selected && selected.includes(v) ? ' selected' : ''}>${esc(label(v))}</option>`
   ).join('');
 }
 
@@ -1700,7 +1741,7 @@ function exportIcs() {
     'PRODID:-//LFS Planner//FR',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:LFS / EFT — Planning enquêtes',
+    'X-WR-CALNAME:' + icsEsc(t('ics_calname')),
     'X-WR-TIMEZONE:Europe/Brussels',
   ];
 
@@ -1714,7 +1755,9 @@ function exportIcs() {
       // DTEND = lendemain du stop (convention iCal : exclusif)
       const dtend   = icsDate(new Date(v.stop.getFullYear(), v.stop.getMonth(), v.stop.getDate() + 1));
       const summary = icsEsc(`LFS ${row.numero} — V${v.idx} (S${v.sem}) ${row.quartier}`);
-      const desc    = icsEsc(`Groupe: ${row.numero}\nCommune: ${row.commune}\nQuartier: ${row.quartier}\nVague: ${v.idx}\nSemaine réf.: S${v.sem}`);
+      const desc    = icsEsc(
+        `${t('ics_lbl_group')}: ${row.numero}\n${t('f_commune')}: ${communeLabel(row.commune)}\n` +
+        `${t('ics_lbl_quartier')}: ${row.quartier}\n${t('ics_lbl_wave')}: ${v.idx}\n${t('ics_lbl_weekref')}: S${v.sem}`);
 
       lines.push(
         'BEGIN:VEVENT',
@@ -1980,11 +2023,6 @@ const PROV_REGION = {
   BWA: 'wallonie', HAI: 'wallonie', LIE: 'wallonie', LUX: 'wallonie', NAM: 'wallonie',
   ANT: 'flandre', LIM: 'flandre', OVL: 'flandre', VBR: 'flandre', WVL: 'flandre',
 };
-const PROV_LABEL = {
-  BRU: 'Bruxelles', BWA: 'Brabant wallon', HAI: 'Hainaut', LIE: 'Liège',
-  LUX: 'Luxembourg', NAM: 'Namur', ANT: 'Antwerpen', LIM: 'Limburg',
-  OVL: 'Oost-Vlaanderen', VBR: 'Vlaams-Brabant', WVL: 'West-Vlaanderen',
-};
 const PLAN_COLS = [
   { label: 'Group' }, { label: 'Commune' }, { label: 'Quartier' },
   { label: 'Wave', num: true }, { label: 'Week', num: true }, { label: 'Start' }, { label: 'Stop' },
@@ -2046,7 +2084,7 @@ function appliquerPlanningActif() {
   document.getElementById('planRenBtn').style.display = actif ? '' : 'none';
   if (!plans.length) {
     _planRows = [];
-    document.getElementById('planProvince').innerHTML = `<option value="">${esc('Toutes les provinces')}</option>`;
+    document.getElementById('planProvince').innerHTML = `<option value="">${esc(t('pl_all_provinces'))}</option>`;
     majCommunesPlan();
     return;
   }
@@ -2058,10 +2096,13 @@ function appliquerPlanningActif() {
     region: regionPourCommune(r.commune, r.prov), d: parseDateFR(r.start),
   }));
   const provs = [...new Set(_planRows.map(r => r.prov).filter(Boolean))].sort();
-  const defProv = provs.includes('BRU') ? 'BRU' : '';
+  // Préserver la province déjà choisie (ex. lors d'un simple changement de langue) ;
+  // sinon défaut Bruxelles si présent.
+  const prevProv = document.getElementById('planProvince').value;
+  const defProv = (prevProv && provs.includes(prevProv)) ? prevProv : (provs.includes('BRU') ? 'BRU' : '');
   document.getElementById('planProvince').innerHTML =
-    `<option value="">${esc('Toutes les provinces')}</option>` +
-    provs.map(p2 => `<option value="${esc(p2)}"${p2 === defProv ? ' selected' : ''}>${esc(PROV_LABEL[p2] || p2)}</option>`).join('');
+    `<option value="">${esc(t('pl_all_provinces'))}</option>` +
+    provs.map(p2 => `<option value="${esc(p2)}"${p2 === defProv ? ' selected' : ''}>${esc(provLabel(p2))}</option>`).join('');
   majCommunesPlan();
 }
 
@@ -2339,8 +2380,8 @@ function majCommunesPlan() {
   const sel = document.getElementById('planCommune');
   const cur = sel.value;
   const communes = [...new Set(_planRows.filter(r => !prov || r.prov === prov).map(r => r.commune))].sort();
-  sel.innerHTML = `<option value="">${esc('Toutes les communes')}</option>` +
-    communes.map(c => `<option${c === cur ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  sel.innerHTML = `<option value="">${esc(t('pl_all_communes'))}</option>` +
+    communes.map(c => `<option value="${esc(c)}"${c === cur ? ' selected' : ''}>${esc(communeLabel(c))}</option>`).join('');
   majQuartiersPlan();
 }
 
@@ -2354,8 +2395,8 @@ function majQuartiersPlan() {
   const quartiers = [...new Set(_planRows
     .filter(r => (!prov || r.prov === prov) && (!comm || r.commune === comm) && r.quartier)
     .map(r => r.quartier))].sort();
-  sel.innerHTML = `<option value="">${esc('Tous les quartiers')}</option>` +
-    quartiers.map(qq => `<option${qq === cur ? ' selected' : ''}>${esc(qq)}</option>`).join('');
+  sel.innerHTML = `<option value="">${esc(t('pl_all_quartiers'))}</option>` +
+    quartiers.map(qq => `<option value="${esc(qq)}"${qq === cur ? ' selected' : ''}>${esc(qq)}</option>`).join('');
 }
 
 function effacerRecherchePlan() {
@@ -3068,10 +3109,49 @@ function candCocherCase(doc, ancre) {
   return doc.replace(re, '<w:sym w:font="Wingdings" w:char="F0FE"/>');
 }
 
+// Traductions des libellés FIXES du formulaire officiel .docx (gabarit de base en
+// français). Les jetons @@…@@ (données) sont conservés et remplis ensuite. À
+// appliquer APRÈS candCocherCase (qui s'ancre sur le texte français des options).
+// NB : traductions de convivialité — le formulaire officiel Statbel en langue
+// régionale peut différer ; à vérifier avant tout usage administratif.
+const CAND_DOCX_I18N = {
+  'CANDIDATURE ENQUETEUR ': { nl:'KANDIDATUUR ENQUÊTEUR ', en:'INTERVIEWER APPLICATION ', de:'BEWERBUNG ALS BEFRAGER ' },
+  'Nom:': { nl:'Naam:', en:'Last name:', de:'Name:' },
+  'Prénom:': { nl:'Voornaam:', en:'First name:', de:'Vorname:' },
+  'Adresse:': { nl:'Adres:', en:'Address:', de:'Adresse:' },
+  'Code postal:': { nl:'Postcode:', en:'Postal code:', de:'Postleitzahl:' },
+  'Commune:': { nl:'Gemeente:', en:'Municipality:', de:'Gemeinde:' },
+  'Téléphone': { nl:'Telefoon', en:'Phone', de:'Telefon' },
+  'Précisez ci-dessous les heures limites d’appel': { nl:'Geef hieronder de uiterste beluren op', en:'Specify the call time limits below', de:'Geben Sie unten die Anrufzeitfenster an' },
+  'privé:': { nl:'privé:', en:'private:', de:'privat:' },
+  'portable:': { nl:'gsm:', en:'mobile:', de:'Mobil:' },
+  'bureau:': { nl:'kantoor:', en:'office:', de:'Büro:' },
+  'Adresse E-mail  privé': { nl:'E-mailadres  privé', en:'E-mail address  private', de:'E-Mail-Adresse  privat' },
+  'bureau': { nl:'kantoor', en:'office', de:'Büro' },
+  'Communes choisies ': { nl:'Gekozen gemeenten ', en:'Chosen municipalities ', de:'Gewählte Gemeinden ' },
+  '(indiquez le numéro des groupes pour @@ABBR@@ ainsi que le nom des communes)': { nl:'(vermeld het groepsnummer voor @@ABBR@@ en de naam van de gemeenten)', en:'(indicate the group number for @@ABBR@@ and the name of the municipalities)', de:'(geben Sie die Gruppennummer für @@ABBR@@ sowie den Namen der Gemeinden an)' },
+  'Num Groupe @@ABBR@@': { nl:'Groepsnr. @@ABBR@@', en:'Group No. @@ABBR@@', de:'Gruppennr. @@ABBR@@' },
+  'Commune': { nl:'Gemeente', en:'Municipality', de:'Gemeinde' },
+  '   Nombre de groupes souhaités : @@NBGROUPES@@': { nl:'   Gewenst aantal groepen: @@NBGROUPES@@', en:'   Desired number of groups: @@NBGROUPES@@', de:'   Gewünschte Anzahl Gruppen: @@NBGROUPES@@' },
+  '   pas intéressé(e) pour effectuer des enquêtes @@ABBR@@ @@PERIOD@@': { nl:'   niet geïnteresseerd om @@ABBR@@ @@PERIOD@@-enquêtes uit te voeren', en:'   not interested in carrying out @@ABBR@@ @@PERIOD@@ surveys', de:'   nicht interessiert an @@ABBR@@ @@PERIOD@@-Erhebungen' },
+  '   n’est plus intéressé(e) pour effectuer des enquêtes ': { nl:'   niet langer geïnteresseerd om enquêtes uit te voeren ', en:'   no longer interested in carrying out surveys ', de:'   nicht mehr an Erhebungen interessiert ' },
+  'Date:': { nl:'Datum:', en:'Date:', de:'Datum:' },
+  'Signature': { nl:'Handtekening', en:'Signature', de:'Unterschrift' },
+};
+function candLocaliserLabels(doc) {
+  if (uiLang === 'fr') return doc;
+  for (const fr in CAND_DOCX_I18N) {
+    const tr = CAND_DOCX_I18N[fr][uiLang];
+    if (!tr) continue;
+    doc = doc.split('>' + fr + '</w:t>').join('>' + candXmlEsc(tr) + '</w:t>');
+  }
+  return doc;
+}
+
 function candGenerateDocxBytes(data) {
   const rowTpl = candBytesToStr(candB64ToBytes(CAND_DOCX.rowtpl));
   const rowsXml = (data.groupes || []).map(g =>
-    rowTpl.replace('@@GRP@@', candXmlEsc(g.numero)).replace('@@COM@@', candXmlEsc(g.commune))
+    rowTpl.replace('@@GRP@@', candXmlEsc(g.numero)).replace('@@COM@@', candXmlEsc(communeLabel(g.commune)))
   ).join('');
 
   let doc = candBytesToStr(candB64ToBytes(CAND_DOCX.parts['word/document.xml']));
@@ -3079,6 +3159,10 @@ function candGenerateDocxBytes(data) {
   // de <w:jc>, son alignement dépend donc du rendu du style (gauche chez certains
   // lecteurs, centré chez d'autres). On force le centrage, cohérent avec l'encadré.
   doc = doc.replace('<w:pStyle w:val="Title"/><w:rPr>', '<w:pStyle w:val="Title"/><w:jc w:val="center"/><w:rPr>');
+  // Case à cocher AVANT la traduction des libellés : candCocherCase s'ancre sur le
+  // texte français des options ; ensuite on traduit les libellés fixes du formulaire.
+  doc = candCocherCase(doc, CAND_CHOIX_ANCRE[data.choix] || CAND_CHOIX_ANCRE.groupes);
+  doc = candLocaliserLabels(doc);   // libellés fixes → langue active (jetons @@…@@ conservés)
   doc = doc.replace('@@ROWS@@', rowsXml);
   const map = {
     '@@NOM@@': data.nom, '@@PRENOM@@': data.prenom, '@@ADRESSE@@': data.adresse,
@@ -3098,9 +3182,6 @@ function candGenerateDocxBytes(data) {
   doc = doc.split('@@TITLE@@').join(candXmlEsc(String(data.title != null ? data.title : '')));
   doc = doc.split('@@ABBR@@').join(candXmlEsc(String(data.abbrev != null ? data.abbrev : '')));
   doc = doc.split('@@PERIOD@@').join(candXmlEsc(String(data.period != null ? data.period : '')));
-
-  // ── Case à cocher : une seule des trois options est cochée (data.choix) ──
-  doc = candCocherCase(doc, CAND_CHOIX_ANCRE[data.choix] || CAND_CHOIX_ANCRE.groupes);
 
   // ── Signature (image PNG optionnelle) ──
   const SIG_RUN = '<w:r><w:t>@@SIGNATURE@@</w:t></w:r>';
@@ -3451,7 +3532,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '197';
+const APP_VERSION = '199';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();

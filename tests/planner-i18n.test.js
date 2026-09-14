@@ -32,6 +32,45 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     out.en_month = (changerLangue('en'), moisNoms()[0]);
     // Persistance partagée avec les autres apps.
     out.stored = (JSON.parse(localStorage.getItem('statbel_settings') || '{}')).lang;
+
+    // Filtres du tableau Planning : défauts « Toutes … » + libellés provinces/communes.
+    _plannings = { P1: { nom:'P1', rows: [
+      { prov:'ANT', commune:'Antwerpen',         quartier:'Q1', start:'01/01/2026', stop:'02/01/2026', code:'G1', wave:'1', sem:'1' },
+      { prov:'BRU', commune:'Bruxelles/Brussel', quartier:'Q2', start:'03/01/2026', stop:'04/01/2026', code:'G2', wave:'1', sem:'1' },
+    ] } };
+    _planActif = 'P1';
+    appliquerPlanningActif();
+    const provOpts = () => [...document.getElementById('planProvince').options].map(o => o.text);
+    changerLangue('nl');
+    out.nl_prov_all = provOpts()[0];
+    out.nl_prov_ant = provOpts().find(x => /Antwerpen/.test(x)) || '';
+    document.getElementById('planProvince').value = ''; majCommunesPlan();   // toutes provinces → toutes communes
+    const commOpts = [...document.getElementById('planCommune').options].map(o => o.text);
+    out.nl_comm_all = commOpts[0];
+    out.nl_comm_bxl = commOpts.find(x => /Brussel|Bruxelles/.test(x)) || '';
+    out.nl_quart_all = [...document.getElementById('planQuartier').options][0].text;
+    changerLangue('de'); out.de_prov_all = provOpts()[0];
+    changerLangue('fr'); out.fr_prov_all = provOpts()[0];
+
+    // Export .docx officiel : libellés fixes traduits, jetons @@…@@ conservés,
+    // case à cocher posée (ancrage sur le texte FR AVANT traduction).
+    const docxDoc = (lang, choix) => {
+      changerLangue(lang);
+      let d = candBytesToStr(candB64ToBytes(CAND_DOCX.parts['word/document.xml']));
+      d = candCocherCase(d, CAND_CHOIX_ANCRE[choix] || CAND_CHOIX_ANCRE.groupes);
+      return candLocaliserLabels(d);
+    };
+    const dNl = docxDoc('nl', 'pas');
+    out.docx_nl_naam     = dNl.includes('>Naam:</w:t>');
+    out.docx_nl_nom_gone = !dNl.includes('>Nom:</w:t>');
+    out.docx_nl_checked  = dNl.includes('F0FE');
+    out.docx_nl_tokens   = dNl.includes('@@ABBR@@') && dNl.includes('@@NBGROUPES@@');
+    out.docx_fr_nom      = docxDoc('fr', 'groupes').includes('>Nom:</w:t>');
+
+    // Export .ics : libellés de description + nom de calendrier traduits.
+    changerLangue('nl');
+    out.ics_desc_nl = [t('ics_lbl_group'), t('f_commune'), communeLabel('Bruxelles/Brussel'), t('ics_lbl_wave')].join('|');
+    out.ics_cal_nl  = t('ics_calname');
     changerLangue('fr');
     return out;
   });
@@ -53,6 +92,20 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     ['DE : mois JS = Januar', r.de_month === 'Januar'],
     ['EN : mois JS = January', r.en_month === 'January'],
     ['langue persistée (partagée)', r.stored === 'en'],
+    ['Planning NL : « Alle provincies »', r.nl_prov_all === 'Alle provincies'],
+    ['Planning NL : province « Antwerpen »', /Antwerpen/.test(r.nl_prov_ant)],
+    ['Planning NL : « Alle gemeenten »', r.nl_comm_all === 'Alle gemeenten'],
+    ['Planning NL : commune « Brussel » (côté NL)', r.nl_comm_bxl === 'Brussel'],
+    ['Planning NL : « Alle wijken »', r.nl_quart_all === 'Alle wijken'],
+    ['Planning DE : « Alle Provinzen »', r.de_prov_all === 'Alle Provinzen'],
+    ['Planning FR : « Toutes les provinces »', r.fr_prov_all === 'Toutes les provinces'],
+    ['.docx NL : libellé « Naam: » traduit', r.docx_nl_naam],
+    ['.docx NL : « Nom: » remplacé', r.docx_nl_nom_gone],
+    ['.docx NL : case à cocher posée (ordre)', r.docx_nl_checked],
+    ['.docx NL : jetons @@…@@ conservés', r.docx_nl_tokens],
+    ['.docx FR : libellé « Nom: » conservé', r.docx_fr_nom],
+    ['.ics NL : description traduite + commune NL', r.ics_desc_nl === 'Groep|Gemeente|Brussel|Golf'],
+    ['.ics NL : nom de calendrier traduit', r.ics_cal_nl === 'LFS / EFT — Enquêteplanning'],
     ['aucune erreur de page', perr.length === 0],
   ];
   let ok = true;
