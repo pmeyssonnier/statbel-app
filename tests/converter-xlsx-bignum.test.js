@@ -43,12 +43,34 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
 
     const rows = parseXlsx(buf);
     const row = rows[0] || {};
+
+    // Cas « fichier passé par Excel » : la cellule d'ID est du TEXTE contenant déjà
+    // la notation scientifique (aucune valeur brute numérique à récupérer).
+    const mkText = (v) => {
+      const w = XLSX.utils.aoa_to_sheet([['NR_HH', 'TX_WEB_USER_ID', 'TX_MB_NM_LST'], ['001', 0, 'X']]);
+      w['A2'] = { t: 's', v: '001' }; w['B2'] = { t: 's', v };
+      const wbk = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wbk, w, 'S');
+      return parseXlsx(XLSX.write(wbk, { type: 'array', bookType: 'xlsx' }))[0]['TX_WEB_USER_ID'];
+    };
+
     return {
       naif,                              // "2.02612E+11" attendu
       uid: row['TX_WEB_USER_ID'],
       pwd: row['TX_WEB_USER_PSWRD'],
       hh:  row['NR_HH'],
       nom: row['TX_MB_NM_LST'],
+      // texte scientifique RÉCUPÉRABLE (mantisse complète) → entier exact
+      textLossless: mkText('3.0071999E+7'),
+      // texte scientifique NON récupérable (mantisse tronquée) → reste scientifique
+      textLossy: mkText('2.02612E+11'),
+      // cellule CAWI : la valeur corrompue est marquée d'un ⚠, la valeur saine est brute
+      cellBad: cawiCellule('2.02612E+11'),
+      cellOk:  cawiCellule('202612345678'),
+      // reparerIdSci : normalisation source-agnostique (CSV/PDF) des ID web
+      idClean:       reparerIdSci('202613605003'),   // sain → inchangé
+      idSciLossless: reparerIdSci('3.0071999E+7'),   // récupérable → entier exact
+      idSciComma:    reparerIdSci('2,02614E+11'),    // virgule (PDF) → point scientifique (repérable)
+      idSciDot:      reparerIdSci('2.02614E+11'),    // perdu → reste scientifique
     };
   });
 
@@ -57,6 +79,16 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.pwd === '30071999', `mot de passe numérique intact (got "${r.pwd}")`);
   A(r.hh === '001', `NR_HH garde ses zéros de tête (got "${r.hh}")`);
   A(r.nom === 'Dubois', `valeur texte inchangée (got "${r.nom}")`);
+
+  A(r.textLossless === '30071999', `texte scientifique complet reconstruit exactement (got "${r.textLossless}")`);
+  A(r.textLossy === '2.02612E+11', `texte scientifique tronqué NON inventé, reste visible (got "${r.textLossy}")`);
+  A(/id-sci/.test(r.cellBad) && /⚠/.test(r.cellBad), `cellule CAWI corrompue marquée ⚠ (got "${r.cellBad}")`);
+  A(r.cellOk === '202612345678', `cellule CAWI saine affichée telle quelle (got "${r.cellOk}")`);
+
+  A(r.idClean === '202613605003', `reparerIdSci : ID sain inchangé (got "${r.idClean}")`);
+  A(r.idSciLossless === '30071999', `reparerIdSci : scientifique récupérable → entier exact (got "${r.idSciLossless}")`);
+  A(r.idSciComma === '2.02614E+11', `reparerIdSci : virgule décimale normalisée en point (got "${r.idSciComma}")`);
+  A(r.idSciDot === '2.02614E+11', `reparerIdSci : perte réelle → reste scientifique (got "${r.idSciDot}")`);
 
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 

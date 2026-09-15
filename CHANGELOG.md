@@ -12,6 +12,68 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — pays/nationalité historiques indécodables (Yougoslavie, URSS…)
+(Convertisseur `230` → `231`, SW `statbel-v369` → `statbel-v370`)
+- **58 codes pays** produisibles par l'import PDF n'étaient pas décodés par le Convertisseur →
+  colonnes Pays de naissance / Nationalité **vides** (signalé pour « Yougoslavie », code 169).
+- **États disparus** (sans ISO3 moderne unique) ont désormais leur entrée dédiée, affichée sans
+  drapeau et marquée « (ex) » : Yougoslavie, URSS, Tchécoslovaquie, Serbie-et-Monténégro,
+  Antilles néerlandaises, Ruanda-Urundi, Sénégambie, et Jérusalem.
+- **Renommages / codes coloniaux / synonymes** rattachés au pays actuel via `NLTY_ALIAS` :
+  Zaïre & Congo belge → RD Congo, Haute-Volta → Burkina Faso, Rhodésie → Zimbabwe,
+  Birmanie → Myanmar, Kampuchea/Rép. Khmère → Cambodge, Congo (République) → Congo,
+  variantes coloniales « (Portugal)/(France)/(Royaume-Uni) », etc.
+- Garde de non-régression : `pdfgrp-pays.test.js` vérifie que **tout** code pays du PDF est
+  décodable par le Convertisseur (plus aucun champ pays/nationalité vide par code inconnu).
+
+### Convertisseur — import PDF : pays de naissance vide
+(Convertisseur `229` → `230`, SW `statbel-v368` → `statbel-v369`)
+- Le **pays de naissance** (colonne PDF « Country birth ») était **jeté** à l'import PDF
+  (`CD_MB_BTH_REFNIS` forcé à vide) → colonne « Pays de naissance » toujours vide, y compris pour
+  « Congo (Rép. dém.) ». `js/pdfgrp.js` mappe désormais ce pays vers le code NIS : natif étranger →
+  code pays complet (Congo → 306 → 🇨🇩 RD Congo) ; natif belge → « 150 » (pays Belgique, sans commune,
+  que le PDF n'expose pas). Les pays de naissance inconnus sont signalés comme les nationalités.
+
+### Convertisseur — import PDF : identifiants CAWI scientifiques + pays « Congo (Rép. dém.) » vide
+(Convertisseur `228` → `229`, SW `statbel-v367` → `statbel-v368`)
+- **ID web (toutes sources)** : la réparation de la notation scientifique s'applique désormais à
+  l'endroit unique où l'ID entre dans le résultat (référent), donc aussi aux imports **CSV** et
+  **PDF**, pas seulement XLSX. Tolère la **virgule décimale** des listings PDF (« 2,02614E+11 »).
+  Reconstruction **exacte** quand la mantisse est complète ; sinon la valeur reste scientifique et
+  est signalée (⚠ + bandeau) plutôt que « réparée » avec des chiffres inventés.
+- **Nationalité (PDF)** : « **Congo (Rép. dém.)** » (et « Rép. pop. », « Rép. Féd. »…) tombait dans un
+  champ vide — l'abréviation ne correspondait à aucun libellé officiel et le repli « sans parenthèses »
+  était ambigu (3 « Congo »). `js/pdfgrp.js` rétablit maintenant les mots pleins (Rép.→République,
+  dém.→démocratique, pop.→populaire, féd.→fédérale) et gère les sigles usuels (RDC, RD Congo).
+- Tests : nouveau `pdfgrp-pays.test.js` (résolution des pays abrégés) ; `converter-xlsx-bignum` étendu
+  (normalisation source-agnostique des ID, virgule décimale).
+
+### Convertisseur — identifiants CAWI en notation scientifique : récupération sûre + signalement
+(Convertisseur `227` → `228`, SW `statbel-v366` → `statbel-v367`)
+- **Bug** : dans la colonne **Identifiant CAWI**, `TX_WEB_USER_ID` pouvait rester affiché en
+  notation scientifique (« 2.02612E+11 »). Cause : quand le `.xlsx` source a été **ouvert/enregistré
+  dans Excel**, la colonne d'ID devient du **texte** déjà scientifique — la réparation `cellTexte`
+  (qui s'appuyait sur la valeur brute numérique) ne s'appliquait pas au texte.
+- **Import** : `cellTexte` reconstruit désormais aussi l'entier depuis une **cellule texte**
+  scientifique — **uniquement quand c'est exact** (mantisse complète, ex. `3.0071999E+7` → `30071999`,
+  calcul sur chaînes, sans flottant). Si la mantisse est tronquée (`2.02612E+11`), les chiffres sont
+  **définitivement perdus** : on n'invente pas de zéros, la valeur reste scientifique.
+- **Affichage** : une valeur CAWI restée scientifique (corrompue, inutilisable) est **marquée d'un ⚠**
+  avec une info-bulle, au lieu d'être présentée comme un login valide.
+- **Avertissement** : le bandeau « identifiants corrompus » explique désormais que la perte vient du
+  **fichier source** (réexporter les colonnes d'ID au format Texte) — ré-importer le même fichier n'y
+  change rien. Textes en 4 langues (fr/nl/en/de).
+
+### Convertisseur — toutes les colonnes importées dans « Personnaliser l'affichage »
+(Convertisseur `226` → `227`, SW `statbel-v365` → `statbel-v366`)
+- Le panneau **Personnaliser l'affichage → Colonnes** expose désormais **tous les champs
+  importés du référent** (activables, masqués par défaut) : **identifiant** et **mot de passe
+  CAWI** (`TX_WEB_USER_ID` / `TX_WEB_USER_PSWRD`), ainsi que sexe, âge, date de naissance,
+  pays/commune de naissance, nationalité et état civil. Les rendus (drapeaux, icônes) et
+  libellés sont repris du détail ménage. La vue par défaut est inchangée.
+- Doc : le README parlait encore de « Quatre applications » (corrigé en trois après le
+  retrait de la page PDF → GRP).
+
 ### Retiré — page autonome PDF → GRP
 (SW `statbel-v364` → `statbel-v365`)
 - La page `statbel_pdf2grp.html` (outil autonome d'extraction PDF → GRP) est **supprimée** :

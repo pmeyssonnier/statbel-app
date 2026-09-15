@@ -304,6 +304,7 @@
   tr:nth-child(even) td { background: var(--row-alt); }
   td.ordre { font-weight: bold; color: var(--accent); }
   td.vide  { color: var(--text3); font-style: italic; }
+  .id-sci  { color: var(--err-text); white-space: nowrap; cursor: help; }
 
   /* ── Boutons téléchargement ── */
   .btns { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -936,6 +937,9 @@ const I18N = {
   tip_sms:  { fr:"Envoyer un SMS", nl:"Sms versturen", en:"Send SMS", de:"SMS senden" },
   th_household: { fr:"Ménage", nl:"Huishouden", en:"Household", de:"Haushalt" },
   th_collect: { fr:"Méthode de collecte", nl:"Verzamelmethode", en:"Collection method", de:"Erhebungsmethode" },
+  th_cawi_id: { fr:"Identifiant CAWI", nl:"CAWI-gebruikersnaam", en:"CAWI user ID", de:"CAWI-Benutzerkennung" },
+  th_cawi_pwd: { fr:"Mot de passe CAWI", nl:"CAWI-wachtwoord", en:"CAWI password", de:"CAWI-Passwort" },
+  cawi_sci_tip: { fr:"Identifiant corrompu (notation scientifique) : les chiffres ont été écrasés par Excel dans le fichier source — inutilisable. Réexportez la source avec cette colonne au format Texte.", nl:"Beschadigde ID (wetenschappelijke notatie): de cijfers zijn door Excel in het bronbestand overschreven — onbruikbaar. Exporteer de bron opnieuw met deze kolom als Tekst.", en:"Corrupted ID (scientific notation): the digits were overwritten by Excel in the source file — unusable. Re-export the source with this column formatted as Text.", de:"Beschädigte Kennung (wissenschaftliche Notation): Excel hat die Ziffern in der Quelldatei überschrieben — unbrauchbar. Exportieren Sie die Quelle erneut mit dieser Spalte im Textformat." },
   collect_cati: { fr:"📞 Téléphone (CATI)", nl:"📞 Telefoon (CATI)", en:"📞 Phone (CATI)", de:"📞 Telefon (CATI)" },
   collect_cawi: { fr:"💻 Internet (CAWI)", nl:"💻 Internet (CAWI)", en:"💻 Web (CAWI)", de:"💻 Internet (CAWI)" },
   admin_year: { fr:"Année", nl:"Jaar", en:"Year", de:"Jahr" },
@@ -957,7 +961,7 @@ const I18N = {
   warn_missing_cols_title: { fr:"⚠️ Certaines colonnes attendues sont absentes", nl:"⚠️ Sommige verwachte kolommen ontbreken", en:"⚠️ Some expected columns are missing", de:"⚠️ Einige erwartete Spalten fehlen" },
   warn_missing_cols_suffix: { fr:"— les données concernées seront vides :", nl:"— de betreffende gegevens blijven leeg:", en:"— related data will be empty:", de:"— betroffene Daten bleiben leer:" },
   warn_sci_id_title: { fr:"⚠️ Identifiants web corrompus", nl:"⚠️ Beschadigde web-ID's", en:"⚠️ Corrupted web IDs", de:"⚠️ Beschädigte Web-Kennungen" },
-  warn_sci_id_body: { fr:"{n} identifiant(s) sont en notation scientifique (ex. « {ex} ») — précision perdue. Cette enquête a été importée avec une version antérieure au correctif : ré-importez le fichier .xlsx d'origine (glisser-déposer) pour la corriger.", nl:"{n} ID('s) staan in wetenschappelijke notatie (bv. « {ex} ») — precisie verloren. Deze enquête is geïmporteerd met een versie van vóór de correctie: herimporteer het originele .xlsx-bestand (slepen) om ze te herstellen.", en:"{n} ID(s) are in scientific notation (e.g. \"{ex}\") — precision lost. This survey was imported with a version predating the fix: re-import the original .xlsx file (drag & drop) to repair it.", de:"{n} Kennung(en) in wissenschaftlicher Notation (z. B. „{ex}“) — Genauigkeit verloren. Diese Erhebung wurde mit einer Version vor der Korrektur importiert: Importieren Sie die ursprüngliche .xlsx-Datei erneut (Drag & Drop), um sie zu reparieren." },
+  warn_sci_id_body: { fr:"{n} identifiant(s) sont en notation scientifique (ex. « {ex} ») : Excel a écrasé les chiffres DANS le fichier source — précision définitivement perdue, ces logins CAWI sont inutilisables. Ré-importer le même fichier n'y changera rien : il faut réexporter la source avec les colonnes d'identifiants au format Texte (ou obtenir un export non ouvert dans Excel).", nl:"{n} ID('s) staan in wetenschappelijke notatie (bv. « {ex} »): Excel heeft de cijfers IN het bronbestand overschreven — precisie definitief verloren, deze CAWI-logins zijn onbruikbaar. Hetzelfde bestand opnieuw importeren helpt niet: exporteer de bron opnieuw met de ID-kolommen als Tekst (of gebruik een export die niet in Excel is geopend).", en:"{n} ID(s) are in scientific notation (e.g. \"{ex}\"): Excel overwrote the digits INSIDE the source file — precision is permanently lost and these CAWI logins are unusable. Re-importing the same file won't help: re-export the source with the ID columns formatted as Text (or get an export that hasn't been opened in Excel).", de:"{n} Kennung(en) in wissenschaftlicher Notation (z. B. „{ex}“): Excel hat die Ziffern IN der Quelldatei überschrieben — die Genauigkeit ist dauerhaft verloren, diese CAWI-Logins sind unbrauchbar. Dieselbe Datei erneut zu importieren hilft nicht: Exportieren Sie die Quelle erneut mit den Kennungsspalten im Textformat (oder verwenden Sie einen nicht in Excel geöffneten Export)." },
   plan_not_found: { fr:"introuvable dans les plannings chargés", nl:"niet gevonden in de geladen plannings", en:"not found in the loaded plannings", de:"in den geladenen Planungen nicht gefunden" },
 
   // ── Export ────────────────────────────────────────────────────────
@@ -1576,6 +1580,18 @@ const PAYS_I18N = {
   "ZAF": { nis:"325", iso2:"ZA", fr:"Afrique du Sud /Rép. d'/", nl:"Zuid-Afrika /Rep./", en:"South Africa", de:"Südafrikanische Republik" },
   "ZMB": { nis:"335", iso2:"ZM", fr:"Zambie", nl:"Zambia", en:"Zambia", de:"Sambia" },
   "ZWE": { nis:"344", iso2:"ZW", fr:"Zimbabwe", nl:"Zimbabwe", en:"Zimbabwe", de:"Zimbabwe" },
+  // États DISPARUS / sans ISO3 moderne unique — codes NIS encore présents dans les
+  // listings (lieu de naissance des personnes nées avant la dissolution). Pas de
+  // drapeau (iso2 vide) ; nom historique marqué « (ex) ». Les États successeurs
+  // gardent leurs propres codes ; ceux-ci ne s'y confondent pas.
+  "YUG": { nis:"169", iso2:"", fr:"Yougoslavie (ex)", nl:"Joegoslavië (ex)", en:"Yugoslavia (former)", de:"Jugoslawien (ehem.)" },
+  "SUN": { nis:"172", iso2:"", fr:"URSS (ex)", nl:"USSR (ex)", en:"USSR (former)", de:"UdSSR (ehem.)" },
+  "CSK": { nis:"130", iso2:"", fr:"Tchécoslovaquie (ex)", nl:"Tsjecho-Slowakije (ex)", en:"Czechoslovakia (former)", de:"Tschechoslowakei (ehem.)" },
+  "SCG": { nis:"132", iso2:"", fr:"Serbie-et-Monténégro (ex)", nl:"Servië en Montenegro (ex)", en:"Serbia and Montenegro (former)", de:"Serbien und Montenegro (ehem.)" },
+  "ANT": { nis:"482", iso2:"", fr:"Antilles néerlandaises (ex)", nl:"Nederlandse Antillen (ex)", en:"Netherlands Antilles (former)", de:"Niederländische Antillen (ehem.)" },
+  "RUU": { nis:"361", iso2:"", fr:"Ruanda-Urundi (ex)", nl:"Ruanda-Urundi (ex)", en:"Ruanda-Urundi (former)", de:"Ruanda-Urundi (ehem.)" },
+  "SGB": { nis:"348", iso2:"", fr:"Sénégambie (ex)", nl:"Senegambia (ex)", en:"Senegambia (former)", de:"Senegambia (ehem.)" },
+  "JRL": { nis:"272", iso2:"", fr:"Jérusalem", nl:"Jeruzalem", en:"Jerusalem", de:"Jerusalem" },
 };
 
 // ── Index dérivés (générés une seule fois à partir de PAYS_I18N) ─────────
@@ -1589,6 +1605,59 @@ for (const [iso, v] of Object.entries(PAYS_I18N)) { if (v.nis) NLTY_ISO[v.nis] =
 const NLTY_ALIAS = {
   '148': 'MKD',   // Macédoine : ancien code (avant 12/02/2019), désormais 154 = North Macedonia
   '822': 'AFG',   // Afghanistan (code non confirmé dans la nomenclature pays officielle — à vérifier, cf. doc Statbel GRP)
+  // Codes NIS anciens, coloniaux ou synonymes présents dans les listings → même
+  // pays qu'aujourd'hui (renommage, décolonisation, code alternatif). Voir la table
+  // PAYS de js/pdfgrp.js pour les libellés sources.
+  '104': 'DEU',   // Allemagne (RDA) → Allemagne
+  '173': 'DEU',   // Allemagne (code alternatif)
+  '202': 'KHM',   // République Khmère → Cambodge
+  '211': 'KHM',   // Kampuchea → Cambodge
+  '232': 'MMR',   // Birmanie → Myanmar
+  '233': 'IRN',   // Iran (code alternatif)
+  '236': 'VNM',   // Vietnam (Rép. dém.) → Vietnam
+  '279': 'VNM',   // Vietnam (Rép.) → Vietnam
+  '263': 'YEM',   // Yémen (Rép. arabe) → Yémen
+  '265': 'YEM',   // Yémen (Rép. pop. dém.) → Yémen
+  '269': 'ARE',   // Abu Dhabi → Émirats arabes unis
+  '273': 'PSE',   // Territoire palestinien → Palestine
+  '280': 'HKG',   // Hong Kong (R.-U.) → Hong Kong
+  '281': 'MAC',   // Macao (Portugal) → Macao
+  '282': 'TLS',   // Timor (Portugal) → Timor-Leste
+  '316': 'BFA',   // Haute-Volta → Burkina Faso
+  '326': 'ZWE',   // Rhodésie → Zimbabwe
+  '347': 'SWZ',   // Swaziland → Eswatini
+  '366': 'SWZ',   // Eswatini (code alternatif)
+  '395': 'SWZ',   // Swaziland (Protectorat britannique) → Eswatini
+  '359': 'COD',   // Congo belge → RD Congo
+  '364': 'COD',   // Zaïre → RD Congo
+  '362': 'COG',   // Congo (République) → Congo (Brazzaville)
+  '380': 'DJI',   // Afars et Issas (France) → Djibouti
+  '381': 'AGO',   // Angola (Portugal) → Angola
+  '382': 'AGO',   // Cabinda → Angola
+  '383': 'MOZ',   // Mozambique (Portugal) → Mozambique
+  '385': 'CPV',   // Îles du Cap-Vert (Portugal) → Cap-Vert
+  '386': 'COM',   // Comores (France) → Comores
+  '390': 'SYC',   // Seychelles (R.-U.) → Seychelles
+  '391': 'GNB',   // Guinée portugaise → Guinée-Bissau
+  '392': 'GNQ',   // Fernando Poo → Guinée équatoriale
+  '393': 'STP',   // Sao Tomé-et-Principe (Portugal) → Sao Tomé-et-Principe
+  '396': 'ZAF',   // Transkei → Afrique du Sud
+  '397': 'ZAF',   // Bophutatswana → Afrique du Sud
+  '398': 'ESP',   // Îles Canaries (Espagne) → Espagne
+  '399': 'PRT',   // Madère (Portugal) → Portugal
+  '478': 'VIR',   // Îles Vierges américaines
+  '479': 'VGB',   // Îles Vierges britanniques
+  '480': 'DMA',   // Dominica (R.-U.) → Dominique
+  '484': 'BHS',   // Bahamas (R.-U.) → Bahamas
+  '491': 'ATG',   // Antigua (R.-U.) → Antigua
+  '494': 'KNA',   // Saint-Kitts-et-Nevis (R.-U.)
+  '499': 'BLM',   // Saint-Barthélemy (France)
+  '583': 'SUR',   // Guyane néerlandaise → Suriname
+  '606': 'WSM',   // Samoa → Samoa occidentales
+  '607': 'KIR',   // Kiribati → Îles Gilbert
+  '618': 'VUT',   // Nouvelles-Hébrides → Vanuatu
+  '685': 'NIU',   // Niué (Nouvelle-Zélande) → Niue
+  '687': 'COK',   // Îles Cook (Nouvelle-Zélande) → Îles Cook
 };
 for (const [code, iso] of Object.entries(NLTY_ALIAS)) { if (!NLTY_ISO[code]) NLTY_ISO[code] = iso; }
 
@@ -5062,8 +5131,8 @@ function convertir(srcRows) {
       gsm: r['NR_PHONE']||'', email: r['TX_EMAIL']||'', notes: '',
       // Méthode de collecte souhaitée (CATI/CAWI) + identifiants d'accès web du ménage.
       collect_method: (r['CD_WSH_CLCT_MTHD']||'').trim(),
-      web_user_id:    (r['TX_WEB_USER_ID']||'').trim(),
-      web_user_pwd:   (r['TX_WEB_USER_PSWRD']||'').trim(),
+      web_user_id:    reparerIdSci(r['TX_WEB_USER_ID']),
+      web_user_pwd:   reparerIdSci(r['TX_WEB_USER_PSWRD']),
     };
   });
 
@@ -5433,7 +5502,6 @@ function afficher(res) {
   // inviter à un vrai ré-import du .xlsx, plutôt que de re-télécharger un CSV avec des
   // logins CAWI inutilisables.
   const elSci = document.getElementById('idScientifiqueWarn');
-  const RE_SCI_ID = /^[+-]?\d+(?:\.\d+)?[eE][+-]?\d+$/;
   const champSci = r => RE_SCI_ID.test((r.web_user_id || '').trim()) ? r.web_user_id
                       : RE_SCI_ID.test((r.web_user_pwd || '').trim()) ? r.web_user_pwd : '';
   let nSci = 0, exSci = '';
@@ -6074,6 +6142,18 @@ function renderBloc(id, ctx) {
   const fn = RENDERERS[def.chart]; if (fn) fn(def.el, def.data(ctx), def.drill);
 }
 
+// Cellule d'un identifiant/mot de passe web CAWI. Une valeur restée en notation
+// scientifique (« 2.02612E+11 ») est CORROMPUE et inutilisable (Excel a écrasé les
+// chiffres) : on la marque d'un ⚠ + info-bulle plutôt que de l'afficher comme un login
+// valide. Sinon : valeur telle quelle (ou tiret si vide).
+function cawiCellule(v) {
+  const s = (v || '').trim();
+  if (!s) return '<span class="vide">—</span>';
+  if (RE_SCI_ID.test(s))
+    return `<span class="id-sci" title="${escHtml(t('cawi_sci_tip'))}">⚠ ${escHtml(s)}</span>`;
+  return escHtml(s);
+}
+
 // Colonnes du tableau de contacts de l'Aperçu — {libellé i18n, <th>, cellule(r)}.
 // La colonne d'expansion (▸) est structurelle : toujours présente, hors config.
 const COL_DEFS = {
@@ -6102,9 +6182,32 @@ const COL_DEFS = {
                return `<td style="white-space:nowrap">${info
                  ? `<span style="display:inline-block;padding:1px 9px;border-radius:10px;font-size:11px;font-weight:600;background:${info.bg};color:${info.fg}">${escHtml(t(info.key))}</span>`
                  : escHtml(s)}</td>`; } },
+  // Colonnes optionnelles (désactivées par défaut) — tous les champs importés du référent,
+  // activables via « Personnaliser l'affichage → Colonnes ». Démographie reprise des mêmes
+  // rendus que le détail ménage ; accès web CAWI (identifiant / mot de passe).
+  sexe:        { i18n: 'hh_gender',             th: '<th style="min-width:90px" data-i18n="hh_gender">Gender</th>',
+                 cell: r => `<td style="white-space:nowrap">${r.sexe ? sexeIcone(r.sexe) + ' ' + escHtml(SEXE_LBL[r.sexe] || r.sexe) : '<span class="vide">—</span>'}</td>` },
+  age:         { i18n: 'hh_age',                th: '<th style="min-width:50px" data-i18n="hh_age">Age</th>',
+                 cell: r => `<td style="text-align:center">${r.age !== '' ? escHtml(r.age) : '<span class="vide">—</span>'}</td>` },
+  birth_date:  { i18n: 'hh_birthdate',          th: '<th style="min-width:96px" data-i18n="hh_birthdate">Birth date</th>',
+                 cell: r => `<td style="white-space:nowrap">${escHtml(fmtDateNaiss(r.birth_date)) || '<span class="vide">—</span>'}</td>` },
+  birth_country:{ i18n: 'hh_country_birth',     th: '<th style="min-width:120px" data-i18n="hh_country_birth">Country birth</th>',
+                 cell: r => `<td>${r.birth_country ? paysDrapeau(r.birth_country) : '<span class="vide">—</span>'}</td>` },
+  birth_commune:{ i18n: 'hh_municipality_birth', th: '<th style="min-width:130px" data-i18n="hh_municipality_birth">Municipality birth</th>',
+                 cell: r => `<td>${escHtml(r.birth_commune) || '<span class="vide">—</span>'}</td>` },
+  nationality: { i18n: 'hh_nationality',        th: '<th style="min-width:120px" data-i18n="hh_nationality">Nationality</th>',
+                 cell: r => `<td>${r.nationality ? paysDrapeau(r.nationality) : '<span class="vide">—</span>'}</td>` },
+  marital:     { i18n: 'hh_marital',            th: '<th style="min-width:130px" data-i18n="hh_marital">Marital status</th>',
+                 cell: r => `<td>${r.marital_status ? mrtlIcone(r.marital_status) + ' ' + escHtml(r.marital_status) : '<span class="vide">—</span>'}</td>` },
+  cawi_id:     { i18n: 'th_cawi_id',            th: '<th style="min-width:130px" data-i18n="th_cawi_id">CAWI user ID</th>',
+                 cell: r => `<td style="font-family:monospace;font-size:11px">${cawiCellule(r.web_user_id)}</td>` },
+  cawi_pwd:    { i18n: 'th_cawi_pwd',            th: '<th style="min-width:120px" data-i18n="th_cawi_pwd">CAWI password</th>',
+                 cell: r => `<td style="font-family:monospace;font-size:11px">${cawiCellule(r.web_user_pwd)}</td>` },
 };
-const COL_ALL = ['ordre', 'contact', 'adresse', 'gsm', 'email', 'menage', 'collect'];
-// Colonnes affichées par défaut (méthode de collecte = optionnelle, à activer via Personnaliser).
+const COL_ALL = ['ordre', 'contact', 'adresse', 'gsm', 'email', 'menage', 'collect',
+                 'sexe', 'age', 'birth_date', 'birth_country', 'birth_commune', 'nationality', 'marital', 'cawi_id', 'cawi_pwd'];
+// Colonnes affichées par défaut ; les autres (méthode de collecte, démographie, accès CAWI…)
+// sont optionnelles, à activer via Personnaliser.
 const COL_ON_DEFAUT = ['ordre', 'contact', 'adresse', 'gsm', 'email', 'menage'];
 
 // Colonnes du détail du ménage (accordéon déplié). Chaque cellule reçoit un
@@ -6871,19 +6974,57 @@ function parseXlsx(arrayBuffer) {
   });
 }
 
-// Texte d'une cellule Excel, en réparant la notation scientifique : quand la valeur
-// FORMATÉE ressemble à « 2.02612E+11 » (ID numérique long affiché en « Standard ») et
-// que la valeur BRUTE est un entier fini, on reconstruit l'entier complet plutôt que
-// la forme tronquée à 6 chiffres significatifs. Sinon on garde le texte formaté (dates,
-// codes, décimaux… inchangés).
+// Identifiant/mot de passe web « cassé » en notation scientifique (ex.
+// « 2.02612E+11 ») : Excel a écrasé un long entier. Regex partagée par la
+// réparation d'import (cellTexte), l'avertissement d'affichage et les colonnes CAWI.
+const RE_SCI_ID = /^[+-]?\d+(?:\.\d+)?[eE][+-]?\d+$/;
+
+// Reconstruit l'entier EXACT dénoté par une notation scientifique, par calcul sur
+// CHAÎNES (aucun flottant → aucune perte). Renvoie null si :
+//  - la valeur n'est pas un entier scientifique (garde des décimales), OU
+//  - la mantisse ne porte pas assez de chiffres pour couvrir l'exposant : il
+//    faudrait « inventer » des zéros de fin (précision réellement perdue, non
+//    récupérable) → on préfère laisser la notation scientifique visible.
+// Ex. « 3.0071999E+7 » → "30071999" (exact) ; « 2.02612E+11 » → null (mantisse trop courte).
+function sciVersEntier(s) {
+  const m = /^([+-]?)(\d+)(?:\.(\d+))?[eE]\+?(\d+)$/.exec(String(s).trim());
+  if (!m) return null;
+  const [, signe, ent, frac = '', expTxt] = m;
+  const exp = parseInt(expTxt, 10);
+  if (exp !== frac.length) return null;          // décimales restantes, ou zéros à inventer
+  return (signe === '-' ? '-' : '') + ent + frac; // reconstruction exacte
+}
+
+// Répare un identifiant/mot de passe web reçu de N'IMPORTE QUELLE source (XLSX déjà
+// nettoyé par cellTexte, CSV brut, ou PDF) : tolère la virgule décimale (locale FR des
+// listings PDF) et reconstruit l'entier EXACT quand la mantisse est complète ; sinon
+// laisse la notation scientifique (point décimal normalisé) pour que l'avertissement
+// « identifiants corrompus » et le marquage ⚠ s'affichent. Valeur saine → inchangée.
+function reparerIdSci(v) {
+  const s = (v == null ? '' : String(v)).trim();
+  const sd = s.replace(',', '.');                // « 2,02614E+11 » → « 2.02614E+11 »
+  if (!RE_SCI_ID.test(sd)) return s;
+  const exact = sciVersEntier(sd);
+  return exact !== null ? exact : sd;
+}
+
+// Texte d'une cellule Excel, en réparant la notation scientifique des ID numériques
+// longs (« 2.02612E+11 »). Deux cas :
+//  1. cellule NUMÉRIQUE : la valeur BRUTE (raw:true) porte l'entier complet → on la
+//     reformate en entier (récupération sûre et intégrale).
+//  2. cellule TEXTE contenant déjà « 2.02612E+11 » (fichier passé par Excel) : plus de
+//     valeur brute exploitable → on ne reconstruit que si la mantisse est ASSEZ précise
+//     (sciVersEntier, aucun zéro inventé) ; sinon on garde la notation scientifique pour
+//     que l'avertissement « identifiants corrompus » s'affiche.
+// Sinon on garde le texte formaté (dates, codes, décimaux… inchangés).
 function cellTexte(fVal, rVal) {
   const s = String(fVal != null ? fVal : '').trim();
-  if (/^[+-]?\d+(?:\.\d+)?[eE][+-]?\d+$/.test(s) &&
-      typeof rVal === 'number' && isFinite(rVal) && Number.isInteger(rVal) &&
-      Math.abs(rVal) < 1e21) {
+  if (!RE_SCI_ID.test(s)) return s;                 // valeur non scientifique → inchangée
+  // 1) cellule NUMÉRIQUE : la valeur brute (raw:true) porte l'entier complet.
+  if (typeof rVal === 'number' && isFinite(rVal) && Number.isInteger(rVal) && Math.abs(rVal) < 1e21)
     return rVal.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
-  }
-  return s;
+  // 2) cellule TEXTE « 2.02612E+11 » : reconstruit si la mantisse est complète, sinon reste scientifique.
+  return sciVersEntier(s) ?? s;
 }
 
 // Colonnes attendues d'un export GRP STATBEL
@@ -7105,7 +7246,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '226';
+const APP_VERSION = '231';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
