@@ -97,6 +97,7 @@
     <div class="btns">
       <button id="dlXlsx">⬇️ Télécharger .xlsx</button>
       <button id="dlCsv" class="sec">⬇️ Télécharger .csv</button>
+      <button id="btnAutre" class="sec" type="button">↻ Traiter un autre PDF</button>
     </div>
     <p class="note">Format GRP à 30 colonnes (identique à l'export Statbel). <b>DT_MB_BTH</b> (date de
        naissance) et <b>CD_MB_BTH_REFNIS</b> (commune de naissance) restent vides : absents du PDF
@@ -155,6 +156,16 @@
     });
     tbl.innerHTML = html;
     res.classList.remove('hidden');
+    dz.classList.add('hidden');            // masque la zone de dépôt une fois un PDF traité
+  }
+
+  // Réafficher la zone de dépôt pour enchaîner sur un autre PDF.
+  function traiterAutre(){
+    res.classList.add('hidden');
+    dz.classList.remove('hidden');
+    setMsg('');
+    lastRows = null; lastAoa = null;
+    try { dz.focus(); } catch(_){}
   }
 
   function dlXlsx(){
@@ -182,6 +193,7 @@
   dz.addEventListener('drop', function(e){ e.preventDefault(); dz.classList.remove('drag'); traiter(e.dataTransfer.files[0]); });
   document.getElementById('dlXlsx').addEventListener('click', dlXlsx);
   document.getElementById('dlCsv').addEventListener('click', dlCsv);
+  document.getElementById('btnAutre').addEventListener('click', traiterAutre);
 
   // PWA (servi en http(s))
   if (location.protocol === 'https:' || location.protocol === 'http:') {
