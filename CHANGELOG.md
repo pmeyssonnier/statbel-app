@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — SheetJS externalisé vers `vendor/`
+(Planner `209` → `210`, SW `statbel-v373` → `statbel-v374`)
+- La lib **SheetJS (xlsx 0.18.5)** était **inlinée** dans `statbel_planner.html` (~861 Ko,
+  **69 % du fichier**). Elle est désormais chargée via `<script src="vendor/xlsx/xlsx.full.min.js">`
+  — le **même fichier vendorisé** que celui déjà utilisé par Interviews (byte-identique), donc
+  **mutualisé** et mis en cache **une seule fois** par le service worker.
+- **`statbel_planner.html` passe de ~1 247 Ko à ~386 Ko** (−69 %). Aucun changement de
+  comportement : chargement en **script classique** (fonctionne aussi en `file://`, comme
+  Leaflet), global `XLSX` inchangé (export Excel + lecture inchangés, vérifiés par round-trip).
+- `vendor/xlsx/xlsx.full.min.js` était déjà dans `APP_CRITICAL` du service worker — rien à ajouter.
+
 ### Convertisseur — rattachement des vagues au groupe initial (planning)
 (Convertisseur `233` → `234`, SW `statbel-v372` → `statbel-v373`)
 - Un fichier de **vague ≥ 2** (numéro « V·SS·GG », ex. `23605`) était **« introuvable dans les
