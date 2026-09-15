@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — découpage du JS métier (5/n) : plannings + filtres extraits
+(Planner `216` → `217`, SW `statbel-v381` → `statbel-v382`)
+- Extraction **verbatim** vers **`js/planner/plannings-filters.js`** (~290 lignes) : **SOURCE**
+  (lecture des plannings du stockage partagé `localStorage['plannings']`, conversion, agrégation
+  des trimestres, déduplication, badge « N groupe(s) », menu du bandeau) et **FILTRES** (cascade
+  province → commune → quartier, trimestre, sélection de groupes, « Tout »).
+- Le `<script>` cœur est re-scindé autour de la zone (LECTURE inline → `plannings-filters.js` →
+  VUES/NAVIGATION/UTILITAIRES inline), ordre préservé (le listener top-level de fermeture de menu
+  reste au même point de séquence). `statbel_planner.html` : **85 Ko → 71 Ko**.
+- 53/53 tests verts, 0 erreur JS au chargement (headless).
+
 ### Planner — découpage du JS métier (4/n) : exports extraits en module
 (Planner `215` → `216`, SW `statbel-v380` → `statbel-v381`)
 - Extraction **verbatim** du cluster **EXPORTS** vers **`js/planner/exports.js`** (~220 lignes) :
