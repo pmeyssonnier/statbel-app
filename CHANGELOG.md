@@ -12,6 +12,14 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — tri sur toutes les colonnes du tableau
+(Convertisseur `231` → `232`, SW `statbel-v370` → `statbel-v371`)
+- Le tableau de contacts n'était triable que sur 4 colonnes (#, contact, adresse, ménage).
+  **Toutes** les colonnes le sont désormais : téléphone, e-mail, méthode de collecte, sexe, âge,
+  date & pays/commune de naissance, nationalité, état civil, identifiant & mot de passe CAWI.
+- Tri **numérique** là où c'est pertinent (âge, taille du ménage, ID) et **par nom traduit** pour les
+  colonnes pays (naissance / nationalité) plutôt que par code ISO3. Clavier + `aria-sort` déjà gérés.
+
 ### Convertisseur — pays/nationalité historiques indécodables (Yougoslavie, URSS…)
 (Convertisseur `230` → `231`, SW `statbel-v369` → `statbel-v370`)
 - **58 codes pays** produisibles par l'import PDF n'étaient pas décodés par le Convertisseur →
