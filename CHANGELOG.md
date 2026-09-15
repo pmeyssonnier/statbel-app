@@ -12,6 +12,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — découpage du JS métier (4/n) : exports extraits en module
+(Planner `215` → `216`, SW `statbel-v380` → `statbel-v381`)
+- Extraction **verbatim** du cluster **EXPORTS** vers **`js/planner/exports.js`** (~220 lignes) :
+  Excel (`.xls` via SheetJS), iCal/Google Agenda (`.ics` RFC 5545), détection de chevauchements,
+  et CSV compatible l'app Interviews.
+- Le `<script>` cœur est re-scindé autour du cluster (LECTURE/SOURCE/FILTRES/VUES/NAVIGATION/
+  UTILITAIRES inline → `exports.js` → SAUVEGARDE inline), ordre préservé. `statbel_planner.html` :
+  **92 Ko → 85 Ko**.
+- 53/53 tests verts, 0 erreur JS au chargement (headless).
+
 ### Planner — découpage du JS métier (3/n) : i18n + données/références extraits
 (Planner `214` → `215`, SW `statbel-v379` → `statbel-v380`)
 - Extraction **verbatim** du haut du bloc cœur vers **`js/planner/i18n-data.js`** (~330 lignes) :
