@@ -12,6 +12,14 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — allègement de l'en-tête et de l'état vide
+(Convertisseur `225` → `226`, SW `statbel-v362` → `statbel-v363`)
+- **Wordmark « Statbel Convertisseur » retiré** de l'en-tête pour libérer de la place
+  au sélecteur de source (liste déroulante des fichiers importés).
+- **Lien « Extraire un GRP depuis le PDF officiel → » retiré** de l'état vide : la zone
+  de dépôt (glisser/cliquer) reste le moyen principal d'import ; le menu ⋮ « Importer un
+  fichier source » couvre le reste. La ligne « 🔒 Traitement 100 % local » est conservée.
+
 ### Planner — passe design : contraste sombre + i18n (P2)
 (Planner `208` → `209`, SW `statbel-v361` → `statbel-v362`)
 - **Boutons d'export lisibles en thème sombre (colorize)** : Excel/CSV App/Chevauchements
