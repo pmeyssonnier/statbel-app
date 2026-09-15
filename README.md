@@ -4,7 +4,7 @@ Trois applications web **sans build ni dépendance externe** (tout est vendoré)
 pour un usage **terrain, hors-ligne**, reliées entre elles (navigation croisée dans
 l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
 
-- **Convertisseur** et **Planner** restent **mono-fichier** (un seul `.html`) : ouvrables par simple double-clic (`file://`).
+- **Convertisseur** et **Planner** restent **mono-page** (un seul `.html` ouvrable par double-clic `file://`) ; leur JS métier est découpé en scripts classiques sous `js/converter/**` et `js/planner/**` (libs vendorisées).
 - **Interviews** est découpé en **modules ES** (voir [Architecture](#architecture-modules-es-sans-build)) : il doit être **servi en http(s)** (PWA / Pages, ou un serveur statique local) — les modules ES ne se chargent pas en `file://`.
 
 | App | Fichier | Rôle |
@@ -18,9 +18,9 @@ l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
 | Composant | Version |
 |---|---:|
 | Interviews | **3.78** |
-| Convertisseur | **235** |
+| Convertisseur | **236** |
 | Planner | **219** |
-| Cache PWA / service worker | **statbel-v384** |
+| Cache PWA / service worker | **statbel-v385** |
 
 Le numéro de version est affiché dans Interviews, le Convertisseur et le Planner. Le
 cache versionné du service worker est incrémenté à chaque mise à jour livrée afin de

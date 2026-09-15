@@ -22,13 +22,14 @@ let fails = 0;
 const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg); } else console.log('✓ ' + msg); };
 
 // Collecte récursive des fichiers .js sous js/ + index.html
-// js/planner/** = modules extraits du Planner (mono-fichier file://) : scripts
-// classiques qui conservent leurs handlers inline — hors périmètre de ce garde-fou
-// Interviews (cf. en-tête), on les exclut de la collecte.
+// js/planner/** et js/converter/** = modules extraits des mono-pages file://
+// (Planner, Convertisseur) : scripts classiques qui conservent leurs handlers inline
+// (et en émettent dans des templates) — hors périmètre de ce garde-fou Interviews
+// (cf. en-tête), on les exclut de la collecte.
 function jsFiles(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => {
     const p = path.join(dir, e.name);
-    if (e.isDirectory()) return e.name === 'planner' ? [] : jsFiles(p);
+    if (e.isDirectory()) return (e.name === 'planner' || e.name === 'converter') ? [] : jsFiles(p);
     return e.name.endsWith('.js') ? [p] : [];
   });
 }
