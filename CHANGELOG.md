@@ -12,6 +12,12 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### PDF → GRP — masquer la zone de dépôt après traitement
+(SW `statbel-v363` → `statbel-v364`)
+- Après extraction d'un PDF, la zone de dépôt se masque et laisse place au résultat
+  (comme le Convertisseur). Un bouton **« ↻ Traiter un autre PDF »** la ré-affiche pour
+  enchaîner. Le module reste FR uniquement (pas de version applicative propre).
+
 ### Convertisseur — allègement de l'en-tête et de l'état vide
 (Convertisseur `225` → `226`, SW `statbel-v362` → `statbel-v363`)
 - **Wordmark « Statbel Convertisseur » retiré** de l'en-tête pour libérer de la place
