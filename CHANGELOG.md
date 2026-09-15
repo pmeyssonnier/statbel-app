@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — découpage du JS métier (3/n) : i18n + données/références extraits
+(Planner `214` → `215`, SW `statbel-v379` → `statbel-v380`)
+- Extraction **verbatim** du haut du bloc cœur vers **`js/planner/i18n-data.js`** (~330 lignes) :
+  **i18n** (dictionnaire `I18N` fr/nl/en/de, `t`/`tf`/`tPlural`, `appliquerLangue`/`changerLangue`)
+  et **données/références** (libellés de provinces `PROV_I18N`, jours/mois localisés, couleurs de vague).
+- Le `<script>` cœur est scindé en : état global (inline) → `i18n-data.js` → reste du cœur (inline),
+  l'ordre d'exécution étant strictement préservé. `statbel_planner.html` : **126 Ko → 92 Ko**.
+- ESLint `js/planner/**` : ajout de `no-redeclare: off` (le Planner définit ses propres globales
+  `t`/`tf`/… qui ne « collisionnent » qu'avec le pont Interviews côté lint — faux positif inter-apps).
+- 53/53 tests verts, 0 erreur JS au chargement (headless).
+
 ### Planner — découpage du JS métier (2/n) : candidature `.docx` extraite en module
 (Planner `213` → `214`, SW `statbel-v378` → `statbel-v379`)
 - Le sous-système **Candidature enquêteur** (~575 lignes : génération du `.docx` officiel via le
