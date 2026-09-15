@@ -14,9 +14,9 @@ statique (GitHub Pages) ; Convertisseur et Planner ouvrables en double-clic
   `window`/`globalThis` ; toute fonction appelée depuis un `onclick=` inline doit être
   réexposée via `Object.assign(window, {…})` en fin de `js/app.js`.
 - **Convertisseur** (`statbel_converter.html`) / **Planner** (`statbel_planner.html`) :
-  **mono-fichier** HTML autonome (libs minifiées inlinées).
-- **PDF→GRP** (`statbel_pdf2grp.html` + `js/pdfgrp.js`) ; lib partagée `js/charts.js`
-  (`window.Charts` : donut/table/sparkline/lineChart) + `css/charts.css`.
+  **mono-fichier** HTML autonome (libs minifiées inlinées). Le Convertisseur importe aussi
+  les listings **PDF** via `js/pdfgrp.js` (+ pdf.js vendorisé).
+- Lib partagée `js/charts.js` (`window.Charts` : donut/table/sparkline/lineChart) + `css/charts.css`.
 
 ## Invariants à ne jamais casser
 

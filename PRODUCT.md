@@ -28,9 +28,8 @@ enquêteur EFT sans jamais dépendre d'un serveur :
 | App | Fichier | Rôle |
 |-----|---------|------|
 | **Interviews** | `index.html` + `js/**` | Suivi des contacts d'un groupe : statuts, historique, RDV, carte, résumé. |
-| **Convertisseur** | `statbel_converter.html` | GRP → CSV, décodage REFNIS/pays/état civil, tableaux et analyses (KPI, tranches d'âge, ménages, Sankey…). |
+| **Convertisseur** | `statbel_converter.html` | GRP (Excel/CSV/**PDF**) → CSV, décodage REFNIS/pays/état civil, tableaux et analyses (KPI, tranches d'âge, ménages, Sankey…). |
 | **Planner** | `statbel_planner.html` | Agenda LFS des interrogations, filtres, carte, et **génération de la candidature enquêteur en `.docx`**. |
-| **PDF→GRP** | `statbel_pdf2grp.html` + `js/pdfgrp.js` | Extraction d'un GRP depuis un PDF officiel. |
 
 La valeur centrale : **transformer des données administratives brutes (GRP) en
 information exploitable sur le terrain**, en gardant la maîtrise totale des
