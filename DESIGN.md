@@ -38,10 +38,15 @@ couleur passe par un token — jamais de littéral en dur dans un composant.
 - **barres genrées** : `--bar-h #1a237e` (hommes) / `--bar-f #c2185b` (femmes)
 - sombre : `--accent #aab4ff`, barres `#7986cb` / `#ef5e8c`
 
-**Planner** (`statbel_planner.html`)
-- ink `#1a1f2e / #3d4460 / #7b82a0` · `--bg #f4f6fb` · `--card #fff`
-- `--accent #2255cc` · `--accent2 #1a42a0` · `--border #dde2f0`
-- accent d'action candidature : **violet `#7b22cc`**
+**Planner** (`statbel_planner.html`) — **thème sombre complet** via `@media (prefers-color-scheme: dark)`
+- ink `#1a1f2e / #3d4460 / #656c88` · `--bg #f4f6fb` · `--card #fff` · `--border #dde2f0`
+- `--accent #2255cc` · `--accent2 #1a42a0` · `--chrome #1a1f2e` (bandeaux/badges sombres à texte blanc, **stable clair/sombre**)
+- **système de vagues** `--v1`…`--v4` : chaque vague d'interrogation a sa couleur — fond `--vNl`,
+  texte `--vN`, bordure `--vNb` — **toutes redéfinies en sombre**. L'agenda double toujours la
+  couleur d'un texte (« V1 ») : jamais de sens porté par la couleur seule.
+- accent d'action candidature : **violet `--cand #7b22cc`** · erreurs `--danger #c62828`
+- **Boutons d'export** (Excel/CSV/iCal/Chevauch.) colorés via ces tokens (jamais en hex dur),
+  pour rester lisibles en thème sombre.
 
 ### Couleurs sémantiques (partagées)
 - **Or `#f9a825`** — attention / jeunes (<15) · **Vert `#2e7d32`** — ok / actifs

@@ -60,8 +60,9 @@ Ces invariants priment sur toute considération esthétique ou de confort :
 4. **Les données personnelles ne quittent jamais l'appareil.** Aucun envoi, aucune
    analytics. `.gitignore` en **liste blanche stricte** : aucune donnée réelle
    n'est jamais versionnée.
-5. **i18n** — Convertisseur & Interviews en **4 langues** (fr/nl/en/de) via `t()`
-   + `data-i18n` ; Planner en FR. Toute donnée injectée passe par `esc()`.
+5. **i18n** — les **trois apps** (Convertisseur, Interviews **et Planner**) en
+   **4 langues** (fr/nl/en/de) via `t()`/`tf()` + `data-i18n` (le Planner a son
+   propre sélecteur 🌐). Toute donnée injectée passe par `esc()`.
 6. **Rituel de version** (même commit) — bumper `CACHE` dans `sw.js` **et**
    l'`APP_VERSION` de chaque app modifiée ; sinon le changement reste invisible
    derrière le cache du service worker.
