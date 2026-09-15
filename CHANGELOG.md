@@ -12,6 +12,26 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — découpage du JS métier (5/5) : affichage + stats + charts extraits
+(Convertisseur `239` → `240`, SW `statbel-v388` → `statbel-v389`)
+- Dernier lot. Extraction **verbatim** des régions **AFFICHAGE** (sources, onglets Aperçu/
+  Statistiques, apparence, rapport), **TABLES** (lookup Pays/Communes, écran paramètres ; table
+  Aperçu/ménage : rendu, tri, accordéon), **STATISTIQUES** (bascule Cibles / tout le ménage,
+  `majStats`, blocs) et **CHARTS** (barres/donut/treemap/pyramide/Sankey) vers
+  **`js/converter/ui.js`** (~1 726 lignes / 103 Ko).
+- Le **bootstrap ÉVÉNEMENTS** (câblage global, listeners délégués, IIFE `init()` et `APP_VERSION`)
+  **reste inline**, à sa position d'origine, pour préserver l'ordre d'exécution.
+  `statbel_converter.html` : **206 Ko → 104 Ko**.
+- Vérification headless renforcée : bascule réelle des onglets via `basculerTab()` (appelé par les
+  `onclick=` inline) → panneaux Aperçu/Statistiques correctement affichés/masqués ; toutes les
+  fonctions représentatives des 5 modules présentes ; non-régression refdata (150→BEL), planning
+  (`chercherPlanningExact('12704')`) et i18n. 53/53 tests, lint 0 warning, garde de version verte.
+
+**Bilan du découpage Convertisseur (lots 1→5)** : `statbel_converter.html` **447 Ko → 104 Ko**.
+JS métier réparti en 5 modules classiques sous `js/converter/` : `refdata` (170 Ko), `i18n` (50 Ko),
+`import-normalisation` (8 Ko), `export-conversion` (14 Ko), `ui` (103 Ko). Restent inline : l'état,
+les données `GRP_PLANNING`/`ARROND`/`NUTS`, et le bootstrap `init()` + `APP_VERSION`.
+
 ### Convertisseur — découpage du JS métier (4/n) : export + conversion extraits
 (Convertisseur `238` → `239`, SW `statbel-v387` → `statbel-v388`)
 - Extraction **verbatim** des régions **EXPORT** (sérialisation CSV, en-têtes traduits,
