@@ -100,6 +100,10 @@ export default [
     rules: {
       'no-undef': 'off',
       'no-unused-vars': 'off',
+      // Le Planner (app distincte) définit ses propres globales classiques (t, tf,
+      // appliquerLangue…) qui « collisionnent » seulement avec les globales du pont
+      // Interviews fusionnées côté ESLint — faux positif inter-apps.
+      'no-redeclare': 'off',
       // Motifs cosmétiques préexistants dans le code extrait (échappements « inutiles »
       // ex. \/, réassignations non lues) — inoffensifs ; on garde l'extraction verbatim.
       'no-useless-escape': 'off',
