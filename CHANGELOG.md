@@ -12,6 +12,22 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — identifiants CAWI en notation scientifique : récupération sûre + signalement
+(Convertisseur `227` → `228`, SW `statbel-v366` → `statbel-v367`)
+- **Bug** : dans la colonne **Identifiant CAWI**, `TX_WEB_USER_ID` pouvait rester affiché en
+  notation scientifique (« 2.02612E+11 »). Cause : quand le `.xlsx` source a été **ouvert/enregistré
+  dans Excel**, la colonne d'ID devient du **texte** déjà scientifique — la réparation `cellTexte`
+  (qui s'appuyait sur la valeur brute numérique) ne s'appliquait pas au texte.
+- **Import** : `cellTexte` reconstruit désormais aussi l'entier depuis une **cellule texte**
+  scientifique — **uniquement quand c'est exact** (mantisse complète, ex. `3.0071999E+7` → `30071999`,
+  calcul sur chaînes, sans flottant). Si la mantisse est tronquée (`2.02612E+11`), les chiffres sont
+  **définitivement perdus** : on n'invente pas de zéros, la valeur reste scientifique.
+- **Affichage** : une valeur CAWI restée scientifique (corrompue, inutilisable) est **marquée d'un ⚠**
+  avec une info-bulle, au lieu d'être présentée comme un login valide.
+- **Avertissement** : le bandeau « identifiants corrompus » explique désormais que la perte vient du
+  **fichier source** (réexporter les colonnes d'ID au format Texte) — ré-importer le même fichier n'y
+  change rien. Textes en 4 langues (fr/nl/en/de).
+
 ### Convertisseur — toutes les colonnes importées dans « Personnaliser l'affichage »
 (Convertisseur `226` → `227`, SW `statbel-v365` → `statbel-v366`)
 - Le panneau **Personnaliser l'affichage → Colonnes** expose désormais **tous les champs
