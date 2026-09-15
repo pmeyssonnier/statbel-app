@@ -12,6 +12,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Retiré — page autonome PDF → GRP
+(SW `statbel-v364` → `statbel-v365`)
+- La page `statbel_pdf2grp.html` (outil autonome d'extraction PDF → GRP) est **supprimée** :
+  l'utilisateur dispose désormais du fichier source XLSX complet. **L'import PDF reste
+  disponible dans le Convertisseur** (même parseur `js/pdfgrp.js` + pdf.js vendorisé — conservés).
+- Nettoyage : précache SW, whitelist `.gitignore`, `tests/csp.test.js`, test `pdf2grp-a11y`
+  supprimé, et références dans README/PRODUCT.md/CLAUDE.md/`docs/manuel.html` (section retirée,
+  sections renumérotées, flux de travail à 3 étapes). Note « Planner en français » du manuel
+  corrigée (4 langues).
+
 ### PDF → GRP — masquer la zone de dépôt après traitement
 (SW `statbel-v363` → `statbel-v364`)
 - Après extraction d'un PDF, la zone de dépôt se masque et laisse place au résultat

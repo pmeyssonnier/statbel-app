@@ -6,14 +6,12 @@ l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
 
 - **Convertisseur** et **Planner** restent **mono-fichier** (un seul `.html`) : ouvrables par simple double-clic (`file://`).
 - **Interviews** est découpé en **modules ES** (voir [Architecture](#architecture-modules-es-sans-build)) : il doit être **servi en http(s)** (PWA / Pages, ou un serveur statique local) — les modules ES ne se chargent pas en `file://`.
-- **PDF → GRP** utilise un fichier HTML et un module JavaScript local ; il fonctionne hors-ligne avec les bibliothèques PDF et Excel vendorées.
 
 | App | Fichier | Rôle |
 |---|---|---|
 | 📋 **Interviews** | `index.html` | Suivi des contacts à interviewer |
-| 🔄 **Convertisseur** | `statbel_converter.html` | Convertit les exports bruts STATBEL en CSV importables |
+| 🔄 **Convertisseur** | `statbel_converter.html` | Convertit les exports bruts STATBEL (Excel/CSV/PDF) en CSV importables |
 | 🗓️ **Statbel Planner** | `statbel_planner.html` | Agenda des vagues d'enquête + candidature enquêteur |
-| 📄 **PDF → GRP** | `statbel_pdf2grp.html` | Extrait un listing GRP PDF vers XLSX / CSV |
 
 ### Versions actuelles
 
@@ -22,7 +20,7 @@ l'en-tête / le menu) et installables en **PWA** (GitHub Pages).
 | Interviews | **3.78** |
 | Convertisseur | **226** |
 | Planner | **209** |
-| Cache PWA / service worker | **statbel-v364** |
+| Cache PWA / service worker | **statbel-v365** |
 
 Le numéro de version est affiché dans Interviews, le Convertisseur et le Planner. Le
 cache versionné du service worker est incrémenté à chaque mise à jour livrée afin de
@@ -160,20 +158,6 @@ XML tokenisé, ZIP + CRC32) :
   - le sigle est **conservé** dans l'en-tête du tableau et la case à cocher (« … EFT 2026-Q4 ») ;
   - dictionnaire des sigles extensible (`CAND_SURVEYS`).
 - Nom de fichier : `Candidature_EFT_2026_Q4_NOMPrenom.docx`.
-
----
-
-## 📄 PDF → GRP (`statbel_pdf2grp.html`)
-
-Extrait localement les personnes et ménages d'un listing GRP au format PDF, sans
-transmettre le document à un serveur.
-
-- Glisser-déposer ou sélection au clavier d'un fichier `GRP_2026…pdf`.
-- Export au format Statbel à **30 colonnes**, en **XLSX** ou **CSV**.
-- Aperçu des 25 premières lignes et compte des ménages/personnes extraits.
-- Signalement des nationalités ou états civils sans code de correspondance.
-- Les champs de date et de commune de naissance restent vides lorsqu'ils sont absents du PDF.
-- Traitement hors-ligne avec PDF.js et SheetJS vendorés.
 
 ---
 
