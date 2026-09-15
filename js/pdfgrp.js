@@ -6,9 +6,11 @@
  * PDF→XLSX/CSV (statbel_pdf2grp.html). Dépendance : pdf.js (global pdfjsLib),
  * chargé avant ce script.
  *
- * Le PDF n'expose PAS la date de naissance complète (DT_MB_BTH) ni la commune
- * de naissance (CD_MB_BTH_REFNIS) — seulement l'âge et le pays en toutes
- * lettres : ces deux colonnes restent vides.
+ * Le PDF n'expose PAS la date de naissance complète (DT_MB_BTH reste vide) ni la
+ * COMMUNE de naissance des personnes nées en Belgique. En revanche il donne le
+ * PAYS de naissance en toutes lettres (colonne « Country birth ») : on le mappe
+ * vers CD_MB_BTH_REFNIS (code NIS pays) — pour un natif belge, cela donne « 150 »
+ * (pays = Belgique) sans commune ; pour un natif étranger, le code pays complet.
  */
 (function (global) {
 'use strict';
@@ -96,7 +98,7 @@ function extractRows(data){
 
 // Lignes visuelles → lignes GRP + codes inconnus.
 function grpRows(rows){
-  var out = [], unknown = { nlty: [], mrtl: [] };
+  var out = [], unknown = { nlty: [], mrtl: [], bth: [] };
   var isLabel = function(s){ return HH_LABELS.indexOf(s) >= 0; };
   var i = 0;
   while (i < rows.length){
@@ -135,6 +137,7 @@ function grpRows(rows){
     var ad = parseAddr(info['Address'] || '');
     members.forEach(function(m, mi){
       var mb = mi + 1;
+      if (m[5] && !paysCode(m[5]) && unknown.bth.indexOf(m[5]) < 0) unknown.bth.push(m[5]);
       if (m[6] && !paysCode(m[6]) && unknown.nlty.indexOf(m[6]) < 0) unknown.nlty.push(m[6]);
       if (m[7] && !MRTL[m[7]] && unknown.mrtl.indexOf(m[7]) < 0) unknown.mrtl.push(m[7]);
       out.push({
@@ -142,7 +145,7 @@ function grpRows(rows){
         NR_YEAR: grp.slice(0,4), NR_SEQ: '2', NR_WAVE: info['Wave'] || '', NR_REF_WK: '23',
         TX_WEB_USER_ID: info['User ID'] || '', TX_WEB_USER_PSWRD: info['Password'] || '', CD_CNTCT_LG: info['Language'] || '',
         FL_MB_CNTCT: mb === 1 ? '1' : '0', TX_MB_NM_FST: m[1] || '', TX_MB_NM_LST: m[2] || '',
-        CD_MB_SEX: SEX[m[4]] || '', DT_MB_BTH: '', MS_MB_AGE: m[3] || '', CD_MB_BTH_REFNIS: '',
+        CD_MB_SEX: SEX[m[4]] || '', DT_MB_BTH: '', MS_MB_AGE: m[3] || '', CD_MB_BTH_REFNIS: paysCode(m[5]),
         CD_MB_NLTY: paysCode(m[6]), CD_MB_MRTL_STS: m[7] ? (MRTL[m[7]] || '') : '',
         TX_ADRS_USTR_NM: ad[0], CD_ADRS_HS: ad[1], CD_ADRS_BX: ad[2], CD_ADRS_ZIP: ad[3], TX_ADRS_REFNIS_NM: ad[4],
         TX_DBENQ_GRP: grp, TX_DBENQ_HH: info['NR_DBENQ_HH'] || '',
@@ -160,7 +163,7 @@ function pdfGrpParse(data){ return extractRows(data).then(function(r){ return gr
 // pdfGrpVersRows(arrayBuffer) → Promise<rows>  (+ alerte sur codes inconnus) — utilisé par le Convertisseur.
 function pdfGrpVersRows(data){
   return pdfGrpParse(data).then(function(res){
-    var inc = res.unknown.nlty.concat(res.unknown.mrtl);
+    var inc = res.unknown.bth.concat(res.unknown.nlty).concat(res.unknown.mrtl);
     if (inc.length) alert('Valeurs sans code (laissées vides) : ' + inc.join(', ')
       + '\nComplétez la table dans js/pdfgrp.js.');
     return res.rows;

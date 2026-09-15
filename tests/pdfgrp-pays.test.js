@@ -41,6 +41,14 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       france:    pc('France'),
       inconnu:   pc('Atlantide'),
       vide:      pc(''),
+      // Intégration : le pays de naissance du PDF (« Country birth ») → code NIS →
+      // décodé en pays de naissance non vide par le Convertisseur (bug : champ vide).
+      bthCongo: (function () {
+        const c = convertir([{ NR_HH: '1', FL_MB_CNTCT: '1', TX_MB_NM_FST: 'A', TX_MB_NM_LST: 'B',
+          TX_DBENQ_GRP: '2026-1', MS_MB_AGE: '40',
+          CD_MB_BTH_REFNIS: pc('Congo (Rép. dém.)'), CD_MB_NLTY: pc('Congo (Rép. dém.)') }]).outCibles[0];
+        return c.birth_country;
+      })(),
     };
   });
 
@@ -55,6 +63,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.france === '111', `France → 111 (non-régression) (got "${r.france}")`);
   A(r.inconnu === '', `pays inconnu → vide (got "${r.inconnu}")`);
   A(r.vide === '', `chaîne vide → vide (got "${r.vide}")`);
+  A(r.bthCongo === 'COD', `pays de naissance PDF « Congo (Rép. dém.) » → décodé (COD), pas vide (got "${r.bthCongo}")`);
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();

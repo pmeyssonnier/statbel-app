@@ -12,6 +12,14 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — import PDF : pays de naissance vide
+(Convertisseur `229` → `230`, SW `statbel-v368` → `statbel-v369`)
+- Le **pays de naissance** (colonne PDF « Country birth ») était **jeté** à l'import PDF
+  (`CD_MB_BTH_REFNIS` forcé à vide) → colonne « Pays de naissance » toujours vide, y compris pour
+  « Congo (Rép. dém.) ». `js/pdfgrp.js` mappe désormais ce pays vers le code NIS : natif étranger →
+  code pays complet (Congo → 306 → 🇨🇩 RD Congo) ; natif belge → « 150 » (pays Belgique, sans commune,
+  que le PDF n'expose pas). Les pays de naissance inconnus sont signalés comme les nationalités.
+
 ### Convertisseur — import PDF : identifiants CAWI scientifiques + pays « Congo (Rép. dém.) » vide
 (Convertisseur `228` → `229`, SW `statbel-v367` → `statbel-v368`)
 - **ID web (toutes sources)** : la réparation de la notation scientifique s'applique désormais à
