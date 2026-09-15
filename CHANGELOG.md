@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — découpage du JS métier (2/n) : i18n extrait en module
+(Convertisseur `236` → `237`, SW `statbel-v385` → `statbel-v386`)
+- Extraction **verbatim** du bloc **I18N** vers **`js/converter/i18n.js`** (~421 lignes / 50 Ko) :
+  dictionnaire `I18N` (fr/nl/en/de), `t()`/`tf()`/`tPlural()`, lecture/persistance de la langue
+  partagée (`localStorage['statbel_settings'].lang`), `appliquerLangue()`/`changerLangue()` et le
+  re-rendu des libellés générés en JS.
+- Script **classique** ; `<script src>` à la même position (avant `refdata.js`) → ordre préservé,
+  mono-page toujours `file://`. `statbel_converter.html` : **277 Ko → 227 Ko**.
+- Rituel de version : `i18n.js` ajouté à `APP_CRITICAL`.
+- Vérification headless : bascule réelle de langue (`data-i18n` : Aperçu / Overzicht / Overview),
+  `t()` varie selon la langue, et **non-régression** de `refdata.js` (decoder 150→BEL, commune
+  11001→Aartselaar). 53/53 tests verts, lint 0 warning, garde de version verte.
+
 ### Convertisseur — découpage du JS métier (1/n) : données de référence extraites
 (Convertisseur `235` → `236`, SW `statbel-v384` → `statbel-v385`)
 - Le Convertisseur était un mono-fichier avec **un seul `<script>` inline de ~6 400 lignes**.
