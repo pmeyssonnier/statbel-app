@@ -12,6 +12,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — découpage du JS métier (2/n) : candidature `.docx` extraite en module
+(Planner `213` → `214`, SW `statbel-v378` → `statbel-v379`)
+- Le sous-système **Candidature enquêteur** (~575 lignes : génération du `.docx` officiel via le
+  moteur ZIP/CRC32 maison, ordre de priorité des groupes, signature, validation) est extrait
+  **verbatim** vers **`js/planner/candidature.js`** (script classique, ajouté à `APP_CRITICAL`).
+- La région **INITIALISATION** (démarrage, `APP_VERSION`, `appliquerLangue()`) reste **inline**
+  dans `statbel_planner.html` — `APP_VERSION` y demeure trouvable pour le rituel de version.
+- `statbel_planner.html` : **160 Ko → 126 Ko**. Comportement inchangé (headless : `candLoadInfos`
+  résolu, génération `.docx` OK, 0 erreur JS), 53/53 tests verts.
+
 ### Planner — découpage du JS métier (1/n) : géocodage extrait en module
 (Planner `212` → `213`, SW `statbel-v377` → `statbel-v378`)
 - Premier lot du **découpage du JS du Planner** en fichiers dédiés (scripts CLASSIQUES,
