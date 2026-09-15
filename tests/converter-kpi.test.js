@@ -109,7 +109,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     // ── Colonnes du tableau (Aperçu) ─────────────────────────────────
     localStorage.removeItem('statbel_conv_cols');
     persoTab('cols');
-    out.colDefaut = getCfg('cols').length + '/' + getCfg('cols').filter(x => x.on).length;   // 7 dispo / 6 affichées (méthode de collecte = opt-in)
+    out.colDefaut = getCfg('cols').length + '/' + getCfg('cols').filter(x => x.on).length;   // 16 dispo / 6 affichées (colonnes optionnelles opt-in)
     renderCiblesHead();
     out.headDefault = document.querySelectorAll('#tableCibles thead th').length;   // 1 expansion + 6
     // Largeurs de colonne prédéfinies (version légère « façon Excel ») → min-width sur les th
@@ -167,7 +167,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.blocDomMatchesCfg, 'réordonner un bloc réordonne les cartes dans le DOM');
   A(r.blocXCount === 15, `croix ✕ injectée dans les 15 blocs → ${r.blocXCount}`);
   A(r.blocXHidden && r.blocXPersisted, 'croix ✕ masque le bloc (carte cachée + config persistée)');
-  A(r.colDefaut === '7/6', `colonnes : 7 disponibles, 6 affichées par défaut (méthode de collecte opt-in) → ${r.colDefaut}`);
+  A(r.colDefaut === '16/6', `colonnes : 16 disponibles (référent complet, dont CAWI id/mdp), 6 affichées par défaut → ${r.colDefaut}`);
   A(r.headDefault === 7, `en-tête par défaut = 1 (expansion) + 6 colonnes → ${r.headDefault} th`);
   A(r.colWidth, 'largeur prédéfinie sur les colonnes du tableau (min-width sur les th)');
   A(r.headAfterHide === 6 && r.gsmGone && r.colPersisted, 'masquer une colonne retire le th et persiste');

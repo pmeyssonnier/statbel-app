@@ -12,6 +12,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — toutes les colonnes importées dans « Personnaliser l'affichage »
+(Convertisseur `226` → `227`, SW `statbel-v365` → `statbel-v366`)
+- Le panneau **Personnaliser l'affichage → Colonnes** expose désormais **tous les champs
+  importés du référent** (activables, masqués par défaut) : **identifiant** et **mot de passe
+  CAWI** (`TX_WEB_USER_ID` / `TX_WEB_USER_PSWRD`), ainsi que sexe, âge, date de naissance,
+  pays/commune de naissance, nationalité et état civil. Les rendus (drapeaux, icônes) et
+  libellés sont repris du détail ménage. La vue par défaut est inchangée.
+- Doc : le README parlait encore de « Quatre applications » (corrigé en trois après le
+  retrait de la page PDF → GRP).
+
 ### Retiré — page autonome PDF → GRP
 (SW `statbel-v364` → `statbel-v365`)
 - La page `statbel_pdf2grp.html` (outil autonome d'extraction PDF → GRP) est **supprimée** :
