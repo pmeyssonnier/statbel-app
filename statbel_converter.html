@@ -6865,9 +6865,8 @@ function sortRows(rows, col, dir) {
   return [...rows].sort((a, b) => {
     const va = acc(a) || ''; const vb = acc(b) || '';
     // Numérique si les deux valeurs sont des nombres (âge, taille ménage, ID web…)
-    const na = parseFloat(va); const nb = parseFloat(vb);
-    if (!isNaN(na) && !isNaN(nb) && String(va).trim() !== '' && String(vb).trim() !== '')
-      return dir * (na - nb);
+    const na = parseFloat(va); const nb = parseFloat(vb);   // parseFloat('') = NaN → non numérique
+    if (!isNaN(na) && !isNaN(nb)) return dir * (na - nb);
     return dir * String(va).localeCompare(String(vb), 'fr', { sensitivity: 'base' });
   });
 }
