@@ -84,14 +84,14 @@ export default [
     },
   },
 
-  // Planner — modules extraits (js/planner/**) : scripts CLASSIQUES qui partagent
-  // leurs globales entre fichiers et avec le <script> inline du mono-fichier
-  // (allRows, t, esc, XLSX, L…) et exposent des fonctions appelées ailleurs
-  // (autres fichiers / onclick=). no-undef et no-unused-vars y seraient donc du
-  // bruit permanent → coupés ; les règles « vrais bugs » (clés dupliquées,
-  // no-cond-assign, syntaxe) restent actives via js.configs.recommended.
+  // Planner (js/planner/**) & Convertisseur (js/converter/**) — modules extraits des
+  // mono-pages file:// : scripts CLASSIQUES qui partagent leurs globales entre fichiers
+  // et avec le <script> inline (allRows, t, esc, XLSX, PAYS_I18N, NLTY_ISO, L…) et
+  // exposent des fonctions appelées ailleurs (autres fichiers / onclick=). no-undef et
+  // no-unused-vars y seraient donc du bruit permanent → coupés ; les règles « vrais bugs »
+  // (clés dupliquées, no-cond-assign, syntaxe) restent actives via js.configs.recommended.
   {
-    files: ['js/planner/**/*.js'],
+    files: ['js/planner/**/*.js', 'js/converter/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'script',

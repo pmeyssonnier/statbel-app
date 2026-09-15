@@ -12,6 +12,24 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — découpage du JS métier (1/n) : données de référence extraites
+(Convertisseur `235` → `236`, SW `statbel-v384` → `statbel-v385`)
+- Le Convertisseur était un mono-fichier avec **un seul `<script>` inline de ~6 400 lignes**.
+  Premier lot : extraction **verbatim** du bloc **TABLES DE CORRESPONDANCE** vers
+  **`js/converter/refdata.js`** (~3 311 lignes / 170 Ko) : codes sexe / état civil, drapeaux,
+  `PAYS_I18N` (235 pays × fr/nl/en/de), `NLTY_ISO` (NIS → ISO3) + `NLTY_ALIAS` (codes historiques)
+  et leurs **boucles de construction**, `REFNIS_COMMUNE` (communes belges), en-têtes CSV.
+- Script **classique** (globales partagées), `<script src>` inséré **à la même position** → ordre
+  d'exécution identique, mono-page toujours ouvrable `file://`. `statbel_converter.html` :
+  **447 Ko → 277 Ko**.
+- Rituel de version : `refdata.js` ajouté à `APP_CRITICAL` ; config ESLint et test
+  `no-inline-handlers` étendus à `js/converter/**` (mêmes règles que `js/planner/**`).
+- Vérification headless : chargement sans erreur, puis appel de `decoder()` (dans le `<script>`
+  restant) qui lit les tables extraites **au travers de la frontière de script** — nationalité
+  `150 → BEL`, `111 → FRA`, commune `11001 → Aartselaar` (BEL), état civil `2 → Married`. 53/53
+  tests verts, lint 0 warning, garde de version verte.
+
+
 ### Planner — découpage du JS métier (7/n) : lecture des dates + sauvegarde locale
 (Planner `218` → `219`, SW `statbel-v383` → `statbel-v384`)
 - **`js/planner/lecture.js`** (~34 lignes) : `parseDate()` — normalise les dates issues du
