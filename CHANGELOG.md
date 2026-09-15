@@ -12,6 +12,20 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — pays/nationalité historiques indécodables (Yougoslavie, URSS…)
+(Convertisseur `230` → `231`, SW `statbel-v369` → `statbel-v370`)
+- **58 codes pays** produisibles par l'import PDF n'étaient pas décodés par le Convertisseur →
+  colonnes Pays de naissance / Nationalité **vides** (signalé pour « Yougoslavie », code 169).
+- **États disparus** (sans ISO3 moderne unique) ont désormais leur entrée dédiée, affichée sans
+  drapeau et marquée « (ex) » : Yougoslavie, URSS, Tchécoslovaquie, Serbie-et-Monténégro,
+  Antilles néerlandaises, Ruanda-Urundi, Sénégambie, et Jérusalem.
+- **Renommages / codes coloniaux / synonymes** rattachés au pays actuel via `NLTY_ALIAS` :
+  Zaïre & Congo belge → RD Congo, Haute-Volta → Burkina Faso, Rhodésie → Zimbabwe,
+  Birmanie → Myanmar, Kampuchea/Rép. Khmère → Cambodge, Congo (République) → Congo,
+  variantes coloniales « (Portugal)/(France)/(Royaume-Uni) », etc.
+- Garde de non-régression : `pdfgrp-pays.test.js` vérifie que **tout** code pays du PDF est
+  décodable par le Convertisseur (plus aucun champ pays/nationalité vide par code inconnu).
+
 ### Convertisseur — import PDF : pays de naissance vide
 (Convertisseur `229` → `230`, SW `statbel-v368` → `statbel-v369`)
 - Le **pays de naissance** (colonne PDF « Country birth ») était **jeté** à l'import PDF

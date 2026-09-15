@@ -180,5 +180,9 @@ global.pdfGrpParse = pdfGrpParse;
 global.pdfGrpVersRows = pdfGrpVersRows;
 global.pdfGrpToAoa = pdfGrpToAoa;
 global.pdfGrpPaysCode = paysCode;   // exposé pour les tests (résolution nom pays → code NIS)
+// Codes NIS pays uniques produisibles depuis un PDF (pour le test de couverture :
+// le Convertisseur doit savoir décoder chacun d'eux — sinon pays/nationalité vide).
+global.pdfGrpPaysCodes = Object.keys(PAYS).map(function (n) { return PAYS[n]; })
+  .filter(function (c, i, a) { return a.indexOf(c) === i; }).sort();
 global.PDF_GRP_COLS = GRP_COLS;
 })(window);

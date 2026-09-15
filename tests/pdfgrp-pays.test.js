@@ -49,6 +49,13 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
           CD_MB_BTH_REFNIS: pc('Congo (Rép. dém.)'), CD_MB_NLTY: pc('Congo (Rép. dém.)') }]).outCibles[0];
         return c.birth_country;
       })(),
+      yougoslavie: pc('Yougoslavie'),
+      yougoslavie_decoded: decoder('', pc('Yougoslavie'), '').nationality,
+      // Couverture globale : TOUT code pays produisible par le PDF doit être décodable
+      // par le Convertisseur (sinon pays/nationalité vide comme pour « Yougoslavie »).
+      undecodable: window.pdfGrpPaysCodes.filter(function (code) {
+        return !decoder('', code, '').nationality;
+      }),
     };
   });
 
@@ -64,6 +71,9 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.inconnu === '', `pays inconnu → vide (got "${r.inconnu}")`);
   A(r.vide === '', `chaîne vide → vide (got "${r.vide}")`);
   A(r.bthCongo === 'COD', `pays de naissance PDF « Congo (Rép. dém.) » → décodé (COD), pas vide (got "${r.bthCongo}")`);
+  A(r.yougoslavie === '169', `Yougoslavie → 169 (got "${r.yougoslavie}")`);
+  A(r.yougoslavie_decoded === 'YUG', `169 (Yougoslavie) décodé par le Convertisseur → YUG, pas vide (got "${r.yougoslavie_decoded}")`);
+  A(r.undecodable.length === 0, `tous les codes pays du PDF sont décodables par le Convertisseur (indécodables: ${r.undecodable.join(', ') || 'aucun'})`);
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 
   await b.close();
