@@ -12,6 +12,21 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — découpage du JS métier (7/n) : lecture des dates + sauvegarde locale
+(Planner `218` → `219`, SW `statbel-v383` → `statbel-v384`)
+- **`js/planner/lecture.js`** (~34 lignes) : `parseDate()` — normalise les dates issues du
+  Convertisseur (objet `Date`, n° de série Excel, ISO `yyyy-mm-dd`, belge `jj/mm/aaaa`, repli US)
+  vers un `Date` local. Bloc `<script>` extrait **verbatim**.
+- **`js/planner/sauvegarde.js`** (~59 lignes) : `sauvegarder()`, `restaurer()`,
+  `effacerSauvegarde()` (clé `lfs_planner_save`) et `afficherToast()`. Extraits **verbatim**.
+- Le **bootstrap** (IIFE `init()` qui charge les plannings au démarrage + écoute `storage`) **reste
+  inline** dans la page, à sa position d'origine, pour préserver l'ordre d'exécution. `statbel_planner.html`
+  passe de **62 Ko → 58 Ko**.
+- Vérification headless **renforcée** : le bootstrap charge bien les plannings au démarrage (donc
+  `parseDate` fonctionne à l'amorçage), `parseDate` normalise les formats ISO **et** belge, aller-retour
+  `sauvegarder`/`restaurer` de la sélection OK, `afficherToast` sans erreur, + les 4 vues rendues avec
+  données. 53/53 tests verts, lint 0 warning, garde de version verte.
+
 ### Planner — découpage du JS métier (6/n) : vues + navigation extraites en module
 (Planner `217` → `218`, SW `statbel-v382` → `statbel-v383`)
 - Extraction **verbatim** du bloc `<script>` entier **VUES + NAVIGATION + UTILITAIRES** vers
