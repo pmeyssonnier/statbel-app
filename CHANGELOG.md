@@ -12,6 +12,25 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — SheetJS externalisé vers `vendor/`
+(Convertisseur `234` → `235`, SW `statbel-v375` → `statbel-v376`)
+- La lib **SheetJS (xlsx 0.18.5)** était **inlinée** dans `statbel_converter.html` (~861 Ko).
+  Elle est byte-identique au `vendor/xlsx/xlsx.full.min.js` déjà vendorisé : on remplace le bloc
+  inline par `<script src="vendor/xlsx/xlsx.full.min.js">` (mutualisé avec Interviews et le Planner,
+  mis en cache une seule fois ; déjà dans `APP_CRITICAL`).
+- **`statbel_converter.html` passe de ~1 308 Ko à ~447 Ko (−66 %).** Chargement en script
+  classique (compatible `file://`), global `XLSX` inchangé ; import Excel inchangé (53/53 tests verts).
+
+### Planner — gabarit `.docx` de candidature externalisé
+(Planner `210` → `211`, SW `statbel-v374` → `statbel-v375`)
+- Le **gabarit du formulaire de candidature enquêteur** (`.docx`, ~170 Ko de parties OOXML
+  encodées en base64) était **inliné** dans `statbel_planner.html`. Il est déplacé dans
+  **`js/cand-docx.js`** (script classique exposant la globale `CAND_DOCX`, chargé avant usage,
+  compatible `file://`), et ajouté à `APP_CRITICAL` du service worker.
+- **`statbel_planner.html` passe de ~386 Ko à ~217 Ko.** Cumulé avec l'externalisation de
+  SheetJS, le mono-fichier a fondu de **~1 247 Ko à ~217 Ko (−83 %)** ; la génération `.docx`
+  est inchangée (vérifiée en headless).
+
 ### Planner — SheetJS externalisé vers `vendor/`
 (Planner `209` → `210`, SW `statbel-v373` → `statbel-v374`)
 - La lib **SheetJS (xlsx 0.18.5)** était **inlinée** dans `statbel_planner.html` (~861 Ko,
