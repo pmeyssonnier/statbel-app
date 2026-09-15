@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carte du code — statbel-app</title>
+<style>
+  :root{
+    --bg:#f4f2ee; --panel:#fbfaf7; --panel-2:#f0ede7; --ink:#211d16; --ink-2:#5c554a;
+    --ink-3:#8b8377; --line:#e2ddd3; --line-2:#d3ccbe; --accent:#b8790a; --accent-ink:#7a4f04;
+    --shadow:0 1px 2px rgba(40,33,20,.06),0 4px 16px rgba(40,33,20,.05);
+    --ok:#2f8f57; --warn:#b8790a; --hot:#c0453f;
+    --m-int:#2563a8; --m-conv:#b8790a; --m-plan:#2f8f57; --m-shar:#7a52c4;
+    --m-test:#0f8a8a; --m-tool:#6b6459; --m-docs:#c05576; --m-vend:#4b7d8c; --m-skil:#9a6b3d;
+    --m-int-bg:#e7effa; --m-conv-bg:#f8efdb; --m-plan-bg:#e4f3ea; --m-shar-bg:#efe9fb;
+    --m-test-bg:#def0f0; --m-tool-bg:#edeae4; --m-docs-bg:#fbe6ed; --m-vend-bg:#e0eef1; --m-skil-bg:#f2e8db;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#17150f; --panel:#201d16; --panel-2:#272319; --ink:#f0ebe0; --ink-2:#b6ad9c;
+    --ink-3:#847c6d; --line:#332e23; --line-2:#403a2c; --accent:#e0a638; --accent-ink:#f0c877;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 22px rgba(0,0,0,.35);
+    --ok:#5fc086; --warn:#e0a638; --hot:#e5776f;
+    --m-int:#6aa6e6; --m-conv:#e0a638; --m-plan:#5fc086; --m-shar:#b394ec;
+    --m-test:#3fc0c0; --m-tool:#a49a8a; --m-docs:#e78aa6; --m-vend:#79b3c2; --m-skil:#c99a63;
+    --m-int-bg:#1b2a3d; --m-conv-bg:#33280f; --m-plan-bg:#16301f; --m-shar-bg:#251c38;
+    --m-test-bg:#0e2c2c; --m-tool-bg:#2a271e; --m-docs-bg:#341620; --m-vend-bg:#12262c; --m-skil-bg:#2e2312;
+    color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#17150f; --panel:#201d16; --panel-2:#272319; --ink:#f0ebe0; --ink-2:#b6ad9c;
+    --ink-3:#847c6d; --line:#332e23; --line-2:#403a2c; --accent:#e0a638; --accent-ink:#f0c877;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 22px rgba(0,0,0,.35);
+    --ok:#5fc086; --warn:#e0a638; --hot:#e5776f;
+    --m-int:#6aa6e6; --m-conv:#e0a638; --m-plan:#5fc086; --m-shar:#b394ec;
+    --m-test:#3fc0c0; --m-tool:#a49a8a; --m-docs:#e78aa6; --m-vend:#79b3c2; --m-skil:#c99a63;
+    --m-int-bg:#1b2a3d; --m-conv-bg:#33280f; --m-plan-bg:#16301f; --m-shar-bg:#251c38;
+    --m-test-bg:#0e2c2c; --m-tool-bg:#2a271e; --m-docs-bg:#341620; --m-vend-bg:#12262c; --m-skil-bg:#2e2312;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);margin:0;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  .wrap{max-width:1220px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+  .num{font-variant-numeric:tabular-nums}
+
+  header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+    background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top-in{max-width:1220px;margin:0 auto;padding:14px 20px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;gap:1px;margin-right:auto}
+  .brand h1{margin:0;font-size:19px;letter-spacing:-.01em;font-weight:700}
+  .brand .sub{color:var(--ink-3);font-size:12px}
+  .brand .sub b{color:var(--accent-ink);font-weight:600}
+  .kpi{display:flex;gap:18px}
+  .kpi div{display:flex;flex-direction:column;line-height:1.05}
+  .kpi .n{font-size:18px;font-weight:700;letter-spacing:-.02em}
+  .kpi .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)}
+  .theme-btn{border:1px solid var(--line-2);background:var(--panel);color:var(--ink-2);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:15px;align-self:center}
+  .theme-btn:hover{border-color:var(--accent)}
+
+  section{margin-top:26px}
+  .sec-h{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+  .sec-h h2{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-2);font-weight:700}
+  .sec-h .hint{font-size:12px;color:var(--ink-3)}
+
+  .scopebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);
+    border-radius:11px;box-shadow:var(--shadow);padding:10px 14px;margin-top:16px}
+  .scopebar .lbl{font-size:12.5px;color:var(--ink-2)}
+  .switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .switch input{display:none}
+  .switch .track{width:38px;height:22px;border-radius:12px;background:var(--line-2);position:relative;transition:background .15s}
+  .switch .track::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .switch input:checked + .track{background:var(--accent)}
+  .switch input:checked + .track::after{transform:translateX(16px)}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-left-width:3px;border-radius:11px;padding:12px 13px;
+    cursor:pointer;text-align:left;color:inherit;box-shadow:var(--shadow);transition:transform .08s,border-color .12s;position:relative}
+  .card:hover{transform:translateY(-2px)}
+  .card.off{opacity:.4}
+  .card.hidden{display:none}
+  .card .cm{display:flex;align-items:center;gap:7px;font-weight:700;font-size:12.5px}
+  .card .dot{width:9px;height:9px;border-radius:3px;flex:none}
+  .card .big{font-size:21px;font-weight:800;letter-spacing:-.02em;margin-top:7px}
+  .card .big small{font-size:11px;font-weight:600;color:var(--ink-3)}
+  .card .det{font-size:11px;color:var(--ink-3);margin-top:2px}
+  .card .bar{height:4px;border-radius:3px;background:var(--panel-2);margin-top:9px;overflow:hidden}
+  .card .bar i{display:block;height:100%;border-radius:3px}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:8px}
+  .cov{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:8px 6px}
+  @media (max-width:680px){.cov{grid-template-columns:1fr}}
+  .cov h4{margin:2px 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+  .covrow{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
+  .covrow .name{width:120px;flex:none;color:var(--ink-2)}
+  .covrow .tk{flex:1;height:9px;border-radius:5px;background:var(--panel-2);overflow:hidden;position:relative}
+  .covrow .tk i{display:block;height:100%;border-radius:5px}
+  .covrow .v{width:112px;flex:none;text-align:right;color:var(--ink-3);font-size:11.5px}
+  .untested{font-size:12px;color:var(--ink-3);padding:2px 6px;line-height:1.9}
+  .untested code{font-family:ui-monospace,monospace;background:var(--panel-2);padding:1px 5px;border-radius:5px;font-size:11px}
+
+  .graph-legend{display:flex;flex-wrap:wrap;gap:14px;padding:8px 10px 4px;font-size:11.5px;color:var(--ink-2)}
+  .graph-legend span{display:inline-flex;align-items:center;gap:5px}
+  .graph-legend i{width:20px;height:0;border-top:2px solid var(--line-2)}
+  .graph-legend i.imp{border-top-color:var(--accent)}
+  .graph-legend i.by{border-top-style:dashed;border-top-color:var(--m-int)}
+  .gwrap{overflow-x:auto}
+  svg#dep{display:block;width:100%;min-width:640px;height:auto}
+  .gnode rect{stroke-width:1.4px;transition:opacity .12s}
+  .gnode text{font-size:11px;fill:var(--ink);font-family:ui-monospace,monospace}
+  .gnode .cnt{font-size:9px;fill:var(--ink-3)}
+  .gnode{cursor:pointer}
+  .gedge{fill:none;transition:opacity .12s,stroke-width .12s}
+  .col-lab{font-size:10px;fill:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;text-anchor:middle;font-weight:700}
+  .dim{opacity:.12!important}
+  .dim text{opacity:.35}
+
+  .toolbar{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 13px;display:flex;flex-direction:column;gap:11px}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .chip{border:1px solid var(--line-2);background:var(--panel-2);color:var(--ink-2);border-radius:20px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .chip .dot{width:8px;height:8px;border-radius:3px}
+  .chip.on{color:#fff;border-color:transparent}
+  :root[data-theme="dark"] .chip.on,:root:not([data-theme="light"]) .chip.on{color:#17150f}
+  @media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .chip.on{color:#fff}}
+  .chip.sm{padding:4px 10px;font-size:11.5px}
+  .chip.hidden{display:none}
+  .row2{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center}
+  .search{flex:1;min-width:180px;display:flex;align-items:center;gap:7px;border:1px solid var(--line-2);background:var(--bg);border-radius:9px;padding:7px 11px}
+  .search input{border:0;background:transparent;color:var(--ink);font-size:13px;width:100%;outline:none}
+  .search input::placeholder{color:var(--ink-3)}
+  .slider{display:flex;flex-direction:column;gap:2px;min-width:140px}
+  .slider label{font-size:11px;color:var(--ink-3);display:flex;justify-content:space-between}
+  .slider label b{color:var(--accent-ink);font-variant-numeric:tabular-nums}
+  input[type=range]{accent-color:var(--accent);width:100%}
+  .clr{margin-left:auto;border:0;background:transparent;color:var(--accent-ink);font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline}
+  .type-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .type-row .lbl{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.07em;margin-right:2px}
+
+  .tstat{font-size:12px;color:var(--ink-3);margin:12px 2px 6px}
+  .tstat b{color:var(--ink)}
+  .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
+  table{border-collapse:collapse;width:100%;min-width:860px;font-size:12.5px}
+  thead th{position:sticky;top:calc(env(safe-area-inset-top,0px) + 60px);background:var(--panel-2);color:var(--ink-2);text-align:left;
+    padding:9px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line-2);user-select:none}
+  thead th:hover{color:var(--accent-ink)}
+  thead th.r{text-align:right}
+  th .ar{opacity:.4;font-size:9px}
+  th.sorted .ar{opacity:1;color:var(--accent)}
+  tbody td{padding:8px 12px;border-bottom:1px solid var(--line)}
+  tbody tr:hover{background:var(--panel-2)}
+  tbody tr:last-child td{border-bottom:0}
+  td.path{font-family:ui-monospace,monospace;font-size:12px;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  td.path .dir{color:var(--ink-3)}
+  td.path .file{color:var(--ink);font-weight:600}
+  .mtag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .mtag .dot{width:7px;height:7px;border-radius:2px}
+  .ttag{font-family:ui-monospace,monospace;font-size:11px;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line);padding:1px 7px;border-radius:6px}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .microbar{display:inline-block;height:6px;border-radius:3px;background:var(--accent);vertical-align:middle;margin-left:8px;opacity:.5}
+  .cx{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
+  .cxdot{width:8px;height:8px;border-radius:2px;flex:none}
+  .cx-low{background:var(--ok)} .cx-med{background:var(--warn)} .cx-hi{background:var(--hot)} .cx-na{background:var(--line-2)}
+  .cxband{font-size:10px;color:var(--ink-3)}
+  .tcnt{font-variant-numeric:tabular-nums;font-weight:700;font-size:11px;border-radius:6px;padding:1px 7px;min-width:22px;display:inline-block;text-align:center}
+  .tcnt.has{background:var(--m-plan-bg);color:var(--m-plan)}
+  .tcnt.no{background:var(--panel-2);color:var(--ink-3);font-weight:600}
+  td.age{color:var(--ink-2);white-space:nowrap}
+  td.age small{color:var(--ink-3);font-size:10.5px}
+  .impbadge{font-variant-numeric:tabular-nums;font-weight:700;font-size:11px;background:var(--m-conv-bg);color:var(--accent-ink);border-radius:6px;padding:1px 7px;min-width:22px;text-align:center;display:inline-block}
+  .impbadge.z{background:var(--panel-2);color:var(--ink-3);font-weight:600}
+  .impby{font-size:10.5px;color:var(--ink-3);margin-left:3px}
+  .deplist{font-family:ui-monospace,monospace;font-size:11px;color:var(--ink-2);background:var(--panel-2);border-radius:8px;padding:8px 12px;margin:2px 0 4px;line-height:1.7}
+  .deplist b{color:var(--accent-ink)}
+  .deplist .none{color:var(--ink-3);font-style:italic}
+  .foot{color:var(--ink-3);font-size:11.5px;margin-top:18px;line-height:1.7}
+  .foot code{font-family:ui-monospace,monospace;background:var(--panel-2);padding:1px 5px;border-radius:5px}
+  @media (max-width:560px){.kpi{gap:12px}.kpi .n{font-size:15px} thead th{top:calc(env(safe-area-inset-top,0px) + 96px)}}
+</style>
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>Carte du code — statbel-app</h1>
+      <div class="sub">3 PWA hors-ligne · commit <b class="mono">7f899c8</b> · Convertisseur v234 / SW v373 · relevé le 15/09/2026</div>
+    </div>
+    <div class="kpi">
+      <div><span class="n num" id="kFiles">–</span><span class="k">Fichiers</span></div>
+      <div><span class="n num" id="kKo">–</span><span class="k">Poids</span></div>
+      <div><span class="n num" id="kLines">–</span><span class="k">Lignes</span></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" title="Thème clair / sombre">◐</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="scopebar">
+    <span class="lbl">📦 Périmètre</span>
+    <label class="switch"><input type="checkbox" id="scVend"><span class="track"></span>Inclure <span class="mono">vendor/</span> (libs)</label>
+    <label class="switch"><input type="checkbox" id="scSkil"><span class="track"></span>Inclure <span class="mono">.claude/</span> (skills)</label>
+    <span class="lbl" style="color:var(--ink-3);margin-left:auto" id="scNote"></span>
+  </div>
+
+  <section>
+    <div class="sec-h"><h2>Modules</h2><span class="hint">clic = filtrer · barres = poids relatif en lignes</span></div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2>Couverture de test</h2><span class="hint">tests headless Playwright · un test = une cible principale</span></div>
+    <div class="panel"><div class="cov">
+      <div>
+        <h4>Par application</h4>
+        <div id="covApp"></div>
+      </div>
+      <div>
+        <h4>Modules Interviews sans test dédié</h4>
+        <div class="untested" id="covUntested"></div>
+      </div>
+    </div></div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2>Graphe de dépendances — Interviews (modules ES)</h2>
+      <span class="hint">survol = imports + dépendants · taille ∝ lignes</span></div>
+    <div class="panel">
+      <div class="graph-legend">
+        <span><i class="imp"></i> importe →</span>
+        <span><i class="by"></i> importé par</span>
+        <span style="color:var(--ink-3)">colonnes : core → data → features → ui → <span class="mono">app.js</span></span>
+      </div>
+      <div class="gwrap"><svg id="dep" viewBox="0 0 960 660" role="img" aria-label="Graphe des imports entre modules ES d'Interviews"></svg></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2>Filtres</h2><span class="hint" id="fcount"></span></div>
+    <div class="toolbar">
+      <div class="filters" id="modChips"></div>
+      <div class="type-row" id="typeChips"><span class="lbl">Type</span></div>
+      <div class="row2">
+        <div class="search">🔎<input id="q" type="search" placeholder="Chercher un chemin (ex. ui/, canon, .test, vendor)…" autocomplete="off"></div>
+        <div class="slider"><label>Taille min. <b><span id="minKoV">0</span> Ko</b></label><input type="range" id="minKo" min="0" max="80" value="0" step="1"></div>
+        <div class="slider"><label>Lignes min. <b><span id="minLnV">0</span></b></label><input type="range" id="minLn" min="0" max="1000" value="0" step="10"></div>
+        <button class="clr" id="clr">réinitialiser</button>
+      </div>
+    </div>
+    <div class="tstat" id="tstat"></div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr>
+          <th data-k="p">Fichier <span class="ar">▾</span></th>
+          <th data-k="m">Module <span class="ar">▾</span></th>
+          <th data-k="t">Type <span class="ar">▾</span></th>
+          <th data-k="ko" class="r">Ko <span class="ar">▾</span></th>
+          <th data-k="l" class="r">Lignes <span class="ar">▾</span></th>
+          <th data-k="cx" class="r">Complexité <span class="ar">▾</span></th>
+          <th data-k="tc" class="r">Tests <span class="ar">▾</span></th>
+          <th data-k="ts" class="r">Modifié <span class="ar">▾</span></th>
+          <th data-k="ni" class="r">Imports <span class="ar">▾</span></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="foot">
+      Colonne <b>Complexité</b> = points de décision (if/for/while/case/catch, &amp;&amp;, ||, ?, ⇒) + profondeur d'imbrication max ; bande
+      <span style="color:var(--ok)">●</span> faible / <span style="color:var(--warn)">●</span> moyenne / <span style="color:var(--hot)">●</span> élevée. Code <b>minifié/généré</b> (libs vendorisées) marqué <code>généré</code> — non pertinent.
+      Les mono-fichiers <code>statbel_*.html</code> incluent leurs libs inline, ce qui gonfle leur score.<br>
+      <b>Tests</b> = nombre de tests dont ce fichier est la cible principale (vert = couvert). <b>Modifié</b> = dernier commit touchant le fichier (git).
+      <b>Imports</b> = imports ES internes (fan-out) · gris = importé par N (fan-in). Clic sur une ligne = dépendances.
+    </p>
+  </section>
+</div>
+
+<script>
+const METRICS = [{"p":".claude/agents/impeccable-asset-producer.md","bytes":5964,"lines":43,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/agents/impeccable-documenter.md","bytes":3184,"lines":30,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/agents/impeccable-finish-reviewer.md","bytes":15223,"lines":44,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/agents/impeccable-manual-edit-applier.md","bytes":6969,"lines":98,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/SKILL.md","bytes":11104,"lines":86,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/adapt.md","bytes":10307,"lines":313,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/adapt.native.md","bytes":3910,"lines":59,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/android.md","bytes":4093,"lines":47,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/animate.md","bytes":5236,"lines":90,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/audit.md","bytes":7873,"lines":137,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/audit.native.md","bytes":8357,"lines":140,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/bolder.md","bytes":3471,"lines":34,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/clarify.md","bytes":4590,"lines":95,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/colorize.md","bytes":4537,"lines":87,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/craft-floor.md","bytes":4484,"lines":45,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/craft.md","bytes":555,"lines":6,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/critique.md","bytes":42693,"lines":807,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/degraded/asset-producer.md","bytes":6171,"lines":37,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/degraded/documenter.md","bytes":3365,"lines":24,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/degraded/finish-reviewer.md","bytes":15390,"lines":38,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/degraded/manual-edit-applier.md","bytes":7182,"lines":92,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/delight.md","bytes":3716,"lines":71,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/distill.md","bytes":5624,"lines":112,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/doctor.md","bytes":5463,"lines":55,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/document.md","bytes":27428,"lines":417,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/extract.md","bytes":3340,"lines":70,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/harden.md","bytes":8539,"lines":337,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/hooks.md","bytes":13310,"lines":112,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/init.md","bytes":11398,"lines":132,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/ios.md","bytes":3812,"lines":52,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/layout.md","bytes":5159,"lines":85,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/live-setup.md","bytes":7422,"lines":103,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/live.md","bytes":35596,"lines":324,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/new-work.md","bytes":52662,"lines":148,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/onboard.md","bytes":7740,"lines":235,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/operate.md","bytes":4145,"lines":62,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/optimize.md","bytes":7614,"lines":259,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/overdrive.md","bytes":9085,"lines":128,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/polish.md","bytes":6635,"lines":106,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/quieter.md","bytes":4859,"lines":100,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/routing.md","bytes":2901,"lines":19,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/shape.md","bytes":3547,"lines":60,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/typeset.md","bytes":5254,"lines":81,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/reference/visualize.md","bytes":11204,"lines":47,"ts":1788454216,"dp":null,"nest":null},{"p":".claude/skills/impeccable/scripts/build-phase.mjs","bytes":77334,"lines":1023,"ts":1788454216,"dp":595,"nest":5},{"p":".claude/skills/impeccable/scripts/comp-diff.mjs","bytes":21349,"lines":392,"ts":1788454216,"dp":120,"nest":5},{"p":".claude/skills/impeccable/scripts/comp-spec.mjs","bytes":31488,"lines":514,"ts":1788454216,"dp":239,"nest":5},{"p":".claude/skills/impeccable/scripts/concept-seed.mjs","bytes":45418,"lines":815,"ts":1788454216,"dp":211,"nest":6},{"p":".claude/skills/impeccable/scripts/context-signals.mjs","bytes":14033,"lines":326,"ts":1788454216,"dp":93,"nest":4},{"p":".claude/skills/impeccable/scripts/context.mjs","bytes":70881,"lines":1692,"ts":1788454216,"dp":529,"nest":5},{"p":".claude/skills/impeccable/scripts/critique-storage.mjs","bytes":18703,"lines":474,"ts":1788454216,"dp":139,"nest":5},{"p":".claude/skills/impeccable/scripts/detect-csp.mjs","bytes":8625,"lines":247,"ts":1788454216,"dp":53,"nest":4},{"p":".claude/skills/impeccable/scripts/detect.mjs","bytes":1235,"lines":31,"ts":1788454216,"dp":4,"nest":2},{"p":".claude/skills/impeccable/scripts/detector/browser/injected/index.mjs","bytes":104813,"lines":2581,"ts":1788454216,"dp":1015,"nest":9},{"p":".claude/skills/impeccable/scripts/detector/cli/main.mjs","bytes":21510,"lines":499,"ts":1788454216,"dp":145,"nest":9},{"p":".claude/skills/impeccable/scripts/detector/design-system.mjs","bytes":49814,"lines":1312,"ts":1788454216,"dp":499,"nest":8},{"p":".claude/skills/impeccable/scripts/detector/detect-antipatterns-browser.js","bytes":424237,"lines":9487,"ts":1788454216,"dp":3937,"nest":11},{"p":".claude/skills/impeccable/scripts/detector/detect-antipatterns.mjs","bytes":1868,"lines":52,"ts":1788454216,"dp":3,"nest":1},{"p":".claude/skills/impeccable/scripts/detector/engines/browser/detect-url.mjs","bytes":16236,"lines":435,"ts":1788454216,"dp":135,"nest":5},{"p":".claude/skills/impeccable/scripts/detector/engines/regex/detect-text.mjs","bytes":55793,"lines":1440,"ts":1788454216,"dp":619,"nest":10},{"p":".claude/skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs","bytes":46017,"lines":1243,"ts":1788454216,"dp":420,"nest":14},{"p":".claude/skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs","bytes":12766,"lines":279,"ts":1788454216,"dp":83,"nest":5},{"p":".claude/skills/impeccable/scripts/detector/engines/visual/screenshot-contrast.mjs","bytes":6529,"lines":190,"ts":1788454216,"dp":47,"nest":5},{"p":".claude/skills/impeccable/scripts/detector/findings.mjs","bytes":897,"lines":24,"ts":1788454216,"dp":4,"nest":2},{"p":".claude/skills/impeccable/scripts/detector/node/file-system.mjs","bytes":7995,"lines":226,"ts":1788454216,"dp":51,"nest":5},{"p":".claude/skills/impeccable/scripts/detector/profile/profiler.mjs","bytes":4550,"lines":167,"ts":1788454216,"dp":45,"nest":4},{"p":".claude/skills/impeccable/scripts/detector/registry/antipatterns.mjs","bytes":29178,"lines":637,"ts":1788454216,"dp":43,"nest":2},{"p":".claude/skills/impeccable/scripts/detector/rules/checks.mjs","bytes":266230,"lines":5751,"ts":1788454216,"dp":2643,"nest":11},{"p":".claude/skills/impeccable/scripts/detector/shared/color.mjs","bytes":23586,"lines":597,"ts":1788454216,"dp":224,"nest":5},{"p":".claude/skills/impeccable/scripts/detector/shared/constants.mjs","bytes":5183,"lines":128,"ts":1788454216,"dp":13,"nest":1},{"p":".claude/skills/impeccable/scripts/detector/shared/fonts.mjs","bytes":852,"lines":31,"ts":1788454216,"dp":9,"nest":3},{"p":".claude/skills/impeccable/scripts/detector/shared/inline-ignores.mjs","bytes":6194,"lines":149,"ts":1788454216,"dp":38,"nest":4},{"p":".claude/skills/impeccable/scripts/detector/shared/page.mjs","bytes":252,"lines":8,"ts":1788454216,"dp":2,"nest":1},{"p":".claude/skills/impeccable/scripts/doctor.mjs","bytes":11577,"lines":330,"ts":1788454216,"dp":67,"nest":6},{"p":".claude/skills/impeccable/scripts/embed-prompt.mjs","bytes":7354,"lines":167,"ts":1788454216,"dp":70,"nest":4},{"p":".claude/skills/impeccable/scripts/font-match.mjs","bytes":28759,"lines":458,"ts":1788454216,"dp":196,"nest":7},{"p":".claude/skills/impeccable/scripts/generate-image.mjs","bytes":22797,"lines":448,"ts":1788454216,"dp":129,"nest":4},{"p":".claude/skills/impeccable/scripts/hook-admin.mjs","bytes":32431,"lines":820,"ts":1788454216,"dp":254,"nest":6},{"p":".claude/skills/impeccable/scripts/hook-before-edit.mjs","bytes":20029,"lines":539,"ts":1788454216,"dp":204,"nest":4},{"p":".claude/skills/impeccable/scripts/hook-lib.mjs","bytes":102883,"lines":2494,"ts":1788454216,"dp":786,"nest":8},{"p":".claude/skills/impeccable/scripts/hook.mjs","bytes":2809,"lines":80,"ts":1788454216,"dp":18,"nest":3},{"p":".claude/skills/impeccable/scripts/lib/artifact-schema.mjs","bytes":3896,"lines":94,"ts":1788454216,"dp":17,"nest":2},{"p":".claude/skills/impeccable/scripts/lib/composition-catalog.mjs","bytes":10249,"lines":201,"ts":1788454216,"dp":106,"nest":5},{"p":".claude/skills/impeccable/scripts/lib/concept-catalog.mjs","bytes":19897,"lines":397,"ts":1788454216,"dp":201,"nest":6},{"p":".claude/skills/impeccable/scripts/lib/design-parser.mjs","bytes":27178,"lines":881,"ts":1788454216,"dp":260,"nest":6},{"p":".claude/skills/impeccable/scripts/lib/font-fingerprint.mjs","bytes":29235,"lines":565,"ts":1788454216,"dp":308,"nest":6},{"p":".claude/skills/impeccable/scripts/lib/font-index.mjs","bytes":6573,"lines":131,"ts":1788454216,"dp":43,"nest":4},{"p":".claude/skills/impeccable/scripts/lib/hero-checks.mjs","bytes":14926,"lines":247,"ts":1788454216,"dp":133,"nest":6},{"p":".claude/skills/impeccable/scripts/lib/image-metrics.mjs","bytes":14207,"lines":307,"ts":1788454216,"dp":85,"nest":4},{"p":".claude/skills/impeccable/scripts/lib/impeccable-config.mjs","bytes":22272,"lines":641,"ts":1788454216,"dp":234,"nest":5},{"p":".claude/skills/impeccable/scripts/lib/impeccable-paths.mjs","bytes":4976,"lines":138,"ts":1788454216,"dp":19,"nest":5},{"p":".claude/skills/impeccable/scripts/lib/is-generated.mjs","bytes":2502,"lines":73,"ts":1788454216,"dp":10,"nest":4},{"p":".claude/skills/impeccable/scripts/lib/live-path-globs.mjs","bytes":847,"lines":38,"ts":1788454216,"dp":10,"nest":5},{"p":".claude/skills/impeccable/scripts/lib/open-system-browser.mjs","bytes":848,"lines":27,"ts":1788454216,"dp":8,"nest":3},{"p":".claude/skills/impeccable/scripts/lib/png.mjs","bytes":10735,"lines":282,"ts":1788454216,"dp":85,"nest":5},{"p":".claude/skills/impeccable/scripts/lib/provider.mjs","bytes":332,"lines":6,"ts":1788454216,"dp":0,"nest":1},{"p":".claude/skills/impeccable/scripts/lib/raster.mjs","bytes":9876,"lines":195,"ts":1788454216,"dp":42,"nest":6},{"p":".claude/skills/impeccable/scripts/lib/roll-selection.mjs","bytes":17803,"lines":370,"ts":1788454216,"dp":113,"nest":4},{"p":".claude/skills/impeccable/scripts/lib/staleness-deep.mjs","bytes":21403,"lines":486,"ts":1788454216,"dp":129,"nest":7},{"p":".claude/skills/impeccable/scripts/lib/staleness-notice.mjs","bytes":6706,"lines":170,"ts":1788454216,"dp":47,"nest":4},{"p":".claude/skills/impeccable/scripts/lib/staleness.mjs","bytes":23416,"lines":534,"ts":1788454216,"dp":122,"nest":8},{"p":".claude/skills/impeccable/scripts/lib/surface-briefs.mjs","bytes":6110,"lines":150,"ts":1788454216,"dp":72,"nest":6},{"p":".claude/skills/impeccable/scripts/lib/target-args.mjs","bytes":1145,"lines":43,"ts":1788454216,"dp":10,"nest":4},{"p":".claude/skills/impeccable/scripts/lib/target-slug.mjs","bytes":1075,"lines":34,"ts":1788454216,"dp":13,"nest":3},{"p":".claude/skills/impeccable/scripts/lib/template-extensions.mjs","bytes":5457,"lines":147,"ts":1788454216,"dp":39,"nest":3},{"p":".claude/skills/impeccable/scripts/live-accept.mjs","bytes":35874,"lines":939,"ts":1788454216,"dp":193,"nest":7},{"p":".claude/skills/impeccable/scripts/live-browser-dom.js","bytes":4917,"lines":168,"ts":1788454216,"dp":54,"nest":5},{"p":".claude/skills/impeccable/scripts/live-browser-ignores.js","bytes":10346,"lines":243,"ts":1788454216,"dp":70,"nest":6},{"p":".claude/skills/impeccable/scripts/live-browser-session.js","bytes":4090,"lines":145,"ts":1788454216,"dp":30,"nest":5},{"p":".claude/skills/impeccable/scripts/live-browser.js","bytes":513389,"lines":12794,"ts":1788454216,"dp":3631,"nest":12},{"p":".claude/skills/impeccable/scripts/live-commit-manual-edits.mjs","bytes":40852,"lines":1201,"ts":1788454216,"dp":426,"nest":7},{"p":".claude/skills/impeccable/scripts/live-complete.mjs","bytes":4808,"lines":108,"ts":1788454216,"dp":42,"nest":5},{"p":".claude/skills/impeccable/scripts/live-copy-edit-agent.mjs","bytes":33453,"lines":801,"ts":1788454216,"dp":264,"nest":7},{"p":".claude/skills/impeccable/scripts/live-discard-manual-edits.mjs","bytes":1687,"lines":52,"ts":1788454216,"dp":10,"nest":2},{"p":".claude/skills/impeccable/scripts/live-inject.mjs","bytes":17585,"lines":464,"ts":1788454216,"dp":103,"nest":4},{"p":".claude/skills/impeccable/scripts/live-insert.mjs","bytes":10081,"lines":293,"ts":1788454216,"dp":51,"nest":5},{"p":".claude/skills/impeccable/scripts/live-manual-edit-evidence.mjs","bytes":11857,"lines":369,"ts":1788454216,"dp":108,"nest":4},{"p":".claude/skills/impeccable/scripts/live-poll.mjs","bytes":16167,"lines":431,"ts":1788454216,"dp":97,"nest":5},{"p":".claude/skills/impeccable/scripts/live-resume.mjs","bytes":6132,"lines":124,"ts":1788454216,"dp":62,"nest":3},{"p":".claude/skills/impeccable/scripts/live-server.mjs","bytes":69577,"lines":1699,"ts":1788454216,"dp":475,"nest":7},{"p":".claude/skills/impeccable/scripts/live-status.mjs","bytes":2626,"lines":72,"ts":1788454216,"dp":22,"nest":3},{"p":".claude/skills/impeccable/scripts/live-target.mjs","bytes":934,"lines":31,"ts":1788454216,"dp":6,"nest":4},{"p":".claude/skills/impeccable/scripts/live-wrap.mjs","bytes":39116,"lines":928,"ts":1788454216,"dp":212,"nest":8},{"p":".claude/skills/impeccable/scripts/live.mjs","bytes":12909,"lines":335,"ts":1788454216,"dp":71,"nest":4},{"p":".claude/skills/impeccable/scripts/live/accept-css.mjs","bytes":22505,"lines":618,"ts":1788454216,"dp":212,"nest":9},{"p":".claude/skills/impeccable/scripts/live/accept-verify.mjs","bytes":2739,"lines":61,"ts":1788454216,"dp":11,"nest":5},{"p":".claude/skills/impeccable/scripts/live/browser-script-parts.mjs","bytes":3674,"lines":85,"ts":1788454216,"dp":10,"nest":4},{"p":".claude/skills/impeccable/scripts/live/completion.mjs","bytes":1444,"lines":29,"ts":1788454216,"dp":10,"nest":3},{"p":".claude/skills/impeccable/scripts/live/event-validation.mjs","bytes":9579,"lines":200,"ts":1788454216,"dp":119,"nest":4},{"p":".claude/skills/impeccable/scripts/live/frameworks/astro.mjs","bytes":1725,"lines":48,"ts":1788454216,"dp":4,"nest":2},{"p":".claude/skills/impeccable/scripts/live/frameworks/detect-utils.mjs","bytes":2102,"lines":74,"ts":1788454216,"dp":19,"nest":4},{"p":".claude/skills/impeccable/scripts/live/frameworks/index.mjs","bytes":5847,"lines":144,"ts":1788454216,"dp":20,"nest":3},{"p":".claude/skills/impeccable/scripts/live/frameworks/journal.mjs","bytes":7182,"lines":198,"ts":1788454216,"dp":44,"nest":4},{"p":".claude/skills/impeccable/scripts/live/frameworks/nextjs.mjs","bytes":1732,"lines":50,"ts":1788454216,"dp":4,"nest":2},{"p":".claude/skills/impeccable/scripts/live/frameworks/nuxt.mjs","bytes":5242,"lines":162,"ts":1788454216,"dp":25,"nest":4},{"p":".claude/skills/impeccable/scripts/live/frameworks/script-src.mjs","bytes":699,"lines":18,"ts":1788454216,"dp":3,"nest":1},{"p":".claude/skills/impeccable/scripts/live/frameworks/static-html.mjs","bytes":656,"lines":27,"ts":1788454216,"dp":1,"nest":3},{"p":".claude/skills/impeccable/scripts/live/frameworks/sveltekit.mjs","bytes":1801,"lines":72,"ts":1788454216,"dp":1,"nest":4},{"p":".claude/skills/impeccable/scripts/live/frameworks/tag-strategy.mjs","bytes":10866,"lines":248,"ts":1788454216,"dp":51,"nest":4},{"p":".claude/skills/impeccable/scripts/live/frameworks/tanstack-start.mjs","bytes":1646,"lines":71,"ts":1788454216,"dp":2,"nest":4},{"p":".claude/skills/impeccable/scripts/live/frameworks/vite-generic.mjs","bytes":1324,"lines":43,"ts":1788454216,"dp":4,"nest":3},{"p":".claude/skills/impeccable/scripts/live/generation-preflight.mjs","bytes":5937,"lines":150,"ts":1788454216,"dp":54,"nest":3},{"p":".claude/skills/impeccable/scripts/live/insert-ui.mjs","bytes":15664,"lines":459,"ts":1788454216,"dp":156,"nest":5},{"p":".claude/skills/impeccable/scripts/live/instructions.mjs","bytes":13216,"lines":143,"ts":1788454216,"dp":58,"nest":4},{"p":".claude/skills/impeccable/scripts/live/manual-apply.mjs","bytes":34898,"lines":940,"ts":1788454216,"dp":326,"nest":6},{"p":".claude/skills/impeccable/scripts/live/manual-edit-routes.mjs","bytes":14933,"lines":358,"ts":1788454216,"dp":123,"nest":8},{"p":".claude/skills/impeccable/scripts/live/manual-edits-buffer.mjs","bytes":5112,"lines":153,"ts":1788454216,"dp":34,"nest":5},{"p":".claude/skills/impeccable/scripts/live/poll-lanes.mjs","bytes":759,"lines":15,"ts":1788454216,"dp":16,"nest":1},{"p":".claude/skills/impeccable/scripts/live/project-ignores.mjs","bytes":6427,"lines":140,"ts":1788454216,"dp":44,"nest":5},{"p":".claude/skills/impeccable/scripts/live/roots.mjs","bytes":20887,"lines":509,"ts":1788454216,"dp":131,"nest":6},{"p":".claude/skills/impeccable/scripts/live/session-store.mjs","bytes":22916,"lines":564,"ts":1788454216,"dp":197,"nest":5},{"p":".claude/skills/impeccable/scripts/live/source-lock.mjs","bytes":3707,"lines":106,"ts":1788454216,"dp":20,"nest":4},{"p":".claude/skills/impeccable/scripts/live/source-search.mjs","bytes":4349,"lines":106,"ts":1788454216,"dp":27,"nest":3},{"p":".claude/skills/impeccable/scripts/live/svelte-ast.mjs","bytes":39160,"lines":970,"ts":1788454216,"dp":392,"nest":8},{"p":".claude/skills/impeccable/scripts/live/svelte-component.mjs","bytes":52297,"lines":1367,"ts":1788454216,"dp":359,"nest":8},{"p":".claude/skills/impeccable/scripts/live/sveltekit-adapter.mjs","bytes":10915,"lines":305,"ts":1788454216,"dp":64,"nest":5},{"p":".claude/skills/impeccable/scripts/live/tanstack-adapter.mjs","bytes":9282,"lines":260,"ts":1788454216,"dp":42,"nest":4},{"p":".claude/skills/impeccable/scripts/live/ui-surfaces.mjs","bytes":3614,"lines":76,"ts":1788454216,"dp":8,"nest":1},{"p":".claude/skills/impeccable/scripts/live/vocabulary.mjs","bytes":7191,"lines":172,"ts":1788454216,"dp":2,"nest":2},{"p":".claude/skills/impeccable/scripts/modern-screenshot.umd.js","bytes":29290,"lines":15,"ts":1788454216,"dp":567,"nest":8},{"p":".claude/skills/impeccable/scripts/palette.mjs","bytes":56787,"lines":629,"ts":1788454216,"dp":117,"nest":4},{"p":".claude/skills/impeccable/scripts/pin.mjs","bytes":12051,"lines":341,"ts":1788454216,"dp":56,"nest":6},{"p":".claude/skills/impeccable/scripts/serve-question.mjs","bytes":121787,"lines":1784,"ts":1788454216,"dp":615,"nest":6},{"p":".claude/skills/impeccable/scripts/surface-brief.mjs","bytes":2517,"lines":75,"ts":1788454216,"dp":20,"nest":3},{"p":".github/workflows/create-release.yml","bytes":3147,"lines":75,"ts":1788560002,"dp":null,"nest":null},{"p":".github/workflows/pages.yml","bytes":728,"lines":39,"ts":1787042166,"dp":null,"nest":null},{"p":".github/workflows/tag-release.yml","bytes":3264,"lines":79,"ts":1788560002,"dp":null,"nest":null},{"p":".github/workflows/tests.yml","bytes":2038,"lines":58,"ts":1788560002,"dp":null,"nest":null},{"p":".gitignore","bytes":1453,"lines":0,"ts":1789463723,"dp":null,"nest":null},{"p":".nojekyll","bytes":0,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"CHANGELOG.md","bytes":91018,"lines":1211,"ts":1789472426,"dp":null,"nest":null},{"p":"CLAUDE.md","bytes":2400,"lines":41,"ts":1789463723,"dp":null,"nest":null},{"p":"DESIGN.md","bytes":6210,"lines":115,"ts":1789456474,"dp":null,"nest":null},{"p":"PRODUCT.md","bytes":4879,"lines":88,"ts":1789463723,"dp":null,"nest":null},{"p":"README.md","bytes":12829,"lines":183,"ts":1789465388,"dp":null,"nest":null},{"p":"apple-touch-icon.png","bytes":6076,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"css/base.css","bytes":24113,"lines":505,"ts":1789405499,"dp":null,"nest":null},{"p":"css/charts.css","bytes":1507,"lines":33,"ts":1787042166,"dp":null,"nest":null},{"p":"css/mobile.css","bytes":3111,"lines":56,"ts":1787042166,"dp":null,"nest":null},{"p":"css/modals.css","bytes":15265,"lines":342,"ts":1789331325,"dp":null,"nest":null},{"p":"css/summary.css","bytes":11363,"lines":286,"ts":1787042166,"dp":null,"nest":null},{"p":"docs/architecture-convertisseur.md","bytes":13431,"lines":712,"ts":1787081415,"dp":null,"nest":null},{"p":"docs/chantier-delegation-onclick.md","bytes":9825,"lines":186,"ts":1789314356,"dp":null,"nest":null},{"p":"docs/eft-2026-organisation.md","bytes":9793,"lines":182,"ts":1789392948,"dp":null,"nest":null},{"p":"docs/eft-cati-cawi.md","bytes":7228,"lines":127,"ts":1789243974,"dp":null,"nest":null},{"p":"docs/manuel.html","bytes":1161581,"lines":472,"ts":1789463723,"dp":3,"nest":2},{"p":"docs/templates-rappels.md","bytes":5311,"lines":170,"ts":1789339514,"dp":null,"nest":null},{"p":"eslint.config.mjs","bytes":4481,"lines":103,"ts":1787042166,"dp":6,"nest":4},{"p":"favicon-32.png","bytes":1095,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"favicon.ico","bytes":3518,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"icon-192-mask.png","bytes":5144,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"icon-192.png","bytes":6300,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"icon-512-mask.png","bytes":15191,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"icon-512.png","bytes":18870,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"index.html","bytes":29360,"lines":453,"ts":1789412047,"dp":9,"nest":2},{"p":"js/app.js","bytes":78060,"lines":1395,"ts":1789421112,"dp":459,"nest":5},{"p":"js/boot.js","bytes":7892,"lines":127,"ts":1789410037,"dp":32,"nest":6},{"p":"js/charts.js","bytes":9353,"lines":145,"ts":1787042166,"dp":64,"nest":5},{"p":"js/core/actions.js","bytes":2820,"lines":59,"ts":1789320227,"dp":13,"nest":2},{"p":"js/core/i18n.js","bytes":64791,"lines":457,"ts":1789414808,"dp":47,"nest":4},{"p":"js/core/util.js","bytes":11999,"lines":258,"ts":1789421112,"dp":115,"nest":3},{"p":"js/data/canon.js","bytes":33676,"lines":369,"ts":1789399462,"dp":32,"nest":2},{"p":"js/data/collect-method.js","bytes":1498,"lines":34,"ts":1789276914,"dp":4,"nest":1},{"p":"js/data/csv.js","bytes":13292,"lines":228,"ts":1789416976,"dp":127,"nest":5},{"p":"js/data/idb.js","bytes":8101,"lines":169,"ts":1789416976,"dp":46,"nest":5},{"p":"js/data/reimport.js","bytes":7160,"lines":144,"ts":1789309228,"dp":65,"nest":5},{"p":"js/data/serialization.js","bytes":2091,"lines":38,"ts":1789288915,"dp":9,"nest":2},{"p":"js/data/statuses.js","bytes":3684,"lines":70,"ts":1789279141,"dp":17,"nest":4},{"p":"js/features/backup.js","bytes":16691,"lines":353,"ts":1789410037,"dp":95,"nest":8},{"p":"js/features/geocoding.js","bytes":5710,"lines":130,"ts":1789410037,"dp":44,"nest":6},{"p":"js/features/history.js","bytes":7046,"lines":161,"ts":1789157329,"dp":63,"nest":3},{"p":"js/features/import.js","bytes":20558,"lines":407,"ts":1789325852,"dp":143,"nest":5},{"p":"js/features/reminders.js","bytes":11023,"lines":283,"ts":1789412047,"dp":67,"nest":4},{"p":"js/pdfgrp.js","bytes":16820,"lines":188,"ts":1789468526,"dp":80,"nest":7},{"p":"js/ui/biometrie.js","bytes":3904,"lines":86,"ts":1789331325,"dp":15,"nest":5},{"p":"js/ui/contacts.js","bytes":31600,"lines":628,"ts":1789412047,"dp":241,"nest":5},{"p":"js/ui/map.js","bytes":10972,"lines":220,"ts":1789318236,"dp":72,"nest":4},{"p":"js/ui/pin.js","bytes":15103,"lines":386,"ts":1789331325,"dp":88,"nest":4},{"p":"js/ui/rdv.js","bytes":5633,"lines":118,"ts":1789318236,"dp":45,"nest":3},{"p":"js/ui/resume.js","bytes":23362,"lines":499,"ts":1789318687,"dp":190,"nest":4},{"p":"js/ui/settings.js","bytes":15466,"lines":298,"ts":1789412047,"dp":101,"nest":4},{"p":"js/ui/stats.js","bytes":18421,"lines":340,"ts":1789318687,"dp":141,"nest":6},{"p":"manifest.webmanifest","bytes":694,"lines":19,"ts":1787042166,"dp":null,"nest":null},{"p":"package.json","bytes":691,"lines":20,"ts":1787042166,"dp":null,"nest":null},{"p":"statbel_converter.html","bytes":1339215,"lines":7301,"ts":1789472426,"dp":11032,"nest":11},{"p":"statbel_planner.html","bytes":1277348,"lines":3585,"ts":1789455384,"dp":10818,"nest":11},{"p":"sw.js","bytes":5880,"lines":152,"ts":1789472426,"dp":27,"nest":4},{"p":"tests/_serve.js","bytes":2056,"lines":59,"ts":1787042166,"dp":11,"nest":4},{"p":"tests/a11y-landmark.test.js","bytes":5032,"lines":105,"ts":1787085938,"dp":27,"nest":5},{"p":"tests/a11y-modal.test.js","bytes":5305,"lines":103,"ts":1789416976,"dp":22,"nest":3},{"p":"tests/a11y.test.js","bytes":4640,"lines":91,"ts":1789243485,"dp":22,"nest":4},{"p":"tests/actions.test.js","bytes":3326,"lines":75,"ts":1789317733,"dp":16,"nest":4},{"p":"tests/backup-reminder.test.js","bytes":4188,"lines":88,"ts":1787042166,"dp":13,"nest":3},{"p":"tests/backup.test.js","bytes":6426,"lines":119,"ts":1789410037,"dp":22,"nest":4},{"p":"tests/biometrie.test.js","bytes":5076,"lines":103,"ts":1789331325,"dp":17,"nest":3},{"p":"tests/candidature-order.test.js","bytes":4742,"lines":91,"ts":1789393842,"dp":23,"nest":3},{"p":"tests/chrome-delegation.test.js","bytes":2778,"lines":67,"ts":1789317733,"dp":11,"nest":3},{"p":"tests/collect-method.test.js","bytes":2499,"lines":47,"ts":1789277292,"dp":13,"nest":2},{"p":"tests/confort.test.js","bytes":3413,"lines":79,"ts":1787042166,"dp":21,"nest":3},{"p":"tests/contact-links.test.js","bytes":2674,"lines":59,"ts":1789078034,"dp":15,"nest":3},{"p":"tests/contacts-delegation.test.js","bytes":3725,"lines":88,"ts":1789320227,"dp":17,"nest":3},{"p":"tests/contacts.test.js","bytes":7313,"lines":137,"ts":1789320227,"dp":29,"nest":5},{"p":"tests/converter-a11y.test.js","bytes":8843,"lines":156,"ts":1789120305,"dp":73,"nest":4},{"p":"tests/converter-blocks.test.js","bytes":11034,"lines":163,"ts":1789275404,"dp":69,"nest":5},{"p":"tests/converter-contact-format.test.js","bytes":4245,"lines":85,"ts":1789470757,"dp":17,"nest":3},{"p":"tests/converter-csv-sep.test.js","bytes":6537,"lines":123,"ts":1789055400,"dp":27,"nest":4},{"p":"tests/converter-import-fields.test.js","bytes":5283,"lines":98,"ts":1789083541,"dp":31,"nest":4},{"p":"tests/converter-kpi.test.js","bytes":12597,"lines":187,"ts":1789465388,"dp":72,"nest":3},{"p":"tests/converter-sci-id-warn.test.js","bytes":3258,"lines":67,"ts":1789327078,"dp":12,"nest":3},{"p":"tests/converter-sort.test.js","bytes":2864,"lines":53,"ts":1789469855,"dp":16,"nest":3},{"p":"tests/converter-wave-link.test.js","bytes":3088,"lines":58,"ts":1789472426,"dp":21,"nest":5},{"p":"tests/converter-xlsx-bignum.test.js","bytes":5235,"lines":100,"ts":1789467186,"dp":13,"nest":4},{"p":"tests/csp.test.js","bytes":4295,"lines":93,"ts":1789463723,"dp":28,"nest":6},{"p":"tests/data-integrity.test.js","bytes":13366,"lines":228,"ts":1789075095,"dp":72,"nest":5},{"p":"tests/date-import.test.js","bytes":9469,"lines":155,"ts":1789421112,"dp":14,"nest":3},{"p":"tests/import-id-corrompu.test.js","bytes":3633,"lines":74,"ts":1789325852,"dp":14,"nest":3},{"p":"tests/maj-popup.test.js","bytes":4263,"lines":89,"ts":1787047338,"dp":20,"nest":3},{"p":"tests/modal-backdrop.test.js","bytes":3947,"lines":83,"ts":1789336012,"dp":15,"nest":3},{"p":"tests/monofile-sw-update.test.js","bytes":2160,"lines":41,"ts":1789325852,"dp":6,"nest":2},{"p":"tests/no-inline-handlers.test.js","bytes":3176,"lines":62,"ts":1789321149,"dp":17,"nest":3},{"p":"tests/pdfgrp-pays.test.js","bytes":4437,"lines":84,"ts":1789468106,"dp":11,"nest":5},{"p":"tests/pin-tempo.test.js","bytes":1422,"lines":37,"ts":1789312461,"dp":7,"nest":2},{"p":"tests/pin.test.js","bytes":4013,"lines":82,"ts":1789312461,"dp":31,"nest":2},{"p":"tests/planner-i18n.test.js","bytes":7015,"lines":125,"ts":1789391324,"dp":33,"nest":5},{"p":"tests/planner.test.js","bytes":31136,"lines":467,"ts":1789414808,"dp":148,"nest":6},{"p":"tests/planning-move.test.js","bytes":13039,"lines":233,"ts":1789384906,"dp":63,"nest":4},{"p":"tests/rappel.test.js","bytes":6615,"lines":122,"ts":1789320227,"dp":26,"nest":3},{"p":"tests/reimport.test.js","bytes":6399,"lines":111,"ts":1789309229,"dp":17,"nest":4},{"p":"tests/reminder-templates.test.js","bytes":7753,"lines":144,"ts":1789412047,"dp":24,"nest":6},{"p":"tests/resume-delegation.test.js","bytes":3617,"lines":78,"ts":1789318687,"dp":15,"nest":4},{"p":"tests/resume-methode.test.js","bytes":5294,"lines":97,"ts":1789247480,"dp":38,"nest":5},{"p":"tests/resume.test.js","bytes":6799,"lines":111,"ts":1788542811,"dp":33,"nest":5},{"p":"tests/robustesse.test.js","bytes":4911,"lines":98,"ts":1789311739,"dp":20,"nest":4},{"p":"tests/serialization.test.js","bytes":3613,"lines":64,"ts":1789286868,"dp":19,"nest":4},{"p":"tests/settings-delegation.test.js","bytes":5148,"lines":102,"ts":1789381722,"dp":13,"nest":3},{"p":"tests/statuses.test.js","bytes":3210,"lines":57,"ts":1789279141,"dp":11,"nest":3},{"p":"tests/statut-autopreset.test.js","bytes":4869,"lines":103,"ts":1789159700,"dp":22,"nest":3},{"p":"tests/statut-lock.test.js","bytes":4211,"lines":80,"ts":1789404876,"dp":20,"nest":3},{"p":"tests/statut-preset.test.js","bytes":6219,"lines":107,"ts":1789399462,"dp":23,"nest":5},{"p":"tests/statut-scope.test.js","bytes":5608,"lines":107,"ts":1789157329,"dp":19,"nest":4},{"p":"tests/vues-delegation.test.js","bytes":3080,"lines":68,"ts":1789318236,"dp":18,"nest":3},{"p":"tools/check-version-bump.js","bytes":2814,"lines":69,"ts":1787042166,"dp":24,"nest":3},{"p":"tools/gen_icons.py","bytes":4712,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"tools/run-tests.js","bytes":2135,"lines":50,"ts":1787042166,"dp":19,"nest":3},{"p":"vendor/leaflet/images/layers-2x.png","bytes":1259,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"vendor/leaflet/images/layers.png","bytes":696,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"vendor/leaflet/images/marker-icon-2x.png","bytes":2464,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"vendor/leaflet/images/marker-icon.png","bytes":1466,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"vendor/leaflet/images/marker-shadow.png","bytes":618,"lines":0,"ts":1787042166,"dp":null,"nest":null},{"p":"vendor/leaflet/leaflet.css","bytes":14806,"lines":662,"ts":1787042166,"dp":null,"nest":null},{"p":"vendor/leaflet/leaflet.js","bytes":147552,"lines":6,"ts":1787042166,"dp":1683,"nest":7},{"p":"vendor/pdfjs/pdf.min.js","bytes":377116,"lines":22,"ts":1787042166,"dp":4094,"nest":11},{"p":"vendor/pdfjs/pdf.worker.min.js","bytes":1133660,"lines":22,"ts":1787042166,"dp":10651,"nest":11},{"p":"vendor/xlsx/xlsx.full.min.js","bytes":881727,"lines":23,"ts":1787042166,"dp":9744,"nest":11}];
+
+/* ---- module classification (path-based) ---- */
+const MOD = {
+  int:{name:"Interviews",v:"--m-int"}, conv:{name:"Convertisseur",v:"--m-conv"}, plan:{name:"Planner",v:"--m-plan"},
+  shar:{name:"Partagé",v:"--m-shar"}, test:{name:"Tests",v:"--m-test"}, tool:{name:"Outils",v:"--m-tool"},
+  docs:{name:"Docs",v:"--m-docs"}, vend:{name:"Vendor",v:"--m-vend"}, skil:{name:"Skills",v:"--m-skil"},
+};
+const OPT = new Set(["vend","skil"]);   // hidden by default
+function classify(p){
+  if (p.startsWith("vendor/")) return "vend";
+  if (p.startsWith(".claude/")) return "skil";
+  if (p.startsWith(".github/")) return "tool";
+  if (p === "statbel_converter.html" || p === "js/pdfgrp.js") return "conv";
+  if (p === "statbel_planner.html") return "plan";
+  if (p === "js/charts.js" || p === "css/charts.css") return "shar";
+  if (p.startsWith("tests/")) return p === "tests/_serve.js" ? "tool" : "test";
+  if (p.startsWith("tools/") || p === "eslint.config.mjs" || p === "package.json") return "tool";
+  if (/\.md$/.test(p) || p.startsWith("docs/")) return "docs";
+  if (p === ".gitignore" || p === ".nojekyll" || p === ".claude/launch.json") return "tool";
+  return "int";
+}
+function ftype(p){ const m=p.match(/\.([a-z0-9]+)$/i); if(!m) return "—"; const e=m[1].toLowerCase();
+  return e==="webmanifest"?"webmanifest":e; }
+
+/* ---- internal ES import map (Interviews) ---- */
+const IMPORTS = {
+  "js/app.js":["actions","i18n","util","canon","csv","idb","reimport","statuses","backup","geocoding","history","import","reminders","biometrie","contacts","map","pin","rdv","settings","stats"],
+  "js/data/csv.js":["util","idb","canon"], "js/data/idb.js":["util"],
+  "js/features/backup.js":["import","reimport","serialization","canon","util","i18n","geocoding"],
+  "js/features/geocoding.js":["util"], "js/features/history.js":["util","i18n","canon"],
+  "js/features/import.js":["csv","util","i18n","canon","idb","reimport"], "js/features/reminders.js":["collect-method","util","i18n"],
+  "js/ui/contacts.js":["util","i18n","canon","idb","collect-method","reminders"], "js/ui/map.js":["util","i18n","canon","idb"],
+  "js/ui/pin.js":["i18n","biometrie"], "js/ui/rdv.js":["stats","util","i18n","canon"],
+  "js/ui/resume.js":["stats","util","i18n","canon","collect-method"], "js/ui/settings.js":["util","i18n","canon","collect-method"],
+  "js/ui/stats.js":["util","i18n","canon"],
+};
+const base = p => p.replace(/^.*\//,"").replace(/\.(js|mjs)$/,"");
+function layerOf(p){ if(p==="js/app.js")return "entry"; const m=p.match(/^js\/(core|data|features|ui)\//); return m?m[1]:null; }
+
+/* ---- test → primary target map ---- */
+const TEST_TARGET = {
+  "a11y":"index.html","a11y-landmark":"index.html","a11y-modal":"index.html","csp":"index.html",
+  "actions":"js/core/actions.js","chrome-delegation":"js/core/actions.js","no-inline-handlers":"js/core/actions.js","vues-delegation":"js/core/actions.js",
+  "backup":"js/features/backup.js","backup-reminder":"js/features/reminders.js","rappel":"js/features/reminders.js","reminder-templates":"js/features/reminders.js",
+  "biometrie":"js/ui/biometrie.js","candidature-order":"js/features/import.js",
+  "collect-method":"js/data/collect-method.js","confort":"js/ui/settings.js","settings-delegation":"js/ui/settings.js",
+  "contact-links":"js/ui/contacts.js","contacts-delegation":"js/ui/contacts.js","contacts":"js/ui/contacts.js",
+  "data-integrity":"js/data/canon.js","date-import":"js/data/csv.js","import-id-corrompu":"js/data/csv.js",
+  "maj-popup":"js/boot.js","modal-backdrop":"js/app.js",
+  "pin-tempo":"js/ui/pin.js","pin":"js/ui/pin.js",
+  "reimport":"js/data/reimport.js","serialization":"js/data/serialization.js",
+  "resume-delegation":"js/ui/resume.js","resume-methode":"js/ui/resume.js","resume":"js/ui/resume.js","robustesse":"js/core/util.js",
+  "statuses":"js/data/statuses.js","statut-autopreset":"js/data/statuses.js","statut-lock":"js/data/statuses.js","statut-preset":"js/data/statuses.js","statut-scope":"js/data/statuses.js",
+  "converter-a11y":"statbel_converter.html","converter-blocks":"statbel_converter.html","converter-contact-format":"statbel_converter.html","converter-csv-sep":"statbel_converter.html","converter-import-fields":"statbel_converter.html","converter-kpi":"statbel_converter.html","converter-sci-id-warn":"statbel_converter.html","converter-sort":"statbel_converter.html","converter-wave-link":"statbel_converter.html","converter-xlsx-bignum":"statbel_converter.html","pdfgrp-pays":"js/pdfgrp.js",
+  "planner":"statbel_planner.html","planner-i18n":"statbel_planner.html","planning-move":"statbel_planner.html",
+};
+const testCount = {};
+Object.values(TEST_TARGET).forEach(t=>{ testCount[t]=(testCount[t]||0)+1; });
+
+/* ---- build records ---- */
+const NOW = 1757894400; // 2026-09-15 (relevé)
+function isGen(p,bytes,lines){ return /\.min\.|leaflet\.js$|modern-screenshot|detect-antipatterns-browser|live-browser\.js$|injected\/index/.test(p) || (lines>0 && bytes/lines>320); }
+function cxScore(dp,nest){ return (dp||0) + (nest||0)*8; }
+function cxBand(f){ if(f.gen||f.dp==null) return "na";
+  const s=cxScore(f.dp,f.nest); return s>=180?"hi":s>=60?"med":"low"; }
+
+const F = METRICS.map(r=>{
+  const m = classify(r.p);
+  const imp = IMPORTS[r.p] ? IMPORTS[r.p].slice() : [];
+  return {
+    p:r.p, m, t:ftype(r.p), b:r.bytes, l:r.lines, ts:r.ts, dp:r.dp, nest:r.nest,
+    ko:r.bytes/1024, imp, ni:imp.length, layer:layerOf(r.p),
+    gen:isGen(r.p,r.bytes,r.lines), tc:testCount[r.p]||0,
+  };
+});
+F.forEach(f=>f.cxb=cxBand(f));
+// fan-in
+const fanin={}; F.forEach(f=>f.imp.forEach(d=>{fanin[d]=(fanin[d]||0)+1;}));
+F.forEach(f=>{ f.nb=fanin[base(f.p)]||0; });
+
+/* ---- helpers ---- */
+const cssv=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function koFmt(ko){ return ko<1000?ko.toFixed(ko<10?1:0):(ko/1000).toFixed(2)+"k"; }
+function weight(bytes){ const ko=bytes/1024; return ko<1000?ko.toFixed(0)+" Ko":(ko/1000).toFixed(2)+" Mo"; }
+function ageFmt(ts){ if(!ts) return {d:"—",a:""}; const dt=new Date(ts*1000);
+  const d=String(dt.getDate()).padStart(2,"0")+"/"+String(dt.getMonth()+1).padStart(2,"0")+"/"+dt.getFullYear();
+  const days=Math.max(0,Math.round((NOW-ts)/86400));
+  const a = days===0?"aujourd'hui":days===1?"hier":days<7?"il y a "+days+" j":days<30?"il y a "+Math.round(days/7)+" sem.":"il y a "+Math.round(days/30)+" mois";
+  return {d,a}; }
+
+/* ---- scope ---- */
+const scVend=document.getElementById("scVend"), scSkil=document.getElementById("scSkil");
+function inScope(f){ if(f.m==="vend"&&!scVend.checked) return false; if(f.m==="skil"&&!scSkil.checked) return false; return true; }
+function scoped(){ return F.filter(inScope); }
+
+/* ---- header totals ---- */
+function updateTotals(){
+  const a=scoped();
+  document.getElementById("kFiles").textContent=a.length;
+  const b=a.reduce((s,f)=>s+f.b,0)/1024/1000;
+  document.getElementById("kKo").textContent=(b<1?(b*1000).toFixed(0)+" Ko":b.toFixed(2)+" Mo");
+  document.getElementById("kLines").textContent=a.reduce((s,f)=>s+f.l,0).toLocaleString("fr-FR");
+  const hidV=F.filter(f=>f.m==="vend").length, hidS=F.filter(f=>f.m==="skil").length;
+  const parts=[]; if(!scVend.checked)parts.push(hidV+" fichiers vendor/"); if(!scSkil.checked)parts.push(hidS+" fichiers .claude/");
+  document.getElementById("scNote").textContent=parts.length?("masqués : "+parts.join(" · ")):"tout le dépôt inclus";
+}
+
+/* ---- module cards ---- */
+const active=new Set(Object.keys(MOD));
+const cardsEl=document.getElementById("cards");
+function buildCards(){
+  const a=scoped();
+  const byMod={}; Object.keys(MOD).forEach(k=>byMod[k]=a.filter(f=>f.m===k));
+  const maxLines=Math.max(1,...Object.keys(MOD).map(k=>byMod[k].reduce((s,f)=>s+f.l,0)));
+  cardsEl.innerHTML="";
+  Object.keys(MOD).forEach(k=>{
+    const arr=byMod[k]; const ln=arr.reduce((s,f)=>s+f.l,0), ko=arr.reduce((s,f)=>s+f.b,0)/1024;
+    const c=document.createElement("button"); c.className="card"; c.dataset.m=k;
+    if(OPT.has(k) && arr.length===0) c.classList.add("hidden");
+    c.style.borderLeftColor=`var(${MOD[k].v})`;
+    c.innerHTML=`<div class="cm"><span class="dot" style="background:var(${MOD[k].v})"></span>${MOD[k].name}</div>
+      <div class="big num">${arr.length}<small> fichiers</small></div>
+      <div class="det num">${ko<1000?ko.toFixed(0)+" Ko":(ko/1000).toFixed(2)+" Mo"} · ${ln.toLocaleString("fr-FR")} l.</div>
+      <div class="bar"><i style="width:${Math.max(3,ln/maxLines*100)}%;background:var(${MOD[k].v})"></i></div>`;
+    c.onclick=()=>toggleMod(k);
+    cardsEl.appendChild(c);
+  });
+  syncCardsOff();
+}
+function toggleMod(k){
+  const vis=Object.keys(MOD).filter(x=>!(OPT.has(x)&&!inScopeMod(x)));
+  if(active.size===vis.length){ active.clear(); active.add(k); }
+  else if(active.size===1 && active.has(k)){ vis.forEach(x=>active.add(x)); }
+  else { active.has(k)?active.delete(k):active.add(k); if(active.size===0) vis.forEach(x=>active.add(x)); }
+  syncControls(); render();
+}
+function inScopeMod(k){ if(k==="vend")return scVend.checked; if(k==="skil")return scSkil.checked; return true; }
+function syncCardsOff(){ cardsEl.querySelectorAll(".card").forEach(c=>c.classList.toggle("off",!active.has(c.dataset.m))); }
+
+/* ---- chips ---- */
+const modChips=document.getElementById("modChips");
+Object.keys(MOD).forEach(k=>{
+  const b=document.createElement("button"); b.className="chip"; b.dataset.m=k;
+  b.innerHTML=`<span class="dot" style="background:var(${MOD[k].v})"></span>${MOD[k].name}`;
+  b.onclick=()=>{ active.has(k)?active.delete(k):active.add(k); if(active.size===0)Object.keys(MOD).forEach(x=>active.add(x)); syncControls(); render(); };
+  modChips.appendChild(b);
+});
+const activeT=new Set();
+const typeChips=document.getElementById("typeChips");
+function buildTypeChips(){
+  const types=[...new Set(scoped().map(f=>f.t))].sort();
+  types.forEach(t=>{ if(!activeT.has(t)) activeT.add(t); });
+  typeChips.querySelectorAll(".chip").forEach(c=>c.remove());
+  types.forEach(t=>{
+    const b=document.createElement("button"); b.className="chip sm"; b.dataset.t=t; b.textContent="."+t;
+    b.onclick=()=>{ activeT.has(t)?activeT.delete(t):activeT.add(t); if(activeT.size===0)types.forEach(x=>activeT.add(x)); syncControls(); render(); };
+    typeChips.appendChild(b);
+  });
+}
+function syncControls(){
+  modChips.querySelectorAll(".chip").forEach(c=>{ const k=c.dataset.m; const on=active.has(k);
+    c.classList.toggle("on",on); c.style.background=on?`var(${MOD[k].v})`:"";
+    c.classList.toggle("hidden", OPT.has(k)&&!inScopeMod(k)); });
+  typeChips.querySelectorAll(".chip").forEach(c=>{ const on=activeT.has(c.dataset.t);
+    c.classList.toggle("on",on); c.style.background=on?"var(--accent)":""; });
+  syncCardsOff();
+}
+
+/* ---- sliders/search/sort ---- */
+let q="",minKo=0,minLn=0,sortK="ko",sortDir=-1;
+const qEl=document.getElementById("q"),minKoEl=document.getElementById("minKo"),minLnEl=document.getElementById("minLn");
+qEl.oninput=e=>{q=e.target.value.toLowerCase();render();};
+minKoEl.oninput=e=>{minKo=+e.target.value;document.getElementById("minKoV").textContent=minKo;render();};
+minLnEl.oninput=e=>{minLn=+e.target.value;document.getElementById("minLnV").textContent=minLn;render();};
+document.getElementById("clr").onclick=()=>{
+  const vis=Object.keys(MOD).filter(inScopeMod); Object.keys(MOD).forEach(k=>active.add(k));
+  activeT.clear(); scoped().forEach(f=>activeT.add(f.t));
+  q="";qEl.value="";minKo=0;minLn=0;minKoEl.value=0;minLnEl.value=0;
+  document.getElementById("minKoV").textContent=0;document.getElementById("minLnV").textContent=0;
+  syncControls();render();
+};
+document.querySelectorAll("thead th").forEach(th=>th.onclick=()=>{
+  const k=th.dataset.k; if(sortK===k)sortDir*=-1; else {sortK=k; sortDir=(k==="p"||k==="m"||k==="t")?1:-1;}
+  render();
+});
+
+/* ---- render table ---- */
+const tbody=document.getElementById("tbody");
+function filtered(){
+  return scoped().filter(f=>active.has(f.m)&&activeT.has(f.t)&&(minKo===0||f.ko>=minKo)&&(minLn===0||f.l>=minLn)&&(q===""||f.p.toLowerCase().includes(q)));
+}
+function sortVal(f,k){ if(k==="cx") return f.gen?-1:cxScore(f.dp,f.nest); if(k==="tc")return f.tc; if(k==="ts")return f.ts; return f[k]; }
+function render(){
+  const rows=filtered();
+  const maxKo=Math.max(1,...rows.map(r=>r.ko));
+  rows.sort((a,b)=>{ let va=sortVal(a,sortK),vb=sortVal(b,sortK);
+    if(typeof va==="string") return sortDir*va.localeCompare(vb); return sortDir*(va-vb); });
+  document.querySelectorAll("thead th").forEach(th=>{ const on=th.dataset.k===sortK; th.classList.toggle("sorted",on);
+    th.querySelector(".ar").textContent = on ? (sortDir<0?"▾":"▴") : "▾"; });
+  const frag=document.createDocumentFragment();
+  rows.forEach(f=>{
+    const tr=document.createElement("tr"); tr.style.cursor="pointer";
+    const dir=f.p.includes("/")?f.p.replace(/[^/]+$/,""):""; const file=f.p.replace(/^.*\//,"");
+    const bw=Math.round(f.ko/maxKo*46);
+    const cxHtml = f.gen ? `<span class="ttag" style="font-size:10px">généré</span>`
+      : f.dp==null ? `<span class="cxband">—</span>`
+      : `<span class="cx"><span class="num">${f.dp}</span><span class="cxband">/${f.nest}</span><span class="cxdot cx-${f.cxb}"></span></span>`;
+    const ag=ageFmt(f.ts);
+    tr.innerHTML=`
+      <td class="path" title="${f.p}"><span class="dir">${dir}</span><span class="file">${file}</span></td>
+      <td><span class="mtag" style="background:var(${MOD[f.m].v}-bg);color:var(${MOD[f.m].v})"><span class="dot" style="background:var(${MOD[f.m].v})"></span>${MOD[f.m].name}</span></td>
+      <td><span class="ttag">${f.t}</span></td>
+      <td class="r">${koFmt(f.ko)}<span class="microbar" style="width:${bw}px"></span></td>
+      <td class="r">${f.l.toLocaleString("fr-FR")}</td>
+      <td class="r">${cxHtml}</td>
+      <td class="r">${f.tc?`<span class="tcnt has">${f.tc}</span>`:`<span class="tcnt no">0</span>`}</td>
+      <td class="age r">${ag.d}<br><small>${ag.a}</small></td>
+      <td class="r"><span class="impbadge ${f.ni?"":"z"}">${f.ni}</span>${f.nb?`<span class="impby">(${f.nb})</span>`:""}</td>`;
+    tr.onclick=()=>toggleDetail(tr,f);
+    frag.appendChild(tr);
+  });
+  tbody.innerHTML=""; tbody.appendChild(frag);
+  const ko=rows.reduce((s,f)=>s+f.b,0)/1024, ln=rows.reduce((s,f)=>s+f.l,0);
+  document.getElementById("tstat").innerHTML=`<b>${rows.length}</b> fichier(s) · <b>${weight(rows.reduce((s,f)=>s+f.b,0))}</b> · <b>${ln.toLocaleString("fr-FR")}</b> lignes`;
+  document.getElementById("fcount").textContent=`${rows.length}/${scoped().length} affichés`;
+}
+function toggleDetail(tr,f){
+  if(tr.nextSibling&&tr.nextSibling.classList&&tr.nextSibling.classList.contains("detrow")){ tr.nextSibling.remove(); return; }
+  const importers=F.filter(x=>x.imp.includes(base(f.p))).map(x=>x.p.replace(/^.*\//,""));
+  const tests=Object.entries(TEST_TARGET).filter(([,t])=>t===f.p).map(([s])=>s+".test.js");
+  const d=document.createElement("tr"); d.className="detrow";
+  d.innerHTML=`<td colspan="9"><div class="deplist">
+    <div>↗ <b>importe (${f.imp.length})</b> : ${f.imp.length?f.imp.map(x=>x+".js").join(", "):'<span class="none">rien</span>'}</div>
+    <div>↘ <b>importé par (${importers.length})</b> : ${importers.length?importers.join(", "):'<span class="none">rien</span>'}</div>
+    <div>🧪 <b>tests (${tests.length})</b> : ${tests.length?tests.join(", "):'<span class="none">aucun test dédié</span>'}</div>
+    </div></td>`;
+  tr.after(d);
+}
+
+/* ---- coverage panel ---- */
+function buildCoverage(){
+  const apps=[["int","Interviews",["int","shar"]],["conv","Convertisseur",["conv"]],["plan","Planner",["plan"]]];
+  const covApp=document.getElementById("covApp");
+  const maxT=Math.max(1,...apps.map(([,,mods])=>F.filter(f=>f.t==="js"&&mods.includes(f.m)&&testTargetsApp(f.m)).length,1),
+    ...apps.map(a=>testFilesForApp(a[2])));
+  covApp.innerHTML=apps.map(([,name,mods])=>{
+    const tf=testFilesForApp(mods); const tl=testLinesForApp(mods);
+    return `<div class="covrow"><span class="name">${name}</span>
+      <span class="tk"><i style="width:${Math.max(4,tf/maxT*100)}%;background:var(--m-test)"></i></span>
+      <span class="v num">${tf} tests · ${tl.toLocaleString("fr-FR")} l.</span></div>`;
+  }).join("");
+  // untested Interviews js modules
+  const intJs=F.filter(f=>f.t==="js"&&(f.m==="int")&&/^js\//.test(f.p)&&f.p!=="js/boot.js");
+  const untested=intJs.filter(f=>(testCount[f.p]||0)===0).map(f=>f.p);
+  document.getElementById("covUntested").innerHTML = untested.length
+    ? untested.map(p=>`<code>${p}</code>`).join(" ") + `<div style="margin-top:8px;color:var(--ink-3)">Souvent couverts <i>indirectement</i> (via app.js / tests d'intégration). i18n, canon partiel, geocoding, map, rdv, charts n'ont pas de test unitaire dédié.</div>`
+    : "Tous les modules ont un test dédié.";
+}
+function testFilesForApp(mods){ return F.filter(f=>f.m==="test").filter(f=>{ const t=TEST_TARGET[f.p.replace(/^tests\//,"").replace(/\.test\.js$/,"")]; return t && mods.includes(classify(t)); }).length; }
+function testLinesForApp(mods){ return F.filter(f=>f.m==="test").filter(f=>{ const t=TEST_TARGET[f.p.replace(/^tests\//,"").replace(/\.test\.js$/,"")]; return t && mods.includes(classify(t)); }).reduce((s,f)=>s+f.l,0); }
+function testTargetsApp(){ return true; }
+
+/* ---- dependency graph (Interviews ES) ---- */
+const svg=document.getElementById("dep");
+const NS="http://www.w3.org/2000/svg";
+const cols=[["core","core"],["data","data"],["features","features"],["ui","ui"],["entry","entrée"]];
+const colX={core:110,data:295,features:485,ui:675,entry:865};
+const nodes=F.filter(f=>f.layer);
+const byLayer={}; cols.forEach(c=>byLayer[c[0]]=nodes.filter(n=>n.layer===c[0]));
+const H=660,gTop=44,gBot=40,pos={};
+Object.keys(byLayer).forEach(layer=>{ const arr=byLayer[layer]; arr.sort((a,b)=>b.l-a.l);
+  const gap=(H-gTop-gBot)/Math.max(arr.length,1);
+  arr.forEach((nd,i)=>{ pos[base(nd.p)]={x:colX[layer],y:gTop+gap*(i+0.5),nd}; }); });
+const maxL=Math.max(...nodes.map(n=>n.l));
+const nodeW=n=>66+Math.round(n.l/maxL*40), nodeH=n=>20+Math.round(n.l/maxL*14);
+cols.forEach(c=>{ const t=document.createElementNS(NS,"text"); t.setAttribute("class","col-lab");
+  t.setAttribute("x",colX[c[0]]); t.setAttribute("y",22); t.textContent=c[1].toUpperCase(); svg.appendChild(t); });
+const edgeEls=[];
+nodes.forEach(n=>{ const from=pos[base(n.p)];
+  n.imp.forEach(dep=>{ const to=pos[dep]; if(!to)return;
+    const p=document.createElementNS(NS,"path"); p.setAttribute("class","gedge");
+    const x1=from.x-nodeW(from.nd)/2,y1=from.y,x2=to.x+nodeW(to.nd)/2,y2=to.y,mx=(x1+x2)/2;
+    p.setAttribute("d",`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+    p.setAttribute("stroke",cssv("--accent")); p.setAttribute("stroke-width",n.layer==="entry"?0.5:1.1);
+    p.setAttribute("opacity",n.layer==="entry"?0.14:0.32); p.dataset.from=base(n.p); p.dataset.to=dep;
+    svg.appendChild(p); edgeEls.push(p); }); });
+const nodeEls=[];
+nodes.forEach(n=>{ const P=pos[base(n.p)],w=nodeW(n),h=nodeH(n);
+  const g=document.createElementNS(NS,"g"); g.setAttribute("class","gnode"); g.dataset.id=base(n.p);
+  g.setAttribute("transform",`translate(${P.x},${P.y})`);
+  const r=document.createElementNS(NS,"rect"); r.setAttribute("x",-w/2);r.setAttribute("y",-h/2);r.setAttribute("width",w);r.setAttribute("height",h);r.setAttribute("rx",6);
+  r.setAttribute("fill",cssv("--m-int-bg")); r.setAttribute("stroke",cssv("--m-int"));
+  const t=document.createElementNS(NS,"text"); t.setAttribute("text-anchor","middle"); t.setAttribute("dy",n.l>250?-1:3.5); t.textContent=base(n.p);
+  g.appendChild(r); g.appendChild(t);
+  if(n.l>250){ const c=document.createElementNS(NS,"text"); c.setAttribute("class","cnt"); c.setAttribute("text-anchor","middle"); c.setAttribute("dy",10); c.textContent=n.l+" l."; g.appendChild(c); }
+  g.onmouseenter=()=>focusNode(base(n.p)); g.onmouseleave=clearFocus;
+  g.onclick=()=>{ q=n.p; qEl.value=n.p; render(); document.getElementById("tstat").scrollIntoView({behavior:"smooth",block:"center"}); };
+  svg.appendChild(g); nodeEls.push(g); });
+function focusNode(id){ const rel=new Set([id]);
+  edgeEls.forEach(e=>{ if(e.dataset.from===id)rel.add(e.dataset.to); if(e.dataset.to===id)rel.add(e.dataset.from); });
+  nodeEls.forEach(g=>g.classList.toggle("dim",!rel.has(g.dataset.id)));
+  edgeEls.forEach(e=>{ const hit=e.dataset.from===id||e.dataset.to===id; e.classList.toggle("dim",!hit);
+    if(hit){ e.setAttribute("stroke-width",2); e.setAttribute("opacity",0.9);
+      e.setAttribute("stroke",e.dataset.to===id?cssv("--m-int"):cssv("--accent"));
+      if(e.dataset.to===id)e.setAttribute("stroke-dasharray","4 3"); else e.removeAttribute("stroke-dasharray"); } }); }
+function clearFocus(){ nodeEls.forEach(g=>g.classList.remove("dim"));
+  edgeEls.forEach(e=>{ e.classList.remove("dim"); e.removeAttribute("stroke-dasharray"); const entry=e.dataset.from==="app";
+    e.setAttribute("stroke",cssv("--accent")); e.setAttribute("stroke-width",entry?0.5:1.1); e.setAttribute("opacity",entry?0.14:0.32); }); }
+
+/* ---- theme + scope wiring ---- */
+document.getElementById("themeBtn").onclick=()=>{
+  const cur=document.documentElement.getAttribute("data-theme");
+  const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  document.documentElement.setAttribute("data-theme",dark?"light":"dark");
+  setTimeout(()=>{ clearFocus(); nodeEls.forEach(g=>{ g.querySelector("rect").setAttribute("fill",cssv("--m-int-bg")); g.querySelector("rect").setAttribute("stroke",cssv("--m-int")); }); },10);
+};
+function onScope(){ Object.keys(MOD).forEach(k=>active.add(k)); buildCards(); buildTypeChips(); syncControls(); updateTotals(); render(); }
+scVend.onchange=onScope; scSkil.onchange=onScope;
+
+/* ---- init ---- */
+buildCards(); buildTypeChips(); buildCoverage(); syncControls(); updateTotals(); render();
+</script>
+
+</body>
+</html>
