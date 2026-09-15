@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Référentiels & données — statbel-app</title>
+<style>
+  :root{
+    --bg:#f4f2ee; --panel:#fbfaf7; --panel-2:#f0ede7; --ink:#211d16; --ink-2:#5c554a;
+    --ink-3:#8b8377; --line:#e2ddd3; --line-2:#d3ccbe; --accent:#b8790a; --accent-ink:#7a4f04;
+    --shadow:0 1px 2px rgba(40,33,20,.06),0 4px 16px rgba(40,33,20,.05);
+    --blue:#2563a8; --blue-bg:#e7effa; --green:#2f8f57; --green-bg:#e4f3ea;
+    --violet:#7a52c4; --violet-bg:#efe9fb; --rose:#c05576; --rose-bg:#fbe6ed;
+    --teal:#0f8a8a; --teal-bg:#def0f0; --amber-bg:#f8efdb;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#17150f; --panel:#201d16; --panel-2:#272319; --ink:#f0ebe0; --ink-2:#b6ad9c;
+    --ink-3:#847c6d; --line:#332e23; --line-2:#403a2c; --accent:#e0a638; --accent-ink:#f0c877;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 22px rgba(0,0,0,.35);
+    --blue:#6aa6e6; --blue-bg:#1b2a3d; --green:#5fc086; --green-bg:#16301f;
+    --violet:#b394ec; --violet-bg:#251c38; --rose:#e78aa6; --rose-bg:#341620;
+    --teal:#3fc0c0; --teal-bg:#0e2c2c; --amber-bg:#33280f; color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#17150f; --panel:#201d16; --panel-2:#272319; --ink:#f0ebe0; --ink-2:#b6ad9c;
+    --ink-3:#847c6d; --line:#332e23; --line-2:#403a2c; --accent:#e0a638; --accent-ink:#f0c877;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 22px rgba(0,0,0,.35);
+    --blue:#6aa6e6; --blue-bg:#1b2a3d; --green:#5fc086; --green-bg:#16301f;
+    --violet:#b394ec; --violet-bg:#251c38; --rose:#e78aa6; --rose-bg:#341620;
+    --teal:#3fc0c0; --teal-bg:#0e2c2c; --amber-bg:#33280f; color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);margin:0;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;
+    -webkit-font-smoothing:antialiased}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  code{font-family:ui-monospace,monospace;font-size:.9em;background:var(--panel-2);
+    padding:1px 5px;border-radius:5px;color:var(--accent-ink);white-space:nowrap}
+
+  header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;
+    background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line)}
+  .top-in{max-width:1120px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:14px}
+  .brand{margin-right:auto;min-width:0}
+  .brand h1{margin:0;font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .brand .sub{color:var(--ink-3);font-size:12px}
+  .brand .sub b{color:var(--accent-ink);font-weight:600}
+  .theme-btn{border:1px solid var(--line-2);background:var(--panel);color:var(--ink-2);
+    border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:15px;flex:none}
+  .theme-btn:hover{border-color:var(--accent)}
+  nav.secnav{display:flex;gap:4px;overflow-x:auto;max-width:1120px;margin:0 auto;
+    padding:0 22px 9px;scrollbar-width:none}
+  nav.secnav::-webkit-scrollbar{display:none}
+  nav.secnav a{font-size:12px;color:var(--ink-2);text-decoration:none;padding:4px 10px;
+    border-radius:16px;white-space:nowrap;border:1px solid transparent}
+  nav.secnav a:hover{background:var(--panel-2);border-color:var(--line)}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px 80px}
+  section{margin-top:40px;scroll-margin-top:110px}
+  .sh{display:flex;align-items:baseline;gap:11px;margin:0 0 4px;flex-wrap:wrap}
+  .sh .no{font-family:ui-monospace,monospace;font-size:12px;color:var(--accent);font-weight:700;
+    border:1px solid var(--accent);border-radius:6px;padding:1px 6px}
+  .sh h2{margin:0;font-size:20px;font-weight:750;letter-spacing:-.015em}
+  .lead{color:var(--ink-2);font-size:13.5px;margin:6px 0 18px;max-width:70ch}
+  .lead code{white-space:normal}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:720px){.grid2{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;
+    box-shadow:var(--shadow);padding:16px 17px;margin-bottom:16px}
+  .panel > h3{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--ink-2);display:flex;align-items:center;gap:7px}
+  .panel > h3 .tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.02em;text-transform:none}
+  .panel .note{font-size:12px;color:var(--ink-3);margin:2px 0 12px}
+  .t-int{background:var(--blue-bg);color:var(--blue)} .t-conv{background:var(--amber-bg);color:var(--accent-ink)}
+  .t-plan{background:var(--green-bg);color:var(--green)} .t-shar{background:var(--violet-bg);color:var(--violet)}
+  .t-all{background:var(--panel-2);color:var(--ink-2);border:1px solid var(--line)}
+
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  th{text-align:left;padding:7px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-3);border-bottom:1px solid var(--line-2);white-space:nowrap;background:var(--panel)}
+  td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--panel-2)}
+  td.k{font-family:ui-monospace,monospace;color:var(--accent-ink);font-weight:600;white-space:nowrap}
+  td.c{font-family:ui-monospace,monospace;color:var(--ink-2);white-space:nowrap}
+  .muted{color:var(--ink-3)}
+  .pill{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:20px;
+    font-family:ui-monospace,monospace}
+  .arrow{color:var(--ink-3);padding:0 3px}
+  .flow{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-family:ui-monospace,monospace;font-size:11.5px}
+  .flow .box{background:var(--panel-2);border:1px solid var(--line-2);border-radius:6px;padding:2px 7px}
+
+  /* group decoder */
+  .decoder{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:6px 0 4px}
+  .seg{border:1.5px solid;border-radius:10px;padding:8px 12px;min-width:60px;text-align:center;flex:1}
+  .seg .code{font-family:ui-monospace,monospace;font-size:24px;font-weight:800;letter-spacing:2px}
+  .seg .lab{font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;font-weight:700}
+  .seg .desc{font-size:11px;color:var(--ink-3);margin-top:3px;line-height:1.35}
+  .s-y{border-color:var(--ink-3)} .s-y .code{color:var(--ink-2)}
+  .s-v{border-color:var(--rose);background:var(--rose-bg)} .s-v .code,.s-v .lab{color:var(--rose)}
+  .s-s{border-color:var(--blue);background:var(--blue-bg)} .s-s .code,.s-s .lab{color:var(--blue)}
+  .s-g{border-color:var(--green);background:var(--green-bg)} .s-g .code,.s-g .lab{color:var(--green)}
+
+  /* stat strip */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:4px 0 8px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 13px;box-shadow:var(--shadow)}
+  .stat .n{font-size:22px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:11px;color:var(--ink-3);margin-top:1px}
+
+  /* country table */
+  .ctrl{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:12px}
+  .search{flex:1;min-width:180px;display:flex;align-items:center;gap:7px;
+    border:1px solid var(--line-2);background:var(--bg);border-radius:9px;padding:7px 11px}
+  .search input{border:0;background:transparent;color:var(--ink);font-size:13px;width:100%;outline:none}
+  .langtoggle{display:flex;gap:3px;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:3px}
+  .langtoggle button{border:0;background:transparent;color:var(--ink-2);font-size:12px;font-weight:600;
+    padding:4px 10px;border-radius:7px;cursor:pointer;text-transform:uppercase}
+  .langtoggle button.on{background:var(--accent);color:#fff}
+  :root[data-theme="dark"] .langtoggle button.on,:root:not([data-theme="light"]) .langtoggle button.on{color:#17150f}
+  #ctCount{font-size:12px;color:var(--ink-3);white-space:nowrap}
+  .ct-wrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:11px}
+  .ct-wrap table{font-size:12px}
+  .ct-wrap th{position:sticky;top:0;z-index:1}
+  .flag{font-family:ui-monospace,monospace;color:var(--ink-3);font-size:11px}
+
+  details.acc{border:1px solid var(--line);border-radius:11px;background:var(--panel);margin-bottom:10px;box-shadow:var(--shadow)}
+  details.acc summary{cursor:pointer;padding:12px 15px;font-weight:650;font-size:13.5px;list-style:none;display:flex;align-items:center;gap:9px}
+  details.acc summary::-webkit-details-marker{display:none}
+  details.acc summary .chev{margin-left:auto;color:var(--ink-3);transition:transform .15s}
+  details.acc[open] summary .chev{transform:rotate(90deg)}
+  details.acc .body{padding:0 15px 14px}
+  .foot{color:var(--ink-3);font-size:11.5px;margin-top:36px;line-height:1.75;border-top:1px solid var(--line);padding-top:16px}
+  .kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px}
+</style>
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>Référentiels &amp; données — statbel-app</h1>
+      <div class="sub">Dictionnaire des structures, tables de correspondance, codes &amp; traductions · commit <b class="mono">7f899c8</b></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" title="Thème clair / sombre">◐</button>
+  </div>
+  <nav class="secnav">
+    <a href="#modele">Modèle de fiche</a>
+    <a href="#formats">Formats de fichiers</a>
+    <a href="#groupe">N° de groupe</a>
+    <a href="#codes">Codes métier</a>
+    <a href="#pays">Référentiel pays</a>
+    <a href="#i18n">Traduction</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+  <div class="stats" style="margin-top:22px">
+    <div class="stat"><div class="n" style="color:var(--blue)">227</div><div class="l">pays (ISO3 ↔ NIS ↔ ISO2)</div></div>
+    <div class="stat"><div class="n" style="color:var(--accent-ink)">+51</div><div class="l">codes NIS historiques (alias)</div></div>
+    <div class="stat"><div class="n" style="color:var(--green)">141</div><div class="l">groupes planning Q3 2026</div></div>
+    <div class="stat"><div class="n" style="color:var(--violet)">6+7</div><div class="l">états civils · statuts</div></div>
+    <div class="stat"><div class="n" style="color:var(--rose)">374+311</div><div class="l">clés i18n × 4 langues</div></div>
+  </div>
+
+  <!-- ============ MODELE ============ -->
+  <section id="modele">
+    <div class="sh"><span class="no">01</span><h2>Modèle de fiche &amp; stockage</h2></div>
+    <p class="lead">Interviews garde chaque fiche en <b>modèle interne FR</b> ; l'export/backup/CSV passe par un
+      <b>pivot anglais</b> (langue canonique). Les valeurs métier (statut, pays, état civil) sont stockées sous
+      leur <b>clé canonique EN</b> ou <b>code</b>, jamais sous le libellé affiché — l'affichage est traduit à la volée.</p>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Clés de champ <span class="tag t-int">Interviews</span></h3>
+        <p class="note">Renommage pur (<code>serialization.js</code>) — interne FR ⇄ pivot EN. Les clés absentes sont conservées.</p>
+        <div class="scroll"><table><thead><tr><th>Interne (FR)</th><th></th><th>Pivot (EN)</th></tr></thead>
+          <tbody id="keymap"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <h3>Persistance</h3>
+        <p class="note">Aucune donnée ne quitte l'appareil (PWA 100 % hors-ligne).</p>
+        <table><tbody id="storage"></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Forme d'une fiche importée <span class="tag t-int">Interviews</span></h3>
+      <p class="note">Objet produit par <code>parseCSV()</code> (<code>data/csv.js</code>) après canonicalisation. Dates ré-normalisées à l'import (Excel réécrit l'ISO en format local).</p>
+      <div class="scroll"><table><thead><tr><th>Champ</th><th>Type / forme</th><th>Canonicalisation</th></tr></thead>
+        <tbody id="record"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ============ FORMATS ============ -->
+  <section id="formats">
+    <div class="sh"><span class="no">02</span><h2>Formats de fichiers</h2></div>
+    <p class="lead">Trois formats d'entrée (CSV, XLSX, PDF listing GRP) convergent vers le format d'export <b>GRP Statbel</b>.
+      Le Convertisseur produit le CSV consommé par Interviews ; l'en-tête reconnaît de multiples alias par colonne.</p>
+
+    <div class="panel">
+      <h3>Import CSV — colonnes reconnues <span class="tag t-int">Interviews</span></h3>
+      <p class="note"><code>CHAMPS_IMPORT</code> — chaque champ interne accepte plusieurs en-têtes (insensible casse/accents/espaces). Détection auto du séparateur <code>;</code>/<code>,</code>.</p>
+      <div class="scroll"><table><thead><tr><th>Clé</th><th>Libellé</th><th>Alias d'en-tête acceptés</th></tr></thead>
+        <tbody id="champs"></tbody></table></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Export CSV — en-tête (pivot EN)</h3>
+        <p class="note">24 colonnes, round-trip préservé (notes multilignes échappées). Préfixe <code>﻿</code> (BOM).</p>
+        <div class="flow" id="csvout"></div>
+      </div>
+      <div class="panel">
+        <h3>Listing PDF → colonnes source <span class="tag t-conv">Convertisseur</span></h3>
+        <p class="note"><code>pdfgrp.js</code> reconstruit les lignes visuelles du PDF puis mappe vers les <b>30 colonnes GRP</b>.</p>
+        <details class="acc" style="box-shadow:none;margin:0"><summary>Bloc ménage <code>HH_LABELS</code> (12) <span class="chev">›</span></summary>
+          <div class="body"><div class="flow" id="hhlab"></div></div></details>
+        <details class="acc" style="box-shadow:none;margin:8px 0 0"><summary>Colonnes membre <code>MB_COLS</code> (8) <span class="chev">›</span></summary>
+          <div class="body"><div class="flow" id="mbcol"></div></div></details>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Format cible — <code>GRP_COLS</code> (30 colonnes Statbel) <span class="tag t-conv">Convertisseur</span></h3>
+      <p class="note">Colonnes de l'export GRP. Le PDF ne fournit ni la date de naissance complète (<code>DT_MB_BTH</code> vide) ni la commune de naissance ; il donne le <b>pays</b> → <code>CD_MB_BTH_REFNIS</code> (code NIS).</p>
+      <div class="scroll"><table><thead><tr><th>#</th><th>Colonne</th><th>Sens</th></tr></thead>
+        <tbody id="grpcols"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ============ GROUPE ============ -->
+  <section id="groupe">
+    <div class="sh"><span class="no">03</span><h2>Numéro de groupe &amp; planning</h2></div>
+    <p class="lead">Le n° de groupe LFS suit le format <code>AAAA-VSSGG</code>. Le planning <code>GRP_PLANNING</code> (141 groupes,
+      Q3 2026) n'est indexé que sur le numéro de la <b>vague 1</b> ; les vagues ≥ 2 sont rattachées au groupe initial.</p>
+
+    <div class="panel">
+      <h3>Décodage — exemple <code class="mono">2026-23605</code></h3>
+      <div class="decoder">
+        <div class="seg s-y"><div class="code">2026</div><div class="lab">AAAA</div><div class="desc">année de l'enquête</div></div>
+        <div class="seg s-v"><div class="code">2</div><div class="lab">V</div><div class="desc">vague / interrogation (1–4)</div></div>
+        <div class="seg s-s"><div class="code">36</div><div class="lab">SS</div><div class="desc">semaine de référence</div></div>
+        <div class="seg s-g"><div class="code">05</div><div class="lab">GG</div><div class="desc">groupe / localisation</div></div>
+      </div>
+      <p class="note" style="margin-top:12px">Une vague est décalée de <b>+13 semaines</b> par rapport à la précédente. Chaque groupe initial porte les <b>4 interrogations</b>
+        <code>i[]</code> = <span class="mono">[[semaine, début, fin] × 4]</span>. Rattachement : pour <code class="mono">23605</code> (V2, sem. 36),
+        on remonte au groupe de même <code>GG=05</code> dont <code>i[1]</code> (I2) tombe sur la semaine 36 → <code class="mono">12305</code>.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Structure d'une entrée <code>GRP_PLANNING</code></h3>
+        <div class="scroll"><table><tbody id="planshape"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <h3>Couverture planning (141 groupes)</h3>
+        <p class="note">Provinces couvertes par la table embarquée Q3 2026 (Wallonie + Bruxelles).</p>
+        <table><tbody id="provdist"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CODES ============ -->
+  <section id="codes">
+    <div class="sh"><span class="no">04</span><h2>Codes &amp; tables de correspondance</h2></div>
+    <p class="lead">Les valeurs stockées sont des <b>codes</b> (sexe, état civil) ou des <b>clés canoniques EN</b> (statut).
+      Chaque table porte ses traductions et ses alias d'import.</p>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Sexe <span class="tag t-conv">CD_MB_SEX</span></h3>
+        <table><tbody id="sex"></tbody></table>
+      </div>
+      <div class="panel">
+        <h3>État civil — codes PDF <span class="tag t-conv">CD_MB_MRTL_STS</span></h3>
+        <table><tbody id="mrtl"></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>État civil — canonique &amp; traduction <span class="tag t-int">Interviews</span></h3>
+      <p class="note"><code>MARITAL_I18N</code> — clé pivot EN ; libellé accordé au genre <span class="mono">[masculin, féminin]</span>. Import tolérant via <code>MARITAL_ALIAS</code>.</p>
+      <div class="scroll"><table><thead><tr><th>Clé (EN)</th><th>FR</th><th>NL</th><th>DE</th></tr></thead><tbody id="marital"></tbody></table></div>
+    </div>
+
+    <div class="panel">
+      <h3>Statuts d'interview <span class="tag t-int">Interviews</span></h3>
+      <p class="note"><code>STATUTS_DEFAULTS</code> — vocabulaire par défaut (personnalisable par enquête). <code>done</code> = traité · <code>realise</code> = interview réalisée · <code>rdv</code> = attend un rendez-vous.</p>
+      <div class="scroll"><table><thead><tr><th>Clé (EN)</th><th>FR</th><th>Couleur</th><th>done</th><th>rdv</th><th>réalisé</th></tr></thead><tbody id="statuts"></tbody></table></div>
+      <p class="note" style="margin-top:10px">Préréglage <b>CATI/CAWI</b> (6 statuts supplémentaires stockés en FR) : Pas encore de contact · Rdv fixé · Tentatives sans résultat · Négatif · Interview réalisée · Inconnu.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Méthode de collecte <span class="tag t-shar">CD_WSH_CLCT_MTHD</span></h3>
+        <p class="note">Classée par regex (source unique <code>collect-method.js</code>, dupliquée à l'identique dans le Convertisseur).</p>
+        <table><tbody id="collect"></tbody></table>
+      </div>
+      <div class="panel">
+        <h3>Région par code postal <span class="tag t-int">util.js</span></h3>
+        <p class="note"><code>regionPourCP(cp)</code> — usage carte/statistiques.</p>
+        <table><tbody id="region"></tbody></table>
+      </div>
+    </div>
+
+    <details class="acc">
+      <summary>Codes NIS historiques, coloniaux &amp; synonymes → pays actuel (<code>NLTY_ALIAS</code>, 51) <span class="chev">›</span></summary>
+      <div class="body">
+        <p class="note">Anciens codes encore présents dans certains listings GRP (renommages, décolonisation, États disparus, Bantoustans). Pointent vers l'ISO3 actuel.</p>
+        <div class="scroll"><table><thead><tr><th>Code NIS</th><th></th><th>ISO3</th><th>Note</th></tr></thead><tbody id="alias"></tbody></table></div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ============ PAYS ============ -->
+  <section id="pays">
+    <div class="sh"><span class="no">05</span><h2>Référentiel pays — NIS ↔ ISO</h2></div>
+    <p class="lead"><code>PAYS_I18N</code> — <b>227 pays</b> indexés par code <b>ISO-3</b>, portant le code <b>NIS Statbel</b>,
+      le code <b>ISO-2</b> et le nom en 4 langues. Normalisation à l'import : ISO-3 → ISO-2 → alias fréquent (<code>GER→DEU</code>, <code>RDC→COD</code>…).</p>
+    <div class="ctrl">
+      <div class="search">🔎<input id="cq" type="search" placeholder="Chercher : nom, code NIS, ISO2, ISO3… (ex. 306, COD, Congo)" autocomplete="off"></div>
+      <div class="langtoggle" id="lt">
+        <button data-l="fr" class="on">FR</button><button data-l="nl">NL</button><button data-l="en">EN</button><button data-l="de">DE</button>
+      </div>
+      <span id="ctCount"></span>
+    </div>
+    <div class="ct-wrap"><table><thead><tr>
+      <th>ISO3</th><th>NIS</th><th>ISO2</th><th id="thName">Nom (FR)</th>
+    </tr></thead><tbody id="paysBody"></tbody></table></div>
+  </section>
+
+  <!-- ============ I18N ============ -->
+  <section id="i18n">
+    <div class="sh"><span class="no">06</span><h2>Traduction (i18n)</h2></div>
+    <p class="lead">Les 3 apps sont en <b>4 langues</b> (fr / nl / en / de). Chaque clé porte un objet
+      <span class="mono">{fr, nl, en, de}</span> ; <code>t('key')</code> lit <code>settings.lang</code> avec repli sur <code>fr</code>.
+      L'<b>anglais est la langue pivot</b> des valeurs stockées (statuts, état civil).</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n" style="color:var(--blue)">374</div><div class="l">clés UI Interviews (<code>I18N</code>)</div></div>
+      <div class="stat"><div class="n" style="color:var(--blue)">23</div><div class="l">libellés de champ (<code>CHAMP_LABEL</code>)</div></div>
+      <div class="stat"><div class="n" style="color:var(--accent-ink)">311</div><div class="l">clés Convertisseur</div></div>
+      <div class="stat"><div class="n" style="color:var(--green)">4</div><div class="l">langues Planner</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3>Mécanique</h3>
+        <table><tbody id="i18nfn"></tbody></table>
+      </div>
+      <div class="panel">
+        <h3>Locales dérivées <span class="tag t-int">localeApp()</span></h3>
+        <p class="note">Pour <code>Intl</code> / dates. Le NL et le DE utilisent la variante belge.</p>
+        <table><tbody id="locales"></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Exemple — une clé, 4 langues</h3>
+      <div class="scroll"><table><thead><tr><th>Clé</th><th>FR</th><th>NL</th><th>EN</th><th>DE</th></tr></thead><tbody id="i18nex"></tbody></table></div>
+      <p class="note" style="margin-top:10px">Les données injectées dans le DOM passent par <code>esc()</code> / <code>escHtml()</code>. <code>tf('k',{n})</code> interpole <code>{n}</code> ; <code>tPlural('k',n)</code> choisit <span class="mono">[singulier, pluriel]</span>.</p>
+    </div>
+  </section>
+
+  <p class="foot">
+    Toutes les valeurs sont relevées au commit <code class="mono">7f899c8</code> (Convertisseur v234 / SW v373). Sources :
+    <code>js/data/canon.js</code> (pays, état civil, statuts), <code>js/data/csv.js</code> (import/export CSV),
+    <code>js/data/serialization.js</code> (pivot EN), <code>js/data/idb.js</code> (stockage), <code>js/data/statuses.js</code>,
+    <code>js/data/collect-method.js</code>, <code>js/core/i18n.js</code>, <code>js/pdfgrp.js</code> (PDF→GRP),
+    et <code>statbel_converter.html</code> (<code>PAYS_I18N</code>, <code>NLTY_ALIAS</code>, <code>GRP_PLANNING</code>).<br>
+    Astuce : <span class="kbd">⌘/Ctrl + F</span> pour chercher dans les tables statiques ; la table pays a sa propre recherche.
+  </p>
+</div>
+
+<script>
+/* ============ DATA ============ */
+const PAYS = [["AFG","251","AF","Afghanistan","Afghanistan","Afghanistan","Afghanistan"],["AGO","341","AO","Angola","Angola","Angola","Angola"],["AIA","490","AI","Anguilla(R.U.)","Anguilla(V.K.)","Anguilla","Anguilla(V.K.)"],["ALB","101","AL","Albanie","Albanië","Albania","Albanien"],["AND","102","AD","Andorre","Andorra","Andorra","Andorra"],["ARE","260","AE","Emirats arabes unis","Verenigde Arabische Emiraten","United Arab Emirates","Vereinigten Arabischen Emiraten"],["ARG","511","AR","Argentine","Argentinië","Argentina","Argentinien"],["ARM","249","AM","Arménie ( Rép. )","Armenië ( Rep. )","Armenia","Armenien ( Rep. )"],["ASM","690","AS","Samoa américaines","Amerik.Samoaeilanden","American Samoa Isles","Amerik.Samoainseln"],["ATG","403","AG","Antigua","Antigua","Antigua and Barbuda","Antigua"],["AUS","611","AU","Australie","Australië","Australia","Australien"],["AUT","105","AT","Autriche","Oostenrijk","Austria","Oesterreich"],["AZE","250","AZ","Azerbaïdjan ( Rép. )","Azerbeidzjan ( Rep. )","Azerbaijan","Azerbaidschan ( Rep. )"],["BDI","303","BI","Burundi","Burundi","Burundi","Burundi"],["BEL","150","BE","Belgique","België","Belgium","Belgien"],["BEN","310","BJ","Bénin(Rép. pop. du)","Benin(Volksrepubliek)","Benin","Benin(Volksrepublik)"],["BFA","308","BF","Burkina Faso","Burkina Faso","Burkina Faso","Burkina Faso"],["BGD","237","BD","Bangladesh","Bangladesh","Bangladesh","Bangla-Desh"],["BGR","106","BG","Bulgarie","Bulgarije","Bulgaria","Bulgarien"],["BHR","268","BH","Bahrein","Bahrein","Bahrain","Bahrein"],["BHS","425","BS","Bahamas","Bahamas","Bahamas","Bahamas"],["BIH","149","BA","Bosnie-Herzégovine (Rép. de)","Bosnië-Herzegovina (Rep.)","Bosnia and Herzegovina","Bosnien-Herczegowina (Rep.)"],["BLM","481","BL","Antilles françaises","Franse Antillen","French West Indies","Franzosische Antillen"],["BLR","142","BY","Biélorussie ( Rép. )","Bielorusland ( Rep. )","Belarus","Weissrussland"],["BLZ","430","BZ","Belize","Belize","Belize","Belize"],["BMU","485","BM","Bermudes","Bermuda's","Bermuda","Bermudas"],["BOL","512","BO","Bolivie","Bolivië","Bolivia (Plurinational State of)","Bolivien"],["BRA","513","BR","Brésil","Brazilië","Brazil","Brasilien"],["BRB","423","BB","Barbade","Barbados","Barbados","Barbados"],["BRN","224","BN","Brunei","Brunei","Brunei Darussalam","Brunei"],["BTN","223","BT","Bhoutan","Bhutan","Bhutan","Bhutan"],["BWA","302","BW","Botswana","Botswana","Botswana","Botswana"],["CAF","305","CF","République Centrafricaine","Centraalafrikaanse Republiek","Central African Republic","Zentralafrikanische Republik"],["CAN","401","CA","Canada","Canada","Canada","Kanada"],["CHE","127","CH","Suisse","Zwitserland","Switzerland","Schweiz"],["CHL","514","CL","Chili","Chili","Chile","Chile"],["CHN","218","CN","Chine","China","China","China"],["CIV","309","CI","Côte d'Ivoire","Ivoorkust","Côte d'Ivoire","Elfenbeinküste"],["CMR","304","CM","Cameroun","Kameroen","Cameroon","Kamerun"],["COD","306","CD","RD Congo","DR Congo","DR Congo","DR Kongo"],["COG","307","CG","Congo","Congo","Congo","Kongo"],["COK","605","CK","Cook","Cook","Cook","Cook"],["COL","515","CO","Colombie","Colombia","Colombia","Kolumbien"],["COM","343","KM","Archipel des Comores","Archipel van de Comoren","Comoros","Komoren - Archipel"],["CPV","339","CV","Cap Vert/Iles du/","Kaapverdische Eilanden","Cabo Verde","Kapverdische Inseln"],["CRI","411","CR","Costa Rica","Costa Rica","Costa Rica","Costa Rica"],["CUB","412","CU","Cuba","Cuba","Cuba","Kuba"],["CYM","492","KY","Caïmanes(R.U.)","Caïmanes(V.K.)","Cayman Islands","Kaiman - Inseln(V.K.)"],["CYP","107","CY","Chypre","Cyprus","Cyprus","Zypern"],["CZE","140","CZ","Tchéquie","Tsjechië","Czechia","Tschechien"],["DEU","103","DE","Allemagne","Duitsland","Germany","Deutschland"],["DJI","345","DJ","République de Djibouti","Republiek Djibouti","Djibouti","Republik Djibouti"],["DMA","427","DM","Dominique (République)","Dominica (Republiek)","Dominica","Dominica (Republik)"],["DNK","108","DK","Danemark","Denemarken","Denmark","Dänemark"],["DOM","420","DO","Dominicaine /Rép./","Dominikaanse Republiek","Dominican Republic","Dominikanische Republik"],["DZA","351","DZ","Algérie","Algerije","Algeria","Algerien"],["ECU","516","EC","Equateur","Ecuador","Ecuador","Ekuador"],["EGY","352","EG","Rép. Arabe d'Egypte","Arabische Republiek Egypte","Egypt","Arabische Republik von Ägypten"],["ERI","349","ER","Erythrée","Erithrea","Eritrea","Erythräen"],["ESH","388","EH","Sahara","Sahara","Western Sahara","Sahara"],["ESP","109","ES","Espagne","Spanje","Spain","Spanien"],["EST","136","EE","Estonie","Estland","Estonia","Estland"],["ETH","311","ET","Ethiopie","Ethiopië","Ethiopia","Äthiopien"],["FIN","110","FI","Finlande","Finland","Finland","Finnland"],["FJI","617","FJ","Fidji","Fiji","Fiji","Fidschi"],["FLK","580","FK","Iles Falkland","Falkland Eilanden","Falkland Islands (Malvinas)","Falklandinseln"],["FRA","111","FR","France","Frankrijk","France","Frankreich"],["FSM","602","FM","Micronésie","Micronisia","Micronesia (Federated States of)","Micronisia"],["GAB","312","GA","Gabon","Gabon","Gabon","Gabun"],["GBR","112","GB","Royaume-Uni","Verenigd Koninkrijk","United Kingdom","Vereinigtes Königreich"],["GEO","253","GE","Géorgie ( Rép. )","Georgië ( Rep. )","Georgia","Georgien"],["GHA","314","GH","Ghana","Ghana","Ghana","Ghana"],["GIB","180","GI","Gibraltar","Gibraltar","Gibraltar","Gibraltar"],["GIN","315","GN","Guinée","Guinea","Guinea","Guinea"],["GLP","496","GP","La Guadeloupe(F.)","La Guadeloupe(F.)","Guadeloupe","La Guadeloupe(F.)"],["GMB","313","GM","Gambie","Gambia","Gambia","Gambia"],["GNB","338","GW","Guinée-Bissau","Guinea-Bissau","Guinea-Bissau","Guinea-Bissau"],["GNQ","337","GQ","Guinée équatoriale","Equatoriaal-Guinea","Equatorial Guinea","Äquatoriales Guinea"],["GRC","114","GR","Grèce","Griekenland","Greece","Griechenland"],["GRD","426","GD","Grenade","Grenada","Grenada","Granada"],["GRL","498","GL","Le Groenland(D.K.)","Groenland(D.K.)","Greenland","Grönland(D.K.)"],["GTM","413","GT","Guatémala","Guatemala","Guatemala","Guatemala"],["GUF","581","GF","Guyane Française","Frans Guyana","French Guiana","Französisch-Guyana"],["GUM","681","GU","Guam","Guam","Guam","Guam"],["GUY","521","GY","Guyane","Guyana","Guyana","Guyana"],["HKG","230","HK","Chine (Hong-Kong SAR)","China (Hongkong SAR)","Hong Kong SAR, China","China (Hong Kong SAR)"],["HND","414","HN","Honduras","Honduras","Honduras","Honduras"],["HRV","146","HR","Croatie","Kroatië","Croatia","Kroatien"],["HTI","419","HT","Haïti","Haïti","Haiti","Haiti"],["HUN","115","HU","Hongrie","Hongarije","Hungary","Ungarn"],["IDN","208","ID","Indonésie","Indonesië","Indonesia","Indonesien"],["IND","207","IN","Inde","India","India","Indien"],["IRL","116","IE","Irlande","Ierland","Ireland","Irland"],["IRN","255","IR","Iran","Iran","Iran","Iran"],["IRQ","254","IQ","Irak","Irak","Iraq","Irak"],["ISL","117","IS","Islande","Ijsland","Iceland","Island"],["ISR","256","IL","Israël","Israël","Israel","Israel"],["ITA","128","IT","Italie","Italië","Italy","Italien"],["JAM","415","JM","Jamaïque","Jamaica","Jamaica","Jamaika"],["JOR","257","JO","Jordanie","Jordanië","Jordan","Jordanien"],["JPN","209","JP","Japon","Japan","Japan","Japan"],["KAZ","225","KZ","Kazakhstan ( Rép. )","Kazachstan ( Rep. )","Kazakhstan","Kasachstan ( Rep. )"],["KEN","336","KE","Kenya","Kenya","Kenya","Kenia"],["KGZ","226","KG","Kirghizie ( Rep. )","Kirgizstan ( Rep. )","Kyrgyzstan","Kirgistan ( Rep. )"],["KHM","216","KH","Cambodge (Royaume du)","Cambodja (Koninkrijk)","Kingdom of Cambodia","Kambodscha (Königreich)"],["KIR","622","KI","Iles Gilbert","Gilberteilanden","Kiribati","Gilbertinseln"],["KNA","431","KN","St. Kitts et Nevis","St. Kitts en Nevis","St. Kitts en Nevis","St. Kitts und Nevis"],["KOR","206","KR","Corée du Sud ( Rép. de )","Zuid-Korea ( Rep. )","Korea (Republic of)","Südkorea ( Rep. )"],["KWT","264","KW","Koweit/Principauté de/","Koeweit/Vorstendom/","Kuwait","Kuwait/Fürstentum/"],["LAO","210","LA","Laos","Laos","Lao People's Democratic Republic","Laos"],["LBN","258","LB","Liban","Libanon","Lebanon","Libanon"],["LBR","318","LR","Libéria","Liberia","Liberia","Liberia"],["LBY","353","LY","Libye","Libië","Libya","Libyen"],["LCA","428","LC","République de Sainte Lucie","Republiek Sint-Lucia","Saint Lucia","Republik Sankt-Luzia"],["LIE","118","LI","Liechtenstein","Liechtenstein","Liechtenstein","Liechtenstein"],["LKA","203","LK","Sri Lanka","Sri Lanka","Sri Lanka","Sri Lanka"],["LSO","301","LS","Lesotho","Lesotho","Lesotho","Lesotho"],["LTU","137","LT","Lituanie","Litouwen","Lithuania","Litauen"],["LUX","113","LU","Luxembourg","Luxemburg","Luxembourg","Luxemburg"],["LVA","135","LV","Lettonie","Letland","Latvia","Lettland"],["MAC","231","MO","Chine (Macao SAR)","China (Macau SAR)","Macao SAR, China","China (Macau SAR)"],["MAR","354","MA","Maroc","Marokko","Morocco","Marokko"],["MCO","120","MC","Monaco /Principauté/","Monaco /Vorstendom/","Monaco","Monako/Fürstentum/"],["MDA","144","MD","Moldavie ( Rép. )","Moldavië ( Rep. )","Moldova (Republic of)","Moldawien ( Rep. )"],["MDG","324","MG","Rép.démocrat. de Madagascar","Democratische Republ. Madagascar","Madagascar","Demokratische Republ. Madagaskar"],["MDV","222","MV","Maldives","Malediven","Maldives","Malediven"],["MEX","416","MX","Mexique","Mexico","Mexico","Mexiko"],["MHL","603","MH","Iles Marshall (République des)","Marshalleilanden (Republiek der)","Marshall Islands","Marshallinseln (Republik)"],["MKD","148","MK","Macédoine (Ex-Rép. yougoslave de)","Macedonië (Ex-Joegoslavische Rep.)","Macedonia (former Yugoslav Rep of)","Makedonien (Ex-Jugoslawischen Rep.)"],["MLI","319","ML","Mali","Mali","Mali","Mali"],["MLT","119","MT","Malte","Malta","Malta","Malta"],["MMR","201","MM","Myanmar (Union de)","Myanmar (Unie van)","Myanmar","Myanmar (Union)"],["MNE","151","ME","Monténégro","Montenegro","Montenegro","Montenegro"],["MNG","221","MN","Mongolie(Rép.pop.de.)","Mongolië(Volksrepubliek)","Mongolia","Mongolei(Volksrepublik)"],["MNP","620","MP","Pacifique/Iles du/","Stille Oceaan /Eilanden/","Northern Mariana Islands","Inseln des pazif. Ozeans"],["MOZ","340","MZ","Mozambique","Mozambique","Mozambique","Mozambik"],["MRT","355","MR","Mauritanie /Rép. Islamique de/","Mauritanië(Islamit. Rep.)","Mauritania","Mauretanien(Islamitische Rep.)"],["MSR","493","MS","Montserrat(R.U.)","Montserrat(V.K.)","Montserrat","Montserrat(V.K.)"],["MTQ","497","MQ","La Martinique(F.)","La Martinique(F.)","Martinique","La Martinique(F.)"],["MUS","317","MU","Maurice /Ile/","Mauritius /Eiland/","Mauritius","Mauritius /Insel/"],["MWI","358","MW","Malawi","Malawi","Malawi","Malawi"],["MYS","212","MY","Malaisie","Maleisië","Malaysia","Malaya"],["NAM","384","NA","Namibie","Namibie","Namibia","Namibia"],["NCL","683","NC","Nouvelle-Calédonie","Nieuw-Caledonië","New Caledonia","Neukaledonien"],["NER","321","NE","Niger","Niger","Niger","Niger"],["NGA","322","NG","Nigéria(Rép. Féder.)","Nigeria (Fed.Rep.)","Nigeria","Nigeria(Bundesrep.)"],["NIC","417","NI","Nicaragua","Nicaragua","Nicaragua","Nikaragua"],["NIU","604","NU","Niue","Niue","Niue","Niue"],["NLD","129","NL","Pays-Bas","Nederland","Netherlands","Niederlande"],["NOR","121","NO","Norvège","Noorwegen","Norway","Norwegen"],["NPL","213","NP","Nepal","Nepal","Nepal","Nepal"],["NRU","615","NR","Nauru","Nauru","Nauru","Nauru"],["NZL","613","NZ","Nouvelle-Zélande","Nieuw-Zeeland","New Zealand","Neuseeland"],["OMN","266","OM","Sultanat d'Oman","Sultanaat Oman","Oman","Sultanat Oman"],["PAK","259","PK","Pakistan","Pakistan","Pakistan","Pakistan"],["PAN","418","PA","Panama","Panama","Panama","Panama"],["PCN","692","PN","Pitcairn(terr.dép.du R.U.)","Pitcairn(Gebied.afh.van het V.K.)","Pitcairn","Pitcairn(vom V.K. abhängiges Gebiet)"],["PER","518","PE","Pérou","Peru","Peru","Peru"],["PHL","214","PH","Philippines","Filippijnen","Philippines","Philippinen"],["PNG","619","PG","Papouasie-Nouvelle-Guinée","Nieuw-Guinea-Papoua","Papua New Guinea","Neu-Guinea-Papua"],["POL","122","PL","Pologne","Polen","Poland","Polen"],["PRI","487","PR","Porto-Rico(Ile de)","Porto Rico Eiland","Puerto Rico","Portoriko"],["PRK","219","KP","Corée du Nord ( Rép. de )","Noord-Korea ( Volksrep. )","Korea (Democratic People's Republic of)","Nordkorea ( Volksrep. )"],["PRT","123","PT","Portugal","Portugal","Portugal","Portugal"],["PRY","517","PY","Paraguay","Paraguay","Paraguay","Paraguay"],["PSE","271","PS","Palestine","Palestina","Palestine","Palästina"],["PYF","684","PF","Polynésie","Polynesië","French Polynesia","Polynesien"],["QAT","267","QA","Qatar","Qatar","Qatar","Qatar"],["REU","387","RE","Réunion","Réunion","Réunion","Réunion"],["ROU","124","RO","Roumanie","Roemenië","Romania","Rumänien"],["RUS","145","RU","Russie","Rusland","Russia","Russland"],["RWA","327","RW","Rwanda","Rwanda","Rwanda","Ruanda"],["SAU","252","SA","Arabie Saoudite","Saoedi-Arabië","Saudi Arabia","Saudi-Arabien"],["SDN","356","SD","Soudan","Soedan","Sudan","Sudan"],["SEN","320","SN","Sénégal","Senegal","Senegal","Senegal"],["SGP","205","SG","Singapour","Singapore","Singapore","Singapur"],["SHN","389","SH","Sainte-Hélène(Ile)","Sint-Helena(Eiland)","St Helena, Ascension, Tristan da Cunha","Sankt-Helena-Insel"],["SLB","623","SB","Iles Salomon","Salomoneilanden","Solomon Islands","Salomoninseln"],["SLE","328","SL","Sierra Leone","Sierra Leone","Sierra Leone","Sierra Leone"],["SLV","421","SV","El Salvador","El Salvador","El Salvador","El Salvador"],["SMR","125","SM","Saint-Marin","San Marino","San Marino","San Marino"],["SOM","329","SO","Somalie /Rép./","Somalië(Rep.)","Somalia","Somaliland /Rep./"],["SPM","495","PM","Saint-Pierre et Miquelon(F.)","Saint-Pierre et Miquelon(F.)","Saint Pierre and Miquelon","Saint-Pierre et Miquelon(F.)"],["SRB","152","RS","Serbie","Servië","Serbia","Serbien"],["SSD","365","SS","Soudan du Sud","Zuid-Soedan","South Sudan","Südsudan"],["STP","346","ST","Sao Tomé et Principe (Rép. dém. de)","Sao Tomé en Principe (Dem. Rep.)","Sao Tome and Principe","Sao Tomé und Principe (Dem. Rep.)"],["SUR","522","SR","Surinam","Suriname","Suriname","Surinam"],["SVK","141","SK","Slovaquie","Slowakije","Slovakia","Slowakei"],["SVN","147","SI","Slovénie ( Rép. de )","Slovenië ( Rep. )","Slovenia","Slowenien ( Rep. )"],["SWE","126","SE","Suède","Zweden","Sweden","Schweden"],["SWZ","331","SZ","Ngwane (Royaume du Swaziland)","Ngwane (Koninkrijk Swaziland)","Swaziland","Ngwane (Königreich Swaziland)"],["SYC","342","SC","Seychelles(Iles)","Seychellen(Eilanden)","Seychelles","Seychellen"],["SYR","261","SY","Syrie","Syrië","Syria","Syrien"],["TCA","488","TC","Iles Turks et Caicos","Turks en Caicos Eilanden","Turks and Caicos Islands","Turks und Caicos Inseln"],["TCD","333","TD","Tchad","Tsjaad","Chad","Tschad"],["TGO","334","TG","Togo","Togo","Togo","Togo"],["THA","235","TH","Thaïlande","Thailand","Thailand","Thailand"],["TJK","228","TJ","Tadjikistan ( Rép. )","Tadzjikistan ( Rep. )","Tajikistan","Tadschikistan ( Rep. )"],["TKL","686","TK","Tokelau(N-Z.)","Tokelau(N-Z.)","Tokelau","Tokelau(N-Z.)"],["TKM","229","TM","Turkménistan ( Rép. )","Turkmenistan ( Rep. )","Turkmenistan","Turkmenistan ( Rep. )"],["TLS","215","TL","Timor-Leste (République démocratique)","Oost-Timor (Democratische Republiek)","Timor-Leste","Timor-Leste (Demokratische Republik)"],["TON","616","TO","Tonga","Tonga","Tonga","Tonga"],["TTO","422","TT","Trinidad et Tobago","Trinidad en Tobago","Trinidad and Tobago","Trinidad und Tobago"],["TUN","357","TN","Tunisie","Tunesië","Tunisia","Tunesien"],["TUR","262","TR","Turquie","Turkije","Turkey","Türkei"],["TUV","621","TV","Tuvalu","Tuvalu","Tuvalu","Tuvalu"],["TWN","204","TW","Chine-Taïwan ( Rép. de )","China-Taïwan ( Rep. )","Taiwan, Province of China","China-Taïwan ( Rep. )"],["TZA","332","TZ","Tanzanie(Rép.Unie de)","Tanzania /Verenigde Rep./","Tanzania, United Republic of","Tansania(Vereinigte Rep.)"],["UGA","323","UG","Ouganda","Uganda","Uganda","Uganda"],["UKR","143","UA","Ukraine","Oekraïne","Ukraine","Ukraine"],["URY","519","UY","Uruguay","Uruguay","Uruguay","Uruguay"],["USA","402","US","États-Unis","Verenigde Staten","United States","Vereinigte Staaten"],["UZB","227","UZ","Ouzbékistan ( Rép. )","Oezbekistan ( Rep. )","Uzbekistan","Uzbekistan ( Rep. )"],["VAT","133","VA","Saint-Siège","Heilige Stoel","Holy See","Päpstlicher Stuhl"],["VCT","429","VC","Saint-Vincent","Saint Vincent","Saint Vincent and the Grenadines","Saint Vincent"],["VEN","520","VE","Vénézuéla","Venezuela","Venezuela (Bolivarian Republic of)","Venezuela"],["VGB","486","VG","Iles Vierges","Maagdeneilanden","Virgin Islands (British)","Jungferninseln"],["VIR","483","VI","Antilles américaines","Amerikaanse Antillen","Virgin Islands (U.S.)","Antillen(U.S.A.)"],["VNM","220","VN","République socialiste du Vietnam","Socialistische Republiek Vietnam","Viet Nam","Sozialistische Republik Vietnam"],["VUT","624","VU","Vanuatu","Vanuatu","Vanuatu","Vanuatu"],["WLF","689","WF","Wallis et Futuna(F.)","Wallis en Futuna(F.)","Wallis and Futuna (F.)","Wallis und Futuna(F.)"],["WSM","614","WS","Samoa occidentales","West-Samoa","Samoa","West-Samoa"],["XKX","153","XK","Kosovo","Kosovo","Kosovo","Kosovo"],["YEM","270","YE","Yemen(Rép.du)","Jemen(Rep.)","Yemen","Jemen(Rep.)"],["ZAF","325","ZA","Afrique du Sud /Rép. d'/","Zuid-Afrika /Rep./","South Africa","Südafrikanische Republik"],["ZMB","335","ZM","Zambie","Zambia","Zambia","Sambia"],["ZWE","344","ZW","Zimbabwe","Zimbabwe","Zimbabwe","Zimbabwe"]];
+
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const $=id=>document.getElementById(id);
+const rows=(id,arr)=>{$(id).innerHTML=arr.join('');};
+
+/* keymap FR<->EN */
+const KEYMAP=[["prenom","first_name"],["nom","last_name"],["adresse","address"],["ordre","order"],["sexe","sex"],["statut","status"],["historique","history"],["taille_menage","household_size"],["gsm","mobile_number"],["rdv","appointment"]];
+rows('keymap',KEYMAP.map(([f,e])=>`<tr><td class="k">${f}</td><td class="arrow">→</td><td class="c">${e}</td></tr>`));
+
+/* storage */
+const STORAGE=[
+  ["IndexedDB",'<code>StatbelInterviewer</code> · store <code>enquetes</code> (keyPath <code>nom</code>)',"enquêtes : { nom → fiches[] }"],
+  ["localStorage",'<code>statbel_active</code>',"enquête active"],
+  ["localStorage",'<code>coords_&lt;adresse&gt;</code>',"cache géocodage {lat,lng}"],
+  ["localStorage",'<code>statbel_backup_dirty</code>',"modifs non sauvegardées"],
+  ["migration",'<code>statbel_enquetes</code> → IDB',"ancien stockage (auto-migré)"],
+];
+rows('storage',STORAGE.map(([a,b,c])=>`<tr><td class="c">${a}</td><td>${b}<div class="muted" style="font-size:11px">${c}</div></td></tr>`));
+
+/* record shape */
+const RECORD=[
+  ["ordre","string (peut être vide)","— (sinon collision d'appariement)"],
+  ["prenom / nom / adresse","string","brut (esc à l'affichage)"],
+  ["statut","clé EN","statutCanon() → « To do » par défaut"],
+  ["date / rdv","date interne","toFrDateTime / toISODateTime"],
+  ["sexe","'M' | 'F' | null",""],
+  ["birth_date","« JJ/MM/AAAA » | null","toISODate (ordre mois auto-détecté)"],
+  ["age","int ≥ 0 | null","intOuNull (garde le 0)"],
+  ["birth_country / nationality","code ISO-3 | null","normaliserPays()"],
+  ["marital_status","clé EN | null","maritalCanon()"],
+  ["taille_menage / nb_cibles","int ≥ 0 | null",""],
+  ["collect_method","CATI/CAWI brut | null","classé par regex à l'usage"],
+  ["web_user_id / web_user_pwd","string | null","reparerIdSci (notation sci.)"],
+  ["gsm / email","string",""],
+  ["historique[]","{statut,date,heure?,rdv?}","statut = clé EN"],
+];
+rows('record',RECORD.map(([a,b,c])=>`<tr><td class="k">${a}</td><td>${b}</td><td class="muted">${c}</td></tr>`));
+
+/* CHAMPS_IMPORT */
+const CHAMPS=[
+  ["ordre","Ordre","ordre, order, nr, no"],["prenom","Prénom","prenom, firstname, first_name, prénom"],
+  ["nom","Nom","nom, lastname, last_name, name"],["adresse","Adresse","adresse, address, adr"],
+  ["statut","Statut","statut, status, etat"],["date","Date interview","date_interview, interview_date, date…"],
+  ["notes","Notes","notes, note, remarques"],["rdv","Rendez-vous","rdv, date_rdv, rendez_vous, appointment"],
+  ["sexe","Sexe","sexe, sex, genre, gender"],["birth_date","Date naissance","birth_date, date_naissance, dob"],
+  ["age","Âge","age"],["birth_country","Pays naissance","birth_country, pays_naissance, country_birth"],
+  ["nationality","Nationalité","nationality, nationalite, nationalité"],["marital_status","État civil","marital_status, etat_civil…"],
+  ["taille_menage","Taille ménage","taille_menage, household_size, menage…"],["nb_cibles","Cibles ≥15","nb_cibles, members_15plus, cibles_15…"],
+  ["collect_method","Méthode de collecte","cd_wsh_clct_mthd, collect_method…"],["web_user_id","Identifiant web","tx_web_user_id, web_user_id, login…"],
+  ["web_user_pwd","Mot de passe web","tx_web_user_pswrd, web_user_pwd, pwd…"],["gsm","Téléphone","gsm, tel, telephone, phone, mobile_number"],
+  ["email","Email","email, mail, e_mail"],["history","Historique","history, historique"],
+  ["lat","Latitude","lat, latitude"],["lng","Longitude","lng, lon, long, longitude"],
+];
+rows('champs',CHAMPS.map(([k,l,a])=>`<tr><td class="k">${k}</td><td>${l}</td><td class="c muted" style="white-space:normal">${a}</td></tr>`));
+
+/* csv export header */
+const CSVOUT="order first_name last_name address status interview_date appointment sex birth_date age birth_country nationality marital_status household_size members_15plus CD_WSH_CLCT_MTHD TX_WEB_USER_ID TX_WEB_USER_PSWRD phone email notes history lat lng".split(' ');
+$('csvout').innerHTML=CSVOUT.map(c=>`<span class="box">${c}</span>`).join('');
+
+/* pdf labels */
+$('hhlab').innerHTML="NR_DBENQ_HH · Contact name · Size · HH N · Address · Wave · User ID · Phone · CATI / CAWI · Password · EMail · Language".split(' · ').map(c=>`<span class="box">${c}</span>`).join('');
+$('mbcol').innerHTML="Nr_MB · First name · Last name · Age · Sex · Country birth · Nationality · Marital status".split(' · ').map(c=>`<span class="box">${c}</span>`).join('');
+
+/* GRP_COLS with meaning */
+const GRP=[
+ ["NR_GRP","n° groupe (AAAA VSSGG)"],["NR_HH","n° ménage dans le groupe"],["NR_DBENQ_MB","id membre = grp+HH+MB"],
+ ["NR_YEAR","année"],["NR_SEQ","séquence"],["NR_WAVE","vague / interrogation"],["NR_REF_WK","semaine de référence"],
+ ["TX_WEB_USER_ID","identifiant CAWI"],["TX_WEB_USER_PSWRD","mot de passe CAWI"],["CD_CNTCT_LG","langue de contact"],
+ ["FL_MB_CNTCT","membre = personne de contact (1/0)"],["TX_MB_NM_FST","prénom"],["TX_MB_NM_LST","nom"],
+ ["CD_MB_SEX","sexe (1/2)"],["DT_MB_BTH","date naissance (vide en PDF)"],["MS_MB_AGE","âge"],
+ ["CD_MB_BTH_REFNIS","pays de naissance (code NIS)"],["CD_MB_NLTY","nationalité (code NIS)"],["CD_MB_MRTL_STS","état civil (1–6)"],
+ ["TX_ADRS_USTR_NM","rue"],["CD_ADRS_HS","n°"],["CD_ADRS_BX","boîte"],["CD_ADRS_ZIP","code postal"],["TX_ADRS_REFNIS_NM","commune"],
+ ["TX_DBENQ_GRP","groupe (texte)"],["TX_DBENQ_HH","ménage (texte)"],["NR_PHONE","téléphone"],["TX_EMAIL","e-mail"],
+ ["CD_WSH_CLCT_MTHD","méthode (CATI/CAWI)"],["TX_GRP_LISTING_XLS","source listing"],
+];
+rows('grpcols',GRP.map(([c,m],i)=>`<tr><td class="muted num">${i+1}</td><td class="k">${c}</td><td>${m}</td></tr>`));
+
+/* planning shape */
+const PLAN=[
+  ["p","province (BRU, HAI, LIE, LUX, NAM, BWA)"],
+  ["c","commune"],["q","quartier"],["n","nb d'interrogations (4)"],
+  ["i[]","4 × [semaine, début, fin] — les 4 interrogations"],
+];
+rows('planshape',PLAN.map(([k,v])=>`<tr><td class="k">${k}</td><td>${v}</td></tr>`));
+$('planshape').innerHTML+=`<tr><td colspan="2" class="muted" style="font-size:11px;padding-top:9px">Ex. <code class="mono">12705</code> = Jette · I1 sem.27 (06→26/07/2026) · I2 sem.40 · I3 sem.27/2027 · I4 sem.40/2027</td></tr>`;
+
+/* province distribution */
+const PROV=[["BRU","Bruxelles",39],["HAI","Hainaut",28],["LIE","Liège",25],["NAM","Namur",17],["BWA","Brabant wallon",16],["LUX","Luxembourg",16]];
+const maxP=39;
+rows('provdist',PROV.map(([c,n,v])=>`<tr><td class="k">${c}</td><td>${n}</td><td style="width:45%"><div style="display:flex;align-items:center;gap:8px"><div style="height:7px;border-radius:4px;background:var(--green);width:${v/maxP*100}%"></div><span class="muted num">${v}</span></div></td></tr>`));
+
+/* sex */
+rows('sex',[["1","Masculin"],["2","Féminin"]].map(([c,l])=>`<tr><td class="k">${c}</td><td>${l}</td></tr>`));
+/* mrtl pdf */
+const MRTL=[["1","Célibataire"],["2","Marié(e)"],["3","Divorcé(e)"],["4","Veuve/veuf"],["5","Divorcé(e), séparé(e) de fait"],["6","Séparé(e) de corps et de biens"]];
+rows('mrtl',MRTL.map(([c,l])=>`<tr><td class="k">${c}</td><td>${l}</td></tr>`));
+
+/* marital i18n */
+const MARITAL=[
+  ["Single","Célibataire","Ongehuwd","Ledig"],
+  ["Married","Marié / Mariée","Gehuwd","Verheiratet"],
+  ["Divorced/Separated","Divorcé/Séparé","Gescheiden","Geschieden/Getrennt"],
+  ["Divorced, de facto separated","Divorcé, séparé de fait","Gescheiden, feitelijk","Geschieden, faktisch getrennt"],
+  ["Widowed","Veuf / Veuve","Weduwnaar / Weduwe","Verwitwet"],
+  ["Legal cohabitant","Cohabitant légal","Wettelijk samenwonend","Gesetzlich zusammenwohnend"],
+];
+rows('marital',MARITAL.map(r=>`<tr><td class="k">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`));
+
+/* statuts */
+const STAT=[
+  ["To do","À faire","#90a4ae",0,0,0],["In progress","En cours","#f9a825",0,1,0],
+  ["Done","Fait","#2e7d32",1,0,1],["Absent","Absent","#a1887f",1,0,0],
+  ["Refusal","Refus","#c62828",1,0,0],["Moved","A déménager","#6a1b9a",1,0,0],
+  ["Impossible","Impossible","#d81b60",1,0,0],
+];
+const yn=b=>b?'<span style="color:var(--green)">✓</span>':'<span class="muted">–</span>';
+rows('statuts',STAT.map(([k,fr,col,d,r,re])=>`<tr><td class="k">${k}</td><td>${fr}</td><td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:${col};display:inline-block"></span><span class="c muted">${col}</span></span></td><td>${yn(d)}</td><td>${yn(r)}</td><td>${yn(re)}</td></tr>`));
+
+/* collect */
+const COLL=[
+  ["cawi","CAWI, WEB, INTERNET, ONLINE, EN LIGNE"],
+  ["cati","CATI, TÉL, PHONE, TELEPH"],
+  ["'' (CAPI)","face-à-face — ni CATI ni CAWI (défaut)"],
+];
+rows('collect',COLL.map(([c,l])=>`<tr><td class="k">${c}</td><td class="muted">${l}</td></tr>`));
+
+/* region */
+const REG=[["1000–1299","bruxelles"],["1300–1499","wallonie"],["4000–7999","wallonie"],["autres","flandre"]];
+rows('region',REG.map(([c,l])=>`<tr><td class="c">${c}</td><td class="arrow">→</td><td>${l}</td></tr>`));
+
+/* NLTY_ALIAS */
+const ALIAS=[
+ ["148","MKD","Macédoine — ancien code (→154)"],["822","AFG","Afghanistan (à vérifier)"],
+ ["104","DEU","Allemagne (RDA)"],["173","DEU","Allemagne (code alternatif)"],
+ ["202","KHM","République Khmère → Cambodge"],["211","KHM","Kampuchea → Cambodge"],
+ ["232","MMR","Birmanie → Myanmar"],["233","IRN","Iran (alternatif)"],
+ ["236","VNM","Vietnam (Rép. dém.)"],["279","VNM","Vietnam (Rép.)"],
+ ["263","YEM","Yémen (Rép. arabe)"],["265","YEM","Yémen (Rép. pop. dém.)"],
+ ["269","ARE","Abu Dhabi → Émirats"],["273","PSE","Territoire palestinien → Palestine"],
+ ["280","HKG","Hong Kong (R.-U.)"],["281","MAC","Macao (Portugal)"],["282","TLS","Timor (Portugal)"],
+ ["316","BFA","Haute-Volta → Burkina Faso"],["326","ZWE","Rhodésie → Zimbabwe"],
+ ["347","SWZ","Swaziland → Eswatini"],["366","SWZ","Eswatini (alternatif)"],["395","SWZ","Swaziland (Protectorat brit.)"],
+ ["359","COD","Congo belge → RD Congo"],["364","COD","Zaïre → RD Congo"],["362","COG","Congo (Rép.) → Brazzaville"],
+ ["380","DJI","Afars et Issas → Djibouti"],["381","AGO","Angola (Portugal)"],["382","AGO","Cabinda → Angola"],
+ ["383","MOZ","Mozambique (Portugal)"],["385","CPV","Cap-Vert (Portugal)"],["386","COM","Comores (France)"],
+ ["390","SYC","Seychelles (R.-U.)"],["391","GNB","Guinée portugaise → Guinée-Bissau"],["392","GNQ","Fernando Poo → Guinée équat."],
+ ["393","STP","Sao Tomé (Portugal)"],["396","ZAF","Transkei → Afrique du Sud"],["397","ZAF","Bophutatswana → Afrique du Sud"],
+ ["398","ESP","Îles Canaries (Espagne)"],["399","PRT","Madère (Portugal)"],
+ ["478","VIR","Îles Vierges américaines"],["479","VGB","Îles Vierges britanniques"],
+ ["480","DMA","Dominica (R.-U.)"],["484","BHS","Bahamas (R.-U.)"],["491","ATG","Antigua (R.-U.)"],
+ ["494","KNA","Saint-Kitts-et-Nevis (R.-U.)"],["499","BLM","Saint-Barthélemy (France)"],
+ ["583","SUR","Guyane néerlandaise → Suriname"],["606","WSM","Samoa → Samoa occidentales"],["607","KIR","Kiribati → Îles Gilbert"],
+ ["618","VUT","Nouvelles-Hébrides → Vanuatu"],["685","NIU","Niué (N.-Z.)"],["687","COK","Îles Cook (N.-Z.)"],
+];
+rows('alias',ALIAS.map(([c,i,n])=>`<tr><td class="k">${c}</td><td class="arrow">→</td><td class="c">${i}</td><td class="muted">${n}</td></tr>`));
+
+/* i18n mechanics */
+const FN=[
+  ["t(key)","I18N[key][lang] · repli fr · repli key"],
+  ["tf(key,{n})","interpole {n} dans la traduction"],
+  ["tPlural(key,n)","choisit [singulier, pluriel]"],
+  ["champLabel(key)","libellé de colonne d'import"],
+];
+rows('i18nfn',FN.map(([a,b])=>`<tr><td class="k">${a}</td><td class="muted">${b}</td></tr>`));
+rows('locales',[["fr","fr-BE"],["nl","nl-BE"],["en","en-GB"],["de","de-BE"]].map(([a,b])=>`<tr><td class="k">${a}</td><td class="arrow">→</td><td class="c">${b}</td></tr>`));
+
+/* i18n example */
+const EX=[
+  ["tip_list","Liste","Lijst","List","Liste"],
+  ["map_editcard","Éditer la fiche","Fiche bewerken","Edit contact","Kontakt bearbeiten"],
+  ["birth_country","Pays de naissance","Geboorteland","Birth country","Geburtsland"],
+];
+rows('i18nex',EX.map(r=>`<tr><td class="k">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`));
+
+/* ============ country table ============ */
+let lang=3; // index into row (3=fr,4=nl,5=en,6=de)
+const LMAP={fr:3,nl:4,en:5,de:6};
+const LLBL={fr:'FR',nl:'NL',en:'EN',de:'DE'};
+let cq='';
+function renderPays(){
+  const q=cq.toLowerCase();
+  const out=[];
+  PAYS.forEach(r=>{
+    if(q && !(r[0].toLowerCase().includes(q)||r[1].includes(q)||r[2].toLowerCase().includes(q)||r[3].toLowerCase().includes(q)||r[4].toLowerCase().includes(q)||r[5].toLowerCase().includes(q)||r[6].toLowerCase().includes(q))) return;
+    out.push(`<tr><td class="k">${r[0]}</td><td class="c">${r[1]}</td><td class="flag">${r[2]}</td><td>${esc(r[lang])}</td></tr>`);
+  });
+  $('paysBody').innerHTML=out.join('')||`<tr><td colspan="4" class="muted" style="padding:16px">Aucun pays.</td></tr>`;
+  $('ctCount').textContent=out.length+' / '+PAYS.length;
+}
+$('cq').oninput=e=>{cq=e.target.value.trim();renderPays();};
+$('lt').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  $('lt').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); lang=LMAP[b.dataset.l];
+  $('thName').textContent='Nom ('+LLBL[b.dataset.l]+')'; renderPays();
+});
+renderPays();
+
+/* theme + smooth nav */
+$('themeBtn').onclick=()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+};
+document.querySelectorAll('nav.secnav a').forEach(a=>a.onclick=e=>{
+  e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'});
+});
+</script>
+
+</body>
+</html>
