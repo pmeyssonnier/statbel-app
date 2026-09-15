@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — découpage du JS métier (1/n) : géocodage extrait en module
+(Planner `212` → `213`, SW `statbel-v377` → `statbel-v378`)
+- Premier lot du **découpage du JS du Planner** en fichiers dédiés (scripts CLASSIQUES,
+  globales partagées — `file://` préservé). Le sous-système **géocodage + carte + gestion des
+  plannings** (~965 lignes) est extrait **verbatim** vers **`js/planner/geocoding.js`**, chargé
+  via `<script src>` à la même position (ordre d'exécution identique → comportement inchangé).
+- `statbel_planner.html` : **160 Ko** (le JS métier restant y vit encore ; les prochains lots
+  sortiront i18n, plannings/filtres, vues, exports, candidature).
+- Outillage : `js/planner/**` reçoit un bloc ESLint dédié (scripts classiques, `no-undef`/
+  `no-unused-vars` coupés car cross-fichier) et est exclu du garde-fou `no-inline-handlers`
+  (le Planner conserve ses `onclick=`, contrairement à Interviews). Nouveau fichier ajouté à
+  `APP_CRITICAL`. 53/53 tests verts, 0 erreur JS au chargement (headless).
+
 ### Correctif lint — `js/cand-docx.js` expose `CAND_DOCX` via `window`
 (Planner `211` → `212`, SW `statbel-v376` → `statbel-v377`)
 - ESLint (`no-unused-vars`, `--max-warnings 0`) voyait `const CAND_DOCX` comme déclaré-non-utilisé
