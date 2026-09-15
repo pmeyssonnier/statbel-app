@@ -32,6 +32,14 @@ module avec captures d'écran ; fichier HTML autonome, ouvrable hors-ligne par d
 ✉️ **[Note d’utilisation des modèles de rappel](docs/templates-rappels.md)** — configuration,
 variables disponibles, exemples CATI/CAWI et précautions avant envoi.
 
+🗺️ **[Carte du code](docs/carte-du-code.html)** — vue interactive et filtrable de tous les
+fichiers (module, type, taille, lignes, complexité, couverture de test, dernière modif git,
+imports) + graphe de dépendances des modules ES. Page HTML autonome, ouvrable hors-ligne.
+
+🗂️ **[Référentiels & données](docs/referentiels.html)** — dictionnaire des structures :
+modèle de fiche, formats CSV/PDF/GRP, n° de groupe `AAAA-VSSGG`, codes métier et référentiel
+pays NIS ↔ ISO (227 pays, 4 langues). Page HTML autonome, ouvrable hors-ligne.
+
 ---
 
 ## 📋 Interviews (`index.html`)
