@@ -12,6 +12,14 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — téléphone/e-mail : action conservée, apparence de texte
+(Convertisseur `232` → `233`, SW `statbel-v371` → `statbel-v372`)
+- Dans les colonnes Téléphone et E-mail, le clic reste actif (appeler `tel:`, SMS `sms:`, e-mail
+  `mailto:`) mais les valeurs ne s'affichent plus comme des liens/URL (ni couleur ni soulignement ;
+  soulignement au survol seulement).
+- L'**e-mail est affiché et lié en minuscules**, même si la source est en casse mixte (la donnée
+  exportée reste inchangée).
+
 ### Convertisseur — tri sur toutes les colonnes du tableau
 (Convertisseur `231` → `232`, SW `statbel-v370` → `statbel-v371`)
 - Le tableau de contacts n'était triable que sur 4 colonnes (#, contact, adresse, ménage).

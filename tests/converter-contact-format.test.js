@@ -18,7 +18,7 @@ const GRP = [
   { NR_HH:'001', FL_MB_CNTCT:'1', TX_MB_NM_FST:'Jean', TX_MB_NM_LST:'Dubois', TX_DBENQ_GRP:'2026-13605',
     MS_MB_AGE:'40', DT_MB_BTH:'12-04-1985', CD_MB_SEX:'1',
     TX_ADRS_USTR_NM:'Rue A', CD_ADRS_HS:'10', CD_ADRS_ZIP:'1030', TX_ADRS_REFNIS_NM:'Schaerbeek',
-    NR_PHONE:'0470 100000', TX_EMAIL:'jean.dubois@example.be',
+    NR_PHONE:'0470 100000', TX_EMAIL:'Jean.Dubois@Example.BE',
     NR_GRP:'202613605', NR_YEAR:'2026', NR_WAVE:'1', NR_SEQ:'001', NR_REF_WK:'36' },
 ];
 
@@ -61,10 +61,15 @@ const GRP = [
   A(/href="tel:\+32470100000"/.test(r.body), 'tableau : lien tel: (appel) présent');
   A(/href="sms:\+32470100000"/.test(r.body), 'tableau : lien sms: présent');
   A(/\+32 470 10 00 00/.test(r.body), 'tableau : téléphone affiché « +32 470 10 00 00 »');
+  // Liens « nus » : action conservée mais pas d'apparence d'URL (classe lien-nu).
+  A(/class="lien-nu" href="tel:/.test(r.body), 'tableau : lien tel: sans style d\'URL (classe lien-nu)');
+  A(/class="lien-nu" href="mailto:/.test(r.body), 'tableau : lien mailto: sans style d\'URL (classe lien-nu)');
 
-  // 2. E-mail
+  // 2. E-mail — affiché et lié en MINUSCULES, même si la source est en casse mixte
   A(r.naiss === '12/04/1985' && r.naiss_bad === '', `fmtDateNaiss ISO→JJ/MM/AAAA (got "${r.naiss}")`);
-  A(/href="mailto:jean\.dubois@example\.be"/.test(r.body), 'tableau : e-mail = lien mailto:');
+  A(/href="mailto:jean\.dubois@example\.be"/.test(r.body), 'tableau : e-mail en minuscules dans mailto:');
+  A(/>jean\.dubois@example\.be</.test(r.body), 'tableau : e-mail affiché en minuscules');
+  A(!/Example\.BE/.test(r.body), 'tableau : aucune casse mixte d\'e-mail affichée');
 
   // 3. Date de naissance dans le détail du ménage
   A(/12\/04\/1985/.test(r.body), 'détail ménage : date de naissance affichée en JJ/MM/AAAA');

@@ -305,6 +305,10 @@
   td.ordre { font-weight: bold; color: var(--accent); }
   td.vide  { color: var(--text3); font-style: italic; }
   .id-sci  { color: var(--err-text); white-space: nowrap; cursor: help; }
+  /* Lien « nu » : garde l'action (appel / sms / e-mail) mais s'affiche comme du
+     texte normal — pas de couleur ni de soulignement d'URL. */
+  a.lien-nu { color: inherit; text-decoration: none; }
+  a.lien-nu:hover { text-decoration: underline; }
 
   /* ── Boutons téléchargement ── */
   .btns { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -935,6 +939,7 @@ const I18N = {
   th_email: { fr:"✉️ Email", nl:"✉️ E-mail", en:"✉️ Email", de:"✉️ E-Mail" },
   tip_call: { fr:"Appeler", nl:"Bellen", en:"Call", de:"Anrufen" },
   tip_sms:  { fr:"Envoyer un SMS", nl:"Sms versturen", en:"Send SMS", de:"SMS senden" },
+  tip_email:{ fr:"Envoyer un e-mail", nl:"E-mail versturen", en:"Send email", de:"E-Mail senden" },
   th_household: { fr:"Ménage", nl:"Huishouden", en:"Household", de:"Haushalt" },
   th_collect: { fr:"Méthode de collecte", nl:"Verzamelmethode", en:"Collection method", de:"Erhebungsmethode" },
   th_cawi_id: { fr:"Identifiant CAWI", nl:"CAWI-gebruikersnaam", en:"CAWI user ID", de:"CAWI-Benutzerkennung" },
@@ -6166,13 +6171,13 @@ const COL_DEFS = {
   gsm:     { i18n: 'th_phone',     th: '<th class="sortable" data-col="gsm" data-table="cibles" style="min-width:150px" data-i18n="th_phone">📞 Phone</th>',
              cell: r => { const tp = telBE(r.gsm);
                return `<td style="white-space:nowrap">${tp
-                 ? `<a href="tel:${escHtml(tp.e164)}" title="${escHtml(t('tip_call'))}">${escHtml(tp.disp)}</a>`
-                   + ` <a href="sms:${escHtml(tp.e164)}" title="${escHtml(t('tip_sms'))}" style="text-decoration:none">💬</a>`
+                 ? `<a class="lien-nu" href="tel:${escHtml(tp.e164)}" title="${escHtml(t('tip_call'))}">${escHtml(tp.disp)}</a>`
+                   + ` <a class="lien-nu" href="sms:${escHtml(tp.e164)}" title="${escHtml(t('tip_sms'))}">💬</a>`
                  : '<span class="vide">—</span>'}</td>`; } },
   email:   { i18n: 'th_email',     th: '<th class="sortable" data-col="email" data-table="cibles" style="min-width:160px" data-i18n="th_email">✉️ Email</th>',
-             cell: r => { const e = (r.email || '').trim();
+             cell: r => { const e = (r.email || '').trim().toLowerCase();
                return `<td style="font-size:11px">${e
-                 ? `<a href="mailto:${escHtml(e)}">${escHtml(e)}</a>`
+                 ? `<a class="lien-nu" href="mailto:${escHtml(e)}" title="${escHtml(t('tip_email'))}">${escHtml(e)}</a>`
                  : '<span class="vide">—</span>'}</td>`; } },
   menage:  { i18n: 'th_household', th: '<th class="sortable" data-col="taille_menage" data-table="cibles" style="min-width:96px" data-i18n="th_household">Household</th>',
              cell: r => `<td style="text-align:center">${escHtml(r.taille_menage)}${parseInt(r.nb_cibles, 10) > 1 ? ` <span style="color:var(--text3);font-size:11px">(${escHtml(r.nb_cibles)} ≥15)</span>` : ''}</td>` },
@@ -7255,7 +7260,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '232';
+const APP_VERSION = '233';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>
