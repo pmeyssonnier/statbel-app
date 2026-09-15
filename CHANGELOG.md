@@ -12,6 +12,18 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — passe design : contraste sombre + i18n (P2)
+(Planner `208` → `209`, SW `statbel-v361` → `statbel-v362`)
+- **Boutons d'export lisibles en thème sombre (colorize)** : Excel/CSV App/Chevauchements
+  codaient leur couleur en hex dur (`#0e7c4a`, `#1a237e`, `#f57f17`) → en sombre le bouton
+  « CSV App » était quasi invisible (1,17:1). Ils passent par les tokens thème-aware
+  `--v2`/`--v1`/`--v4` comme les boutons voisins.
+- **Bordures de puces de vague/fichier thème-aware** : `.v1`–`.v4` et `.file-chip` codaient
+  leur bordure en pastel clair (`#b8ccff`…) non redéfini en sombre → nouveaux tokens
+  `--v1b`–`--v4b` (clair + sombre).
+- **i18n (clarify)** : l'option « Tout — N trimestres » du sélecteur, en français en dur,
+  passe par `tf('sel_all_quarters')` (fr/nl/en/de).
+
 ### Planner — passe design (critique Impeccable 29/40, top 3 a11y)
 (Planner `207` → `208`, SW `statbel-v360` → `statbel-v361`)
 - **Sélection de groupe accessible (P0, harden)** : les puces `.grp-tag` deviennent des
