@@ -12,6 +12,21 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — découpage du JS métier (6/n) : vues + navigation extraites en module
+(Planner `217` → `218`, SW `statbel-v382` → `statbel-v383`)
+- Extraction **verbatim** du bloc `<script>` entier **VUES + NAVIGATION + UTILITAIRES** vers
+  **`js/planner/views.js`** (~297 lignes) : `setView`/`renderView` et les quatre rendus
+  (**liste** triable via `js/charts.js`, **semaine**, **mois**, **année**), la navigation
+  temporelle (`navPrev`/`navNext`/`navToday`, fenêtres de dates) et les utilitaires partagés
+  (`esc`, `fmtDate`, `addDays`, `mondayOf`, `isoWeek`…).
+- Bloc déplacé **d'un seul tenant** à la même position → ordre d'exécution identique (zone
+  couplée, uniquement des déclarations de fonctions, aucun statement top-level). `statbel_planner.html`
+  passe de **76 Ko → 62 Ko**.
+- Vérification headless **renforcée** : chargement d'un planning de test, sélection des groupes,
+  puis **bascule réelle des 4 vues** avec assertion que chacune affiche bien les données du groupe
+  (pas seulement l'absence d'erreur), + changement de langue (re-rendu NL). 53/53 tests verts,
+  0 erreur JS réelle.
+
 ### Planner — découpage du JS métier (5/n) : plannings + filtres extraits
 (Planner `216` → `217`, SW `statbel-v381` → `statbel-v382`)
 - Extraction **verbatim** vers **`js/planner/plannings-filters.js`** (~290 lignes) : **SOURCE**
