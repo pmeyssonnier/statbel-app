@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v387';
+const CACHE = 'statbel-v388';
 
 // Ressources CRITIQUES : indispensables au fonctionnement hors-ligne. Si l'une
 // manque, l'installation doit ÉCHOUER (ne pas activer un cache incomplet qui
@@ -13,6 +13,7 @@ const APP_CRITICAL = [
   './js/pdfgrp.js',
   './js/converter/i18n.js',
   './js/converter/import-normalisation.js',
+  './js/converter/export-conversion.js',
   './js/converter/refdata.js',
   './js/cand-docx.js',
   './js/planner/i18n-data.js',

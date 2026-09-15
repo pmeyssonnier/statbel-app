@@ -12,6 +12,18 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — découpage du JS métier (4/n) : export + conversion extraits
+(Convertisseur `238` → `239`, SW `statbel-v387` → `statbel-v388`)
+- Extraction **verbatim** des régions **EXPORT** (sérialisation CSV, en-têtes traduits,
+  téléchargement, rapport texte de synthèse) et **CONVERSION PRINCIPALE** (GRP → cibles/membres,
+  recherche de groupe + rattachement des vagues, annexe planning, nom complet de l'enquête) vers
+  **`js/converter/export-conversion.js`** (~282 lignes / 14 Ko).
+- Script **classique** ; `<script src>` à la même position → ordre préservé. Lit `refdata`,
+  `GRP_PLANNING` (inline) et `t()` au runtime. `statbel_converter.html` : **219 Ko → 206 Ko**.
+- Vérification headless : `chercherPlanningExact('12704')` trouve l'entrée de planning (lit bien
+  `GRP_PLANNING` inline), `toCsv()` opérationnel, + non-régression refdata (150→BEL) et i18n.
+  53/53 tests, lint 0 warning, garde de version verte.
+
 ### Convertisseur — découpage du JS métier (3/n) : import + normalisation extraits
 (Convertisseur `237` → `238`, SW `statbel-v386` → `statbel-v387`)
 - Extraction **verbatim** des régions **IMPORT** (détection de séparateur, découpage CSV/TSV) et
