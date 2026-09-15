@@ -968,6 +968,7 @@ const I18N = {
   warn_sci_id_title: { fr:"⚠️ Identifiants web corrompus", nl:"⚠️ Beschadigde web-ID's", en:"⚠️ Corrupted web IDs", de:"⚠️ Beschädigte Web-Kennungen" },
   warn_sci_id_body: { fr:"{n} identifiant(s) sont en notation scientifique (ex. « {ex} ») : Excel a écrasé les chiffres DANS le fichier source — précision définitivement perdue, ces logins CAWI sont inutilisables. Ré-importer le même fichier n'y changera rien : il faut réexporter la source avec les colonnes d'identifiants au format Texte (ou obtenir un export non ouvert dans Excel).", nl:"{n} ID('s) staan in wetenschappelijke notatie (bv. « {ex} »): Excel heeft de cijfers IN het bronbestand overschreven — precisie definitief verloren, deze CAWI-logins zijn onbruikbaar. Hetzelfde bestand opnieuw importeren helpt niet: exporteer de bron opnieuw met de ID-kolommen als Tekst (of gebruik een export die niet in Excel is geopend).", en:"{n} ID(s) are in scientific notation (e.g. \"{ex}\"): Excel overwrote the digits INSIDE the source file — precision is permanently lost and these CAWI logins are unusable. Re-importing the same file won't help: re-export the source with the ID columns formatted as Text (or get an export that hasn't been opened in Excel).", de:"{n} Kennung(en) in wissenschaftlicher Notation (z. B. „{ex}“): Excel hat die Ziffern IN der Quelldatei überschrieben — die Genauigkeit ist dauerhaft verloren, diese CAWI-Logins sind unbrauchbar. Dieselbe Datei erneut zu importieren hilft nicht: Exportieren Sie die Quelle erneut mit den Kennungsspalten im Textformat (oder verwenden Sie einen nicht in Excel geöffneten Export)." },
   plan_not_found: { fr:"introuvable dans les plannings chargés", nl:"niet gevonden in de geladen plannings", en:"not found in the loaded plannings", de:"in den geladenen Planungen nicht gefunden" },
+  plan_via_base: { fr:"Rattaché au groupe initial (vague 1) — même groupe, ré-interrogé", nl:"Gekoppeld aan de oorspronkelijke groep (golf 1) — zelfde groep, heropgevraagd", en:"Linked to the initial group (wave 1) — same group, re-interviewed", de:"Mit der ursprünglichen Gruppe (Welle 1) verknüpft — dieselbe Gruppe, erneut befragt" },
 
   // ── Export ────────────────────────────────────────────────────────
   lbl_source_file: { fr:"Fichier source :", nl:"Bronbestand:", en:"Source file:", de:"Quelldatei:" },
@@ -5195,16 +5196,45 @@ function convertir(srcRows) {
   return { grpId, localisation, outCibles, outMembres, outEnquete, tailleHH, srcRows, adminCols, codesManquants, planning };
 }
 
-// Recherche un groupe (5 chiffres) dans les plannings chargés (type LFS, index .grp),
-// puis repli sur la table embarquée GRP_PLANNING (Q3 2026). Renvoie { e, source } ou null.
-function chercherPlanning(code) {
+// Recherche EXACTE d'un groupe (5 chiffres) dans les plannings chargés (type LFS,
+// index .grp), puis repli sur la table embarquée GRP_PLANNING (Q3 2026).
+function chercherPlanningExact(code) {
   if (typeof _plannings !== 'undefined') {
     for (const p of Object.values(_plannings)) {
-      if (p.grp && p.grp[code]) return { e: p.grp[code], source: p.nom };
+      if (p.grp && p.grp[code]) return { e: p.grp[code], source: p.nom, base: code };
     }
   }
   if (typeof GRP_PLANNING !== 'undefined' && GRP_PLANNING[code])
-    return { e: GRP_PLANNING[code], source: 'Q3 2026 (embarqué)' };
+    return { e: GRP_PLANNING[code], source: 'Q3 2026 (embarqué)', base: code };
+  return null;
+}
+
+// Recherche un groupe avec RATTACHEMENT DES VAGUES. Le planning n'est indexé que
+// sur le numéro de la VAGUE 1 (« 1·SS·GG »), qui porte déjà les 4 interrogations.
+// Un fichier de vague ≥ 2 a un numéro différent (« V·SS·GG », ex. 23605) absent du
+// planning : on remonte alors au groupe INITIAL de MÊME GG dont l'interrogation Iᵥ
+// (i[wave-1]) tombe sur la SEMAINE SS du numéro (ex. 23605 → 12305 : I2 = wk36).
+// Renvoie { e, source, base } (base = clé du groupe initial) ou null.
+function chercherPlanning(code, wave) {
+  const direct = chercherPlanningExact(code);
+  if (direct) return direct;
+  const v = parseInt(wave, 10) || parseInt(code[0], 10) || 1;   // vague (1er chiffre = V)
+  if (v < 2) return null;
+  const ss = parseInt(code.slice(1, 3), 10);   // semaine de référence de la vague
+  const gg = code.slice(3, 5);                  // numéro de groupe (localisation)
+  const idx = v - 1;
+  const ok = e => e && e.i && e.i[idx] && parseInt(e.i[idx][0], 10) === ss;
+  if (typeof _plannings !== 'undefined') {
+    for (const p of Object.values(_plannings)) {
+      if (!p.grp) continue;
+      for (const [k, e] of Object.entries(p.grp))
+        if (k.slice(-2) === gg && ok(e)) return { e, source: p.nom, base: k };
+    }
+  }
+  if (typeof GRP_PLANNING !== 'undefined') {
+    for (const [k, e] of Object.entries(GRP_PLANNING))
+      if (k.slice(-2) === gg && ok(e)) return { e, source: 'Q3 2026 (embarqué)', base: k };
+  }
   return null;
 }
 
@@ -5213,7 +5243,7 @@ function planningPourGRP(adminCols) {
   const grp = String(adminCols.NR_GRP || '').trim();
   const code = grp.slice(-5);
   const wave = parseInt(adminCols.NR_WAVE, 10) || 1;
-  const m = chercherPlanning(code);
+  const m = chercherPlanning(code, wave);
   if (!m) return { found: false, code, wave, province: '', commune: '', quartier: '', sem: '', start: '', stop: '', source: '' };
   const e = m.e;
   const it = (e.i && e.i[wave - 1]) || ['', '', ''];
@@ -5414,13 +5444,16 @@ function afficherPlanning(adminCols, res) {
   if (!el) return;
   const grp = String(adminCols.NR_GRP || '').trim();
   const code = grp.slice(-5);
-  const m = chercherPlanning(code);
+  const wave = parseInt(adminCols.NR_WAVE, 10) || 1;
+  const m = chercherPlanning(code, wave);
   if (!m) {
     el.innerHTML = grp ? `<div class="plan-box plan-none">📋 ${escHtml(code)} — ${escHtml(t('plan_not_found'))}</div>` : '';
     return;
   }
   const e = m.e;
-  const wave = parseInt(adminCols.NR_WAVE, 10) || 1;
+  // Rattaché à un groupe INITIAL différent (fichier de vague ≥ 2) → on le signale.
+  const viaHtml = (m.base && m.base !== code)
+    ? ` <span class="plan-q" title="${escHtml(t('plan_via_base'))}">↩ ${escHtml(m.base)}</span>` : '';
   // Cohérence commune planning ↔ localisation détectée
   const locData = (res.localisation || '').toLowerCase();
   const planComm = (e.c || '').toLowerCase();
@@ -5433,7 +5466,7 @@ function afficherPlanning(adminCols, res) {
   }).join('');
   el.innerHTML = `<div class="plan-box">
     <div class="plan-head">📋 ${escHtml(e.c)} <span class="plan-q">${escHtml(e.q)}</span>
-      ${mismatch ? `<span class="plan-warn" title="Commune planning ≠ localisation détectée">⚠️</span>` : ''}
+      ${mismatch ? `<span class="plan-warn" title="Commune planning ≠ localisation détectée">⚠️</span>` : ''}${viaHtml}
       <span class="plan-q" style="margin-left:auto;opacity:.8">↪ ${escHtml(m.source)}</span></div>
     <div class="plan-interros">${interroHtml}</div>
   </div>`;
@@ -7259,7 +7292,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '233';
+const APP_VERSION = '234';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

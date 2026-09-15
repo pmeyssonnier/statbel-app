@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — rattachement des vagues au groupe initial (planning)
+(Convertisseur `233` → `234`, SW `statbel-v372` → `statbel-v373`)
+- Un fichier de **vague ≥ 2** (numéro « V·SS·GG », ex. `23605`) était **« introuvable dans les
+  plannings chargés »** : le planning n'est indexé que sur le numéro de **vague 1** (« 1·SS·GG »,
+  ex. `12305`), qui porte déjà les 4 interrogations.
+- `chercherPlanning` remonte désormais au **groupe initial de même GG** dont l'interrogation Iᵥ
+  (`i[vague-1]`) tombe sur la **semaine** du numéro (ex. `23605` → `12305` : I2 = wk36). La
+  localisation et le planning s'affichent alors pour les vagues ≥ 2, et les colonnes planning
+  (`planning_commune/quartier`, `wave`, `ref_week`, `field_start/stop`) se remplissent à l'export.
+- Le bloc planning signale le rattachement (« ↩ 12305 »). Fonctionne avec la table embarquée
+  comme avec un planning importé.
+- Inclut le nettoyage `/simplify` de `sortRows` mis en attente à la version précédente.
+
 ### Convertisseur — téléphone/e-mail : action conservée, apparence de texte
 (Convertisseur `232` → `233`, SW `statbel-v371` → `statbel-v372`)
 - Dans les colonnes Téléphone et E-mail, le clic reste actif (appeler `tel:`, SMS `sms:`, e-mail
