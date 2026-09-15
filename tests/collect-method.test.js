@@ -32,11 +32,12 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(estCatiCawi('') === false && estCatiCawi('CAPI') === false && estCatiCawi(null) === false,
     'estCatiCawi : CAPI / vide → false');
 
-  // Drift guard : la copie du Convertisseur (collecteInfo) doit porter EXACTEMENT les
-  // mêmes regex. Comparaison bidirectionnelle (égalité du corps, pas simple inclusion) :
-  // une divergence par sur-ensemble côté Convertisseur — p.ex. ajouter « |GSM » — casse
+  // Drift guard : la copie du Convertisseur (collecteInfo, extraite sous
+  // js/converter/import-normalisation.js) doit porter EXACTEMENT les mêmes regex.
+  // Comparaison bidirectionnelle (égalité du corps, pas simple inclusion) : une
+  // divergence par sur-ensemble côté Convertisseur — p.ex. ajouter « |GSM » — casse
   // donc aussi ce test, pas seulement la suppression d'un motif.
-  const conv = fs.readFileSync(path.join(__dirname, '..', 'statbel_converter.html'), 'utf8');
+  const conv = fs.readFileSync(path.join(__dirname, '..', 'js', 'converter', 'import-normalisation.js'), 'utf8');
   const corpsConv = re => { const m = conv.match(re); return m ? m[1] : null; };   // corps du littéral /…/.test(u)
   A(corpsConv(/\/(CATI[^/]*)\/\.test\(u\)/) === RE_CATI.source, `Convertisseur : regex CATI identique (${RE_CATI.source})`);
   A(corpsConv(/\/(CAWI[^/]*)\/\.test\(u\)/) === RE_CAWI.source, `Convertisseur : regex CAWI identique (${RE_CAWI.source})`);

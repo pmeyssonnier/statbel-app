@@ -12,6 +12,20 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — découpage du JS métier (3/n) : import + normalisation extraits
+(Convertisseur `237` → `238`, SW `statbel-v386` → `statbel-v387`)
+- Extraction **verbatim** des régions **IMPORT** (détection de séparateur, découpage CSV/TSV) et
+  **NORMALISATION** (dates de naissance, téléphone belge → e164, méthode de collecte CATI/CAWI,
+  `refnisInfo()` : arrondissement / province / région / NUTS) vers
+  **`js/converter/import-normalisation.js`** (~170 lignes / 8 Ko).
+- Script **classique** ; `<script src>` à la même position → ordre préservé. `refnisInfo()` lit
+  `ARROND`/`NUTS`/`GRP_PLANNING` restés inline (au runtime). `statbel_converter.html` : **227 Ko → 219 Ko**.
+- `collect-method.test.js` (drift guard des regex CATI/CAWI, partagées avec `js/data/collect-method.js`)
+  mis à jour pour lire la copie à sa nouvelle place — le garde-fou reste identique.
+- Vérification headless : `refnisInfo()` via `decoder('11001')` → Aartselaar / prov. Antwerp / NUTS2
+  BE21 (lit bien `ARROND`/`NUTS` inline), + non-régression refdata (150→BEL) et i18n. 53/53 tests,
+  lint 0 warning, garde de version verte.
+
 ### Convertisseur — découpage du JS métier (2/n) : i18n extrait en module
 (Convertisseur `236` → `237`, SW `statbel-v385` → `statbel-v386`)
 - Extraction **verbatim** du bloc **I18N** vers **`js/converter/i18n.js`** (~421 lignes / 50 Ko) :
