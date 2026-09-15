@@ -22,10 +22,14 @@ let fails = 0;
 const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg); } else console.log('✓ ' + msg); };
 
 // Collecte récursive des fichiers .js sous js/ + index.html
+// js/planner/** = modules extraits du Planner (mono-fichier file://) : scripts
+// classiques qui conservent leurs handlers inline — hors périmètre de ce garde-fou
+// Interviews (cf. en-tête), on les exclut de la collecte.
 function jsFiles(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => {
     const p = path.join(dir, e.name);
-    return e.isDirectory() ? jsFiles(p) : (e.name.endsWith('.js') ? [p] : []);
+    if (e.isDirectory()) return e.name === 'planner' ? [] : jsFiles(p);
+    return e.name.endsWith('.js') ? [p] : [];
   });
 }
 const fichiers = ['index.html', ...jsFiles(path.join(ROOT, 'js')).map(p => path.relative(ROOT, p))];

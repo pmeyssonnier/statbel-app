@@ -13,7 +13,10 @@
 //    du CLAUDE.md). La liste reste ainsi synchronisée sans entretien manuel.
 //  - Libs vendorisées (Leaflet=L, SheetJS=XLSX, Charts, pdf.js) en <script> global.
 //  - vendor/**, node_modules/** et fichiers minifiés hors périmètre.
-//  - Convertisseur/Planner : mono-fichiers HTML → non lintés (ESLint = .js).
+//  - Convertisseur : mono-fichier HTML → non linté (ESLint = .js).
+//  - Planner : mono-fichier + modules extraits sous js/planner/** (scripts
+//    CLASSIQUES à globales partagées, handlers inline tolérés) — bloc dédié
+//    ci-dessous : no-undef/no-unused-vars coupés (cross-fichier), le reste actif.
 
 import fs from 'node:fs';
 import js from '@eslint/js';
@@ -75,6 +78,33 @@ export default [
       'no-cond-assign': ['error', 'except-parens'],
       // NBSP & co. sont volontaires dans les libellés FR (chaînes/templates) :
       // on ne les signale qu'en dehors des chaînes.
+      'no-irregular-whitespace': ['error', {
+        skipStrings: true, skipTemplates: true, skipComments: true, skipRegExps: true,
+      }],
+    },
+  },
+
+  // Planner — modules extraits (js/planner/**) : scripts CLASSIQUES qui partagent
+  // leurs globales entre fichiers et avec le <script> inline du mono-fichier
+  // (allRows, t, esc, XLSX, L…) et exposent des fonctions appelées ailleurs
+  // (autres fichiers / onclick=). no-undef et no-unused-vars y seraient donc du
+  // bruit permanent → coupés ; les règles « vrais bugs » (clés dupliquées,
+  // no-cond-assign, syntaxe) restent actives via js.configs.recommended.
+  {
+    files: ['js/planner/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'script',
+      globals: { ...globals.browser, ...APP_STATE },
+    },
+    rules: {
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
+      // Motifs cosmétiques préexistants dans le code extrait (échappements « inutiles »
+      // ex. \/, réassignations non lues) — inoffensifs ; on garde l'extraction verbatim.
+      'no-useless-escape': 'off',
+      'no-useless-assignment': 'off',
+      'no-empty': ['warn', { allowEmptyCatch: true }],
       'no-irregular-whitespace': ['error', {
         skipStrings: true, skipTemplates: true, skipComments: true, skipRegExps: true,
       }],
