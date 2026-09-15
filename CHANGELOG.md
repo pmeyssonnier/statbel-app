@@ -12,6 +12,20 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — import PDF : identifiants CAWI scientifiques + pays « Congo (Rép. dém.) » vide
+(Convertisseur `228` → `229`, SW `statbel-v367` → `statbel-v368`)
+- **ID web (toutes sources)** : la réparation de la notation scientifique s'applique désormais à
+  l'endroit unique où l'ID entre dans le résultat (référent), donc aussi aux imports **CSV** et
+  **PDF**, pas seulement XLSX. Tolère la **virgule décimale** des listings PDF (« 2,02614E+11 »).
+  Reconstruction **exacte** quand la mantisse est complète ; sinon la valeur reste scientifique et
+  est signalée (⚠ + bandeau) plutôt que « réparée » avec des chiffres inventés.
+- **Nationalité (PDF)** : « **Congo (Rép. dém.)** » (et « Rép. pop. », « Rép. Féd. »…) tombait dans un
+  champ vide — l'abréviation ne correspondait à aucun libellé officiel et le repli « sans parenthèses »
+  était ambigu (3 « Congo »). `js/pdfgrp.js` rétablit maintenant les mots pleins (Rép.→République,
+  dém.→démocratique, pop.→populaire, féd.→fédérale) et gère les sigles usuels (RDC, RD Congo).
+- Tests : nouveau `pdfgrp-pays.test.js` (résolution des pays abrégés) ; `converter-xlsx-bignum` étendu
+  (normalisation source-agnostique des ID, virgule décimale).
+
 ### Convertisseur — identifiants CAWI en notation scientifique : récupération sûre + signalement
 (Convertisseur `227` → `228`, SW `statbel-v366` → `statbel-v367`)
 - **Bug** : dans la colonne **Identifiant CAWI**, `TX_WEB_USER_ID` pouvait rester affiché en

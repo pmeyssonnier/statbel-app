@@ -5066,8 +5066,8 @@ function convertir(srcRows) {
       gsm: r['NR_PHONE']||'', email: r['TX_EMAIL']||'', notes: '',
       // Méthode de collecte souhaitée (CATI/CAWI) + identifiants d'accès web du ménage.
       collect_method: (r['CD_WSH_CLCT_MTHD']||'').trim(),
-      web_user_id:    (r['TX_WEB_USER_ID']||'').trim(),
-      web_user_pwd:   (r['TX_WEB_USER_PSWRD']||'').trim(),
+      web_user_id:    reparerIdSci(r['TX_WEB_USER_ID']),
+      web_user_pwd:   reparerIdSci(r['TX_WEB_USER_PSWRD']),
     };
   });
 
@@ -6930,6 +6930,19 @@ function sciVersEntier(s) {
   return (signe === '-' ? '-' : '') + ent + frac; // reconstruction exacte
 }
 
+// Répare un identifiant/mot de passe web reçu de N'IMPORTE QUELLE source (XLSX déjà
+// nettoyé par cellTexte, CSV brut, ou PDF) : tolère la virgule décimale (locale FR des
+// listings PDF) et reconstruit l'entier EXACT quand la mantisse est complète ; sinon
+// laisse la notation scientifique (point décimal normalisé) pour que l'avertissement
+// « identifiants corrompus » et le marquage ⚠ s'affichent. Valeur saine → inchangée.
+function reparerIdSci(v) {
+  const s = (v == null ? '' : String(v)).trim();
+  const sd = s.replace(',', '.');                // « 2,02614E+11 » → « 2.02614E+11 »
+  if (!RE_SCI_ID.test(sd)) return s;
+  const exact = sciVersEntier(sd);
+  return exact !== null ? exact : sd;
+}
+
 // Texte d'une cellule Excel, en réparant la notation scientifique des ID numériques
 // longs (« 2.02612E+11 »). Deux cas :
 //  1. cellule NUMÉRIQUE : la valeur BRUTE (raw:true) porte l'entier complet → on la
@@ -7169,7 +7182,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '228';
+const APP_VERSION = '229';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 
 </script>

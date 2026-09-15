@@ -66,6 +66,11 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       // cellule CAWI : la valeur corrompue est marquée d'un ⚠, la valeur saine est brute
       cellBad: cawiCellule('2.02612E+11'),
       cellOk:  cawiCellule('202612345678'),
+      // reparerIdSci : normalisation source-agnostique (CSV/PDF) des ID web
+      idClean:       reparerIdSci('202613605003'),   // sain → inchangé
+      idSciLossless: reparerIdSci('3.0071999E+7'),   // récupérable → entier exact
+      idSciComma:    reparerIdSci('2,02614E+11'),    // virgule (PDF) → point scientifique (repérable)
+      idSciDot:      reparerIdSci('2.02614E+11'),    // perdu → reste scientifique
     };
   });
 
@@ -79,6 +84,11 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.textLossy === '2.02612E+11', `texte scientifique tronqué NON inventé, reste visible (got "${r.textLossy}")`);
   A(/id-sci/.test(r.cellBad) && /⚠/.test(r.cellBad), `cellule CAWI corrompue marquée ⚠ (got "${r.cellBad}")`);
   A(r.cellOk === '202612345678', `cellule CAWI saine affichée telle quelle (got "${r.cellOk}")`);
+
+  A(r.idClean === '202613605003', `reparerIdSci : ID sain inchangé (got "${r.idClean}")`);
+  A(r.idSciLossless === '30071999', `reparerIdSci : scientifique récupérable → entier exact (got "${r.idSciLossless}")`);
+  A(r.idSciComma === '2.02614E+11', `reparerIdSci : virgule décimale normalisée en point (got "${r.idSciComma}")`);
+  A(r.idSciDot === '2.02614E+11', `reparerIdSci : perte réelle → reste scientifique (got "${r.idSciDot}")`);
 
   A(errs.length === 0, 'aucune erreur JS' + (errs.length ? ' → ' + errs.join(' | ') : ''));
 

@@ -24,15 +24,33 @@ var PAYS = {"Abu Dhabi":"269", "Afars et Issas (France)":"380", "Afghanistan":"2
 // alias → sans parenthèses (si non ambigu). Inconnu → '' (signalé).
 function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’‘`´]/g,"'").replace(/\s+/g,' ').trim(); }
 function base(s){ return norm(s.replace(/\([^)]*\)/g,'')); }
+// Les listings PDF abrègent les qualificatifs : « Congo (Rép. dém.) »,
+// « Allemagne (Rép. Féd.) »… On rétablit les mots pleins (sur la chaîne DÉJÀ
+// normalisée, sans accents) pour retomber sur le nom officiel de la table PAYS.
+function devAbrev(n){
+  return n.replace(/\brep\b\.?/g, 'republique')
+          .replace(/\bdem\b\.?/g, 'democratique')
+          .replace(/\bpop\b\.?/g, 'populaire')
+          .replace(/\bfed\b\.?/g, 'federale')
+          .replace(/\s+/g, ' ').trim();
+}
 var PAYS_NORM = {}, PAYS_BASE = {}, baseCount = {};
 Object.keys(PAYS).forEach(function(n){ PAYS_NORM[norm(n)] = PAYS[n]; var b = base(n); baseCount[b] = (baseCount[b]||0)+1; });
 Object.keys(PAYS).forEach(function(n){ var b = base(n); if (baseCount[b] === 1) PAYS_BASE[b] = PAYS[n]; });
-var PAYS_ALIAS = { 'allemagne (rep.fed.)': '103', 'allemagne (rep.dem.)': '104' };
+// Alias pour les formes sans espace (« rep.dem. ») que devAbrev ne peut pas
+// resegmenter, et pour les sigles usuels (RDC, RD Congo).
+var PAYS_ALIAS = {
+  'allemagne (rep.fed.)': '103', 'allemagne (rep.dem.)': '104',
+  'congo (rep.dem.)': '306', 'rd congo': '306', 'rdc': '306', 'congo-kinshasa': '306',
+  'congo (rep.pop.)': '307', 'congo-brazzaville': '362'
+};
 function paysCode(txt){
   if (!txt) return '';
   var n = norm(txt);
   if (PAYS_NORM[n]) return PAYS_NORM[n];
   if (PAYS_ALIAS[n]) return PAYS_ALIAS[n];
+  var e = devAbrev(n);                       // « congo (rep. dem.) » → « congo (republique democratique) »
+  if (e !== n && PAYS_NORM[e]) return PAYS_NORM[e];
   return PAYS_BASE[base(txt)] || '';
 }
 
@@ -158,5 +176,6 @@ function pdfGrpToAoa(rows){
 global.pdfGrpParse = pdfGrpParse;
 global.pdfGrpVersRows = pdfGrpVersRows;
 global.pdfGrpToAoa = pdfGrpToAoa;
+global.pdfGrpPaysCode = paysCode;   // exposé pour les tests (résolution nom pays → code NIS)
 global.PDF_GRP_COLS = GRP_COLS;
 })(window);
