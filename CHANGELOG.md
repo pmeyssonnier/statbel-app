@@ -12,6 +12,13 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Correctif lint — `js/cand-docx.js` expose `CAND_DOCX` via `window`
+(Planner `211` → `212`, SW `statbel-v376` → `statbel-v377`)
+- ESLint (`no-unused-vars`, `--max-warnings 0`) voyait `const CAND_DOCX` comme déclaré-non-utilisé
+  (lint par fichier, sans voir l'usage cross-fichier dans le Planner) → CI rouge sur `main` après
+  merge de la #229. On assigne à **`window.CAND_DOCX`** — même pattern que `js/pdfgrp.js` et
+  `js/charts.js`. Comportement inchangé.
+
 ### Convertisseur — SheetJS externalisé vers `vendor/`
 (Convertisseur `234` → `235`, SW `statbel-v375` → `statbel-v376`)
 - La lib **SheetJS (xlsx 0.18.5)** était **inlinée** dans `statbel_converter.html` (~861 Ko).
