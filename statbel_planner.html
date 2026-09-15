@@ -69,6 +69,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   --v2:#0e7c4a; --v2l:#d4f0e2;
   --v3:#7b22cc; --v3l:#eedeff;
   --v4:#cc4400; --v4l:#ffe8d8;
+  --v1b:#b8ccff; --v2b:#9de0c0; --v3b:#d0a8ff; --v4b:#ffbf99;   /* bordures des puces de vague (thème-aware) */
   --cand:#7b22cc; --cand2:#6a1fb0;   /* accent candidature (.docx) */
   --danger:#c62828;                  /* erreurs / requis */
   --shadow: 0 2px 12px rgba(26,31,46,.09);
@@ -183,7 +184,7 @@ header{
 
 /* Fichiers chargés */
 .file-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.file-chip{background:var(--v1l);color:var(--v1);border:1px solid #b8ccff;
+.file-chip{background:var(--v1l);color:var(--v1);border:1px solid var(--v1b);
            border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;
            display:flex;align-items:center;gap:5px}
 .chip-remove{cursor:pointer;opacity:.6;font-size:14px}
@@ -198,17 +199,20 @@ select,input[type=text]{
   width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;
   font-size:13px;font-family:var(--font);color:var(--ink);background:var(--card);
 }
-select:focus,input:focus{outline:none;border-color:var(--accent)}
+select:focus,input:focus,textarea:focus{border-color:var(--accent)}
+/* Anneau de focus clavier visible (WCAG 2.4.7) — au clavier seulement, pas au clic souris */
+select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 select[multiple]{height:120px}
 
 /* Groupes sélectionnés */
 .groups-selected{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:32px}
 .grp-tag{
-  background:var(--chrome);color:#fff;border-radius:6px;
-  padding:4px 10px;font-size:12px;font-weight:600;
-  display:flex;align-items:center;gap:6px;cursor:pointer;
+  background:var(--chrome);color:#fff;border:0;border-radius:6px;
+  padding:4px 10px;font-size:12px;font-weight:600;font-family:inherit;
+  display:flex;align-items:center;gap:6px;cursor:pointer;appearance:none;
 }
 .grp-tag:hover{background:var(--chrome2)}
+.grp-tag:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .grp-tag .gt-qtier{opacity:.65;font-weight:400}
 
 /* ══ Vue controls ════════════════════════════════════════════════════ */
@@ -291,10 +295,10 @@ select[multiple]{height:120px}
 .empty .em-icon{font-size:36px;margin-bottom:8px}
 
 /* ══ Vague colors helpers ════════════════════════════════════════════ */
-.v1{background:var(--v1l);color:var(--v1);border-color:#b8ccff}
-.v2{background:var(--v2l);color:var(--v2);border-color:#9de0c0}
-.v3{background:var(--v3l);color:var(--v3);border-color:#d0a8ff}
-.v4{background:var(--v4l);color:var(--v4);border-color:#ffbf99}
+.v1{background:var(--v1l);color:var(--v1);border-color:var(--v1b)}
+.v2{background:var(--v2l);color:var(--v2);border-color:var(--v2b)}
+.v3{background:var(--v3l);color:var(--v3);border-color:var(--v3b)}
+.v4{background:var(--v4l);color:var(--v4);border-color:var(--v4b)}
 
 /* Candidature */
 /* align-items:end → les champs restent alignés par le bas même quand un libellé
@@ -339,6 +343,7 @@ select[multiple]{height:120px}
     --v2:#43c78d; --v2l:#123528;
     --v3:#c58cff; --v3l:#2c1f42;
     --v4:#ff8a4d; --v4l:#3a2214;
+    --v1b:#3a4d7a; --v2b:#2a5c44; --v3b:#4d3a6e; --v4b:#5c3a24;
     --cand:#c58cff; --cand2:#b06fff; --danger:#ef6f6f;
     --shadow:0 2px 12px rgba(0,0,0,.5);
   }
@@ -578,10 +583,10 @@ select[multiple]{height:120px}
         <button class="nav-btn" onclick="navToday()" style="font-weight:700;border-color:var(--accent);color:var(--accent)" data-i18n="today">Aujourd'hui</button>
       </div>
       <div class="view-controls" style="margin-left:auto">
-        <button class="nav-btn" onclick="exportXls()" title="Exporter la liste en Excel" data-i18n-tip="exp_excel_tip" style="border-color:#0e7c4a;color:#0e7c4a;font-weight:600" data-i18n="exp_excel">⬇️ Excel</button>
-        <button class="nav-btn" onclick="exportCsvApp()" title="Export CSV pour enquetes_statbel.html" data-i18n-tip="exp_csv_tip" style="border-color:#1a237e;color:#1a237e;font-weight:600" data-i18n="exp_csv">⬇️ CSV App</button>
+        <button class="nav-btn" onclick="exportXls()" title="Exporter la liste en Excel" data-i18n-tip="exp_excel_tip" style="border-color:var(--v2);color:var(--v2);font-weight:600" data-i18n="exp_excel">⬇️ Excel</button>
+        <button class="nav-btn" onclick="exportCsvApp()" title="Export CSV pour enquetes_statbel.html" data-i18n-tip="exp_csv_tip" style="border-color:var(--v1);color:var(--v1);font-weight:600" data-i18n="exp_csv">⬇️ CSV App</button>
         <button class="nav-btn" onclick="exportIcs()" title="Exporter vers Google Agenda / iCal" data-i18n-tip="exp_ical_tip" style="border-color:var(--cand);color:var(--cand);font-weight:600" data-i18n="exp_ical">📅 iCal</button>
-        <button class="nav-btn" onclick="exportChevauchements()" title="Exporter les chevauchements" data-i18n-tip="exp_overlap_tip" style="border-color:#f57f17;color:#f57f17;font-weight:600" data-i18n="exp_overlap">⚠️ Chevauch.</button>
+        <button class="nav-btn" onclick="exportChevauchements()" title="Exporter les chevauchements" data-i18n-tip="exp_overlap_tip" style="border-color:var(--v4);color:var(--v4);font-weight:600" data-i18n="exp_overlap">⚠️ Chevauch.</button>
       </div>
     </div>
 
@@ -702,6 +707,12 @@ select[multiple]{height:120px}
         <button type="button" onclick="candSigClear()" style="padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer" data-i18n="cand_sig_clear">✕ Effacer la signature</button>
         <span style="font-size:11px;color:var(--ink3)" data-i18n="cand_sig_hint">Signez à la souris ou au doigt — la signature est intégrée au .docx.</span>
       </div>
+      <!-- Chemin non-souris (clavier / lecteur d'écran) : la signature peut aussi être saisie au nom. -->
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label for="candSigName" style="font-size:12px;color:var(--ink2)" data-i18n="cand_sig_or">Ou tapez votre nom :</label>
+        <input id="candSigName" type="text" style="flex:1;min-width:150px;max-width:260px" data-i18n-ph="cand_sig_name_ph" placeholder="Prénom Nom">
+        <button type="button" onclick="candSigFromName()" style="padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer" data-i18n="cand_sig_use">Utiliser comme signature</button>
+      </div>
     </div>
 
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -759,6 +770,7 @@ const I18N = {
   // — En-tête / menu ⋮ —
   skip_link: { fr:"Aller au contenu", nl:"Naar de inhoud", en:"Skip to content", de:"Zum Inhalt springen" },
   plan_sel_title: { fr:"Trimestre / planning", nl:"Kwartaal / planning", en:"Quarter / schedule", de:"Quartal / Planung" },
+  sel_all_quarters: { fr:"Tout — {n} trimestres", nl:"Alles — {n} kwartalen", en:"All — {n} quarters", de:"Alle — {n} Quartale" },
   tab_planning: { fr:"Planning", nl:"Planning", en:"Schedule", de:"Planung" },
   tab_agenda: { fr:"Agenda", nl:"Agenda", en:"Calendar", de:"Kalender" },
   tab_candidature: { fr:"Candidature", nl:"Kandidatuur", en:"Application", de:"Bewerbung" },
@@ -884,6 +896,9 @@ const I18N = {
   cand_sig_empty: { fr:"Signature vide", nl:"Lege handtekening", en:"Empty signature", de:"Leere Unterschrift" },
   cand_sig_clear: { fr:"✕ Effacer la signature", nl:"✕ Handtekening wissen", en:"✕ Clear signature", de:"✕ Unterschrift löschen" },
   cand_sig_hint: { fr:"Signez à la souris ou au doigt — la signature est intégrée au .docx.", nl:"Onderteken met de muis of vinger — de handtekening wordt in de .docx opgenomen.", en:"Sign with the mouse or finger — the signature is embedded in the .docx.", de:"Unterschreiben Sie mit Maus oder Finger — die Unterschrift wird in die .docx eingebettet." },
+  cand_sig_or: { fr:"Ou tapez votre nom :", nl:"Of typ uw naam:", en:"Or type your name:", de:"Oder geben Sie Ihren Namen ein:" },
+  cand_sig_name_ph: { fr:"Prénom Nom", nl:"Voornaam Naam", en:"First name Last name", de:"Vorname Name" },
+  cand_sig_use: { fr:"Utiliser comme signature", nl:"Als handtekening gebruiken", en:"Use as signature", de:"Als Unterschrift verwenden" },
   cand_generate: { fr:"⬇️ Générer la candidature (.docx)", nl:"⬇️ Kandidatuur genereren (.docx)", en:"⬇️ Generate the application (.docx)", de:"⬇️ Bewerbung erzeugen (.docx)" },
   cand_generate_hint: { fr:"Formulaire de candidature rempli — s'ouvre dans Word / LibreOffice", nl:"Ingevuld kandidatuurformulier — opent in Word / LibreOffice", en:"Filled application form — opens in Word / LibreOffice", de:"Ausgefülltes Bewerbungsformular — öffnet in Word / LibreOffice" },
   // — Chaînes générées en JS (alertes, statuts, tableaux, agenda) —
@@ -1169,7 +1184,7 @@ function chargerPlanningsConvertisseur() {
   const prev = sel.value;                       // préserver le choix courant si possible
   const opts = [];
   if (_plans.length > 1)
-    opts.push(`<option value="__ALL__">Tout — ${_plans.length} trimestres</option>`);
+    opts.push(`<option value="__ALL__">${tf('sel_all_quarters', { n: _plans.length })}</option>`);
   _plans.forEach(p => opts.push(`<option value="${esc(p.id)}">${esc(p.nom)}</option>`));
   sel.innerHTML = opts.join('');
   if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
@@ -1327,12 +1342,14 @@ function renderGroupsList() {
     const on = selected.has(r.numero);
     // n° de groupe = donnée importée : jamais interpolée dans un onclick (→ data-num
     // échappé + écouteur délégué) ni injectée sans esc() (protection XSS).
-    return `<div class="grp-tag" data-num="${esc(r.numero)}"
+    // Puce = <button> : focusable et activable au clavier (Entrée/Espace natif),
+    // état de sélection annoncé au lecteur d'écran via aria-pressed.
+    return `<button type="button" class="grp-tag" data-num="${esc(r.numero)}" aria-pressed="${on ? 'true' : 'false'}"
       style="${on?'':'background:var(--bg);color:var(--ink2);border:1px solid var(--border);'}">
       <span>${esc(r.numero)}</span>
       <span class="gt-qtier">${esc(r.quartier.split(' ').slice(0,3).join(' '))}</span>
-      ${on?'<span style="color:#4caf50;font-weight:700">✓</span>':''}
-    </div>`;
+      ${on?'<span style="color:#4caf50;font-weight:700" aria-hidden="true">✓</span>':''}
+    </button>`;
   }).join('');
   // Écouteur délégué (réassigné à chaque rendu, donc pas de doublon).
   el.onclick = e => { const tag = e.target.closest('.grp-tag'); if (tag) toggleGroup(tag.dataset.num); };
@@ -3509,6 +3526,17 @@ function candSigClear(){
   if(c&&candSigCtx) candSigCtx.clearRect(0,0,c.width,c.height);
   candSigData=null; candSaveSig(); candSigStatus(false);
 }
+// Chemin non-souris : rend le nom saisi au clavier dans le canvas → même pipeline PNG.
+function candSigFromName(){
+  const inp=document.getElementById('candSigName'); const name=(inp&&inp.value||'').trim();
+  if(!name){ if(inp) inp.focus(); return; }
+  candSigInit(); const c=document.getElementById('candSigCanvas'); if(!c||!candSigCtx) return;
+  candSigCtx.clearRect(0,0,c.width,c.height);
+  candSigCtx.fillStyle='#12203a'; candSigCtx.textBaseline='middle';
+  let fs=44; do { candSigCtx.font='italic '+fs+'px "Segoe Script","Brush Script MT",cursive'; if(candSigCtx.measureText(name).width<=c.width-24) break; fs-=2; } while(fs>16);
+  candSigCtx.fillText(name,16,c.height/2);
+  candSigData=c.toDataURL('image/png'); candSaveSig(); candSigStatus(true);
+}
 function candSigLoad(dataUrl){
   candSigData=dataUrl||null;
   candSigStatus(!!candSigData);
@@ -3547,7 +3575,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '207';
+const APP_VERSION = '209';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();

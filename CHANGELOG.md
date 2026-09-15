@@ -12,6 +12,30 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — passe design : contraste sombre + i18n (P2)
+(Planner `208` → `209`, SW `statbel-v361` → `statbel-v362`)
+- **Boutons d'export lisibles en thème sombre (colorize)** : Excel/CSV App/Chevauchements
+  codaient leur couleur en hex dur (`#0e7c4a`, `#1a237e`, `#f57f17`) → en sombre le bouton
+  « CSV App » était quasi invisible (1,17:1). Ils passent par les tokens thème-aware
+  `--v2`/`--v1`/`--v4` comme les boutons voisins.
+- **Bordures de puces de vague/fichier thème-aware** : `.v1`–`.v4` et `.file-chip` codaient
+  leur bordure en pastel clair (`#b8ccff`…) non redéfini en sombre → nouveaux tokens
+  `--v1b`–`--v4b` (clair + sombre).
+- **i18n (clarify)** : l'option « Tout — N trimestres » du sélecteur, en français en dur,
+  passe par `tf('sel_all_quarters')` (fr/nl/en/de).
+
+### Planner — passe design (critique Impeccable 29/40, top 3 a11y)
+(Planner `207` → `208`, SW `statbel-v360` → `statbel-v361`)
+- **Sélection de groupe accessible (P0, harden)** : les puces `.grp-tag` deviennent des
+  `<button>` focusables et activables au clavier (Entrée/Espace), avec `aria-pressed`
+  reflétant l'état sélectionné. La tâche centrale (choisir des groupes) était jusqu'ici
+  impossible au clavier / lecteur d'écran (WCAG 2.1.1).
+- **Signature au clavier (P1, adapt)** : en plus du tracé à la souris/au doigt, un champ
+  « Ou tapez votre nom » rend le nom saisi dans le canvas de signature (même pipeline PNG →
+  .docx). Les utilisateurs clavier/SR peuvent enfin produire la candidature.
+- **Anneau de focus visible (P1, harden)** : `outline:none` inconditionnel sur les inputs/
+  selects remplacé par un `:focus-visible` tokenisé, global (WCAG 2.4.7).
+
 ### Convertisseur — passe design 2 (vérification Impeccable, couche a11y + onboarding)
 (Convertisseur `224` → `225`, SW `statbel-v359` → `statbel-v360`)
 - **État ARIA des contrôles (harden)** : les bascules (onglets de vue, périmètre Enquête/
