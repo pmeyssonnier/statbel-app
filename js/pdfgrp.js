@@ -29,11 +29,9 @@ function base(s){ return norm(s.replace(/\([^)]*\)/g,'')); }
 // Les listings PDF abrègent les qualificatifs : « Congo (Rép. dém.) »,
 // « Allemagne (Rép. Féd.) »… On rétablit les mots pleins (sur la chaîne DÉJÀ
 // normalisée, sans accents) pour retomber sur le nom officiel de la table PAYS.
+var ABREV = { rep: 'republique', dem: 'democratique', pop: 'populaire', fed: 'federale' };
 function devAbrev(n){
-  return n.replace(/\brep\b\.?/g, 'republique')
-          .replace(/\bdem\b\.?/g, 'democratique')
-          .replace(/\bpop\b\.?/g, 'populaire')
-          .replace(/\bfed\b\.?/g, 'federale')
+  return n.replace(/\b(rep|dem|pop|fed)\b\.?/g, function(_, w){ return ABREV[w]; })
           .replace(/\s+/g, ' ').trim();
 }
 var PAYS_NORM = {}, PAYS_BASE = {}, baseCount = {};
@@ -52,7 +50,7 @@ function paysCode(txt){
   if (PAYS_NORM[n]) return PAYS_NORM[n];
   if (PAYS_ALIAS[n]) return PAYS_ALIAS[n];
   var e = devAbrev(n);                       // « congo (rep. dem.) » → « congo (republique democratique) »
-  if (e !== n && PAYS_NORM[e]) return PAYS_NORM[e];
+  if (PAYS_NORM[e]) return PAYS_NORM[e];     // (si e === n, PAYS_NORM[n] a déjà été testé ci-dessus)
   return PAYS_BASE[base(txt)] || '';
 }
 
@@ -137,16 +135,17 @@ function grpRows(rows){
     var ad = parseAddr(info['Address'] || '');
     members.forEach(function(m, mi){
       var mb = mi + 1;
-      if (m[5] && !paysCode(m[5]) && unknown.bth.indexOf(m[5]) < 0) unknown.bth.push(m[5]);
-      if (m[6] && !paysCode(m[6]) && unknown.nlty.indexOf(m[6]) < 0) unknown.nlty.push(m[6]);
+      var bth = paysCode(m[5]), nlty = paysCode(m[6]);   // pays de naissance + nationalité (une seule résolution)
+      if (m[5] && !bth  && unknown.bth.indexOf(m[5])  < 0) unknown.bth.push(m[5]);
+      if (m[6] && !nlty && unknown.nlty.indexOf(m[6]) < 0) unknown.nlty.push(m[6]);
       if (m[7] && !MRTL[m[7]] && unknown.mrtl.indexOf(m[7]) < 0) unknown.mrtl.push(m[7]);
       out.push({
         NR_GRP: nrgrp, NR_HH: String(hn), NR_DBENQ_MB: '' + nrgrp + pad(hn,3) + pad(mb,4),
         NR_YEAR: grp.slice(0,4), NR_SEQ: '2', NR_WAVE: info['Wave'] || '', NR_REF_WK: '23',
         TX_WEB_USER_ID: info['User ID'] || '', TX_WEB_USER_PSWRD: info['Password'] || '', CD_CNTCT_LG: info['Language'] || '',
         FL_MB_CNTCT: mb === 1 ? '1' : '0', TX_MB_NM_FST: m[1] || '', TX_MB_NM_LST: m[2] || '',
-        CD_MB_SEX: SEX[m[4]] || '', DT_MB_BTH: '', MS_MB_AGE: m[3] || '', CD_MB_BTH_REFNIS: paysCode(m[5]),
-        CD_MB_NLTY: paysCode(m[6]), CD_MB_MRTL_STS: m[7] ? (MRTL[m[7]] || '') : '',
+        CD_MB_SEX: SEX[m[4]] || '', DT_MB_BTH: '', MS_MB_AGE: m[3] || '', CD_MB_BTH_REFNIS: bth,
+        CD_MB_NLTY: nlty, CD_MB_MRTL_STS: m[7] ? (MRTL[m[7]] || '') : '',
         TX_ADRS_USTR_NM: ad[0], CD_ADRS_HS: ad[1], CD_ADRS_BX: ad[2], CD_ADRS_ZIP: ad[3], TX_ADRS_REFNIS_NM: ad[4],
         TX_DBENQ_GRP: grp, TX_DBENQ_HH: info['NR_DBENQ_HH'] || '',
         NR_PHONE: info['Phone'] || '', TX_EMAIL: info['EMail'] || '', CD_WSH_CLCT_MTHD: info['CATI / CAWI'] || '',

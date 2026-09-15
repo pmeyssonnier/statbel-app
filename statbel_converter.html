@@ -7019,13 +7019,12 @@ function reparerIdSci(v) {
 // Sinon on garde le texte formaté (dates, codes, décimaux… inchangés).
 function cellTexte(fVal, rVal) {
   const s = String(fVal != null ? fVal : '').trim();
-  if (RE_SCI_ID.test(s)) {
-    if (typeof rVal === 'number' && isFinite(rVal) && Number.isInteger(rVal) && Math.abs(rVal) < 1e21)
-      return rVal.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
-    const exact = sciVersEntier(s);
-    if (exact !== null) return exact;
-  }
-  return s;
+  if (!RE_SCI_ID.test(s)) return s;                 // valeur non scientifique → inchangée
+  // 1) cellule NUMÉRIQUE : la valeur brute (raw:true) porte l'entier complet.
+  if (typeof rVal === 'number' && isFinite(rVal) && Number.isInteger(rVal) && Math.abs(rVal) < 1e21)
+    return rVal.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
+  // 2) cellule TEXTE « 2.02612E+11 » : reconstruit si la mantisse est complète, sinon reste scientifique.
+  return sciVersEntier(s) ?? s;
 }
 
 // Colonnes attendues d'un export GRP STATBEL
