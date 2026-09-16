@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — e-mail en minuscules + tél./e-mail source non modifiables en CATI/CAWI
+(Interviews `3.78` → `3.79`, SW `statbel-v389` → `statbel-v390`)
+- **Affichage e-mail** : normalisé en minuscules partout où l'adresse est utilisée
+  (badge de fiche, champ d'édition, popup carte, lien de rappel `mailto:`, export vCard)
+  via le nouvel utilitaire `emailAffiche()` (`js/core/util.js`). La saisie manuelle est
+  aussi enregistrée en minuscules (`changerEmail`). Rendu homogène quelle que soit la
+  casse d'origine (saisie ou donnée source importée).
+- **CATI/CAWI** : dans la fiche, le **téléphone** et l'**e-mail** proviennent de la donnée
+  source Statbel et servent à joindre le ménage → affichés en **lecture seule** (badge 🔒,
+  champ atténué `.input-source`), pour ne pas altérer la source. Le double-clic (`tel:` /
+  `mailto:`) reste actif. En **CAPI** (face-à-face), les deux champs restent éditables.
+- Clé i18n `src_readonly` (fr/nl/en/de).
+
 ### Convertisseur — découpage du JS métier (5/5) : affichage + stats + charts extraits
 (Convertisseur `239` → `240`, SW `statbel-v388` → `statbel-v389`)
 - Dernier lot. Extraction **verbatim** des régions **AFFICHAGE** (sources, onglets Aperçu/

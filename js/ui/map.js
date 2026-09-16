@@ -10,7 +10,7 @@
  * L'état carte (leafletMap, markersLayer, baseLayer, maPosition, markerMoi,
  * _geoSession, _fondActuel) est déclaré ici sur globalThis (partagé avec app.js).
  */
-import { esc, regionPourCP, telBE } from '../core/util.js';
+import { esc, regionPourCP, telBE, emailAffiche } from '../core/util.js';
 import { t } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
 import { coordsCache, saveCoords } from '../data/idb.js';
@@ -124,7 +124,8 @@ export function afficherMarqueurs() {
     const idx    = enquetes[enqueteActive].indexOf(c);
     const _tb    = c.gsm ? telBE(c.gsm) : null;
     const gsm    = c.gsm   ? `<div style="margin-top:5px">📞 <a href="tel:${esc(_tb?_tb.e164:c.gsm)}" style="color:#1a73e8;text-decoration:none;">${esc(_tb?_tb.disp:c.gsm)}</a></div>` : '';
-    const email  = c.email ? `<div style="margin-top:3px">✉️ <a href="mailto:${esc(c.email)}" style="color:#1a73e8;text-decoration:none;">${esc(c.email)}</a></div>` : '';
+    const _em    = emailAffiche(c.email);
+    const email  = _em ? `<div style="margin-top:3px">✉️ <a href="mailto:${esc(_em)}" style="color:#1a73e8;text-decoration:none;">${esc(_em)}</a></div>` : '';
     let distPopup='';
     if (maPosition) {
       const cd=coordsCache(c.adresse);
