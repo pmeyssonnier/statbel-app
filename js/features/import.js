@@ -15,7 +15,7 @@
 import { parseCSV } from '../data/csv.js';
 import { esc, jourValide } from '../core/util.js';
 import { t, tf, tPlural, champLabel } from '../core/i18n.js';
-import { statutLabel, PAYS_I18N } from '../data/canon.js';
+import { statutLabel, PAYS_I18N, STATUT_I18N } from '../data/canon.js';
 import { saveCoords } from '../data/idb.js';
 import { apparieurAnciens, diffHistorique, _diffContacts } from '../data/reimport.js';
 
@@ -72,11 +72,12 @@ export function preparerImport(rawRows, nom) {
   const match = apparieurAnciens(old || []);
   const chk = document.getElementById('chkOnlyValid');
   const onlyValid = chk ? chk.checked : false;
+  const statutsOk = statutsAcceptes(nom);   // vocabulaire de l'enquête CIBLE (pas l'active) — bug C1
   const result = [], exclus = [];
   (rawRows || []).forEach(neu => {
     const o = match(neu);
-    if (onlyValid && recordEnErreur(neu)) {
-      const raisons = raisonsErreur(neu);
+    if (onlyValid && recordEnErreur(neu, statutsOk)) {
+      const raisons = raisonsErreur(neu, statutsOk);
       if (o) { result.push(o); exclus.push({ c: neu, raisons, garde: true }); }   // existant → conservé
       else   { exclus.push({ c: neu, raisons, garde: false }); }                   // nouveau → ignoré
       return;
@@ -245,12 +246,30 @@ export function fermerModal() {
 // moteur data/reimport.js (importé ci-dessus). Ici : la validation
 // de cohérence (liée au vocabulaire de statuts actif + i18n) et l'orchestration.
 
-export function valeurIncoherente(champ, val) {
+// Libellés de statut ACCEPTÉS à l'import pour l'enquête `nom` : le vocabulaire
+// RÉSOLU de l'enquête cible, élargi à tous les libellés canoniques connus
+// (STATUT_I18N — pivot EN + préréglage CATI/CAWI). La cohérence d'un statut ne
+// doit PAS dépendre de l'enquête ACTIVE : importer ou ré-importer une enquête
+// dont le vocabulaire diffère de celle ouverte — ou une enquête neuve dont le
+// préréglage (CAPI/CATI) sera déduit APRÈS coup (cf. deduirePresetStatuts) — ne
+// doit pas écarter à tort des statuts pourtant valides. (bug C1)
+export function statutsAcceptes(nom) {
+  const set = new Set(Object.keys(STATUT_I18N));
+  (statutsPourEnquete(nom) || []).forEach(s => set.add(s.label));
+  return set;
+}
+
+// `statutsOk` (optionnel) = Set des libellés de statut acceptés pour l'enquête
+// CIBLE ; l'import et la restauration le passent TOUJOURS (bug C1). À défaut, on
+// conserve le comportement historique : validation stricte contre le vocabulaire
+// de l'enquête ACTIVE — utilisé par l'audit de cohérence de la fiche active
+// (detecterIncoherences), où un statut hors vocabulaire actif doit rester signalé.
+export function valeurIncoherente(champ, val, statutsOk) {
   const v = (val == null ? '' : val).toString().trim();
   if (!v) return false;
   if (champ === 'birth_country' || champ === 'nationality') return !PAYS_I18N[v.toUpperCase()];
   if (champ === 'sexe')   return v !== 'M' && v !== 'F';
-  if (champ === 'statut') return !statutDefs().some(s => s.label === v);
+  if (champ === 'statut') return statutsOk ? !statutsOk.has(v) : !statutDefs().some(s => s.label === v);
   if (champ === 'birth_date') {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return true;
     const [y, m, d] = v.split('-').map(Number);
@@ -260,23 +279,23 @@ export function valeurIncoherente(champ, val) {
 }
 
 // Vrai si l'enregistrement contient au moins une valeur incohérente (pays/date/sexe/statut)
-export function recordEnErreur(c) {
+export function recordEnErreur(c, statutsOk) {
   return valeurIncoherente('birth_country', c.birth_country)
     || valeurIncoherente('nationality', c.nationality)
     || valeurIncoherente('birth_date', c.birth_date)
     || valeurIncoherente('sexe', c.sexe)
-    || valeurIncoherente('statut', c.statut);
+    || valeurIncoherente('statut', c.statut, statutsOk);
 }
 
 // Liste lisible des raisons d'incohérence d'un enregistrement (avec la valeur fautive)
-export function raisonsErreur(c) {
+export function raisonsErreur(c, statutsOk) {
   const r = [];
-  const add = (champ, val, label) => { if (valeurIncoherente(champ, val)) r.push(t(label) + ' « ' + val + ' »'); };
+  const add = (champ, val, label, ok) => { if (valeurIncoherente(champ, val, ok)) r.push(t(label) + ' « ' + val + ' »'); };
   add('birth_country', c.birth_country, 'cohr_country');
   add('nationality',   c.nationality,   'cohr_country');
   add('birth_date',    c.birth_date,    'cohr_date');
   add('sexe',          c.sexe,          'cohr_sex');
-  add('statut',        c.statut,        'cohr_status');
+  add('statut',        c.statut,        'cohr_status', statutsOk);
   return r;
 }
 
@@ -308,6 +327,7 @@ export function buildCompareHTML(src, meta) {
     const arrOld = enquetes[nom] || null; // null = enquête entièrement nouvelle
 
     const match = apparieurAnciens(arrOld || []);
+    const statutsOk = statutsAcceptes(nom);   // cohérence colorée contre le vocab de CETTE enquête
     const rowsAdd = [], rowsRem = [], rowsMod = [];
     let unch = 0;
 
@@ -347,7 +367,7 @@ export function buildCompareHTML(src, meta) {
         const av = tr(d.avant), ap = tr(d.apres);
         // Nouvelle valeur incohérente → rouge barré
         const apTxt = esc(ap || '∅');
-        const apHtml = valeurIncoherente(d.champ, d.apres) ? `<span class="cr-bad">${apTxt}</span>` : apTxt;
+        const apHtml = valeurIncoherente(d.champ, d.apres, statutsOk) ? `<span class="cr-bad">${apTxt}</span>` : apTxt;
         return esc(champLabel) + ' : ' + esc(av || '∅') + ' → ' + apHtml;
       }).join(' · ') + (champDiffs.length > 4 ? '…' : '');
       // Sous-bloc détaillé de l'historique (date modifiée, ligne ajoutée/supprimée)

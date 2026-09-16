@@ -12,6 +12,21 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Import : validation du statut contre l'enquête cible (bug C1)
+(Interviews `3.80` → `3.81`, SW `statbel-v391` → `statbel-v392`)
+- **Correctif** : à l'import (et à la restauration de sauvegarde), la cohérence du
+  **statut** était vérifiée contre le vocabulaire de l'enquête **active** (`statutDefs()`),
+  pas contre celui de l'enquête **cible**. Avec « n'importer que les corrects » coché
+  (le défaut), importer une enquête au vocabulaire différent de celle ouverte rejetait
+  silencieusement toutes les lignes → **enquête créée vide** (ex. active CATI + import
+  d'un lot CAPI « Done ») ou **mises à jour perdues** au ré-import.
+- Le statut est désormais validé contre `statutsAcceptes(nom)` = vocabulaire **résolu de
+  l'enquête cible**, élargi à tous les libellés canoniques connus (`STATUT_I18N` : pivot EN
+  + préréglage CATI/CAWI). Un statut réellement inconnu reste écarté. Corrigé aussi pour la
+  restauration (`majComparaisonRestore`) et la coloration de la comparaison. L'audit de
+  cohérence de la fiche active (`detecterIncoherences`) garde sa validation stricte.
+- Test de non-régression `tests/import-statut-scope.test.js` (échoue sur l'ancien code).
+
 ### Interviews — CATI/CAWI : champs tél./e-mail retirés de l'édition (redondants)
 (Interviews `3.79` → `3.80`, SW `statbel-v390` → `statbel-v391`)
 - En CATI/CAWI, le téléphone et l'e-mail étaient affichés en lecture seule dans la fiche.

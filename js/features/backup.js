@@ -12,7 +12,7 @@
  * sauver, refreshSelect, rendu, majSettingsUI, appliquerTheme, afficherToast,
  * GEO, rafraichirFond, leafletMap) est globale (pont).
  */
-import { buildCompareHTML } from './import.js';
+import { buildCompareHTML, statutsAcceptes } from './import.js';
 import { apparieurAnciens } from '../data/reimport.js';
 import { enquetesVersEN, enquetesVersInterne } from '../data/serialization.js';
 import { normaliserPays } from '../data/canon.js';
@@ -217,12 +217,13 @@ export function majComparaisonRestore() {
   Object.entries(_restoreRaw).forEach(([n, arr]) => {
     if (!onlyValid) { filtered[n] = arr; return; }
     const cur = enquetes[n]; const trouver = apparieurAnciens(cur || []);
+    const statutsOk = statutsAcceptes(n);   // vocabulaire de l'enquête restaurée (pas l'active) — bug C1
     const out = [];
     arr.forEach(rec => {
-      if (recordEnErreur(rec)) {
+      if (recordEnErreur(rec, statutsOk)) {
         const o = trouver(rec);
-        if (o) { out.push(o); exclus.push({ c: rec, raisons: raisonsErreur(rec), garde: true }); }  // existant conservé
-        else exclus.push({ c: rec, raisons: raisonsErreur(rec), garde: false });                    // non restauré
+        if (o) { out.push(o); exclus.push({ c: rec, raisons: raisonsErreur(rec, statutsOk), garde: true }); }  // existant conservé
+        else exclus.push({ c: rec, raisons: raisonsErreur(rec, statutsOk), garde: false });                    // non restauré
       } else out.push(rec);
     });
     filtered[n] = out;
