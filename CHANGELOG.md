@@ -12,6 +12,22 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Export CSV : préserver la valeur 0 (bug M2)
+(Interviews `3.90` → `3.91`, SW `statbel-v403` → `statbel-v404`)
+- À l'export, `csvCell(c.nb_cibles || '')` transformait un **`0` légitime** (falsy) en
+  **cellule vide** ; au réimport, `intOuNull('')` → `null`. La valeur `0` ne survivait
+  donc pas à un aller-retour CSV (export puis réimport — transfert d'appareil, partage,
+  sauvegarde CSV). L'import, lui, préservait déjà 0 (`intOuNull`) : l'export annulait ce soin.
+- **Conséquence** : un ménage à `nb_cibles = 0` (aucun membre ≥15) voyait, après
+  aller-retour, son compte de cibles retomber sur la **taille du ménage** (`resume.js`) →
+  total « personnes ≥15 » **gonflé**, **estimation d'indemnité surévaluée**, et marqueur
+  « approximatif » (`*`) activé à tort. Idem `taille_menage` et `age` (nourrisson `age:0`).
+- **Correctif** : helper `numCell` dans `genererCSV` qui stringifie `0` (« 0 ») avant
+  `csvCell` — nécessaire car `csvCell` retombe elle-même dans le piège `(v||'')`. Appliqué
+  à `age`, `taille_menage`, `nb_cibles`. Une absence (`null`) reste vide (jamais transformée en 0).
+- Test `tests/csv-roundtrip-zero.test.js` : `genererCSV` → `parseCSV` préserve `0` (et
+  garde `null` distinct) ; échoue sur l'ancien code (0 → vide → null).
+
 ### Interviews — Comparaison d'import : libellés de champs manquants (bug M1)
 (Interviews `3.89` → `3.90`, SW `statbel-v402` → `statbel-v403`)
 - Le détail de la comparaison (ré-import / restauration) affichait le libellé via

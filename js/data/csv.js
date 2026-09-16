@@ -204,6 +204,11 @@ export function sepCSVexport() {
 
 export function genererCSV() {
   const rows = [['order','first_name','last_name','address','status','interview_date','appointment','sex','birth_date','age','birth_country','nationality','marital_status','household_size','members_15plus','CD_WSH_CLCT_MTHD','TX_WEB_USER_ID','TX_WEB_USER_PSWRD','phone','email','notes','history','lat','lng']];
+  // Cellule ENTIÈRE : `0` est une valeur légitime (âge < 1 an, ménage sans cible ≥15).
+  // On ne peut PAS écrire `csvCell(c.champ || '')` — `0 || ''` = '' — ni compter sur
+  // csvCell qui retombe dans le même piège (`(v||'')`). On stringifie donc « 0 » avant
+  // csvCell pour que l'aller-retour export→réimport préserve le 0 (bug M2).
+  const numCell = v => (v == null ? '' : csvCell(String(v)));
   contacts().forEach(c => {
     const cc = coordsCache(c.adresse);
     // Historique sérialisé : « status@date | status@date » (statut canonique EN)
@@ -217,8 +222,8 @@ export function genererCSV() {
     rows.push([
       csvCell(c.ordre||''), csvCell(c.prenom||''), csvCell(c.nom||''), csvCell(c.adresse||''),
       csvCell(c.statut||statutDefaut()), csvCell(c.date||''), csvCell(c.rdv||''), csvCell(c.sexe||''),
-      csvCell(c.birth_date||''), csvCell(c.age||''), csvCell(c.birth_country||''), csvCell(c.nationality||''),
-      csvCell(c.marital_status||''), csvCell(c.taille_menage||''), csvCell(c.nb_cibles||''), csvCell(c.collect_method||''), csvCell(c.web_user_id||''), csvCell(c.web_user_pwd||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||''),
+      csvCell(c.birth_date||''), numCell(c.age), csvCell(c.birth_country||''), csvCell(c.nationality||''),
+      csvCell(c.marital_status||''), numCell(c.taille_menage), numCell(c.nb_cibles), csvCell(c.collect_method||''), csvCell(c.web_user_id||''), csvCell(c.web_user_pwd||''), csvCell(c.gsm||''), csvCell(c.email||''), csvCell(c.notes||''),
       csvCell(hist), csvCell(cc?cc.lat:''), csvCell(cc?cc.lng:'')
     ]);
   });
