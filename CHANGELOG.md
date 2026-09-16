@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Sécurité : `rel="noopener"` sur les liens `target="_blank"` (bug M6)
+(Interviews `3.92` → `3.93`, SW `statbel-v407` → `statbel-v408`)
+- Six liens ouvrant un nouvel onglet (`target="_blank"`) n'avaient pas `rel="noopener"`
+  → la page ouverte peut manipuler `window.opener` (reverse tabnabbing). Concernés :
+  le lien d'adresse de la **popup carte** (→ Google Maps) et les **5 attributions** de
+  fonds cartographiques (OpenStreetMap, IGN/NGI, CIRB, SPW, Geopunt).
+- **Correctif** : `rel="noopener"` ajouté sur les 6 liens (`js/ui/map.js`,
+  `js/features/geocoding.js`), aligné sur les liens d'adresse déjà protégés de
+  `contacts.js`.
+- Test `tests/noopener.test.js` — scan statique repo-wide (js/**, HTML racine, docs) :
+  tout `target="_blank"` doit porter `rel=noopener`, tout `window.open('_blank')` doit
+  inclure `noopener`. Garde durable ; échoue sur l'ancien code.
+
 ### Planner — Vie privée : ne plus envoyer une adresse de ménage à OSM (bug M5)
 (Planner `220` → `221`, SW `statbel-v406` → `statbel-v407`)
 - Le vérificateur d'adresse (`verifierAdresse`) géocode le texte libre tapé par

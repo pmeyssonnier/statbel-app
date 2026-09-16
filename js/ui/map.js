@@ -136,7 +136,7 @@ export function afficherMarqueurs() {
     const popup=`
       <div class="popup-titre">N° ${esc(c.ordre)} — ${esc(c.prenom)} ${esc(c.nom)}</div>
       ${demo ? `<div style="font-size:12px;color:#666;margin-bottom:4px">👤 ${demo}</div>` : ''}
-      <a href="${mapsUrl(c.adresse)}" target="_blank" style="color:#1a73e8;text-decoration:none;font-size:13px;">📍 ${esc(c.adresse)}</a>
+      <a href="${mapsUrl(c.adresse)}" target="_blank" rel="noopener" style="color:#1a73e8;text-decoration:none;font-size:13px;">📍 ${esc(c.adresse)}</a>
       ${distPopup}${gsm}${email}
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span class="s-btn actif" style="color:${def.color};border-color:${def.color};background:${def.color}22;cursor:default;opacity:1">${esc(def.icon)} ${esc(statutLabel(statut))}</span>
@@ -199,7 +199,7 @@ export function regionDominante() {
 // personnelle) → conforme RGPD. Utilisé pour le fond en mode auto.
 export const FOND_OSM = {
   tileUrl: function() { return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; },
-  tileAttribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
+  tileAttribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
   maxZoom: 19
 };
 

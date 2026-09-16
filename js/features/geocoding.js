@@ -18,7 +18,7 @@ export const GEO_PROVIDERS = {
   // selon son code postal. Fond de carte IGN/NGI (couvre toute la Belgique).
   auto: {
     label: 'Automatique (selon le code postal)',
-    tileAttribution: '© <a href="https://www.ngi.be" target="_blank">IGN/NGI</a> · géocodage UrbIS / SPW / Geopunt',
+    tileAttribution: '© <a href="https://www.ngi.be" target="_blank" rel="noopener">IGN/NGI</a> · géocodage UrbIS / SPW / Geopunt',
     maxZoom: 17,
     tileUrl: function() {
       return 'https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png';
@@ -34,7 +34,7 @@ export const GEO_PROVIDERS = {
   // Données belges, hébergées en Belgique, pas de transfert hors UE.
   bruxelles: {
     label: 'Bruxelles (UrbIS — CIRB)',
-    tileAttribution: '© <a href="https://cirb.brussels" target="_blank">UrbIS® — CIRB</a>',
+    tileAttribution: '© <a href="https://cirb.brussels" target="_blank" rel="noopener">UrbIS® — CIRB</a>',
     maxZoom: 19,
     // style : 'gray' (sobre) ou 'color' (couleur)
     tileUrl: function(style) {
@@ -75,7 +75,7 @@ export const GEO_PROVIDERS = {
   // Deux services publics belges, hébergés en Belgique, pas de transfert hors UE.
   wallonie: {
     label: 'Wallonie (SPW + IGN)',
-    tileAttribution: '© <a href="https://www.ngi.be" target="_blank">IGN/NGI</a> · géocodage © SPW',
+    tileAttribution: '© <a href="https://www.ngi.be" target="_blank" rel="noopener">IGN/NGI</a> · géocodage © SPW',
     maxZoom: 17,
     tileUrl: function() {
       return 'https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png';
@@ -97,7 +97,7 @@ export const GEO_PROVIDERS = {
   // Deux services publics belges, hébergés en Belgique, pas de transfert hors UE.
   flandre: {
     label: 'Flandre (Geopunt + IGN)',
-    tileAttribution: '© <a href="https://www.ngi.be" target="_blank">IGN/NGI</a> · géocodage © Geopunt',
+    tileAttribution: '© <a href="https://www.ngi.be" target="_blank" rel="noopener">IGN/NGI</a> · géocodage © Geopunt',
     maxZoom: 17,
     tileUrl: function() {
       return 'https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png';
