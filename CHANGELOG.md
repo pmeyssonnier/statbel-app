@@ -12,6 +12,42 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Réconciliation MKD + parité NIS complète (audit F9)
+(Interviews `3.88` → `3.89`, SW `statbel-v401` → `statbel-v402`)
+- **MKD (Macédoine)** divergeait entre les deux tables pays : `canon.js` avait
+  `nis:148` / « Macédoine (Ex-Rép. yougoslave de) » (ancien nom), `refdata.js`
+  `nis:154` / « Macédoine du Nord » (nom officiel depuis 2019). Aucun bug d'import
+  (Interviews n'utilise pas le NIS pour valider), mais l'affichage montrait le nom
+  périmé et le NIS différait. `canon.js` est aligné sur `refdata.js` (source des
+  fichiers Statbel réels) : `nis:154`, « Macédoine du Nord » (fr/nl/en/de).
+- **Parité NIS durcie** : `tests/pays-parite.test.js` vérifie désormais la
+  concordance du code NIS sur **tous** les codes ISO-3 communs (235), pas seulement
+  les 8 États disparus → toute future divergence NIS entre Convertisseur et
+  Interviews casse la CI.
+
+### Interviews — Import : ne plus écarter une fiche pour un pays inconnu (bug C2)
+(Interviews `3.87` → `3.88`, SW `statbel-v400` → `statbel-v401`)
+- **Contexte** : le Convertisseur émet des codes d'**États disparus** pour les personnes
+  nées avant leur dissolution (`YUG` ex-Yougoslavie, `SUN` ex-URSS, `CSK`
+  ex-Tchécoslovaquie, `SCG`, `ANT`, `RUU`, `SGB`, `JRL`) — fréquent chez les ≥ 60 ans.
+  Ces codes étant absents de `js/data/canon.js`, la fiche était signalée « pays inconnu »
+  et, avec « n'importer que les corrects » (coché par défaut), **écartée** : ménage absent
+  de l'enquête (fiche neuve) ou **mise à jour perdue** (réimport). Même mécanisme que C1,
+  déclenché par le pays.
+- **Correctif, 2 volets** :
+  1. les 8 codes historiques sont ajoutés à `PAYS_I18N` (fr/nl/en/de), alignés sur
+     `js/converter/refdata.js` → reconnus et affichés proprement (« Yougoslavie (ex) ») ;
+  2. un pays de naissance / nationalité inconnu ne fait **plus** écarter la ligne
+     (`recordEnErreur` ne teste plus le pays) : la fiche est **importée**, le code reste
+     seulement **signalé** (barré en rouge / panneau de cohérence). La démographie ne doit
+     jamais faire disparaître un ménage. Garde-fous conservés : un statut hors vocabulaire
+     ou une date impossible excluent toujours.
+- Tests : `tests/import-pays-historiques.test.js` (flux d'import : fiche à pays inconnu
+  importée et non écartée ; échoue sur l'ancien code) et `tests/pays-parite.test.js`
+  (garde-fou F9 : tout code ISO-3 émissible par le Convertisseur — `NLTY_ISO` — est
+  connu du `PAYS_I18N` d'Interviews, NIS concordant ; aurait échoué avant l'ajout des
+  8 États disparus).
+
 ### Interviews — Ré-import d'une enquête renommée : ne plus perdre l'historique
 (Interviews `3.86` → `3.87`, SW `statbel-v399` → `statbel-v400`)
 - **Contexte** : une enquête est indexée par son **nom**. Le fichier ré-importé porte
