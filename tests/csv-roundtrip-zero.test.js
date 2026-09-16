@@ -41,7 +41,7 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
 
     const csv = genererCSV();
     // Cellule brute exportée pour c1 (ligne « order=1 ») : age(9), household_size(13), members_15plus(14).
-    const lignes = csv.replace(/^﻿/, '').split('\n');
+    const lignes = csv.replace(/^\ufeff/, '').split('\n');
     const c1 = (lignes.find(l => l.split(',')[0] === '1') || '').split(',');
     const brut = { age: c1[9], taille: c1[13], cibles: c1[14] };
 
