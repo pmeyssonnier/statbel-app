@@ -288,6 +288,18 @@ export const PAYS_I18N = {
   "ZAF": { nis:"325", iso2:"ZA", fr:"Afrique du Sud /Rép. d'/", nl:"Zuid-Afrika /Rep./", en:"South Africa", de:"Südafrikanische Republik" },
   "ZMB": { nis:"335", iso2:"ZM", fr:"Zambie", nl:"Zambia", en:"Zambia", de:"Sambia" },
   "ZWE": { nis:"344", iso2:"ZW", fr:"Zimbabwe", nl:"Zimbabwe", en:"Zimbabwe", de:"Zimbabwe" },
+  // États historiques (disparus) encore émis par le Convertisseur pour les personnes
+  // nées avant leur dissolution — fréquent chez les ≥ 60 ans. Sans ces entrées, la
+  // fiche était signalée « pays inconnu » à l'import et pouvait être écartée (bug C2).
+  // Alignés sur js/converter/refdata.js (mêmes codes/NIS) — cf. test de parité.
+  "YUG": { nis:"169", iso2:"", fr:"Yougoslavie (ex)", nl:"Joegoslavië (ex)", en:"Yugoslavia (former)", de:"Jugoslawien (ehem.)" },
+  "SUN": { nis:"172", iso2:"", fr:"URSS (ex)", nl:"USSR (ex)", en:"USSR (former)", de:"UdSSR (ehem.)" },
+  "CSK": { nis:"130", iso2:"", fr:"Tchécoslovaquie (ex)", nl:"Tsjecho-Slowakije (ex)", en:"Czechoslovakia (former)", de:"Tschechoslowakei (ehem.)" },
+  "SCG": { nis:"132", iso2:"", fr:"Serbie-et-Monténégro (ex)", nl:"Servië en Montenegro (ex)", en:"Serbia and Montenegro (former)", de:"Serbien und Montenegro (ehem.)" },
+  "ANT": { nis:"482", iso2:"", fr:"Antilles néerlandaises (ex)", nl:"Nederlandse Antillen (ex)", en:"Netherlands Antilles (former)", de:"Niederländische Antillen (ehem.)" },
+  "RUU": { nis:"361", iso2:"", fr:"Ruanda-Urundi (ex)", nl:"Ruanda-Urundi (ex)", en:"Ruanda-Urundi (former)", de:"Ruanda-Urundi (ehem.)" },
+  "SGB": { nis:"348", iso2:"", fr:"Sénégambie (ex)", nl:"Senegambia (ex)", en:"Senegambia (former)", de:"Senegambia (ehem.)" },
+  "JRL": { nis:"272", iso2:"", fr:"Jérusalem", nl:"Jeruzalem", en:"Jerusalem", de:"Jerusalem" },
 };
 export function paysNom(code) {
   if (!code) return '';

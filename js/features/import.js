@@ -314,11 +314,14 @@ export function valeurIncoherente(champ, val, statutsOk) {
   return false;
 }
 
-// Vrai si l'enregistrement contient au moins une valeur incohérente (pays/date/sexe/statut)
+// Vrai si l'enregistrement doit être EXCLU par « n'importer que les corrects ».
+// Un pays de naissance / nationalité inconnu ne fait PLUS écarter la fiche (bug C2) :
+// la démographie ne doit jamais faire disparaître un ménage (ni perdre sa mise à jour).
+// Ces codes restent signalés — barrés en rouge dans l'aperçu et le panneau de cohérence
+// (valeurIncoherente / renderCoherence) — mais la ligne est importée. Seules les valeurs
+// réellement malformées (date/sexe impossibles, statut hors vocabulaire) excluent encore.
 export function recordEnErreur(c, statutsOk) {
-  return valeurIncoherente('birth_country', c.birth_country)
-    || valeurIncoherente('nationality', c.nationality)
-    || valeurIncoherente('birth_date', c.birth_date)
+  return valeurIncoherente('birth_date', c.birth_date)
     || valeurIncoherente('sexe', c.sexe)
     || valeurIncoherente('statut', c.statut, statutsOk);
 }
