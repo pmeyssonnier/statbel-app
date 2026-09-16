@@ -239,9 +239,13 @@ function afficher(res) {
     [t('admin_refweek'),  adminCols.NR_REF_WK],
     [t('admin_group'),    grpSuffix],
   ].map(([desc, val]) =>
+    // `val` provient du fichier importé (colonnes NR_* du CSV/XLSX) → escHtml
+    // obligatoire (sinon HTML injecté, exécuté à chaque réouverture car la source
+    // est persistée en IndexedDB) ; `desc` vient de t() (i18n) mais on l'échappe
+    // aussi par cohérence.
     `<div class="admin-col">
-      <span class="ac-label">${desc}</span>
-      <span class="ac-val">${val}</span>
+      <span class="ac-label">${escHtml(desc)}</span>
+      <span class="ac-val">${escHtml(val)}</span>
     </div>`).join('');
 
   // KPI — le titre n'affiche que l'identifiant ; la localisation est dans le champ

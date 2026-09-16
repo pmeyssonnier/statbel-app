@@ -12,6 +12,17 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — Sécurité : échapper les colonnes administratives (XSS persistant, bug E5)
+(Convertisseur `241` → `242`, SW `statbel-v393` → `statbel-v394`)
+- **Correctif de sécurité** : les valeurs `NR_YEAR` / `NR_WAVE` / `NR_SEQ` / `NR_REF_WK`
+  proviennent directement du fichier importé (CSV/XLSX) et étaient injectées dans
+  `#adminCols` en `innerHTML` **sans échappement** → un fichier GRP piégé pouvait
+  exécuter du HTML/JS, **ré-exécuté à chaque réouverture** (la source est persistée en
+  IndexedDB). Ces valeurs (et le libellé) passent désormais par `escHtml()`
+  (`js/converter/ui.js`) — l'invariant « `esc()` sur toute donnée injectée » est rétabli.
+- Test de non-régression `tests/converter-xss-admincols.test.js` (échoue sur l'ancien code :
+  la charge `<img onerror>` s'exécutait).
+
 ### Interviews + Convertisseur — Téléphone : ne plus « belgiciser » un numéro étranger (bug E4)
 (Interviews `3.81` → `3.82`, Convertisseur `240` → `241`, SW `statbel-v392` → `statbel-v393`)
 - **Correctif** : `telBE()` (et `formaterGsm()` côté saisie CAPI) supprimaient le
