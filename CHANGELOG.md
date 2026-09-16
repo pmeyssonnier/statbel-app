@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — RDV d'historique : validation calendaire (bug M4)
+(Interviews `3.91` → `3.92`, SW `statbel-v405` → `statbel-v406`)
+- `modifierRdvHistorique` validait le **format** (`jj/mm/aaaa [hh:mm]`) mais pas la
+  **validité du jour** (contrairement à `changerDateHistorique`, qui appelle `jourValide`).
+  Une date impossible « 31/02/2026 » était donc acceptée → stockée « 2026-02-31 » →
+  `formatRdv` la décalait au **3 mars** : RDV **silencieusement faux**, propagé au
+  calendrier, à la vue Suivi et aux **rappels envoyés au répondant**.
+- **Correctif** : ajout de `jourValide(+m[3], +m[2], +m[1])` au garde (aligné sur
+  `changerDateHistorique`) → une date impossible est refusée (alerte, RDV inchangé).
+- Test `tests/rdv-hist-validation.test.js` (31 février, 29/02 non bissextile, jour 32
+  rejetés ; dates valides — dont 29/02 bissextile et sans heure — acceptées). Échoue
+  sur l'ancien code.
+
 ### Convertisseur — Date de naissance : parseur tolérant et validé (bug M3)
 (Convertisseur `242` → `243`, SW `statbel-v404` → `statbel-v405`)
 - `convertirDate` ne gérait que `JJ-MM-AAAA` (tirets, jour d'abord) et sans validation :
