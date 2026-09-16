@@ -12,6 +12,18 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Avancement : compter le statut « réalisé », pas le libellé 'Done' (bug E6)
+(Interviews `3.84` → `3.85`, SW `statbel-v397` → `statbel-v398`)
+- **Correctif** : la progression (barre globale, courbe cumulée, superposition au graphe
+  d'activité) testait `statut === 'Done'` en dur. En **CATI/CAWI** le statut réalisé est
+  « Interview réalisée » → l'avancement affichait **0 %** et la courbe restait vide.
+- On s'appuie désormais sur le **drapeau `realise`** du vocabulaire (résolu contre le
+  vocabulaire de chaque enquête), et la couleur de la courbe = celle du statut réalisé actif.
+  Corrige `renderProgressionGlobale`, `renderCourbeAvancement`, `dessinerCourbeProgression`,
+  la légende « % faits » (`renderActiviteQuotidienne`) et le déclenchement de la courbe (`rdv.js`).
+- Test de non-régression `tests/progression-realise.test.js` (échoue sur l'ancien code :
+  CATI affichait 0/3).
+
 ### Interviews + Planner — Dates : ne plus décaler d'un jour selon le fuseau (bug E3)
 (Interviews `3.83` → `3.84`, Planner `219` → `220`, SW `statbel-v396` → `statbel-v397`)
 - **Correctif** : des dates à **minuit local** (issues de `parseDate` côté Planner, ou des
