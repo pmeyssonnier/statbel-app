@@ -12,6 +12,22 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — Date de naissance : parseur tolérant et validé (bug M3)
+(Convertisseur `242` → `243`, SW `statbel-v404` → `statbel-v405`)
+- `convertirDate` ne gérait que `JJ-MM-AAAA` (tirets, jour d'abord) et sans validation :
+  une date **ISO** « 1985-04-12 » devenait « **2012-04-1985** » (jour = 1985 !), une date
+  à **slashs** « 12/04/1985 » → `''` (perdue), et « 31-02-1985 » → « 1985-02-31 »
+  (impossible, accepté). Un aller-retour **Excel** réécrit fréquemment la date en ISO ou
+  en slashs → date de naissance **absurde ou perdue**, propagée au CSV « enquête » puis à
+  Interviews (mauvaise tranche d'âge, pyramide faussée).
+- **Correctif** : `convertirDate` accepte `-` **et** `/`, l'ordre `JJ-MM-AAAA` **comme**
+  `AAAA-MM-JJ` (détecté sur un 1ᵉʳ champ à 4 chiffres), conserve le pivot de siècle pour
+  les années à 2 chiffres, et **valide** la date via `jourValideConv` (jour/mois
+  impossibles, années bissextiles) → `''` si invalide. Le format GRP natif reste traité
+  à l'identique.
+- Test `tests/converter-date-parse.test.js` (échoue sur l'ancien code : ISO mutilé, slashs
+  perdus, 31 février accepté).
+
 ### Interviews — Export CSV : préserver la valeur 0 (bug M2)
 (Interviews `3.90` → `3.91`, SW `statbel-v403` → `statbel-v404`)
 - À l'export, `csvCell(c.nb_cibles || '')` transformait un **`0` légitime** (falsy) en

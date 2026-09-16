@@ -42,22 +42,35 @@ function splitLine(line, sep) {
 // ════════════════════════════════════════════════════════════════════════
 //  RÉGION — NORMALISATION · dates & adresses (formats bruts → canoniques)
 // ════════════════════════════════════════════════════════════════════════
+// Validité calendaire (jour existant pour le mois/année, années bissextiles).
+// Local au Convertisseur (script classique) — équivalent de jourValide d'Interviews.
+function jourValideConv(a, m, j) {
+  if (!(m >= 1 && m <= 12) || j < 1) return false;
+  const feb = (a % 4 === 0 && (a % 100 !== 0 || a % 400 === 0)) ? 29 : 28;
+  const dim = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return j <= dim[m - 1];
+}
+
+// Date de naissance brute → ISO AAAA-MM-JJ (format attendu par le module Interviews).
+// Tolérant (bug M3) : accepte le séparateur « - » OU « / », le format natif GRP
+// JJ-MM-AAAA comme l'ISO AAAA-MM-JJ (qu'un aller-retour Excel peut avoir réécrit),
+// et VALIDE la date (jour/mois impossibles → '') au lieu de produire un ISO absurde.
 function convertirDate(dob) {
   if (!dob || dob.includes('#')) return '';
-  const p = dob.trim().split('-');
-  if (p.length !== 3) return '';
-  const [j, m, a] = p.map(Number);
-  if ([j, m, a].some(isNaN)) return '';
-  // Année déjà sur 4 chiffres → telle quelle ; sinon pivot de siècle dynamique
-  let annee;
-  if (p[2].trim().length === 4) {
-    annee = a;
-  } else {
-    annee = 2000 + a;                                   // 20xx par défaut
-    if (annee > new Date().getFullYear()) annee -= 100; // sauf si futur → 19xx
+  const p = dob.trim().split(/[-/]/).map(s => s.trim());
+  if (p.length !== 3 || p.some(x => x === '' || /\D/.test(x))) return '';
+  let a, m, j;
+  if (p[0].length === 4) {                 // AAAA-MM-JJ (ISO, p. ex. réécrit par Excel)
+    [a, m, j] = p.map(Number);
+  } else {                                 // JJ-MM-AAAA (format GRP natif)
+    [j, m, a] = p.map(Number);
+    if (p[2].length !== 4) {               // année sur 2 chiffres → pivot de siècle
+      a = 2000 + a;                                   // 20xx par défaut
+      if (a > new Date().getFullYear()) a -= 100;     // sauf si futur → 19xx
+    }
   }
-  // Sortie ISO AAAA-MM-JJ (format attendu par enquetes_statbel.html)
-  return `${annee}-${String(m).padStart(2,'0')}-${String(j).padStart(2,'0')}`;
+  if (!jourValideConv(a, m, j)) return '';
+  return `${a}-${String(m).padStart(2, '0')}-${String(j).padStart(2, '0')}`;
 }
 
 // ── Formats d'AFFICHAGE (les données exportées, elles, restent inchangées) ──
