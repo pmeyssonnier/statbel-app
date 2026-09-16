@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <!-- CSP pragmatique (voir index.html). La section Planning (carte + vérificateur
-     d'adresse) interroge les géocodeurs régionaux belges + OSM ; le reste reste
-     hors-ligne (génération .docx côté client). -->
+     d'adresse) interroge les géocodeurs RÉGIONAUX belges (UrbIS/Geopunt/SPW) pour une
+     adresse précise ; OSM/Nominatim n'est utilisé QUE pour des libellés de quartier
+     publics (sans numéro), jamais pour une adresse de ménage (vie privée). Le reste
+     reste hors-ligne (génération .docx côté client). -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.irisnet.be https://*.wallonie.be https://*.vlaanderen.be https://*.openstreetmap.org">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statbel Planner — Agenda d'enquêtes</title>
@@ -798,7 +800,7 @@ candLoadInfos();
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '220';
+const APP_VERSION = '221';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 // Applique la langue (fr/nl/en/de) à tout le DOM balisé, une fois toutes les fonctions définies.
 appliquerLangue();
