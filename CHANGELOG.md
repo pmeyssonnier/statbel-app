@@ -12,6 +12,16 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — CATI/CAWI : champs tél./e-mail retirés de l'édition (redondants)
+(Interviews `3.79` → `3.80`, SW `statbel-v390` → `statbel-v391`)
+- En CATI/CAWI, le téléphone et l'e-mail étaient affichés en lecture seule dans la fiche.
+  Comme ils sont déjà présents dans les **canaux de contact** de la fiche (badges tél./
+  e-mail cliquables `tel:`/`mailto:`), les deux **champs de saisie** sont désormais
+  **masqués** dans le formulaire d'édition → suppression du doublon. En **CAPI**
+  (face-à-face), les champs restent éditables comme avant.
+- Nettoyage : styles `.input-source`/`.src-hint` et clé i18n `src_readonly` (introduits
+  pour l'affichage lecture seule) devenus inutiles → retirés.
+
 ### Interviews — e-mail en minuscules + tél./e-mail source non modifiables en CATI/CAWI
 (Interviews `3.78` → `3.79`, SW `statbel-v389` → `statbel-v390`)
 - **Affichage e-mail** : normalisé en minuscules partout où l'adresse est utilisée

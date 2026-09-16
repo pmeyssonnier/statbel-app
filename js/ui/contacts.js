@@ -277,13 +277,10 @@ export function buildEditForm(i) {
   const statut = c.statut || statutDefaut();
   const def    = statutDef(statut);
   // En CATI/CAWI, le téléphone et l'e-mail proviennent de la donnée source
-  // (Statbel) et servent à joindre le ménage : on les affiche en lecture seule
-  // pour ne pas altérer la source. Le double-clic (tel:/mailto:) reste actif.
-  // En CAPI (face-à-face), l'enquêteur les saisit sur le terrain → éditables.
+  // (Statbel) : non modifiables, et déjà affichés dans les canaux de contact de
+  // la fiche (badges tél./e-mail) → on masque les champs de saisie (redondants).
+  // En CAPI (face-à-face), l'enquêteur les saisit sur le terrain → champs éditables.
   const distant = classerMethode(c.collect_method);
-  const srcHint = distant ? ` <span class="src-hint" aria-hidden="true" title="${esc(t('src_readonly'))}">🔒</span>` : '';
-  const gsmRO   = distant ? ` readonly class="input-source" aria-label="${esc(t('ed_gsm') + ' — ' + t('src_readonly'))}"` : '';
-  const mailRO  = distant ? ` readonly class="input-source" aria-label="${esc(t('ed_email') + ' — ' + t('src_readonly'))}"` : '';
   // Édition volontairement limitée : statut, téléphone, e-mail, note et historique.
   // Les données démographiques (nom, adresse, ménage, âge…) sont affichées en tête
   // de fiche et ne sont pas ré-éditables ici → pas de doublon, pas de saisie à risque.
@@ -293,22 +290,23 @@ export function buildEditForm(i) {
           <label>${t('ed_status')}</label>
           <div class="statut-bar">${statutBarHTML(i, statut)}</div>
         </div>
+        ${distant ? '' : `
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:0.45">
-            <label>${t('ed_gsm')}${srcHint}</label>
+            <label>${t('ed_gsm')}</label>
             <input type="tel" placeholder="+32 4xx xx xx xx" value="${esc(c.gsm||'')}"
-              data-act="editGsm" data-i="${i}"${gsmRO} style="max-width:150px">
+              data-act="editGsm" data-i="${i}" style="max-width:150px">
           </div>
           <div class="edit-row" style="flex:1">
-            <label>${t('ed_email')}${srcHint}</label>
+            <label>${t('ed_email')}</label>
             <div class="email-wrap">
               <input type="email" placeholder="${t('ph_email')}" value="${esc(emailAffiche(c.email))}"
-                data-act="editEmail" data-i="${i}"${mailRO}
+                data-act="editEmail" data-i="${i}"
                 autocomplete="off">
               <div class="email-suggestions" id="esug-${i}"></div>
             </div>
           </div>
-        </div>
+        </div>`}
         <div class="edit-row">
           <label>${t('ed_notes')}</label>
           <textarea placeholder="${t('ph_notes')}" data-act="editNotes" data-i="${i}"
