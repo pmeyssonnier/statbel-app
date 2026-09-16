@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Comparaison d'import : libellés de champs manquants (bug M1)
+(Interviews `3.89` → `3.90`, SW `statbel-v402` → `statbel-v403`)
+- Le détail de la comparaison (ré-import / restauration) affichait le libellé via
+  `t('field_' + champ)`. `t()` renvoyant la CLÉ quand elle est absente (repli
+  `|| champ` mort), les 4 champs sans clé montraient le jargon interne :
+  « **field_nb_cibles** : 2 → 3 » au lieu de « **Cibles ≥15** : 2 → 3 ».
+- Champs concernés : `nb_cibles`, `collect_method`, `web_user_id`, `web_user_pwd`
+  (visibles quand l'un d'eux change entre l'app et le fichier ré-importé/restauré).
+- **Correctif** : ajout des 4 clés `field_*` (fr/nl/en/de) dans `js/core/i18n.js`.
+  Bug d'affichage uniquement (le diff était correct, seule l'étiquette était brute).
+- Test `tests/import-field-labels.test.js` : vérifie qu'aucune clé `field_*` brute
+  n'apparaît dans la comparaison pour ces 4 champs (FR + NL) ; échoue sur l'ancien code.
+
 ### Interviews — Réconciliation MKD + parité NIS complète (audit F9)
 (Interviews `3.88` → `3.89`, SW `statbel-v401` → `statbel-v402`)
 - **MKD (Macédoine)** divergeait entre les deux tables pays : `canon.js` avait
