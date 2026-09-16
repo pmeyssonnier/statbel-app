@@ -1,9 +1,11 @@
 /*
- * Test de non-régression — bug C2 : un code pays de naissance / nationalité
- * inconnu d'Interviews faisait ÉCARTER la fiche à l'import (case « n'importer que
- * les corrects » cochée par défaut) → ménage absent de l'enquête, ou mise à jour
- * perdue au réimport. Typiquement les codes d'États disparus émis par le
- * Convertisseur (YUG ex-Yougoslavie, SUN ex-URSS…), fréquents chez les ≥ 60 ans.
+ * Test de non-régression — bug C2 : un code pays inconnu d'Interviews faisait
+ * ÉCARTER la fiche à l'import (case « n'importer que les corrects » cochée par
+ * défaut) → ménage absent de l'enquête, ou mise à jour perdue au réimport.
+ * Cas typique : le PAYS DE NAISSANCE, décodé par le Convertisseur (CD_MB_BTH_REFNIS)
+ * en un code d'État disparu (YUG ex-Yougoslavie, SUN ex-URSS…) absent de canon.js,
+ * fréquent chez les ≥ 60 ans. (La nationalité, elle, part du NIS numérique
+ * CD_MB_NLTY et arrive déjà décodée en ISO-3 — elle ne déclenche pas ce cas.)
  *
  * Correctif à deux volets :
  *   A. Les 8 codes historiques du Convertisseur sont ajoutés à PAYS_I18N
@@ -49,13 +51,16 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       confirmerImport();
     };
 
-    // ── A+B. Lot avec des pays d'États disparus + un code réellement inconnu ──
+    // ── A+B. Lot dont le PAYS DE NAISSANCE est un État disparu + un code inconnu ──
+    // (Le Convertisseur décode CD_MB_BTH_REFNIS / CD_MB_NLTY : birth_country et
+    //  nationality arrivent en ISO-3. Les codes d'États disparus apparaissent sur
+    //  birth_country — décodé depuis le NIS — ; la nationalité est un ISO-3 courant.)
     importer('LFS pays',
       'order,first_name,last_name,address,status,birth_country,nationality\n' +
-      '1,Marko,Petrovic,Rue A 1 1000 Bxl,To do,YUG,YUG\n' +   // ex-Yougoslavie
-      '2,Ivan,Sovietski,Rue B 2 1000 Bxl,To do,SUN,SUN\n' +   // ex-URSS
-      '3,Jan,Cesky,Rue C 3 1000 Bxl,To do,CSK,BEL\n' +        // ex-Tchécoslovaquie
-      '4,Xavier,Zzz,Rue D 4 1000 Bxl,To do,ZZZ,BEL\n');       // code vraiment inconnu → importé quand même
+      '1,Marko,Petrovic,Rue A 1 1000 Bxl,To do,YUG,BEL\n' +   // né en ex-Yougoslavie, naturalisé belge
+      '2,Ivan,Sovietski,Rue B 2 1000 Bxl,To do,SUN,FRA\n' +   // né en ex-URSS
+      '3,Jan,Cesky,Rue C 3 1000 Bxl,To do,CSK,BEL\n' +        // né en ex-Tchécoslovaquie
+      '4,Xavier,Zzz,Rue D 4 1000 Bxl,To do,ZZZ,BEL\n');       // pays de naissance vraiment inconnu → importé quand même
     const lot = enquetes['LFS pays'] || [];
     out.count = lot.length;
     out.pays = lot.map(c => c.birth_country).sort();
