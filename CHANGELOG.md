@@ -12,6 +12,20 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Service worker — Navigation : réseau d'abord pour les pages non cachées (bug E2)
+(SW `statbel-v395` → `statbel-v396`)
+- **Correctif** : la stratégie de navigation renvoyait `index.html` pour **toute** page
+  non mise en cache, même **en ligne** (`caches.match(req) || caches.match('./index.html')
+  || fetch(req)` — `fetch` jamais atteint car `index.html` est toujours en cache). Les
+  pages `docs/manuel.html`, `docs/referentiels.html`, `docs/carte-du-code.html` étaient donc
+  **inaccessibles** dès qu'on avait ouvert l'app une fois : on obtenait l'app Interviews à leur place.
+- Désormais : une page HTML **en cache** (shell : index / convertisseur / planner) est servie
+  depuis le cache — avec `ignoreSearch` pour qu'une query (`index.html?x`) tape le shell et
+  non le réseau (pas de désynchro HTML/JS pendant une mise à jour) ; une page **non cachée**
+  passe par le **réseau** ; le repli sur le shell n'intervient qu'**hors-ligne**.
+- Test de non-régression `tests/sw-navigation.test.js` (bac à sable `self`/`caches`/`fetch` ;
+  échoue sur l'ancienne logique).
+
 ### Interviews — Coordonnées : ne plus purger les adresses contenant « et… » (bug E1)
 (Interviews `3.82` → `3.83`, SW `statbel-v394` → `statbel-v395`)
 - **Correctif** : la purge des coordonnées au démarrage testait la clé `coords_…` contre

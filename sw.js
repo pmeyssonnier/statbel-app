@@ -1,6 +1,6 @@
 // Service Worker — Statbel Interviews (PWA hors-ligne)
 // Incrémente CACHE à chaque mise à jour pour forcer le rafraîchissement.
-const CACHE = 'statbel-v395';
+const CACHE = 'statbel-v396';
 
 // Ressources CRITIQUES : indispensables au fonctionnement hors-ligne. Si l'une
 // manque, l'installation doit ÉCHOUER (ne pas activer un cache incomplet qui
@@ -129,22 +129,21 @@ self.addEventListener('fetch', e => {
   if (estGeo) return; // laisse le réseau gérer (pas d'interception)
 
   if (req.mode === 'navigate') {
-    // Navigation « cache d'abord » : la page HTML et les scripts/CSS proviennent
-    // ainsi TOUJOURS du même cache, donc de la MÊME version. Auparavant l'index
-    // était récupéré frais (réseau) tandis que les scripts restaient servis « cache
-    // d'abord » : pendant la fenêtre de mise à jour (nouveau SW « en attente »), un
-    // index.html neuf pouvait être servi avec un app.js encore périmé → HTML/JS
-    // désynchronisés (depuis la migration onclick→data-act : boutons sans routeur
-    // enregistré → interface figée). Le popup « Mise à jour disponible » reste servi
-    // (il vit dans l'index.html en cache, présent dans toutes les versions) et le
-    // cycle SW (nouveau cache → « Poser » → SKIP_WAITING → activate/claim → reload)
-    // fait basculer HTML ET scripts atomiquement vers la nouvelle version. Repli
-    // réseau si l'URL demandée n'est pas en cache (1er lancement, lien profond).
-    e.respondWith(
-      caches.match(req)
-        .then(r => r || caches.match('./index.html'))
-        .then(r => r || fetch(req))
-    );
+    // Navigation « cache d'abord » : une page HTML EN CACHE (index / convertisseur /
+    // planner) est servie depuis le cache → HTML et scripts/CSS proviennent TOUJOURS
+    // de la MÊME version (évite la désynchro HTML/JS pendant une fenêtre de mise à
+    // jour ; cf. migration onclick→data-act). `ignoreSearch` : une éventuelle query
+    // (index.html?x) tape quand même le shell en cache, jamais le réseau.
+    // Sinon (page NON mise en cache : docs/manuel.html, docs/referentiels.html, lien
+    // profond) → RÉSEAU d'abord ; ce n'est qu'HORS-LIGNE, en dernier recours, qu'on
+    // retombe sur le shell de l'app. Auparavant toute navigation non cachée renvoyait
+    // index.html même EN LIGNE → les pages docs/ étaient inaccessibles (bug E2).
+    e.respondWith((async () => {
+      const cached = await caches.match(req, { ignoreSearch: true });
+      if (cached) return cached;                                  // shell en cache → version cohérente
+      try { return await fetch(req); }                           // page non cachée (docs/…) → réseau
+      catch (e2) { return (await caches.match('./index.html')) || Response.error(); }  // hors-ligne → shell
+    })());
     return;
   }
 
