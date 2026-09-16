@@ -183,10 +183,14 @@ function verifierAdresse() {
     const proche = pt => pt && (!centre || distanceKm(pt, centre) <= seuil);
     const viaUrbis = () => geocodeAdresseRegion(region, ctx).then(res => (nomOk(res) && proche(res)) ? res : null);
     const viaNomi = () => geocodeNominatim(ctx + ', Belgique').then(n => proche(n) ? Object.assign({ source: 'osm' }, n) : null);
-    // Adresse précise (rue + numéro) → UrbIS d'abord ; libellé de quartier (sans numéro)
-    //  → lieu-dit OSM d'abord (point stable, identique pour la variante FR ou NL).
+    // Adresse précise (rue + numéro) → UrbIS/services régionaux UNIQUEMENT.
+    // Vie privée (bug M5) : une adresse avec numéro est potentiellement celle d'un
+    // MÉNAGE → on ne l'envoie JAMAIS à Nominatim/OSM (serveur hors UE). Interviews a
+    // retiré Nominatim pour cette raison. OSM reste réservé aux libellés de quartier
+    // (sans numéro) = données géographiques PUBLIQUES, où il est utilisé en premier
+    // (point stable, identique pour la variante FR ou NL).
     const precis = /\d/.test(adr);
-    const sources = precis ? [viaUrbis, viaNomi] : [viaNomi, viaUrbis];
+    const sources = precis ? [viaUrbis] : [viaNomi, viaUrbis];
     let k = 0;
     const run = () => k >= sources.length ? Promise.resolve(null) : sources[k++]().then(r => r || run());
     return run().then(pt => pt || geocodeAdresseRegion(region, ctx).then(r => r ? Object.assign({ approx: true }, r) : null));

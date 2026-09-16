@@ -12,6 +12,21 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Planner — Vie privée : ne plus envoyer une adresse de ménage à OSM (bug M5)
+(Planner `220` → `221`, SW `statbel-v406` → `statbel-v407`)
+- Le vérificateur d'adresse (`verifierAdresse`) géocode le texte libre tapé par
+  l'enquêteur — potentiellement l'**adresse d'un ménage**. Une adresse **précise**
+  (avec numéro) essayait UrbIS puis, en repli, **Nominatim/OSM** (serveur hors UE) →
+  fuite possible de données personnelles, alors qu'Interviews a retiré Nominatim pour
+  cette raison et que l'aide promet « pas de transfert hors UE ».
+- **Correctif** : une adresse **avec numéro** n'utilise plus QUE les services régionaux
+  belges (UrbIS/Geopunt/SPW) ; **Nominatim/OSM reste réservé aux libellés de quartier**
+  (sans numéro) = données géographiques publiques. Documentation alignée (en-tête
+  `statbel_planner.html` + section RGPD du manuel, dont la formulation « OSM en repli —
+  pas de transfert hors UE » était contradictoire).
+- Test `tests/planner-osm-privacy.test.js` : une adresse précise ne touche jamais
+  Nominatim (uniquement le régional), un libellé de quartier le peut. Échoue sur l'ancien code.
+
 ### Interviews — RDV d'historique : validation calendaire (bug M4)
 (Interviews `3.91` → `3.92`, SW `statbel-v405` → `statbel-v406`)
 - `modifierRdvHistorique` validait le **format** (`jj/mm/aaaa [hh:mm]`) mais pas la
