@@ -47,7 +47,7 @@ function renderListe() {
   // Aplatir toutes les vagues en lignes de tableau
   const items = [];
   rows.forEach(r => r.vagues.forEach(v => items.push({ row: r, v })));
-  const isoOf = d => d ? d.toISOString().slice(0, 10) : '';
+  const isoOf = d => d ? isoLocal(d) : '';   // heure locale (toISOString décalerait d'un jour) — bug E3
   const data = items.map(({ row, v }) => ({
     numero:   row.numero,
     province: provLabel(row.province),

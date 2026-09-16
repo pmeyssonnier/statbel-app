@@ -9,7 +9,7 @@
  * formatDateJour, filtrerActiviteJour, ouvrirFicheEvtIdx, _activiteJour,
  * _journalEvents) est global (pont / globalThis).
  */
-import { esc, dateFrToISO, dateISOToFr } from '../core/util.js';
+import { esc, dateFrToISO, dateISOToFr, isoLocal } from '../core/util.js';
 import { t, tPlural } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
 
@@ -93,11 +93,11 @@ export function renderActiviteQuotidienne(enqFilter, statutFilter) {
     : '') + '</div>';
 
   // Liste des jours : du 1er passage à aujourd'hui (inclus)
-  const today = new Date().toISOString().slice(0, 10);
+  const today = isoLocal(new Date());
   const fin = today > dates[dates.length - 1] ? today : dates[dates.length - 1];
   const jours = [];
-  for (let d = new Date(dates[0] + 'T00:00'); d.toISOString().slice(0, 10) <= fin; d.setDate(d.getDate() + 1)) {
-    jours.push(d.toISOString().slice(0, 10));
+  for (let d = new Date(dates[0] + 'T00:00'); isoLocal(d) <= fin; d.setDate(d.getDate() + 1)) {
+    jours.push(isoLocal(d));
   }
   const totalJour = iso => Object.values(parJour[iso] || {}).reduce((a, b) => a + b, 0);
   const maxTot = Math.max(1, ...jours.map(totalJour));
@@ -162,11 +162,11 @@ export function renderCourbeAvancement(enqFilter, methOK) {
   const dates = Object.keys(parJour).sort();
   if (!dates.length || !total) return `<div style="font-size:12px;color:var(--text3)">${t('res_activity_none')}</div>`;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = isoLocal(new Date());
   const fin = today > dates[dates.length - 1] ? today : dates[dates.length - 1];
   const jours = [];
-  for (let d = new Date(dates[0] + 'T00:00'); d.toISOString().slice(0, 10) <= fin; d.setDate(d.getDate() + 1)) {
-    jours.push(d.toISOString().slice(0, 10));
+  for (let d = new Date(dates[0] + 'T00:00'); isoLocal(d) <= fin; d.setDate(d.getDate() + 1)) {
+    jours.push(isoLocal(d));
   }
   let cum = 0;
   const pts = jours.map(j => { cum += parJour[j] || 0; return { iso: j, pct: cum / total, cum }; });
