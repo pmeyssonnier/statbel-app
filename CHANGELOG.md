@@ -29,8 +29,11 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
      seulement **signalé** (barré en rouge / panneau de cohérence). La démographie ne doit
      jamais faire disparaître un ménage. Garde-fous conservés : un statut hors vocabulaire
      ou une date impossible excluent toujours.
-- Test de non-régression `tests/import-pays-historiques.test.js` (échoue sur l'ancien
-  code : les 4 fiches YUG/SUN/CSK/inconnu étaient toutes écartées).
+- Tests : `tests/import-pays-historiques.test.js` (flux d'import : fiche à pays inconnu
+  importée et non écartée ; échoue sur l'ancien code) et `tests/pays-parite.test.js`
+  (garde-fou F9 : tout code ISO-3 émissible par le Convertisseur — `NLTY_ISO` — est
+  connu du `PAYS_I18N` d'Interviews, NIS concordant ; aurait échoué avant l'ajout des
+  8 États disparus).
 
 ### Interviews — Ré-import d'une enquête renommée : ne plus perdre l'historique
 (Interviews `3.86` → `3.87`, SW `statbel-v399` → `statbel-v400`)
