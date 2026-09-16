@@ -12,6 +12,17 @@
 import { esc, dateFrToISO, dateISOToFr, isoLocal } from '../core/util.js';
 import { t, tPlural } from '../core/i18n.js';
 import { statutLabel } from '../data/canon.js';
+import { statutDefDe, statutDefautDe } from '../data/statuses.js';
+
+// Le statut « réalisé » (interview faite = comptée dans l'avancement) N'EST PAS
+// forcément 'Done' : en CATI/CAWI c'est « Interview réalisée ». On s'appuie donc sur
+// le drapeau `realise` du vocabulaire, jamais sur un libellé en dur (bug E6).
+// estRealiseEvt résout le statut d'un évènement contre le vocabulaire de SON enquête
+// (statutsPourEnquete/statutDefDe sont globaux — pont) → correct même toutes enquêtes
+// confondues. couleurRealise = couleur du statut réalisé du vocabulaire actif.
+const estRealiseEvt   = e => statutDefDe(statutsPourEnquete(e.enq), e.statut).realise === true;
+const estFiltreRealise = f => !f || f === 'Tous' || (statutDef(f) && statutDef(f).realise === true);
+const couleurRealise   = () => (statutDefs().find(s => s.realise) || statutDefs()[0] || { color: '#2e7d32' }).color;
 
 // Graphe « activité quotidienne » : nombre de visites par statut et par jour,
 // depuis le 1er passage enregistré jusqu'à aujourd'hui. Source : c.historique
@@ -85,7 +96,7 @@ export function renderActiviteQuotidienne(enqFilter, statutFilter) {
   // Statuts présents, dans l'ordre configuré
   const statutsOrdre = statutDefs().filter(s => presents.has(s.label));
   // Légende (+ courbe % faits, uniquement en vue non filtrée)
-  const montreProg = !statutFilter || statutFilter === 'Tous' || statutFilter === 'Done';
+  const montreProg = estFiltreRealise(statutFilter);
   html += '<div class="progress-legend" style="margin-bottom:6px;">' + statutsOrdre.map(s =>
     `<div class="prog-leg-item"><div class="prog-leg-dot" style="background:${s.color}"></div>${esc(s.icon)} ${esc(statutLabel(s.label))}</div>`
   ).join('') + (montreProg
@@ -129,18 +140,24 @@ export function renderActiviteQuotidienne(enqFilter, statutFilter) {
 
 /** Barre de progression globale : Fait / total (+ à traiter / clôturés autrement) */
 export function renderProgressionGlobale(enqFilter) {
-  const cs = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
-  const total = cs.length;
-  if (!total) return '';
-  let fait = 0, clos = 0, rest = 0;
-  cs.forEach(c => {
-    const st = c.statut || statutDefaut();
-    if (st === 'Done') fait++;
-    else if (statutDef(st).done) clos++;
-    else rest++;
+  // Résoudre chaque statut contre le vocabulaire de SON enquête (réalisé = drapeau
+  // `realise`, pas le libellé 'Done') → correct en CATI/CAWI et toutes enquêtes confondues.
+  const entries = enqFilter ? [[enqFilter, enquetes[enqFilter] || []]] : Object.entries(enquetes);
+  let total = 0, fait = 0, clos = 0, rest = 0;
+  entries.forEach(([enq, arr]) => {
+    const vocab = statutsPourEnquete(enq);
+    const defaut = statutDefautDe(vocab);
+    arr.forEach(c => {
+      total++;
+      const def = statutDefDe(vocab, c.statut || defaut);
+      if (def.realise) fait++;
+      else if (def.done) clos++;
+      else rest++;
+    });
   });
+  if (!total) return '';
   const pc = Math.round(fait / total * 100);
-  const col = statutDef('Done').color;
+  const col = couleurRealise();
   return `<div class="progress-global">
     <div class="pg-bar">
       <div class="pg-seg" style="width:${fait / total * 100}%;background:${col}"></div>
@@ -153,7 +170,7 @@ export function renderProgressionGlobale(enqFilter) {
 
 /** Courbe autonome (Résumé) : % de Fait cumulés dans le temps (SVG, axe % + infobulles) */
 export function renderCourbeAvancement(enqFilter, methOK) {
-  const events = collecterVisites(enqFilter, methOK).filter(e => !e.isRdv && e.statut === 'Done');
+  const events = collecterVisites(enqFilter, methOK).filter(e => !e.isRdv && estRealiseEvt(e));
   const csAll = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
   const cs = methOK ? csAll.filter(c => methOK(c)) : csAll;
   const total = cs.length;
@@ -176,7 +193,7 @@ export function renderCourbeAvancement(enqFilter, methOK) {
   const n = jours.length;
   const X = i => padL + (n <= 1 ? plotW / 2 : i * (plotW / (n - 1)));
   const Y = pct => padT + plotH - pct * plotH;
-  const col = statutDef('Done').color;
+  const col = couleurRealise();
 
   const grid = [0, 0.5, 1].map(f =>
     `<line x1="${padL}" y1="${Y(f).toFixed(1)}" x2="${W - padR}" y2="${Y(f).toFixed(1)}" stroke="#cfd8dc" stroke-dasharray="3 3" stroke-width="1"/>` +
@@ -229,7 +246,7 @@ export function dessinerCourbeProgression(enqFilter) {
 
   // Fait cumulés par jour
   const doneJour = {};
-  collecterVisites(enqFilter).filter(e => !e.isRdv && e.statut === 'Done')
+  collecterVisites(enqFilter).filter(e => !e.isRdv && estRealiseEvt(e))
     .forEach(e => { const j = e.iso.slice(0, 10); doneJour[j] = (doneJour[j] || 0) + 1; });
   const cs = enqFilter ? (enquetes[enqFilter] || []) : Object.values(enquetes).flat();
   const total = Math.max(cs.length, 1);

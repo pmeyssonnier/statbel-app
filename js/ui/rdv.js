@@ -95,7 +95,10 @@ export function renduRdv() {
     + renderActiviteQuotidienne(enqAct, filtreRdv).replace(`<div class="resume-section-title">${t('res_activity')}</div>`, '');
   container.appendChild(grapheEl);
   // Courbe de progression (% Fait cumulés) superposée au graphe, en vue non filtrée
-  if (!filtreRdv || filtreRdv === 'Tous' || filtreRdv === 'Done') requestAnimationFrame(() => dessinerCourbeProgression(enqAct));
+  // Courbe % réalisé : affichée en vue non filtrée ou filtrée sur le statut « réalisé »
+  // (drapeau realise, pas le libellé 'Done' — bug E6).
+  if (!filtreRdv || filtreRdv === 'Tous' || (statutDef(filtreRdv) && statutDef(filtreRdv).realise))
+    requestAnimationFrame(() => dessinerCourbeProgression(enqAct));
 
   // ── Journal des événements (briques, filtré par statut + recherche) ──
   const journalEl = document.createElement('div');
