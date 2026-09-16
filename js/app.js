@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.82';
+const APP_VERSION = '3.83';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1319,7 +1319,13 @@ async function init() {
   // Purger les coordonnées invalides ou hors Belgique du localStorage
   Object.keys(localStorage).forEach(k => {
     if (!k.startsWith('coords_')) return;
-    if (/bte\s*\d+|ET\w+|b\d{2,}/i.test(k)) { localStorage.removeItem(k); return; }
+    // Purge des clés HÉRITÉES d'avant la normalisation par adresseSansBoite : une clé
+    // légitime vaut aujourd'hui 'coords_' + adresseSansBoite(adresse) (boîte/étage retirés).
+    // Si retirer la boîte de la clé la modifie, c'est une ancienne clé (adresse avec
+    // boîte) → obsolète, on la supprime. Remplace une regex (/…ET\w+…/i) qui écartait à
+    // tort les adresses contenant « et… » (Etterbeek, Wetteren, « rue Petite »…) — bug E1.
+    const adr = k.slice(7);   // après « coords_ »
+    if (adresseSansBoite(adr) !== adr) { localStorage.removeItem(k); return; }
     try {
       const v = JSON.parse(localStorage.getItem(k));
       if (!v||!v.lat||!v.lng||v.lat<49.5||v.lat>51.5||v.lng<2.5||v.lng>6.5)
