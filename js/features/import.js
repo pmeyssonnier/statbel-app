@@ -17,12 +17,14 @@ import { esc, jourValide } from '../core/util.js';
 import { t, tf, tPlural, champLabel } from '../core/i18n.js';
 import { statutLabel, PAYS_I18N, STATUT_I18N } from '../data/canon.js';
 import { saveCoords } from '../data/idb.js';
-import { apparieurAnciens, diffHistorique, _diffContacts } from '../data/reimport.js';
+import { apparieurAnciens, diffHistorique, _diffContacts, meilleureCorrespondance } from '../data/reimport.js';
 
 
 
 let csvEnAttente  = null;
 let coordsEnAttente = null;   // coords d'import en attente (écrites à la confirmation)
+let renameCandidat = null;    // { nom } : enquête existante reconnue comme renommée (cf. majComparaisonImport)
+let nomFichierImport = '';    // nom par défaut issu du fichier (repli « créer une nouvelle enquête »)
 
 export function importerFichier(event) {
   const file = event.target.files[0];
@@ -54,11 +56,42 @@ export function importerFichier(event) {
 export function ouvrirModalImport(parsed, defaultName) {
   csvEnAttente = parsed.rows;
   coordsEnAttente = parsed.coords || [];   // appliquées seulement à la confirmation
+  nomFichierImport = defaultName;
+  // Le nom de fichier ne désigne aucune enquête existante ? Peut-être une enquête
+  // RENOMMÉE dans l'app : on la retrouve par le contenu et on la cible d'emblée
+  // (nom pré-rempli) pour mettre à jour ses données SANS perdre l'historique ni
+  // créer un doublon. L'utilisateur garde la main (champ éditable + « créer une
+  // nouvelle enquête »).
+  renameCandidat = enquetes[defaultName] ? null : meilleureCorrespondance(parsed.rows, enquetes, null);
   document.getElementById('importApercu').innerHTML = renderImportApercu(parsed.stats);
-  document.getElementById('inputNomEnquete').value = defaultName;
+  document.getElementById('inputNomEnquete').value = renameCandidat ? renameCandidat.nom : defaultName;
   document.getElementById('modalNom').classList.add('open');
   majComparaisonImport();
   setTimeout(() => document.getElementById('inputNomEnquete').select(), 100);
+}
+
+// Bannière « enquête renommée reconnue » : n'apparaît que tant que la cible
+// pré-remplie (renameCandidat) est conservée dans le champ. Propose de créer une
+// nouvelle enquête au nom du fichier à la place (revient au comportement neutre).
+export function renderRenameHint() {
+  const el = document.getElementById('importRenameHint');
+  if (!el) return;
+  const nom = document.getElementById('inputNomEnquete').value.trim();
+  if (renameCandidat && nom === renameCandidat.nom && enquetes[nom]) {
+    el.innerHTML = `<div class="import-rename-hint">
+      <span>${tf('ip_rename_detected', { name: esc(renameCandidat.nom) })}</span>
+      <button type="button" class="import-rename-new" data-act="importCreerNouvelle">${t('ip_rename_new')}</button>
+    </div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+// « Créer une nouvelle enquête à la place » : rétablit le nom du fichier comme
+// cible (donc une création), tout en gardant renameCandidat pour pouvoir revenir.
+export function importCreerNouvelle() {
+  document.getElementById('inputNomEnquete').value = nomFichierImport;
+  majComparaisonImport();
 }
 
 // Prépare le résultat d'import pour l'enquête `nom` :
@@ -141,6 +174,7 @@ export function majComparaisonImport() {
   if (!csvEnAttente) { wrap.classList.add('hidden'); wrap.innerHTML = ''; return; }
 
   const nom = document.getElementById('inputNomEnquete').value.trim();
+  renderRenameHint();     // bannière « enquête renommée reconnue » (cible pré-remplie)
   const { result, exclus, incertains } = preparerImport(csvEnAttente, nom);
   renderExclus(exclus);   // compteur + détail (raisons) — affiché quel que soit le cas
   renderIncertains(incertains);   // ⚠️ n° d'ordre concordant mais identité divergente
@@ -239,6 +273,8 @@ export function fermerModal() {
   document.getElementById('modalNom').classList.remove('open');
   csvEnAttente = null;
   coordsEnAttente = null;   // annulation : ne pas écrire les coords en attente
+  renameCandidat = null;
+  nomFichierImport = '';
 }
 
 // ── Comparaison données existantes vs fichier à restaurer ──────────────

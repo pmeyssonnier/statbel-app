@@ -12,6 +12,29 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Ré-import d'une enquête renommée : ne plus perdre l'historique
+(Interviews `3.86` → `3.87`, SW `statbel-v399` → `statbel-v400`)
+- **Contexte** : une enquête est indexée par son **nom**. Le fichier ré-importé porte
+  encore son nom d'origine (le nom de fichier), mais l'enquête a été **renommée** dans
+  l'app → `enquetes[nomFichier]` n'existe plus. Résultat : un **doublon** était créé,
+  tous les contacts « neufs » (statut « To do »), et l'**historique des statuts perdu**.
+- **Correctif** : à l'ouverture de la modale d'import, si le nom de fichier ne désigne
+  aucune enquête existante, le **contenu** du fichier est apparié à celui des enquêtes
+  présentes (`meilleureCorrespondance`, moteur pur `data/reimport.js`). L'enquête
+  renommée est **reconnue et pré-ciblée** (nom pré-rempli + bannière verte). À la
+  confirmation : **pas de doublon**, **données administratives mises à jour** depuis le
+  fichier, **historique des statuts conservé**. Une porte de sortie « Créer une nouvelle
+  enquête » rétablit le nom du fichier.
+- **Correctif lié** : `confirmerRename` déplace désormais le **vocabulaire par enquête**
+  (`settings.statutsParEnquete`) vers le nouveau nom — sinon la liste CATI/CAWI devenait
+  orpheline et l'enquête retombait sur le modèle global (statuts « inconnus »).
+- Détection franche (score = `min(part du fichier apparié, couverture de l'enquête)` ≥ 0,6)
+  → quasi zéro faux positif ; l'utilisateur garde la main (champ éditable).
+- Tests : `tests/reimport-renommee.test.js` (flux complet, échoue sur l'ancien code :
+  doublon + historique perdu + vocabulaire orphelin) ; `tests/reimport.test.js` couvre
+  `meilleureCorrespondance` (unitaire pur). i18n `ip_rename_detected` / `ip_rename_new`
+  (fr/nl/en/de).
+
 ### Interviews — Rappels : date de RDV lisible dans le message (bug E7)
 (Interviews `3.85` → `3.86`, SW `statbel-v398` → `statbel-v399`)
 - **Correctif** : `construireRappel` injectait `c.rdv` au **format interne**
