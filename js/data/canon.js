@@ -189,7 +189,7 @@ export const PAYS_I18N = {
   "MDV": { nis:"222", iso2:"MV", fr:"Maldives", nl:"Malediven", en:"Maldives", de:"Malediven" },
   "MEX": { nis:"416", iso2:"MX", fr:"Mexique", nl:"Mexico", en:"Mexico", de:"Mexiko" },
   "MHL": { nis:"603", iso2:"MH", fr:"Iles Marshall (République des)", nl:"Marshalleilanden (Republiek der)", en:"Marshall Islands", de:"Marshallinseln (Republik)" },
-  "MKD": { nis:"148", iso2:"MK", fr:"Macédoine (Ex-Rép. yougoslave de)", nl:"Macedonië (Ex-Joegoslavische Rep.)", en:"Macedonia (former Yugoslav Rep of)", de:"Makedonien (Ex-Jugoslawischen Rep.)" },
+  "MKD": { nis:"154", iso2:"MK", fr:"Macédoine du Nord", nl:"Noord-Macedonië", en:"North Macedonia", de:"Nordmazedonien" },
   "MLI": { nis:"319", iso2:"ML", fr:"Mali", nl:"Mali", en:"Mali", de:"Mali" },
   "MLT": { nis:"119", iso2:"MT", fr:"Malte", nl:"Malta", en:"Malta", de:"Malta" },
   "MMR": { nis:"201", iso2:"MM", fr:"Myanmar (Union de)", nl:"Myanmar (Unie van)", en:"Myanmar", de:"Myanmar (Union)" },

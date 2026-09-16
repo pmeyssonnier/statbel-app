@@ -46,6 +46,20 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
       ? `codes ISO-3 émis par le Convertisseur mais ABSENTS de canon.js : ${manquants.join(', ')}`
       : `parité OK : les ${emis.size} codes ISO-3 émissibles sont tous connus d'Interviews`);
 
+  // 3bis. Concordance NIS SUR TOUS les codes communs : les deux tables décrivent
+  //   la même donnée de référence Statbel, donc un code ISO-3 partagé doit porter
+  //   le MÊME code NIS des deux côtés — sinon le Convertisseur décoderait un NIS
+  //   vers un pays qu'Interviews rattacherait à un autre. (durcissement audit F9)
+  const nisDivergents = Object.keys(PAYS_I18N)
+    .filter(k => paysConv[k])
+    .filter(k => (PAYS_I18N[k].nis || '') !== (paysConv[k].nis || ''))
+    .map(k => `${k} (canon=${PAYS_I18N[k].nis} / conv=${paysConv[k].nis})`)
+    .sort();
+  A(nisDivergents.length === 0,
+    nisDivergents.length
+      ? `NIS divergents entre canon.js et refdata.js : ${nisDivergents.join(', ')}`
+      : `concordance NIS OK sur les ${Object.keys(PAYS_I18N).filter(k => paysConv[k]).length} codes communs`);
+
   // 4. Les 8 États disparus (cœur du bug C2) sont bien présents des deux côtés.
   ['YUG', 'SUN', 'CSK', 'SCG', 'ANT', 'RUU', 'SGB', 'JRL'].forEach(code => {
     A(connusInterviews.has(code), `Interviews connaît ${code} (${(PAYS_I18N[code] || {}).fr || '—'})`);

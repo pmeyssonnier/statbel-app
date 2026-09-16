@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Réconciliation MKD + parité NIS complète (audit F9)
+(Interviews `3.88` → `3.89`, SW `statbel-v401` → `statbel-v402`)
+- **MKD (Macédoine)** divergeait entre les deux tables pays : `canon.js` avait
+  `nis:148` / « Macédoine (Ex-Rép. yougoslave de) » (ancien nom), `refdata.js`
+  `nis:154` / « Macédoine du Nord » (nom officiel depuis 2019). Aucun bug d'import
+  (Interviews n'utilise pas le NIS pour valider), mais l'affichage montrait le nom
+  périmé et le NIS différait. `canon.js` est aligné sur `refdata.js` (source des
+  fichiers Statbel réels) : `nis:154`, « Macédoine du Nord » (fr/nl/en/de).
+- **Parité NIS durcie** : `tests/pays-parite.test.js` vérifie désormais la
+  concordance du code NIS sur **tous** les codes ISO-3 communs (235), pas seulement
+  les 8 États disparus → toute future divergence NIS entre Convertisseur et
+  Interviews casse la CI.
+
 ### Interviews — Import : ne plus écarter une fiche pour un pays inconnu (bug C2)
 (Interviews `3.87` → `3.88`, SW `statbel-v400` → `statbel-v401`)
 - **Contexte** : le Convertisseur émet des codes d'**États disparus** pour les personnes
