@@ -1,5 +1,6 @@
 /*
- * Test de non-régression — ré-import d'une enquête RENOMMÉE.
+ * Test de non-régression — ré-import d'une enquête RENOMMÉE (toutes méthodes :
+ * CAPI comme CATI/CAWI — la détection se fait sur le CONTENU, jamais la méthode).
  *
  * Bug : une enquête est indexée par son NOM. Le fichier ré-importé porte encore
  * son nom d'origine (le nom de fichier), or l'enquête a été renommée dans l'app.
@@ -107,6 +108,38 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     out.vocabAncienParti = !settings.statutsParEnquete['Ancien nom'];
     out.enqueteRenommee = !!enquetes['Nouveau nom'] && !enquetes['Ancien nom'];
 
+    // ── 5. Méthode-agnostique : même scénario pour une enquête CAPI renommée ──
+    // (vocabulaire CAPI par défaut EN : To do / In progress / Done…). La détection
+    // ne regarde que le CONTENU, jamais la méthode de collecte.
+    Object.keys(enquetes).forEach(k => delete enquetes[k]);
+    settings.statutsParEnquete = {};
+    enquetes['Secteur Nord (renommé)'] = [
+      { ordre:'1', nom:'Petit', prenom:'Chloé', adresse:'Rue N 1 5000 Namur', collect_method:'CAPI',
+        taille_menage:2, statut:'Done', date:'03/09/2026',
+        historique:[{ statut:'To do', date:'30/08/2026' }, { statut:'Done', date:'03/09/2026' }] },
+      { ordre:'2', nom:'Grand', prenom:'David', adresse:'Rue N 2 5000 Namur', collect_method:'CAPI',
+        taille_menage:2, statut:'Refusal', date:'03/09/2026',
+        historique:[{ statut:'Refusal', date:'03/09/2026' }] },
+    ];
+    // pas de statutsParEnquete → vocabulaire global CAPI (EN) par défaut
+    enqueteActive = 'Secteur Nord (renommé)';
+    const csvCapi =
+      'order,first_name,last_name,address,status,household_size,collect_method\n' +
+      '1,Chloé,Petit,Rue N 1 5000 Namur,To do,4,CAPI\n' +
+      '2,David,Grand,Rue N 2 5000 Namur,To do,4,CAPI\n';
+    const nomFichierCapi = '2026-77777 SECTEUR NORD';
+    ouvrirModalImport(parseCSV(csvCapi), nomFichierCapi);
+    out.capiChamp = document.getElementById('inputNomEnquete').value;
+    out.capiHint = /Secteur Nord/.test(document.getElementById('importRenameHint').innerHTML);
+    confirmerImport();
+    out.capiDoublon = enquetes[nomFichierCapi] ? enquetes[nomFichierCapi].length : 0;
+    const capiMaj = enquetes['Secteur Nord (renommé)'] || [];
+    out.capiCount = capiMaj.length;
+    const chloe = capiMaj.find(c => c.ordre === '1') || {};
+    out.capiStatut = chloe.statut;                       // 'Done' préservé
+    out.capiHistLen = (chloe.historique || []).length;   // 2 entrées conservées
+    out.capiMenage = chloe.taille_menage;                // admin mis à jour (4)
+
     return out;
   });
 
@@ -135,6 +168,15 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
   A(r.enqueteRenommee, 'renommage : l\'enquête change bien de nom');
   A(r.vocabDeplace, 'renommage : le vocabulaire par enquête suit le nouveau nom');
   A(r.vocabAncienParti, 'renommage : l\'ancienne entrée de vocabulaire est retirée');
+
+  // 5 — méthode-agnostique : une enquête CAPI renommée bénéficie du même traitement
+  A(r.capiChamp === 'Secteur Nord (renommé)', `CAPI : cible pré-remplie sur l'enquête renommée (got « ${r.capiChamp} »)`);
+  A(r.capiHint, 'CAPI : bannière « enquête renommée reconnue » affichée');
+  A(r.capiDoublon === 0, `CAPI : pas de doublon au nom du fichier (got ${r.capiDoublon})`);
+  A(r.capiCount === 2, `CAPI : toujours 2 contacts (got ${r.capiCount})`);
+  A(r.capiStatut === 'Done', `CAPI : historique conservé, statut préservé (got « ${r.capiStatut} »)`);
+  A(r.capiHistLen === 2, `CAPI : 2 entrées d'historique conservées (got ${r.capiHistLen})`);
+  A(r.capiMenage === 4, `CAPI : donnée administrative mise à jour, taille ménage 2 → 4 (got ${r.capiMenage})`);
 
   A(perr.length === 0, 'aucune erreur JS' + (perr.length ? ' → ' + perr.join(' | ') : ''));
 
