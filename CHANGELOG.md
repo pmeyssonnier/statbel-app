@@ -12,6 +12,18 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Rappels : date de RDV lisible dans le message (bug E7)
+(Interviews `3.85` → `3.86`, SW `statbel-v398` → `statbel-v399`)
+- **Correctif** : `construireRappel` injectait `c.rdv` au **format interne**
+  (`YYYY-MM-DD HH:MM`) dans le message → le répondant recevait « Rendez-vous prévu :
+  2026-09-18 14:30 ». La date est désormais formatée « **18/09/2026 14:30** » (neutre :
+  le libellé autour reste traduit fr/nl/en/de). Corrige les deux chemins (modèle par
+  défaut et variable `{{rendez_vous}}`).
+- L'**aperçu** des Réglages utilise maintenant un RDV au format interne → il reflète
+  exactement le message réel.
+- Test de non-régression `tests/rappel-rdv-format.test.js` (échoue sur l'ancien code :
+  ISO brut dans le message) ; `reminder-templates.test.js` : fixture RDV alignée sur le format interne.
+
 ### Interviews — Avancement : compter le statut « réalisé », pas le libellé 'Done' (bug E6)
 (Interviews `3.84` → `3.85`, SW `statbel-v397` → `statbel-v398`)
 - **Correctif** : la progression (barre globale, courbe cumulée, superposition au graphe
