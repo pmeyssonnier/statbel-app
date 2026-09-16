@@ -202,6 +202,14 @@ export function formaterGsm(val) {
   return '+' + d.slice(0,2) + ' ' + d.slice(2,5) + ' ' + d.slice(5,7) + ' ' + d.slice(7,9) + ' ' + d.slice(9,11);
 }
 
+// Adresse e-mail en affichage : toujours en minuscules (les adresses sont
+// insensibles à la casse) et sans espaces parasites. Utilisée à chaque rendu ou
+// lien mailto: pour un affichage homogène, quelle que soit la casse d'origine
+// (saisie manuelle ou import de la donnée source).
+export function emailAffiche(email) {
+  return String(email ?? '').trim().toLowerCase();
+}
+
 // Téléphone belge (affichage) → { e164:'+32…' (lien tel:), disp:'+32 xxx xx xx xx' }.
 // Tolérant : chiffres seuls ; préfixe 0032 / 32 / 0 géré ; 9 chiffres nationaux
 // (mobile) groupés 3-2-2-2, 8 (fixe) 2-2-2-2, sinon national tel quel. Renvoie

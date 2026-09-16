@@ -12,7 +12,7 @@
  * formatDateJour, formatDateFrSaisie, afficherMarqueurs, vueActive,
  * markersLayer, maPosition, filtreActif, refreshSelect) sont globaux (pont).
  */
-import { esc, formaterGsm, telBE, calcAge, todayStr, nowHHMM,
+import { esc, formaterGsm, telBE, emailAffiche, calcAge, todayStr, nowHHMM,
          dateFrToISO, dateISOToFr, composeAdresse, parseAdresse,
          correspondRecherche } from '../core/util.js';
 import { t, tf, tPlural, nomJourCourt } from '../core/i18n.js';
@@ -89,7 +89,7 @@ export function changerMenage(i, champ, val) {
   sauverBientot();
 }
 
-export function changerEmail(i, val)  { contacts()[i].email = val;  sauverBientot(); }
+export function changerEmail(i, val)  { contacts()[i].email = emailAffiche(val);  sauverBientot(); }
 
 export function changerGsm(i, input) {
   const f = formaterGsm(input.value);
@@ -276,6 +276,14 @@ export function buildEditForm(i) {
   const c      = contacts()[i];
   const statut = c.statut || statutDefaut();
   const def    = statutDef(statut);
+  // En CATI/CAWI, le téléphone et l'e-mail proviennent de la donnée source
+  // (Statbel) et servent à joindre le ménage : on les affiche en lecture seule
+  // pour ne pas altérer la source. Le double-clic (tel:/mailto:) reste actif.
+  // En CAPI (face-à-face), l'enquêteur les saisit sur le terrain → éditables.
+  const distant = classerMethode(c.collect_method);
+  const srcHint = distant ? ` <span class="src-hint" aria-hidden="true" title="${esc(t('src_readonly'))}">🔒</span>` : '';
+  const gsmRO   = distant ? ` readonly class="input-source" aria-label="${esc(t('ed_gsm') + ' — ' + t('src_readonly'))}"` : '';
+  const mailRO  = distant ? ` readonly class="input-source" aria-label="${esc(t('ed_email') + ' — ' + t('src_readonly'))}"` : '';
   // Édition volontairement limitée : statut, téléphone, e-mail, note et historique.
   // Les données démographiques (nom, adresse, ménage, âge…) sont affichées en tête
   // de fiche et ne sont pas ré-éditables ici → pas de doublon, pas de saisie à risque.
@@ -287,15 +295,15 @@ export function buildEditForm(i) {
         </div>
         <div style="display:flex;gap:10px;align-items:flex-start">
           <div class="edit-row" style="flex:0.45">
-            <label>${t('ed_gsm')}</label>
+            <label>${t('ed_gsm')}${srcHint}</label>
             <input type="tel" placeholder="+32 4xx xx xx xx" value="${esc(c.gsm||'')}"
-              data-act="editGsm" data-i="${i}" style="max-width:150px">
+              data-act="editGsm" data-i="${i}"${gsmRO} style="max-width:150px">
           </div>
           <div class="edit-row" style="flex:1">
-            <label>${t('ed_email')}</label>
+            <label>${t('ed_email')}${srcHint}</label>
             <div class="email-wrap">
-              <input type="email" placeholder="${t('ph_email')}" value="${esc(c.email||'')}"
-                data-act="editEmail" data-i="${i}"
+              <input type="email" placeholder="${t('ph_email')}" value="${esc(emailAffiche(c.email))}"
+                data-act="editEmail" data-i="${i}"${mailRO}
                 autocomplete="off">
               <div class="email-suggestions" id="esug-${i}"></div>
             </div>
@@ -368,7 +376,7 @@ export function exporterVCard(i) {
   vcard += 'FN:'+prenom+' '+nom+CRLF+'N:'+nom+';'+prenom+';;;'+CRLF;
   if (street)  vcard += 'ADR;TYPE=HOME:;;'+street+';'+city+';;'+zip+';Belgique'+CRLF;
   if (c.gsm)   vcard += 'TEL;TYPE=CELL:'+c.gsm+CRLF;
-  if (c.email) vcard += 'EMAIL:'+c.email+CRLF;
+  if (c.email) vcard += 'EMAIL:'+emailAffiche(c.email)+CRLF;
   if (c.notes) vcard += 'NOTE:'+c.notes.split('\n').join(' ')+CRLF;
   vcard += 'ORG:Statbel LFS'+CRLF+'END:VCARD';
   const a = Object.assign(document.createElement('a'), {
@@ -411,7 +419,7 @@ export function rendu() {
     const mb = methodeBadge(c);
     if (mb)      badges.push(mb);                 // méthode CATI/CAWI en tête des canaux de contact
     if (c.gsm)   { const tb = telBE(c.gsm); badges.push(`<a class="badge badge-tel" href="tel:${esc(tb?tb.e164:c.gsm)}">📞 ${esc(tb?tb.disp:c.gsm)}</a>`); }
-    if (c.email) badges.push(`<a class="badge badge-mail" href="mailto:${esc(c.email)}">✉️ ${esc(c.email)}</a>`);
+    if (c.email) { const em = emailAffiche(c.email); badges.push(`<a class="badge badge-mail" href="mailto:${esc(em)}">✉️ ${esc(em)}</a>`); }
     // Date associée au statut : RDV (si statut « rendez-vous ») sinon date d'action
     const dateStatut = (c.rdv && def.rdv) ? '📅 ' + formatRdv(c.rdv) : (c.date ? formatDateJour(c.date) : '');
     const _p = parseAdresse(c.adresse);

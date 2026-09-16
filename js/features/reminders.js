@@ -6,7 +6,7 @@
  * Sans modèle personnalisé, le message i18n historique reste utilisé.
  */
 import { classerMethode } from '../data/collect-method.js';
-import { telBE } from '../core/util.js';
+import { telBE, emailAffiche } from '../core/util.js';
 import { t, tf } from '../core/i18n.js';
 
 export const RAPPEL_TEMPLATES_FR = Object.freeze({
@@ -270,7 +270,7 @@ export function construireRappel({
 
   let href;
   if (canal === 'mail') {
-    href = 'mailto:' + encodeURIComponent(c.email || '').replace(/%40/g, '@')
+    href = 'mailto:' + encodeURIComponent(emailAffiche(c.email)).replace(/%40/g, '@')
          + '?subject=' + encodeURIComponent(subject)
          + '&body=' + encodeURIComponent(body);
   } else {
