@@ -144,7 +144,6 @@ export const I18N = {
   "ed_save": { fr:"✅ Enregistrer", nl:"✅ Opslaan", en:"✅ Save", de:"✅ Speichern" },
   "ph_notes": { fr:"Notes...", nl:"Notities...", en:"Notes...", de:"Notizen..." },
   "ph_email": { fr:"Email", nl:"E-mail", en:"Email", de:"E-Mail" },
-  "src_readonly": { fr:"Donnée source · non modifiable", nl:"Brongegeven · niet wijzigbaar", en:"Source data · read-only", de:"Quelldaten · schreibgeschützt" },
   "backup_last": { fr:"✅ Dernière sauvegarde :", nl:"✅ Laatste back-up:", en:"✅ Last backup:", de:"✅ Letztes Sicherung:" },
   "backup_none": { fr:"⚠️ Aucune sauvegarde effectuée sur cet appareil.", nl:"⚠️ Nog geen back-up op dit toestel.", en:"⚠️ No backup made on this device.", de:"⚠️ Auf diesem Gerät wurde noch keine Sicherung erstellt." },
   "backup_unsaved": { fr:"⚠️ modifications non sauvegardées", nl:"⚠️ niet-opgeslagen wijzigingen", en:"⚠️ unsaved changes", de:"⚠️ nicht gesicherte Änderungen" },
