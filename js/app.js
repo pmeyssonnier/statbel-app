@@ -97,7 +97,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.85';
+const APP_VERSION = '3.86';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -1073,7 +1073,7 @@ function apercuModelesRappel() {
     shortSignature: settings.reminderSignatureShort,
     includePwd: settings.reminderIncludePwd !== false,
   };
-  const cati = { prenom:'Alice', collect_method:'CATI', rdv:'18/09/2026 à 14:30', email:'alice@example.be', gsm:'0470123456' };
+  const cati = { prenom:'Alice', collect_method:'CATI', rdv:'2026-09-18 14:30', email:'alice@example.be', gsm:'0470123456' };
   const cawi = { prenom:'Bob', collect_method:'CAWI', web_user_id:'202612345678', web_user_pwd:'Exemple9', email:'bob@example.be', gsm:'0470123456' };
   const blocs = [
     ['E-MAIL CATI', construireRappel({ ...commun, contact:cati, canal:'mail' })],

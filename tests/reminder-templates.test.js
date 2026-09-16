@@ -61,7 +61,7 @@ const EXEC = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM || '/u
     const nlSubject = settings.reminderTemplates.mailSubject;
     const nlSig = settings.reminderSignature;
     const nlRdv = construireRappel({
-      contact:{ prenom:'Alice', collect_method:'CATI', rdv:'18/09/2026', gsm:'0470123456' },
+      contact:{ prenom:'Alice', collect_method:'CATI', rdv:'2026-09-18 14:30', gsm:'0470123456' },   // rdv au format interne (ISO), cf. bug E7
       canal:'sms', templates:settings.reminderTemplates,
       signature:settings.reminderSignature, shortSignature:settings.reminderSignatureShort,
     }).body;

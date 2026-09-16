@@ -6,7 +6,17 @@
  * Sans modèle personnalisé, le message i18n historique reste utilisé.
  */
 import { classerMethode } from '../data/collect-method.js';
-import { telBE, emailAffiche } from '../core/util.js';
+import { telBE, emailAffiche, dateISOToFr } from '../core/util.js';
+
+// c.rdv est stocké au format INTERNE « YYYY-MM-DD HH:MM ». Le message envoyé au
+// répondant doit afficher une date lisible « JJ/MM/AAAA HH:MM », pas l'ISO brut
+// (bug E7). Neutre linguistiquement : le libellé autour (rappel_rdv) est traduit.
+function rdvLisible(rdv) {
+  const [d, h] = String(rdv || '').trim().split(' ');
+  const fr = dateISOToFr(d || '');
+  if (!fr) return '';
+  return h ? `${fr} ${h}` : fr;
+}
 import { t, tf } from '../core/i18n.js';
 
 export const RAPPEL_TEMPLATES_FR = Object.freeze({
@@ -226,7 +236,7 @@ export function construireRappel({
   const variables = {
     prenom: c.prenom || '',
     enquete: surveyName || '',
-    rendez_vous: c.rdv ? tf('rappel_rdv', { rdv: c.rdv }) : '',
+    rendez_vous: rdvLisible(c.rdv) ? tf('rappel_rdv', { rdv: rdvLisible(c.rdv) }) : '',
     lien: (cawiUrl || '').trim(),
     identifiant: c.web_user_id || '',
     // Option de confidentialité : ne pas inclure le mot de passe CAWI dans le message.
@@ -258,7 +268,7 @@ export function construireRappel({
       if (variables.mot_de_passe) lignes.push(t('rappel_lbl_pwd')  + ' : ' + variables.mot_de_passe);
     } else {
       lignes.push(t('rappel_intro_cati'));
-      if (c.rdv) lignes.push(tf('rappel_rdv', { rdv: c.rdv }));
+      { const r = rdvLisible(c.rdv); if (r) lignes.push(tf('rappel_rdv', { rdv: r })); }
     }
     lignes.push(t('rappel_thanks'));
     body = lignes.filter(Boolean).join('\n');
