@@ -38,3 +38,13 @@ function parseDate(v) {
   if (m && +m[1] <= 12) return new Date(+m[3], +m[1]-1, +m[2]);
   return null;
 }
+
+// Date → « YYYY-MM-DD » en heure LOCALE. À utiliser au lieu de
+// toISOString().slice(0,10) sur une Date à minuit local : toISOString() renvoie
+// l'UTC et décale d'un jour en arrière en Belgique (UTC+1/＋2). Script CLASSIQUE :
+// globale partagée avec les autres modules du Planner (views.js…).
+function isoLocal(d) {
+  return d.getFullYear() + '-'
+    + ('0' + (d.getMonth() + 1)).slice(-2) + '-'
+    + ('0' + d.getDate()).slice(-2);
+}

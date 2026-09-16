@@ -96,6 +96,16 @@ export function nowHHMM() {
   return ('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
 }
 
+// Date → « YYYY-MM-DD » en heure LOCALE. À utiliser au lieu de
+// toISOString().slice(0,10) sur une Date à minuit local : toISOString() renvoie
+// l'UTC et, en Belgique (UTC+1/＋2), décale d'un jour en arrière. Pour tri,
+// comparaison et libellés de jour cohérents avec le fuseau de l'utilisateur.
+export function isoLocal(d) {
+  return d.getFullYear() + '-'
+    + ('0' + (d.getMonth() + 1)).slice(-2) + '-'
+    + ('0' + d.getDate()).slice(-2);
+}
+
 /** Convertit DD/MM/YYYY en YYYY-MM-DD pour comparaison de tri */
 export function dateFrToISO(d) {
   if (!d) return '';

@@ -12,6 +12,18 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews + Planner — Dates : ne plus décaler d'un jour selon le fuseau (bug E3)
+(Interviews `3.83` → `3.84`, Planner `219` → `220`, SW `statbel-v396` → `statbel-v397`)
+- **Correctif** : des dates à **minuit local** (issues de `parseDate` côté Planner, ou des
+  visites côté Interviews) étaient formatées via `toISOString().slice(0,10)` → l'UTC recule
+  d'un jour en Belgique (UTC+1/+2). Symptômes : **vue Liste** du Planner affichait le début/fin
+  de vague **la veille** (et triait dessus) ; le **graphe d'activité** d'Interviews commençait
+  un jour trop tôt (colonne vide) et « aujourd'hui » disparaissait entre 00 h et 02 h locales.
+- Nouveau formateur **`isoLocal(d)`** (heure locale) : `js/core/util.js` (Interviews, utilisé par
+  `js/ui/stats.js`) et `js/planner/lecture.js` (Planner, utilisé par `js/planner/views.js`).
+- Test de non-régression `tests/date-timezone.test.js` — contexte **forcé sur Europe/Brussels**
+  (sinon le bug reste invisible en UTC) ; échoue sur l'ancien code.
+
 ### Service worker — Navigation : réseau d'abord pour les pages non cachées (bug E2)
 (SW `statbel-v395` → `statbel-v396`)
 - **Correctif** : la stratégie de navigation renvoyait `index.html` pour **toute** page
