@@ -12,6 +12,19 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews + Convertisseur — Téléphone : ne plus « belgiciser » un numéro étranger (bug E4)
+(Interviews `3.81` → `3.82`, Convertisseur `240` → `241`, SW `statbel-v392` → `statbel-v393`)
+- **Correctif** : `telBE()` (et `formaterGsm()` côté saisie CAPI) supprimaient le
+  préfixe international (`+`/`00`) puis forçaient `+32` → un numéro **étranger**
+  (ménage frontalier FR/NL/LU) était transformé en numéro belge invalide. Ex.
+  `telBE('+33 6 12 34 56 78')` renvoyait `+3233612345678` → le **rappel SMS** et le
+  **lien tel:** partaient vers un mauvais destinataire.
+- Un numéro international explicite d'indicatif ≠ 32 est désormais **conservé tel
+  quel** ; les numéros belges (`0…`, `32…`, `+32…`, `0032…`) restent inchangés.
+  Corrigé dans les deux implémentations alignées (`js/core/util.js` et
+  `js/converter/import-normalisation.js`).
+- Test de non-régression `tests/tel-intl.test.js` (échoue sur l'ancien code).
+
 ### Interviews — Import : validation du statut contre l'enquête cible (bug C1)
 (Interviews `3.80` → `3.81`, SW `statbel-v391` → `statbel-v392`)
 - **Correctif** : à l'import (et à la restauration de sauvegarde), la cohérence du
