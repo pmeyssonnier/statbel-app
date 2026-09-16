@@ -97,7 +97,10 @@ export function modifierRdvHistorique(i, idx, val) {
   val = (val || '').trim();
   if (!val) { delete c.historique[idx].rdv; apresModifHistorique(i); return; }
   const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+([01]\d|2[0-3]):([0-5]\d))?$/);
-  if (!m) { alert(t('al_date_invalid')); rafraichirHistorique(i); return; }
+  // Valider aussi la validité CALENDAIRE (comme changerDateHistorique) : le format
+  // seul acceptait « 31/02/2026 » → stocké « 2026-02-31 » → formatRdv le décalait au
+  // 3 mars (RDV silencieusement faux, y compris dans les rappels au répondant). (bug M4)
+  if (!m || !jourValide(+m[3], +m[2], +m[1])) { alert(t('al_date_invalid')); rafraichirHistorique(i); return; }
   c.historique[idx].rdv = `${m[3]}-${m[2]}-${m[1]}` + (m[4] ? ` ${m[4]}:${m[5]}` : '');
   apresModifHistorique(i);
 }
