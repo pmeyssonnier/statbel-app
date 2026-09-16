@@ -192,8 +192,17 @@ export function toISODateTime(v) {
 }
 
 export function formaterGsm(val) {
-  let d = val.replace(/[^\d]/g, '');
-  if (d.startsWith('0')) d = '32' + d.slice(1);
+  const s = String(val || '');
+  let d = s.replace(/[^\d]/g, '');
+  // Numéro international explicite (« + » ou « 00 ») : on retire le « 00 » de tête
+  // et, si l'indicatif n'est pas 32, on renvoie le numéro tel quel (« +… ») sans
+  // imposer la mise en forme belge (sinon 0033… serait belgicisé à tort).
+  if (/^\s*(?:\+|00)/.test(s)) {
+    d = d.replace(/^00/, '');
+    if (!d.startsWith('32')) return d ? '+' + d : '+';
+  } else if (d.startsWith('0')) {
+    d = '32' + d.slice(1);
+  }
   d = d.slice(0, 11);
   if (d.length <= 2) return d ? '+' + d : '';
   if (d.length <= 5) return '+' + d.slice(0,2) + ' ' + d.slice(2);
@@ -210,16 +219,26 @@ export function emailAffiche(email) {
   return String(email ?? '').trim().toLowerCase();
 }
 
-// Téléphone belge (affichage) → { e164:'+32…' (lien tel:), disp:'+32 xxx xx xx xx' }.
-// Tolérant : chiffres seuls ; préfixe 0032 / 32 / 0 géré ; 9 chiffres nationaux
-// (mobile) groupés 3-2-2-2, 8 (fixe) 2-2-2-2, sinon national tel quel. Renvoie
-// null si vide. Aligné sur telBE() du Convertisseur.
+// Téléphone (affichage + lien tel:/sms:) → { e164, disp }. Renvoie null si vide.
+// Tolérant : chiffres seuls ; national « 0… » ou « 32… » → Belgique, 9 chiffres
+// (mobile) groupés 3-2-2-2, 8 (fixe) 2-2-2-2, sinon national tel quel.
+// IMPORTANT : un numéro international EXPLICITE (« + » ou « 00 ») dont l'indicatif
+// n'est PAS 32 est conservé tel quel — on ne « belgicise » jamais un numéro
+// étranger (ménage frontalier FR/NL/LU), sinon tel:/sms: appellent un mauvais
+// numéro. Aligné sur telBE() du Convertisseur.
 export function telBE(raw) {
-  let d = String(raw || '').replace(/\D/g, '');
+  const s = String(raw || '').trim();
+  let d = s.replace(/\D/g, '');
   if (!d) return null;
-  if (d.startsWith('0032')) d = d.slice(4);
-  else if (d.startsWith('32')) d = d.slice(2);
-  else if (d.startsWith('0'))  d = d.slice(1);
+  if (/^(?:\+|00)/.test(s)) {                 // notation internationale explicite
+    if (d.startsWith('00')) d = d.slice(2);
+    if (!d.startsWith('32')) { const e164 = '+' + d; return { e164, disp: e164 }; }  // étranger : tel quel
+    d = d.slice(2);                            // +32 / 0032 → national belge
+  } else if (d.startsWith('32')) {
+    d = d.slice(2);                            // « 32… » sans « + » : tolérance historique
+  } else if (d.startsWith('0')) {
+    d = d.slice(1);                            // national « 0… »
+  }
   if (!d) return null;
   const e164 = '+32' + d;
   let disp;

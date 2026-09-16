@@ -66,15 +66,24 @@ function fmtDateNaiss(iso) {
   const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || '');
 }
-// Téléphone belge → { e164:'+32…' (liens tel:/sms:), disp:'+32 xxx xx xx xx' }.
-// Tolérant : chiffres seuls ; préfixe 0032 / 32 / 0 géré. Regroupement 3-2-2-2
-// (mobile, 9 chiffres nationaux) ou 2-2-2-2 (fixe, 8), sinon national tel quel.
+// Téléphone → { e164:'+…' (liens tel:/sms:), disp }. Tolérant : chiffres seuls ;
+// national « 0… » / « 32… » → Belgique (regroupement 3-2-2-2 mobile, 2-2-2-2 fixe).
+// IMPORTANT : un numéro international EXPLICITE (« + » ou « 00 ») d'indicatif ≠ 32 est
+// conservé tel quel — on ne « belgicise » pas un numéro étranger (sinon tel:/sms:
+// appellent un mauvais numéro). Aligné sur telBE() d'Interviews (js/core/util.js).
 function telBE(raw) {
-  let d = String(raw || '').replace(/\D/g, '');
+  const s = String(raw || '').trim();
+  let d = s.replace(/\D/g, '');
   if (!d) return null;
-  if (d.startsWith('0032')) d = d.slice(4);
-  else if (d.startsWith('32')) d = d.slice(2);
-  else if (d.startsWith('0'))  d = d.slice(1);
+  if (/^(?:\+|00)/.test(s)) {                 // notation internationale explicite
+    if (d.startsWith('00')) d = d.slice(2);
+    if (!d.startsWith('32')) { const e164 = '+' + d; return { e164, disp: e164 }; }  // étranger : tel quel
+    d = d.slice(2);                            // +32 / 0032 → national belge
+  } else if (d.startsWith('32')) {
+    d = d.slice(2);
+  } else if (d.startsWith('0')) {
+    d = d.slice(1);
+  }
   if (!d) return null;
   const e164 = '+32' + d;
   let disp;
