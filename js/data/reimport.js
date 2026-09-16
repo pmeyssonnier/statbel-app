@@ -87,6 +87,38 @@ export function apparieurAnciens(oldArr) {
   return match;
 }
 
+// Détecte une enquête RENOMMÉE : le fichier ré-importé porte son nom d'origine
+// (le nom de fichier), mais l'enquête a été renommée dans l'app → `enquetes[nom]`
+// n'existe pas et un ré-import créerait un DOUBLON en perdant l'historique. On
+// retrouve alors l'enquête cible par le CONTENU : celle dont les contacts
+// s'apparient le mieux aux lignes importées (même fichier = mêmes référents).
+//
+// `enquetesMap` = { nom: [contacts…] } ; `exclureNom` = un nom déjà ciblé par
+// correspondance de nom exacte (à ignorer). Retourne { nom, ratio, couv, score }
+// de la meilleure enquête si la correspondance est franche, sinon null. Pur.
+//   ratio = part des lignes importées appariées à cette enquête
+//   couv  = part de l'enquête existante couverte par le fichier
+//   score = min(ratio, couv) — exige une correspondance MUTUELLE (ni un simple
+//           sous-ensemble, ni un sur-ensemble ne suffit) → quasi zéro faux positif.
+export function meilleureCorrespondance(rows, enquetesMap, exclureNom) {
+  const news = (rows || []).filter(Boolean);
+  if (!news.length) return null;
+  let best = null;
+  for (const nom of Object.keys(enquetesMap || {})) {
+    if (nom === exclureNom) continue;
+    const old = enquetesMap[nom] || [];
+    if (!old.length) continue;
+    const match = apparieurAnciens(old);      // matcher autonome, jeté après la passe
+    let hits = 0;
+    news.forEach(c => { if (match(c)) hits++; });
+    const ratio = hits / news.length;
+    const couv  = hits / old.length;
+    const score = Math.min(ratio, couv);
+    if (!best || score > best.score) best = { nom, ratio, couv, score };
+  }
+  return best && best.score >= 0.6 ? best : null;
+}
+
 // Champs comparés pour détecter une "modification" (les champs purement
 // d'horodatage ou de cache ne sont pas pris en compte).
 const _CHAMPS_COMPARES = [

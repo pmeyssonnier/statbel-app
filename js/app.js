@@ -18,6 +18,7 @@ import {
   importerFichier, ouvrirModalImport, preparerImport, renderExclus,
   majComparaisonImport, renderImportApercu, confirmerImport, fermerModal,
   recordEnErreur, raisonsErreur, buildCompareHTML, valeurIncoherente,
+  importCreerNouvelle,
 } from './features/import.js';
 import {
   apparieurAnciens, diffHistorique, _diffContacts,
@@ -97,7 +98,7 @@ import {
 
 // ── Paramètres utilisateur (persistés dans localStorage) ─────────────
 // Version de l'application (source unique, affichée dans Paramètres et Aide)
-const APP_VERSION = '3.86';
+const APP_VERSION = '3.87';
 
 const SETTINGS_DEFAULTS = {
   theme:    'auto',       // 'light' | 'dark' | 'auto' (auto = suit l'OS via prefers-color-scheme)
@@ -489,6 +490,14 @@ function confirmerRename() {
   const renomme = {};
   Object.keys(enquetes).forEach(k => { renomme[k === ancien ? nouveau : k] = enquetes[k]; });
   enquetes = renomme;
+  // Le vocabulaire de statuts est indexé PAR NOM d'enquête (settings.statutsParEnquete) :
+  // suivre le renommage, sinon la liste propre à l'enquête (CATI/CAWI…) devient
+  // orpheline et l'enquête retombe sur le modèle global (statuts « inconnus »).
+  const vocab = settings.statutsParEnquete;
+  if (vocab && Object.prototype.hasOwnProperty.call(vocab, ancien)) {
+    if (!Object.prototype.hasOwnProperty.call(vocab, nouveau)) vocab[nouveau] = vocab[ancien];
+    delete vocab[ancien];
+  }
   enqueteActive = nouveau;
   sauver();
   refreshSelect();
@@ -1218,6 +1227,7 @@ function enregistrerActionsVues() {
     // Import
     fermerModal:     () => fermerModal(),
     confirmerImport: () => confirmerImport(),
+    importCreerNouvelle: () => importCreerNouvelle(),
     toggleCompare:   el => document.getElementById(el.dataset.target).classList.toggle('hidden'),
   });
 }
@@ -1366,7 +1376,7 @@ Object.assign(window, {
   statutCanon, statutLabel, ligneDemographie, toggleEdit, ouvrirEdit, buildEditForm,
   sauverEdit, filtrer, champLabel, parseCSVRows, parseCSV, importerFichier,
   ouvrirModalImport, preparerImport, renderExclus, majComparaisonImport,
-  renderImportApercu, confirmerImport, fermerModal, csvGuard, csvDeguard, csvCell,
+  renderImportApercu, confirmerImport, importCreerNouvelle, fermerModal, csvGuard, csvDeguard, csvCell,
   sepRegionalAuto, sepCSVexport, genererCSV, exporterCSV, exporterVCard, renderFilters,
   construireRappel, envoyerRappel, smsInfo, variablesInconnues,
   rendu, haversine, formatDist, distanceBadge, afficherToast, toggleMaPosition,

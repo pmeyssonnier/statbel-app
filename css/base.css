@@ -236,6 +236,13 @@
   .import-incertains-tt { font-size:12px; font-weight:700; color:#8a6d00; margin-bottom:4px; }
   .import-incertains .excl-row { color:#8a6d00; background:#fff3cd; }
   .import-incertains-note { font-size:11px; color:var(--text3); margin-top:6px; }
+  /* Enquête renommée reconnue au réimport (cible pré-remplie, historique conservé) */
+  .import-rename-hint { display:flex; align-items:center; gap:8px; flex-wrap:wrap; border:1px solid #a5d6a7; background:#e8f5e9; border-radius:8px; padding:8px 10px; margin-top:8px; font-size:12px; color:#1b5e20; }
+  .import-rename-new { flex:none; font-size:11px; font-weight:600; color:#1565c0; background:transparent; border:1px solid #90caf9; border-radius:6px; padding:4px 8px; min-height:32px; cursor:pointer; }
+  .import-rename-new:hover { background:#e3f2fd; }
+  body.dark .import-rename-hint { background:#16351b; border-color:#3a6b45; color:#b7e0bd; }
+  body.dark .import-rename-new { color:#c5d9f0; border-color:#2e5c85; }
+  body.dark .import-rename-new:hover { background:#1e3f5c; }
   .card-statut { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 14px; }
   .card-statut-date { color: var(--text3); font-size: 13px; }
   /* En édition, le statut se règle dans le formulaire → on masque la barre verrouillée

@@ -11,7 +11,7 @@ let fails = 0;
 const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg); } else console.log('✓ ' + msg); };
 
 (async () => {
-  const { apparieurAnciens, diffHistorique, _diffContacts } =
+  const { apparieurAnciens, diffHistorique, _diffContacts, meilleureCorrespondance } =
     await import('../js/data/reimport.js');
 
   // ── apparieurAnciens : priorité 1 (ordre unique + ≥1 concordance) ────
@@ -103,6 +103,49 @@ const A = (cond, msg) => { if (!cond) { fails++; console.log('✗ FAIL ' + msg);
     ['nb_cibles','collect_method','web_user_id','web_user_pwd','historique'].forEach(champ =>
       A(metier.some(d => d.champ === champ), `_diffContacts : détecte ${champ}`));
 
+  }
+
+  // ── meilleureCorrespondance : détection d'une enquête RENOMMÉE ───────
+  {
+    const fichier = [
+      { ordre: '1', nom: 'Martin', prenom: 'Alice', adresse: 'Rue A 1' },
+      { ordre: '2', nom: 'Durand', prenom: 'Bob',   adresse: 'Rue B 2' },
+      { ordre: '3', nom: 'Neyt',   prenom: 'Carla', adresse: 'Rue C 3' },
+    ];
+    // « Ma tournée » = même contenu que le fichier (enquête renommée) ; « Autre » = sans rapport.
+    const enquetesMap = {
+      'Ma tournée': [
+        { ordre: '1', nom: 'Martin', prenom: 'Alice', adresse: 'Rue A 1', statut: 'Done' },
+        { ordre: '2', nom: 'Durand', prenom: 'Bob',   adresse: 'Rue B 2', statut: 'Refusal' },
+        { ordre: '3', nom: 'Neyt',   prenom: 'Carla', adresse: 'Rue C 3', statut: 'To do' },
+      ],
+      'Autre': [
+        { ordre: '9', nom: 'Zzz', prenom: 'Yyy', adresse: 'Ailleurs 9' },
+      ],
+    };
+    const best = meilleureCorrespondance(fichier, enquetesMap, null);
+    A(best && best.nom === 'Ma tournée', 'renommée : retrouve l\'enquête par le contenu');
+    A(best && best.score >= 0.6, `renommée : score franc (${best && best.score.toFixed(2)})`);
+
+    // exclureNom : ignorer une enquête déjà ciblée par correspondance de nom exacte.
+    A(meilleureCorrespondance(fichier, enquetesMap, 'Ma tournée') === null,
+      'renommée : l\'enquête exclue n\'est pas re-proposée');
+
+    // Pas de faux positif quand aucune enquête ne recoupe le fichier.
+    A(meilleureCorrespondance(fichier, { 'Autre': enquetesMap['Autre'] }, null) === null,
+      'aucun recoupement → aucune correspondance');
+
+    // Un simple sous-ensemble (le fichier ne couvre qu'une petite part de l'enquête)
+    // ne doit pas déclencher une correspondance (score = min(ratio, couverture)).
+    const grande = { 'Grande': [] };
+    for (let i = 1; i <= 20; i++) grande.Grande.push({ ordre: String(i), nom: 'N' + i, prenom: 'P' + i, adresse: 'Adr ' + i });
+    const petitFichier = [{ ordre: '1', nom: 'N1', prenom: 'P1', adresse: 'Adr 1' }];
+    A(meilleureCorrespondance(petitFichier, grande, null) === null,
+      'sous-ensemble minime → pas de correspondance (couverture trop faible)');
+
+    // Cartes vides / entrées nulles : robustesse.
+    A(meilleureCorrespondance([], enquetesMap, null) === null, 'fichier vide → null');
+    A(meilleureCorrespondance(fichier, {}, null) === null, 'aucune enquête existante → null');
   }
 
   console.log(fails ? `\nÉCHEC (${fails})` : '\nTOUS LES TESTS PASSENT');
