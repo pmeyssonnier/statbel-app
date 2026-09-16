@@ -12,6 +12,18 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Interviews — Coordonnées : ne plus purger les adresses contenant « et… » (bug E1)
+(Interviews `3.82` → `3.83`, SW `statbel-v394` → `statbel-v395`)
+- **Correctif** : la purge des coordonnées au démarrage testait la clé `coords_…` contre
+  `/bte\s*\d+|ET\w+|b\d{2,}/i`. Le motif `ET\w+` (insensible à la casse) faisait
+  correspondre **« Etterbeek », « Wetteren », « rue Petite »…** → leurs coordonnées étaient
+  supprimées à **chaque démarrage** (re-géocodage répété = fuite + quota ; perte du repère
+  hors-ligne).
+- La purge repose désormais sur `adresseSansBoite` : une clé déjà normalisée (sans boîte)
+  est **conservée** ; une ancienne clé contenant une boîte/étage est supprimée ; la
+  validation des bornes belges (lat/lng) reste active. Fini les faux positifs.
+- Test de non-régression `tests/coords-purge.test.js` (échoue sur l'ancien code).
+
 ### Convertisseur — Sécurité : échapper les colonnes administratives (XSS persistant, bug E5)
 (Convertisseur `241` → `242`, SW `statbel-v393` → `statbel-v394`)
 - **Correctif de sécurité** : les valeurs `NR_YEAR` / `NR_WAVE` / `NR_SEQ` / `NR_REF_WK`
