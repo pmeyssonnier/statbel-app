@@ -27,15 +27,27 @@
       // petit popup « Mise à jour disponible — Poser » et l'utilisateur choisit le
       // moment (pas de rechargement surprise en pleine saisie). Sans ce mécanisme,
       // le raccourci écran d'accueil continuerait de servir l'ancienne version.
-      const avaitControleur = !!navigator.serviceWorker.controller;   // false au 1er install
-      let rechargement = false;
+      // Décision de rechargement sur `controllerchange`, ISOLÉE pour être testable
+      // (le vrai cycle SW n'est pas reproductible en headless). Reçoit l'état courant
+      // { rechargement, aEuControleur } et renvoie { reload, aEuControleur } :
+      //  - déjà rechargé → jamais deux fois ;
+      //  - aucun contrôleur connu jusqu'ici → 1re prise de contrôle (install, via
+      //    clients.claim) : PAS de rechargement, mais on note qu'un contrôleur existe ;
+      //  - un contrôleur existait déjà → mise à jour posée qui prend la main → reload.
+      // Bug M7 : l'ancien code figeait ce drapeau à `false` au CHARGEMENT (const), donc
+      // une maj posée dans la MÊME session que le 1er install ne rechargeait jamais
+      // (bouton « … » à vie). On bascule désormais le drapeau au 1er controllerchange.
+      function decisionMajControleur(etat) {
+        if (etat.rechargement) return { reload: false, aEuControleur: etat.aEuControleur };
+        if (!etat.aEuControleur) return { reload: false, aEuControleur: true };
+        return { reload: true, aEuControleur: true };
+      }
+      window.decisionMajControleur = decisionMajControleur;
+      let etatMaj = { rechargement: false, aEuControleur: !!navigator.serviceWorker.controller };
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // Le SW en attente a pris la main (après « Poser » → SKIP_WAITING →
-        // activate → clients.claim) : on recharge UNE fois pour servir les nouveaux
-        // fichiers. Pas de rechargement au tout premier install (aucun contrôleur).
-        if (rechargement || !avaitControleur) return;
-        rechargement = true;
-        window.location.reload();
+        const d = decisionMajControleur(etatMaj);
+        etatMaj = { rechargement: d.reload || etatMaj.rechargement, aEuControleur: d.aEuControleur };
+        if (d.reload) window.location.reload();
       });
       // Popup « Mise à jour disponible » AUTONOME (ne dépend PAS de js/app.js).
       // Le service worker sert la navigation « cache d'abord » → index.html ET ses
