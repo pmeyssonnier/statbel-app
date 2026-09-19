@@ -73,6 +73,23 @@ function convertirDate(dob) {
   return `${a}-${String(m).padStart(2, '0')}-${String(j).padStart(2, '0')}`;
 }
 
+// Décodage tolérant d'un CSV lu en binaire (ArrayBuffer) → texte. (bug M9)
+// Le GRP Statbel historique est en ISO-8859-1, mais un CSV UTF-8 (ex. ré-import d'un
+// export de l'app, souvent avec BOM) décodé en Latin-1 donne du mojibake (« Ã© »).
+// On choisit donc : BOM UTF-8 → UTF-8 (BOM retiré) ; sinon octets UTF-8 valides →
+// UTF-8 (décodage « fatal » qui lève si invalide) ; sinon repli ISO-8859-1.
+function decoderCsv(buf) {
+  const bytes = new Uint8Array(buf);
+  if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+    return new TextDecoder('utf-8').decode(bytes.subarray(3));       // BOM UTF-8 explicite
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);  // UTF-8 sans BOM mais valide
+  } catch (e) {
+    return new TextDecoder('iso-8859-1').decode(bytes);             // sinon Latin-1 (GRP historique)
+  }
+}
+
 // ── Formats d'AFFICHAGE (les données exportées, elles, restent inchangées) ──
 // Date de naissance ISO (AAAA-MM-JJ) → JJ/MM/AAAA. Repli : valeur telle quelle.
 function fmtDateNaiss(iso) {
