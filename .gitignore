@@ -22,6 +22,9 @@
 # Outillage dev : générateur d'icônes, runner de tests, garde de version
 !tools/
 !tools/**
+# Menu développeur Windows + vérificateur de liens (outillage dev local, non servi)
+!start-dev.bat
+!check_links.py
 # CSS + JS externalisés (PR découpage)
 !css/
 !css/*.css
