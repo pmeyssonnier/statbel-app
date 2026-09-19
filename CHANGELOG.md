@@ -12,6 +12,22 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### PWA (3 apps) — Popup « Mise à jour » : recharger même si install + maj dans la même session (bug M7)
+(Interviews `3.93` → `3.94`, Convertisseur `243` → `244`, Planner `221` → `222`, SW `statbel-v408` → `statbel-v409`)
+- `js/boot.js` figeait `avaitControleur` (un `const`) à `false` au **chargement** (1er
+  install, aucun contrôleur). Si une mise à jour était **posée dans la même session**
+  que le premier install, le `controllerchange` déclenché par « Poser » voyait toujours
+  `avaitControleur === false` → **pas de rechargement** → bouton « … » bloqué à vie, app
+  servie depuis l'ancien cache. (`sw.js` appelle `clients.claim()`, donc le 1er install
+  émet bien un `controllerchange`.)
+- **Correctif** : la décision de rechargement est isolée dans `decisionMajControleur` et
+  le drapeau « un contrôleur existe » **bascule au 1er `controllerchange`** (prise de
+  contrôle initiale = pas de reload) → un `controllerchange` **ultérieur** (maj posée)
+  recharge, y compris dans la session d'install. Comportement inchangé pour une maj
+  classique (contrôleur déjà présent au chargement). Partagé par les 3 apps.
+- Test `tests/maj-controllerchange.test.js` : la machine à états (1re prise de contrôle
+  → pas de reload ; maj suivante → reload ; jamais deux fois). Échoue sur l'ancienne logique.
+
 ### Interviews — Sécurité : `rel="noopener"` sur les liens `target="_blank"` (bug M6)
 (Interviews `3.92` → `3.93`, SW `statbel-v407` → `statbel-v408`)
 - Six liens ouvrant un nouvel onglet (`target="_blank"`) n'avaient pas `rel="noopener"`
