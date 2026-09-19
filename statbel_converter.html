@@ -1221,7 +1221,7 @@ function traiterFichier(file) {
       } else if (estExcel) {
         srcRows = parseXlsx(e.target.result);          // ArrayBuffer
       } else {
-        const text  = e.target.result;                 // texte iso-8859-1
+        const text  = decoderCsv(e.target.result);     // ArrayBuffer → texte (UTF-8 si BOM/valide, sinon ISO-8859-1) — bug M9
         const lines = text.split(/\r?\n/).filter(l => l.trim());
         if (lines.length < 2) throw new Error(t('al_empty_or_invalid'));
         const sep   = detecterSep(lines[0]);
@@ -1251,8 +1251,7 @@ function traiterFichier(file) {
       try { el.focus(); } catch (_) {}   // amène le lecteur d'écran + le clavier sur l'erreur
     }
   };
-  if (estExcel || estPdf) reader.readAsArrayBuffer(file);
-  else                    reader.readAsText(file, 'iso-8859-1');
+  reader.readAsArrayBuffer(file);   // CSV inclus : décodage d'encodage géré par decoderCsv (bug M9)
 }
 
 // Drop zone
@@ -1403,7 +1402,7 @@ document.getElementById('btnRapport').addEventListener('click', () => {
 })();
 
 // Numéro de version (à garder aligné avec le cache du service worker, sw.js)
-const APP_VERSION = '244';
+const APP_VERSION = '245';
 (function(){ const e=document.getElementById('appVer'); if(e) e.textContent='v'+APP_VERSION; })();
 </script>
 </body>

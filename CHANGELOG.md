@@ -12,6 +12,18 @@ changent. Les tags git `vX.Y` pointent sur le commit de merge correspondant
 
 ## [Non publié]
 
+### Convertisseur — CSV : détecter l'encodage UTF-8 (bug M9)
+(Convertisseur `244` → `245`, SW `statbel-v409` → `statbel-v410`)
+- Tout CSV était lu en **ISO-8859-1** (`readAsText(file, 'iso-8859-1')`). Un CSV **UTF-8**
+  (ré-import d'un export de l'app — qui écrit en UTF-8 avec BOM —, ou « CSV UTF-8 » d'Excel)
+  était alors décodé en Latin-1 → **mojibake** : « Café » → « CafÃ© », « François » →
+  « FranÃ§ois », noms/adresses faussés puis exportés vers l'enquête.
+- **Correctif** : le CSV est lu en binaire (`readAsArrayBuffer`) et décodé par `decoderCsv` :
+  **BOM UTF-8 → UTF-8** (BOM retiré) ; sinon **octets UTF-8 valides → UTF-8** (décodage
+  « fatal ») ; sinon **repli ISO-8859-1** (format GRP Statbel historique, inchangé).
+- Test `tests/converter-csv-encoding.test.js` (UTF-8 avec/ sans BOM, Latin-1, et preuve
+  anti-mojibake sur des octets UTF-8). Échoue sur l'ancien code.
+
 ### PWA (3 apps) — Popup « Mise à jour » : recharger même si install + maj dans la même session (bug M7)
 (Interviews `3.93` → `3.94`, Convertisseur `243` → `244`, Planner `221` → `222`, SW `statbel-v408` → `statbel-v409`)
 - `js/boot.js` figeait `avaitControleur` (un `const`) à `false` au **chargement** (1er
